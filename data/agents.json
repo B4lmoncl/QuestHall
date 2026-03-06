@@ -1,0 +1,80 @@
+[
+  {
+    "id": "agt-001",
+    "name": "Aria",
+    "role": "Research Analyst",
+    "model": "claude-opus-4-6",
+    "status": "active",
+    "avatar": "AR",
+    "color": "#6366f1",
+    "description": "Deep research, source synthesis, and knowledge extraction",
+    "tasksCompleted": 142,
+    "uptime": "99.2%",
+    "lastSeen": "2026-03-06T12:34:00Z"
+  },
+  {
+    "id": "agt-002",
+    "name": "Bolt",
+    "role": "Code Engineer",
+    "model": "claude-sonnet-4-6",
+    "status": "active",
+    "avatar": "BO",
+    "color": "#10b981",
+    "description": "Full-stack development, refactoring, and code review",
+    "tasksCompleted": 289,
+    "uptime": "98.7%",
+    "lastSeen": "2026-03-06T12:35:00Z"
+  },
+  {
+    "id": "agt-003",
+    "name": "Cipher",
+    "role": "Security Auditor",
+    "model": "claude-opus-4-6",
+    "status": "idle",
+    "avatar": "CI",
+    "color": "#f59e0b",
+    "description": "Vulnerability assessment, threat modeling, and pen-test review",
+    "tasksCompleted": 67,
+    "uptime": "97.1%",
+    "lastSeen": "2026-03-06T11:20:00Z"
+  },
+  {
+    "id": "agt-004",
+    "name": "Delta",
+    "role": "Data Processor",
+    "model": "claude-haiku-4-5-20251001",
+    "status": "active",
+    "avatar": "DE",
+    "color": "#3b82f6",
+    "description": "ETL pipelines, data cleaning, and structured extraction",
+    "tasksCompleted": 531,
+    "uptime": "99.9%",
+    "lastSeen": "2026-03-06T12:35:30Z"
+  },
+  {
+    "id": "agt-005",
+    "name": "Echo",
+    "role": "Content Writer",
+    "model": "claude-sonnet-4-6",
+    "status": "error",
+    "avatar": "EC",
+    "color": "#ec4899",
+    "description": "Long-form content, technical docs, and copywriting",
+    "tasksCompleted": 203,
+    "uptime": "94.3%",
+    "lastSeen": "2026-03-06T10:05:00Z"
+  },
+  {
+    "id": "agt-006",
+    "name": "Flux",
+    "role": "Orchestrator",
+    "model": "claude-opus-4-6",
+    "status": "active",
+    "avatar": "FL",
+    "color": "#8b5cf6",
+    "description": "Multi-agent coordination, task decomposition, and routing",
+    "tasksCompleted": 98,
+    "uptime": "99.5%",
+    "lastSeen": "2026-03-06T12:35:45Z"
+  }
+]
