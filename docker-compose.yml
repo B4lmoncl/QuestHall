@@ -3,11 +3,16 @@ version: '3.8'
 services:
   api:
     build: .
+    container_name: agent-dashboard-api
+    restart: unless-stopped
     ports:
       - "3001:3001"
     environment:
+      - NODE_ENV=production
       - PORT=3001
-      - API_KEY=Khqun0gODzP22z9RKRW5n0iEJmQli52
+      - API_KEY=133e6c2602b0fd62e64de00779d44093
     volumes:
-      - ./public/data:/app/public/data
-    restart: unless-stopped
+      - quest-data:/app/public/data
+
+volumes:
+  quest-data:
