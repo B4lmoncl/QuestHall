@@ -1,187 +1,95 @@
-# Agent Orchestration Dashboard
+# Agent Dashboard — OpenClaw Revenue Team
 
-A dark-themed web dashboard for monitoring AI agent teams — built with Next.js, TypeScript, and Tailwind CSS.
+Real-time operations center for Leon's AI revenue agents: **Nova, Hex, Echo, Pixel, Atlas**.
+
+Live: https://b4lmoncl.github.io/agent-dashboard/
 
 ## Features
 
-- **Agent Roster** — all agents with role, model, status, uptime, and task counts
-- **Current Quests** — live view of in-progress tasks with animated progress bars
-- **Quest Log** — completed/failed task history with duration, token usage, and tags
-- **Stat Strip** — at-a-glance totals for active agents, completed quests, tokens used
-- **JSON API** — three REST endpoints, filterable by agent or status
+- **OpenClaw dark theme** — `#0a0a0a` background, red/orange accents
+- **5 revenue agents** — live status, current task, last seen
+- **Quests system** — expandable cards with What/Why/Output, Pending bucket
+- **REST API** — agents post status/results, dashboard auto-refreshes
+- **Dual mode** — runs as static GitHub Pages OR live API server
 
-## Tech Stack
-
-- [Next.js 16](https://nextjs.org) (App Router) + TypeScript
-- [Tailwind CSS v4](https://tailwindcss.com)
-- JSON flat-file data store (`/data/*.json`)
-- Deploy: Vercel (recommended) or Netlify/Cloudflare Pages
-
-## Getting Started
+## Running the API Server
 
 ```bash
 npm install
-npm run dev
+node server.js        # API at http://localhost:3001
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Then open `http://localhost:3001` (serves the built frontend).
 
-## Project Structure
-
-```
-agent-dashboard/
-├── app/
-│   ├── page.tsx              # Main dashboard
-│   ├── layout.tsx
-│   ├── globals.css
-│   └── api/
-│       ├── agents/route.ts
-│       ├── quests/route.ts
-│       └── current-quests/route.ts
-├── components/
-│   ├── AgentCard.tsx
-│   ├── CurrentQuestCard.tsx
-│   ├── QuestRow.tsx
-│   └── StatBar.tsx
-└── data/
-    ├── agents.json
-    ├── quests.json
-    └── current-quests.json
-```
+Build first: `npm run build`
 
 ## API Reference
 
-All endpoints return JSON. No auth required in MVP.
+### Agent Endpoints
 
----
-
-### `GET /api/agents`
-
-Returns all registered agents.
-
-**Response**
-```json
-{
-  "agents": [
-    {
-      "id": "agt-001",
-      "name": "Aria",
-      "role": "Research Analyst",
-      "model": "claude-opus-4-6",
-      "status": "active",       // "active" | "idle" | "error"
-      "avatar": "AR",
-      "color": "#6366f1",
-      "description": "...",
-      "tasksCompleted": 142,
-      "uptime": "99.2%",
-      "lastSeen": "2026-03-06T12:34:00Z"
-    }
-  ],
-  "total": 6
-}
+```
+GET  /api/agents                        → all agent statuses
+GET  /api/agent/:name                   → single agent
+POST /api/agent/:name/status            → agent posts status update
+POST /api/agent/:name/result            → agent posts task result
+POST /api/agent/:name/command           → send command to agent
+GET  /api/agent/:name/commands          → agent polls for pending commands
+PATCH /api/agent/:name/command/:cmdId   → agent acks command
 ```
 
----
+### Quest Endpoints
 
-### `GET /api/quests`
-
-Returns the quest history log.
-
-**Query params**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `agentId` | string | Filter by agent ID (e.g. `agt-001`) |
-| `status` | string | Filter by status: `completed` or `failed` |
-
-**Response**
-```json
-{
-  "quests": [
-    {
-      "id": "qst-001",
-      "title": "Synthesize Q1 market research report",
-      "agentId": "agt-001",
-      "agentName": "Aria",
-      "status": "completed",    // "completed" | "failed"
-      "priority": "high",       // "critical" | "high" | "medium" | "low"
-      "completedAt": "2026-03-06T09:14:00Z",
-      "durationMs": 47200,
-      "tokensUsed": 28400,
-      "tags": ["research", "report"],
-      "error": null             // string if status=failed
-    }
-  ],
-  "total": 8
-}
+```
+GET   /api/quests          → all quests (filter: ?status=pending&agent=nova)
+POST  /api/quests          → create quest
+PATCH /api/quest/:id       → update quest status/progress
+DELETE /api/quest/:id      → delete quest
+GET   /api/health          → server health check
 ```
 
----
-
-### `GET /api/current-quests`
-
-Returns all currently running tasks.
-
-**Query params**
-
-| Param | Type | Description |
-|-------|------|-------------|
-| `agentId` | string | Filter by agent ID |
-
-**Response**
-```json
-{
-  "quests": [
-    {
-      "id": "cqst-001",
-      "title": "Summarize academic papers on LLM reasoning",
-      "agentId": "agt-001",
-      "agentName": "Aria",
-      "status": "running",
-      "priority": "high",
-      "startedAt": "2026-03-06T12:20:00Z",
-      "progress": 68,           // 0-100
-      "tags": ["research", "llm"]
-    }
-  ],
-  "total": 4
-}
-```
-
----
-
-## Data Models
-
-Edit `data/*.json` to add real agents and tasks. The dashboard and API will pick up changes automatically on next render.
-
-**Agent statuses:** `active` | `idle` | `error`
-**Quest priorities:** `critical` | `high` | `medium` | `low`
-**Quest statuses (history):** `completed` | `failed`
-**Quest statuses (current):** `running` | `paused`
-
-## Deployment
-
-### Vercel (recommended)
-
-1. Push this repo to GitHub
-2. Import at [vercel.com/new](https://vercel.com/new) — zero config needed
-3. Auto-deploys on every push to `main`
-
-### Netlify
+### Agent Status Update
 
 ```bash
-npm run build
-# Publish `.next` directory, runtime: Next.js
+curl -X POST http://localhost:3001/api/agent/nova/status \
+  -H "Content-Type: application/json" \
+  -d '{"status": "active", "currentTask": "Analyzing KPI metrics..."}'
 ```
 
-### Cloudflare Pages
+### Post Task Result
 
-Use `@cloudflare/next-on-pages` adapter.
+```bash
+curl -X POST http://localhost:3001/api/agent/hex/result \
+  -H "Content-Type: application/json" \
+  -d '{"title": "Built API endpoint", "output": "Done. 3 endpoints live.", "success": true}'
+```
 
-## Roadmap
+### Create Quest
 
-- [ ] WebSocket / SSE for real-time progress updates
-- [ ] Per-agent detail page (`/agents/[id]`)
-- [ ] Write API endpoints (POST quest, PATCH agent status)
-- [ ] Auth (API key or OAuth)
-- [ ] Real integration with Claude Agent SDK
+```bash
+curl -X POST http://localhost:3001/api/quests \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Research AI cost-tracker SaaS opportunity",
+    "description": "Analyze the market for AI agent cost tracking tools",
+    "why": "Revenue potential: teams waste money on untracked LLM costs",
+    "agentId": "atlas",
+    "priority": "high",
+    "tags": ["research", "saas"]
+  }'
+```
+
+## Agents
+
+| Name  | Role         | Specialty                                  |
+|-------|-------------|---------------------------------------------|
+| Nova  | Optimizer   | KPI frameworks, dashboard optimization      |
+| Hex   | Code Eng.   | MVP development, automation scripts         |
+| Echo  | Sales       | Target segments, cold outreach, pricing     |
+| Pixel | Marketer    | Landing pages, SEO, social campaigns        |
+| Atlas | Researcher  | Market research, competitor analysis        |
+
+## Static GitHub Pages Mode
+
+The dashboard auto-detects whether the live API is available. If not, it falls back to reading `/data/agents.json` (served from `public/data/`).
+
+The `update-dashboard.sh` script writes agent data to `public/data/agents.json` and triggers a rebuild via GitHub Actions.

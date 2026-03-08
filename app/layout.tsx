@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agent Orchestration Dashboard",
-  description: "Monitor your AI agent team — roles, status, active quests, and history.",
+  title: "Agent Dashboard — OpenClaw Revenue Team",
+  description: "Live operations center for Leon's AI revenue agents: Nova, Hex, Echo, Pixel, Atlas.",
 };
 
 export default function RootLayout({

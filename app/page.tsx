@@ -1,129 +1,295 @@
-import AgentCard from "@/components/AgentCard";
-import QuestRow from "@/components/QuestRow";
-import CurrentQuestCard from "@/components/CurrentQuestCard";
-import StatBar from "@/components/StatBar";
-import agents from "@/data/agents.json";
-import quests from "@/data/quests.json";
-import currentQuests from "@/data/current-quests.json";
+"use client";
 
-export const dynamic = "force-static";
+import { useEffect, useState, useCallback } from "react";
+import AgentCard from "@/components/AgentCard";
+import QuestCard from "@/components/QuestCard";
+import StatBar from "@/components/StatBar";
+
+interface Agent {
+  id: string;
+  name: string;
+  status: "active" | "idle" | "error";
+  lastUpdate: string | null;
+  currentTask: string | null;
+  results?: { title: string; success: boolean; timestamp: string }[];
+  pendingCommands?: number;
+}
+
+interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  why: string;
+  agentId: string | null;
+  agentName: string | null;
+  status: "pending" | "running" | "completed" | "failed";
+  priority: "critical" | "high" | "medium" | "low";
+  tags: string[];
+  createdAt: string;
+  startedAt: string | null;
+  completedAt: string | null;
+  progress: number;
+}
+
+const API_BASE = "";
+
+async function fetchAgents(): Promise<Agent[]> {
+  // Try live API first, fall back to static JSON
+  try {
+    const r = await fetch(`${API_BASE}/api/agents`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* API not running */ }
+  try {
+    const r = await fetch(`${API_BASE}/data/agents.json`);
+    if (r.ok) {
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
+async function fetchQuests(): Promise<Quest[]> {
+  try {
+    const r = await fetch(`${API_BASE}/api/quests`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* API not running */ }
+  try {
+    const r = await fetch(`${API_BASE}/data/quests.json`);
+    if (r.ok) {
+      const data = await r.json();
+      return Array.isArray(data) ? data : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
 
 export default function Dashboard() {
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [quests, setQuests] = useState<Quest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  const [apiLive, setApiLive] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
+    setAgents(a);
+    setQuests(q);
+    try {
+      const r = await fetch(`${API_BASE}/api/health`, { signal: AbortSignal.timeout(1500) });
+      setApiLive(r.ok);
+    } catch { setApiLive(false); }
+    setLoading(false);
+    setLastRefresh(new Date());
+  }, []);
+
+  useEffect(() => {
+    refresh();
+    const interval = setInterval(refresh, 30_000);
+    return () => clearInterval(interval);
+  }, [refresh]);
+
   const activeCount = agents.filter((a) => a.status === "active").length;
   const idleCount = agents.filter((a) => a.status === "idle").length;
   const errorCount = agents.filter((a) => a.status === "error").length;
-  const completedCount = quests.filter((q) => q.status === "completed").length;
-  const totalTokens = quests.reduce((acc, q) => acc + q.tokensUsed, 0);
-  const formattedTokens = totalTokens >= 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : String(totalTokens);
+  const runningQuests = quests.filter((q) => q.status === "running");
+  const pendingQuests = quests.filter((q) => q.status === "pending");
+  const doneQuests = quests.filter((q) => q.status === "completed" || q.status === "failed");
+
+  const timeStr = lastRefresh
+    ? lastRefresh.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+    : "—";
 
   return (
-    <div className="min-h-screen bg-[#0b0d11]">
+    <div className="min-h-screen" style={{ background: "#0a0a0a", color: "#e8e8e8" }}>
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/[0.05] bg-[#0b0d11]/80 backdrop-blur-xl">
+      <header
+        className="sticky top-0 z-40 backdrop-blur-xl"
+        style={{
+          background: "rgba(10,10,10,0.92)",
+          borderBottom: "1px solid rgba(255,68,68,0.15)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
+            <div
+              className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
+              style={{ background: "linear-gradient(135deg, #ff4444, #cc2200)", boxShadow: "0 0 12px rgba(255,68,68,0.3)" }}
+            >
+              OC
             </div>
-            <span className="font-semibold text-white/90 text-sm tracking-tight">Agent Dashboard</span>
+            <span className="font-semibold text-sm tracking-tight" style={{ color: "#e8e8e8" }}>
+              Agent Dashboard
+            </span>
+            <span
+              className="text-xs font-mono px-2 py-0.5 rounded"
+              style={{ color: "#ff4444", background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.2)" }}
+            >
+              Revenue Team
+            </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xs text-white/30">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Updated every 15min</span>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <span
+                className="w-1.5 h-1.5 rounded-full inline-block"
+                style={{
+                  background: apiLive ? "#22c55e" : "rgba(255,255,255,0.2)",
+                  boxShadow: apiLive ? "0 0 6px #22c55e" : "none",
+                }}
+              />
+              <span>{apiLive ? "API Live" : "Static"}</span>
             </div>
-            <a
-              href="#"
-              target="_blank"
-              className="text-xs text-white/30 hover:text-white/60 transition-colors font-mono border border-white/[0.06] px-2 py-1 rounded-lg hover:border-white/[0.12]"
+            <div className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>
+              {timeStr}
+            </div>
+            <button
+              onClick={refresh}
+              className="text-xs px-3 py-1.5 rounded transition-all"
+              style={{ color: "#ff4444", border: "1px solid rgba(255,68,68,0.3)", background: "rgba(255,68,68,0.05)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "rgba(255,68,68,0.12)")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "rgba(255,68,68,0.05)")}
             >
-              API
-            </a>
+              Refresh
+            </button>
           </div>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-10">
-        {/* Page title */}
         <div>
-          <h1 className="text-2xl font-bold text-white/90">Operations Center</h1>
-          <p className="text-sm text-white/35 mt-1">Real-time overview of your AI agent team</p>
+          <h1 className="text-2xl font-bold" style={{ color: "#e8e8e8" }}>
+            Operations Center
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
+            Live overview of Leon&apos;s revenue agent team
+          </p>
         </div>
 
-        {/* Stat strip */}
+        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatBar label="Agents" value={agents.length} sub={`${activeCount} active`} />
-          <StatBar label="Active" value={activeCount} sub={`${idleCount} idle · ${errorCount} error`} accent="text-emerald-400" />
-          <StatBar label="Quests today" value={completedCount} sub="completed" accent="text-violet-400" />
-          <StatBar label="Tokens used" value={formattedTokens} sub="today total" accent="text-blue-400" />
+          <StatBar label="Agents" value={loading ? "—" : agents.length} sub={`${activeCount} active`} />
+          <StatBar label="Active" value={loading ? "—" : activeCount} sub={`${idleCount} idle · ${errorCount} error`} accent="#ff4444" />
+          <StatBar label="Running" value={loading ? "—" : runningQuests.length} sub={`${pendingQuests.length} pending`} accent="#ff6633" />
+          <StatBar label="Completed" value={loading ? "—" : doneQuests.length} sub="total done" accent="rgba(255,255,255,0.6)" />
         </div>
 
-        {/* Agent Overview */}
+        {/* Agent Roster */}
         <section>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Agent Roster</h2>
-              <p className="text-xs text-white/30 mt-0.5">{agents.length} agents registered</p>
+              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Agent Roster
+              </h2>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+                {loading ? "Loading…" : agents.length > 0 ? `${agents.length} agents registered` : "Waiting for agents to check in"}
+              </p>
             </div>
-            <div className="flex items-center gap-3 text-xs text-white/30">
-              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />Active</span>
-              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400" />Idle</span>
-              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400" />Error</span>
+            <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />Active</span>
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-yellow-400 inline-block" />Idle</span>
+              <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-red-400 inline-block" />Error</span>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {agents.map((agent) => <AgentCard key={agent.id} agent={agent as any} />)}
-          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {[1, 2, 3, 4, 5].map((i) => <SkeletonCard key={i} height={180} />)}
+            </div>
+          ) : agents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} />)}
+            </div>
+          ) : (
+            <EmptyState
+              message="No agents have checked in yet."
+              sub="POST /api/agent/:name/status  →  { status: 'active', currentTask: '...' }"
+            />
+          )}
         </section>
 
-        {/* Two-column: Current Quests + Quest Log */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Current Quests */}
-          <section>
-            <div className="mb-4">
-              <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Current Quests</h2>
-              <p className="text-xs text-white/30 mt-0.5">{currentQuests.length} tasks in progress</p>
-            </div>
+        {/* Active Quests */}
+        <section>
+          <SectionHeader title="Active Quests" count={runningQuests.length} sub="currently running" dot="#22c55e" />
+          {loading ? <SkeletonCard height={80} /> : runningQuests.length > 0 ? (
             <div className="space-y-3">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {currentQuests.map((quest) => <CurrentQuestCard key={quest.id} quest={quest as any} />)}
-              {currentQuests.length === 0 && (
-                <div className="bg-[#111318] border border-white/[0.06] rounded-2xl p-8 text-center">
-                  <p className="text-sm text-white/25">No active quests</p>
-                </div>
-              )}
+              {runningQuests.map((q) => <QuestCard key={q.id} quest={q} />)}
             </div>
-          </section>
+          ) : (
+            <EmptyState message="No active quests." sub="PATCH /api/quest/:id  →  { status: 'running' }" />
+          )}
+        </section>
 
-          {/* Quest Log */}
-          <section>
-            <div className="mb-4">
-              <h2 className="text-sm font-semibold text-white/80 uppercase tracking-wider">Quest Log</h2>
-              <p className="text-xs text-white/30 mt-0.5">{quests.length} entries today</p>
+        {/* Pending bucket */}
+        <section>
+          <SectionHeader title="Pending" count={pendingQuests.length} sub="queued, not started" dot="#f59e0b" />
+          {loading ? <SkeletonCard height={80} /> : pendingQuests.length > 0 ? (
+            <div className="space-y-3">
+              {pendingQuests.map((q) => <QuestCard key={q.id} quest={q} />)}
             </div>
-            <div className="bg-[#111318] border border-white/[0.06] rounded-2xl overflow-hidden">
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              {quests.map((quest) => <QuestRow key={quest.id} quest={quest as any} />)}
+          ) : (
+            <EmptyState message="No pending quests." sub="POST /api/quests  →  { title, description, why, agentId }" />
+          )}
+        </section>
+
+        {/* Quest log */}
+        {doneQuests.length > 0 && (
+          <section>
+            <SectionHeader title="Quest Log" count={doneQuests.length} sub="completed & failed" dot="rgba(255,255,255,0.25)" />
+            <div className="space-y-2">
+              {doneQuests.slice(0, 10).map((q) => <QuestCard key={q.id} quest={q} compact />)}
             </div>
           </section>
-        </div>
+        )}
       </main>
 
-      {/* Footer */}
-      <footer className="mt-16 border-t border-white/[0.04] py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/20">
-          <span>Agent Orchestration Dashboard</span>
-          <div className="flex items-center gap-4 font-mono">
-            <a href="#" target="_blank" className="hover:text-white/40 transition-colors">GET /api/agents</a>
-            
-            
+      <footer className="mt-16 py-6" style={{ borderTop: "1px solid rgba(255,68,68,0.08)" }}>
+        <div
+          className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
+          style={{ color: "rgba(255,255,255,0.2)" }}
+        >
+          <span>OpenClaw · Agent Dashboard · Revenue Team</span>
+          <div className="flex items-center gap-4" style={{ color: "rgba(255,68,68,0.4)" }}>
+            <span>GET /api/agents</span>
+            <span>POST /api/agent/:name/status</span>
+            <span>GET /api/quests</span>
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+function SectionHeader({ title, count, sub, dot }: { title: string; count: number; sub: string; dot: string }) {
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      <span className="w-2 h-2 rounded-full flex-shrink-0 inline-block" style={{ background: dot }} />
+      <div>
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+          {title}
+        </h2>
+        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+          {count} {sub}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ message, sub }: { message: string; sub?: string }) {
+  return (
+    <div className="rounded-2xl p-8 text-center" style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.05)" }}>
+      <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>{message}</p>
+      {sub && <p className="text-xs mt-1.5 font-mono" style={{ color: "rgba(255,68,68,0.3)" }}>{sub}</p>}
+    </div>
+  );
+}
+
+function SkeletonCard({ height = 120 }: { height?: number }) {
+  return (
+    <div
+      className="rounded-2xl animate-pulse"
+      style={{ background: "#111111", border: "1px solid rgba(255,255,255,0.04)", height }}
+    />
   );
 }
