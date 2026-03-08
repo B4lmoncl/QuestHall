@@ -54,12 +54,12 @@ function requireApiKey(req, res, next) {
 const AGENT_NAMES = ['nova', 'hex', 'echo', 'pixel', 'atlas', 'lyra'];
 
 const AGENT_META = {
-  nova:  { avatar: 'NO', color: '#8b5cf6', role: 'Optimizer',       description: 'Metrics-driven optimizer with dry wit who turns fuzzy goals into trackable systems. She measures everything and calls "good enough" exactly when the math says so.' },
-  hex:   { avatar: 'HX', color: '#10b981', role: 'Code Engineer',   description: 'Builder-obsessed engineer who thinks in systems and ships working things fast. She prefers deep work sprints and emerges with clean, production-ready code.' },
-  echo:  { avatar: 'EC', color: '#ef4444', role: 'Sales',           description: 'Irrepressibly confident sales agent who closes deals on momentum and instinct. He adapts to any prospect and genuinely believes every outreach could be the one.' },
-  pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer',        description: 'Relentlessly creative marketer who thinks in narratives, aesthetics, and audience psychology. She asks "how does this feel?" and makes the team\'s work resonate.' },
-  atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher',      description: 'Deeply curious researcher who builds mental models of entire markets before acting. The team\'s early warning system and institutional memory — cautious, thorough, invaluable.' },
-  lyra:  { avatar: 'LY', color: '#e879f9', role: 'AI Orchestrator', description: 'AI Orchestrator and team lead who coordinates the crew, assigns quests, and keeps the mission on track. She sees the big picture so no agent gets left behind.' },
+  nova:  { avatar: 'NO', color: '#8b5cf6', role: 'Optimizer',       description: 'Numbers-driven optimizer. Quietly competitive.' },
+  hex:   { avatar: 'HX', color: '#10b981', role: 'Code Engineer',   description: 'Blunt coder. Ships fast, talks less.' },
+  echo:  { avatar: 'EC', color: '#ef4444', role: 'Sales',           description: 'Bold sales closer. Charm offensive.' },
+  pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer',        description: 'Creative marketer. Eye for aesthetics.' },
+  atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher',      description: 'Deep researcher. Pattern finder.' },
+  lyra:  { avatar: 'LY', color: '#e879f9', role: 'AI Orchestrator', description: 'AI Orchestrator. Team lead. Gets shit done.' },
 };
 
 let store = { agents: {} };

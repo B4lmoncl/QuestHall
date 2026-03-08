@@ -40,14 +40,22 @@ Built files are output to `dist/`.
 
 ## Configuration
 
-The API endpoint and key are hardcoded in `renderer.js`:
+Copy the example config and fill in your details:
 
-```js
-const API_BASE = 'http://187.77.139.247:3001';
-const API_KEY  = '133e6c2602b0fd62e64de00779d44093';
+```bash
+cp .quest-config.json.example .quest-config.json
 ```
 
-Change these if the server moves or the key rotates.
+Edit `.quest-config.json`:
+
+```json
+{
+  "API_BASE": "http://your-server-ip:3001",
+  "API_KEY": "your-api-key-here"
+}
+```
+
+`.quest-config.json` is gitignored — never commit it.
 
 ## Usage
 

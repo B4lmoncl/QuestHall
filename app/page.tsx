@@ -293,11 +293,13 @@ export default function Dashboard() {
             ) : agents.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {agents.map((agent) => (
-                  <AgentCard
-                    key={agent.id}
-                    agent={agent}
-                    activeQuests={agentQuestMap[agent.id] ?? []}
-                  />
+                  <div key={agent.id} className={agent.id === "lyra" ? "col-span-1 sm:col-span-2" : ""}>
+                    <AgentCard
+                      agent={agent}
+                      activeQuests={agentQuestMap[agent.id] ?? []}
+                      isWide={agent.id === "lyra"}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (

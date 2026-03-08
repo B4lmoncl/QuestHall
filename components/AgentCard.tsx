@@ -54,15 +54,15 @@ const priorityDot: Record<string, string> = {
 };
 
 const agentMeta: Record<string, { avatar: string; color: string; role: string; description: string }> = {
-  nova:  { avatar: "NO", color: "#8b5cf6", role: "Optimizer",       description: 'Metrics-driven optimizer with dry wit who turns fuzzy goals into trackable systems. Calls "good enough" exactly when the math says so.' },
-  hex:   { avatar: "HX", color: "#10b981", role: "Code Engineer",   description: 'Builder-obsessed engineer who thinks in systems and ships working things fast. Deep work sprints, clean code, no spaghetti.' },
-  echo:  { avatar: "EC", color: "#ef4444", role: "Sales",           description: 'Irrepressibly confident sales agent who closes on momentum and instinct. He adapts to any prospect and never takes no for an answer.' },
-  pixel: { avatar: "PX", color: "#f59e0b", role: "Marketer",        description: 'Relentlessly creative marketer who thinks in narratives and audience psychology. Asks "how does this feel?" and makes the work resonate.' },
-  atlas: { avatar: "AT", color: "#6366f1", role: "Researcher",      description: "Deeply curious researcher who builds mental models before acting. The team's early warning system and institutional memory." },
-  lyra:  { avatar: "LY", color: "#e879f9", role: "AI Orchestrator", description: 'AI Orchestrator and team lead who coordinates the crew and keeps the mission on track. She sees the big picture so no agent gets left behind.' },
+  nova:  { avatar: "NO", color: "#8b5cf6", role: "Optimizer",       description: "Numbers-driven optimizer. Quietly competitive." },
+  hex:   { avatar: "HX", color: "#10b981", role: "Code Engineer",   description: "Blunt coder. Ships fast, talks less." },
+  echo:  { avatar: "EC", color: "#ef4444", role: "Sales",           description: "Bold sales closer. Charm offensive." },
+  pixel: { avatar: "PX", color: "#f59e0b", role: "Marketer",        description: "Creative marketer. Eye for aesthetics." },
+  atlas: { avatar: "AT", color: "#6366f1", role: "Researcher",      description: "Deep researcher. Pattern finder." },
+  lyra:  { avatar: "LY", color: "#e879f9", role: "AI Orchestrator", description: "AI Orchestrator. Team lead. Gets shit done." },
 };
 
-export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; activeQuests?: Quest[] }) {
+export default function AgentCard({ agent, activeQuests = [], isWide = false }: { agent: Agent; activeQuests?: Quest[]; isWide?: boolean }) {
   const st = statusConfig[agent.status] ?? statusConfig.offline;
   const hc = healthConfig[agent.health] ?? healthConfig.ok;
   const meta = agentMeta[agent.id?.toLowerCase()] ?? {
@@ -124,7 +124,7 @@ export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; 
       </div>
 
       {/* Metrics */}
-      <div className="mt-4 space-y-2">
+      <div className={`mt-4 ${isWide ? "grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-2" : "space-y-2"}`}>
         <MetricRow label="Platform" value={agent.platform ?? "—"} />
         <MetricRow label="Uptime" value={formatDuration(agent.uptime)} />
         <MetricRow

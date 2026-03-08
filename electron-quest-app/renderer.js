@@ -1,5 +1,21 @@
-const API_BASE = 'http://187.77.139.247:3001';
-const API_KEY  = '133e6c2602b0fd62e64de00779d44093';
+const { existsSync, readFileSync } = require('fs');
+const path = require('path');
+
+let API_BASE = 'http://localhost:3001';
+let API_KEY  = '';
+
+try {
+  const configPath = path.join(__dirname, '.quest-config.json');
+  if (existsSync(configPath)) {
+    const config = JSON.parse(readFileSync(configPath, 'utf8'));
+    if (config.API_BASE) API_BASE = config.API_BASE;
+    if (config.API_KEY)  API_KEY  = config.API_KEY;
+  } else {
+    console.warn('[config] .quest-config.json not found — copy .quest-config.json.example and fill in your details');
+  }
+} catch (e) {
+  console.error('[config] Failed to load .quest-config.json:', e.message);
+}
 
 const form      = document.getElementById('quest-form');
 const submitBtn = document.getElementById('submit-btn');
