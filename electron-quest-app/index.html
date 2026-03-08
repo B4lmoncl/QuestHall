@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quest Poster</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">OC</div>
+      <div>
+        <h1>Quest Poster</h1>
+        <p class="subtitle">Post a quest to the Agent Dashboard</p>
+      </div>
+    </header>
+
+    <form id="quest-form">
+      <div class="field">
+        <label for="title">Quest Title</label>
+        <input
+          type="text"
+          id="title"
+          placeholder="e.g. Analyze Q1 sales data"
+          maxlength="120"
+          required
+        />
+      </div>
+
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          placeholder="What needs to be done and why…"
+          rows="5"
+          maxlength="1000"
+        ></textarea>
+      </div>
+
+      <div class="field">
+        <label for="priority">Priority</label>
+        <select id="priority">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+      </div>
+
+      <button type="submit" id="submit-btn">Quest Posten</button>
+    </form>
+
+    <div id="message" class="message hidden"></div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

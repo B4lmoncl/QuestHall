@@ -14,6 +14,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DATA_DIR = path.join(__dirname, 'public', 'data');
 const AGENTS_FILE = path.join(DATA_DIR, 'agents.json');
+const QUESTS_FILE = path.join(DATA_DIR, 'quests.json');
 
 app.use(cors());
 app.use(express.json());
@@ -63,6 +64,9 @@ const AGENT_META = {
 
 let store = { agents: {} };
 
+// ─── Quest store ────────────────────────────────────────────────────────────────
+let quests = [];
+
 function initStore() {
   for (const name of AGENT_NAMES) {
     const meta = AGENT_META[name] || {};
@@ -107,6 +111,26 @@ function saveData() {
     fs.writeFileSync(AGENTS_FILE, JSON.stringify(Object.values(store.agents), null, 2));
   } catch (e) {
     console.warn('[store] Failed to persist data:', e.message);
+  }
+}
+
+function loadQuests() {
+  try {
+    if (fs.existsSync(QUESTS_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(QUESTS_FILE, 'utf8'));
+      if (Array.isArray(raw)) quests = raw;
+    }
+  } catch (e) {
+    console.warn('[quests] Failed to load quests:', e.message);
+  }
+}
+
+function saveQuests() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(QUESTS_FILE, JSON.stringify(quests, null, 2));
+  } catch (e) {
+    console.warn('[quests] Failed to persist quests:', e.message);
   }
 }
 
@@ -160,6 +184,13 @@ app.post('/api/agent/:name/status', requireApiKey, (req, res) => {
 
 // GET /api/agents — get all agents
 app.get('/api/agents', (req, res) => {
+  const STALE_MS = 30 * 60 * 1000; // 30 minutes
+  const nowMs = Date.now();
+  for (const agent of Object.values(store.agents)) {
+    if (agent.lastUpdate && (nowMs - new Date(agent.lastUpdate).getTime()) > STALE_MS) {
+      if (agent.health === 'ok') agent.health = 'stale';
+    }
+  }
   res.json(Object.values(store.agents).map(sanitizeAgent));
 });
 
@@ -242,6 +273,78 @@ app.post('/api/agent/:name/register', requireApiKey, (req, res) => {
 // GET /api/health
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, agents: AGENT_NAMES.length, time: now() });
+});
+
+// ─── Quest API ──────────────────────────────────────────────────────────────────
+
+// POST /api/quest — create a new quest
+app.post('/api/quest', requireApiKey, (req, res) => {
+  const { title, description, priority } = req.body;
+  if (!title) return res.status(400).json({ error: 'title is required' });
+  const validPriorities = ['low', 'medium', 'high'];
+  if (priority && !validPriorities.includes(priority)) {
+    return res.status(400).json({ error: `Invalid priority. Use: ${validPriorities.join(', ')}` });
+  }
+  const quest = {
+    id: `quest-${Date.now()}`,
+    title,
+    description: description || '',
+    priority: priority || 'medium',
+    status: 'open',
+    createdAt: now(),
+    claimedBy: null,
+    completedBy: null,
+    completedAt: null,
+  };
+  quests.push(quest);
+  saveQuests();
+  console.log(`[quest] created: ${quest.id} — "${title}"`);
+  res.json({ ok: true, quest });
+});
+
+// POST /api/quest/:id/claim — agent claims a quest
+app.post('/api/quest/:id/claim', requireApiKey, (req, res) => {
+  const quest = quests.find(q => q.id === req.params.id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found' });
+  if (quest.status !== 'open') return res.status(409).json({ error: `Quest is already ${quest.status}` });
+  const { agentId } = req.body;
+  if (!agentId) return res.status(400).json({ error: 'agentId is required' });
+  quest.status = 'in_progress';
+  quest.claimedBy = agentId;
+  saveQuests();
+  console.log(`[quest] ${quest.id} claimed by ${agentId}`);
+  res.json({ ok: true, quest });
+});
+
+// POST /api/quest/:id/complete — mark quest as done
+app.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
+  const quest = quests.find(q => q.id === req.params.id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found' });
+  if (quest.status === 'completed') return res.status(409).json({ error: 'Quest already completed' });
+  const { agentId } = req.body;
+  if (!agentId) return res.status(400).json({ error: 'agentId is required' });
+  quest.status = 'completed';
+  quest.completedBy = agentId;
+  quest.completedAt = now();
+  saveQuests();
+  console.log(`[quest] ${quest.id} completed by ${agentId}`);
+  res.json({ ok: true, quest });
+});
+
+// GET /api/quests — list all quests grouped by status
+app.get('/api/quests', (req, res) => {
+  res.json({
+    open:       quests.filter(q => q.status === 'open'),
+    inProgress: quests.filter(q => q.status === 'in_progress'),
+    completed:  quests.filter(q => q.status === 'completed'),
+  });
+});
+
+// GET /api/agent/:name/quests — get agent's active quests
+app.get('/api/agent/:name/quests', (req, res) => {
+  const name = req.params.name.toLowerCase();
+  const active = quests.filter(q => q.claimedBy === name && q.status === 'in_progress');
+  res.json(active);
 });
 
 // ─── API Documentation ──────────────────────────────────────────────────────────
@@ -718,6 +821,7 @@ app.get('*', (req, res) => {
 // ─── Boot ──────────────────────────────────────────────────────────────────────
 initStore();
 loadData();
+loadQuests();
 
 app.listen(PORT, () => {
   console.log(`\n🔴 Agent Dashboard API running on http://localhost:${PORT}`);

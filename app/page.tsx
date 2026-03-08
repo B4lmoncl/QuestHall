@@ -13,13 +13,37 @@ interface Agent {
   currentJobDuration: number;
   jobsCompleted: number;
   revenue: number;
-  health: "ok" | "needs_checkin" | "broken";
+  health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
   role?: string;
   avatar?: string;
   color?: string;
   pendingCommands?: number;
 }
+
+interface Quest {
+  id: string;
+  title: string;
+  description: string;
+  priority: "low" | "medium" | "high";
+  status: "open" | "in_progress" | "completed";
+  createdAt: string;
+  claimedBy: string | null;
+  completedBy: string | null;
+  completedAt: string | null;
+}
+
+interface QuestsData {
+  open: Quest[];
+  inProgress: Quest[];
+  completed: Quest[];
+}
+
+const priorityConfig = {
+  low:    { label: "Low",    color: "#22c55e", bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)"   },
+  medium: { label: "Med",   color: "#eab308", bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.3)"   },
+  high:   { label: "High",  color: "#ef4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)"   },
+};
 
 async function fetchAgents(): Promise<Agent[]> {
   try {
@@ -36,16 +60,44 @@ async function fetchAgents(): Promise<Agent[]> {
   return [];
 }
 
+async function fetchQuests(): Promise<QuestsData> {
+  try {
+    const r = await fetch(`/api/quests`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* ignore */ }
+  try {
+    const r = await fetch(`/data/quests.json`);
+    if (r.ok) {
+      const data = await r.json();
+      return data && !Array.isArray(data) ? data : { open: [], inProgress: [], completed: [] };
+    }
+  } catch { /* ignore */ }
+  return { open: [], inProgress: [], completed: [] };
+}
+
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return "just now";
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [quests, setQuests] = useState<QuestsData>({ open: [], inProgress: [], completed: [] });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [apiLive, setApiLive] = useState(false);
+  const [completedOpen, setCompletedOpen] = useState(false);
 
   const refresh = useCallback(async () => {
-    const a = await fetchAgents();
+    const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
     setAgents(a);
+    setQuests(q);
     try {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
       setApiLive(r.ok);
@@ -78,6 +130,15 @@ export default function Dashboard() {
     ? secondsAgo < 5 ? "just now" : `${secondsAgo}s ago`
     : "—";
 
+  // Build per-agent quest map
+  const agentQuestMap: Record<string, Quest[]> = {};
+  for (const q of quests.inProgress) {
+    if (q.claimedBy) {
+      if (!agentQuestMap[q.claimedBy]) agentQuestMap[q.claimedBy] = [];
+      agentQuestMap[q.claimedBy].push(q);
+    }
+  }
+
   return (
     <div className="min-h-screen" style={{ background: "#1a1a1a", color: "#e8e8e8" }}>
       {/* Header */}
@@ -88,7 +149,7 @@ export default function Dashboard() {
           borderBottom: "1px solid rgba(255,68,68,0.15)",
         }}
       >
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div
               className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
@@ -137,7 +198,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         <div>
           <h1 className="text-xl font-bold" style={{ color: "#f0f0f0" }}>
             Operations Center
@@ -174,67 +235,223 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Agent Roster */}
-        <section>
-          <div className="flex items-center justify-between mb-4">
-            <div>
+        {/* Agent Roster + Quest Board */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start">
+
+          {/* Agent Roster */}
+          <section className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  Agent Roster
+                </h2>
+                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
+                  {loading ? "Loading…" : agents.length > 0 ? `${agents.length} agents registered` : "Waiting for agents to check in"}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#22c55e" }} />
+                  Online
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#ff6633" }} />
+                  Working
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#eab308" }} />
+                  Idle
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "rgba(255,255,255,0.2)" }} />
+                  Offline
+                </span>
+              </div>
+            </div>
+
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : agents.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {agents.map((agent) => (
+                  <AgentCard
+                    key={agent.id}
+                    agent={agent}
+                    activeQuests={agentQuestMap[agent.id] ?? []}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                message="No agents have checked in yet."
+                sub={`POST /api/agent/:name/status  →  { status, platform, uptime, jobsCompleted, revenue, health }`}
+              />
+            )}
+          </section>
+
+          {/* Quest Board */}
+          <aside className="w-full lg:w-80 flex-shrink-0">
+            <div className="mb-4">
               <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
-                Agent Roster
+                Quest Board
               </h2>
               <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
-                {loading ? "Loading…" : agents.length > 0 ? `${agents.length} agents registered` : "Waiting for agents to check in"}
+                {quests.open.length} open · {quests.inProgress.length} in progress
               </p>
             </div>
-            <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#22c55e" }} />
-                Online
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#ff6633" }} />
-                Working
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#eab308" }} />
-                Idle
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "rgba(255,255,255,0.2)" }} />
-                Offline
-              </span>
-            </div>
-          </div>
 
-          {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} />)}
+            <div className="space-y-2">
+              {loading ? (
+                [1, 2, 3].map(i => (
+                  <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />
+                ))
+              ) : quests.open.length === 0 ? (
+                <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>No open quests</p>
+                  <p className="text-xs mt-1 font-mono" style={{ color: "rgba(255,68,68,0.3)" }}>POST /api/quest</p>
+                </div>
+              ) : (
+                quests.open.map(q => <QuestCard key={q.id} quest={q} />)
+              )}
+
+              {quests.inProgress.length > 0 && (
+                <>
+                  <div className="pt-2 pb-1">
+                    <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      In Progress
+                    </span>
+                  </div>
+                  {quests.inProgress.map(q => <QuestCard key={q.id} quest={q} />)}
+                </>
+              )}
             </div>
-          ) : agents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-              {agents.map((agent) => <AgentCard key={agent.id} agent={agent} />)}
-            </div>
-          ) : (
-            <EmptyState
-              message="No agents have checked in yet."
-              sub={`POST /api/agent/:name/status  →  { status, platform, uptime, jobsCompleted, revenue, health }`}
-            />
-          )}
-        </section>
+          </aside>
+        </div>
+
+        {/* Completed Quests Log */}
+        {(quests.completed.length > 0 || !loading) && (
+          <section>
+            <button
+              onClick={() => setCompletedOpen(v => !v)}
+              className="flex items-center gap-2 mb-3 w-full text-left"
+            >
+              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+                Completed Quests
+              </h2>
+              <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
+                {quests.completed.length}
+              </span>
+              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+                {completedOpen ? "▲" : "▼"}
+              </span>
+            </button>
+
+            {completedOpen && (
+              <div className="rounded-xl overflow-hidden" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+                {quests.completed.length === 0 ? (
+                  <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>No completed quests yet</p>
+                ) : (
+                  <div>
+                    {quests.completed.map((q, i) => (
+                      <div
+                        key={q.id}
+                        className="flex items-center gap-3 px-4 py-3"
+                        style={{
+                          borderBottom: i < quests.completed.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
+                        }}
+                      >
+                        <span className="text-xs font-mono" style={{ color: "rgba(34,197,94,0.6)" }}>✓</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.6)" }}>{q.title}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>
+                            by <span style={{ color: "rgba(255,255,255,0.35)" }}>{q.completedBy}</span>
+                          </p>
+                        </div>
+                        <PriorityBadge priority={q.priority} />
+                        <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>
+                          {q.completedAt ? timeAgo(q.completedAt) : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+        )}
       </main>
 
       <footer className="mt-12 py-6" style={{ borderTop: "1px solid rgba(255,68,68,0.07)" }}>
         <div
-          className="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
+          className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
           style={{ color: "rgba(255,255,255,0.15)" }}
         >
           <span>OpenClaw · Agent Dashboard · Revenue Team</span>
           <div className="flex items-center gap-4" style={{ color: "rgba(255,68,68,0.35)" }}>
+            <span>GET /api/quests</span>
+            <span>POST /api/quest</span>
             <span>GET /api/agents</span>
-            <span>POST /api/agent/:name/status</span>
-            <span>GET /api/agent/:name</span>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: Quest["priority"] }) {
+  const cfg = priorityConfig[priority] ?? priorityConfig.medium;
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded font-semibold flex-shrink-0"
+      style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}` }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
+function QuestCard({ quest }: { quest: Quest }) {
+  const [expanded, setExpanded] = useState(false);
+  const isInProgress = quest.status === "in_progress";
+
+  return (
+    <div
+      className="rounded-lg p-3 cursor-pointer transition-all duration-150"
+      style={{
+        background: "#252525",
+        border: `1px solid ${isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)"}`,
+      }}
+      onClick={() => setExpanded(v => !v)}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = isInProgress ? "rgba(139,92,246,0.45)" : "rgba(255,255,255,0.15)";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLDivElement).style.borderColor = isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)";
+      }}
+    >
+      <div className="flex items-start gap-2">
+        {isInProgress && (
+          <span
+            className="mt-0.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
+            style={{ background: "#8b5cf6", boxShadow: "0 0 6px #8b5cf6", animation: "pulse 1.5s ease-in-out infinite" }}
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-xs font-medium truncate flex-1" style={{ color: "#e8e8e8" }}>{quest.title}</p>
+            <PriorityBadge priority={quest.priority} />
+          </div>
+          {isInProgress && quest.claimedBy && (
+            <p className="text-xs mt-0.5" style={{ color: "rgba(139,92,246,0.7)" }}>→ {quest.claimedBy}</p>
+          )}
+          {expanded && quest.description && (
+            <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{quest.description}</p>
+          )}
+          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
+        </div>
+      </div>
     </div>
   );
 }

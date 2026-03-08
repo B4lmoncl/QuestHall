@@ -9,12 +9,19 @@ interface Agent {
   currentJobDuration: number; // seconds
   jobsCompleted: number;
   revenue: number;
-  health: "ok" | "needs_checkin" | "broken";
+  health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
   role?: string;
   avatar?: string;
   color?: string;
   pendingCommands?: number;
+}
+
+interface Quest {
+  id: string;
+  title: string;
+  priority: "low" | "medium" | "high";
+  status: "open" | "in_progress" | "completed";
 }
 
 function formatDuration(seconds: number): string {
@@ -36,6 +43,13 @@ const healthConfig: Record<string, { label: string; color: string; bg: string }>
   ok:            { label: "Health: OK",          color: "#22c55e", bg: "rgba(34,197,94,0.08)"   },
   needs_checkin: { label: "Health: Needs Check",  color: "#f59e0b", bg: "rgba(245,158,11,0.08)"  },
   broken:        { label: "Health: Broken",       color: "#ff4444", bg: "rgba(255,68,68,0.1)"    },
+  stale:         { label: "Health: Stale",        color: "#6b7280", bg: "rgba(107,114,128,0.1)"  },
+};
+
+const priorityDot: Record<string, string> = {
+  low: "#22c55e",
+  medium: "#eab308",
+  high: "#ef4444",
 };
 
 const agentMeta: Record<string, { avatar: string; color: string; role: string }> = {
@@ -47,7 +61,7 @@ const agentMeta: Record<string, { avatar: string; color: string; role: string }>
   lyra:  { avatar: "LY", color: "#e879f9", role: "AI Orchestrator" },
 };
 
-export default function AgentCard({ agent }: { agent: Agent }) {
+export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; activeQuests?: Quest[] }) {
   const st = statusConfig[agent.status] ?? statusConfig.offline;
   const hc = healthConfig[agent.health] ?? healthConfig.ok;
   const meta = agentMeta[agent.id?.toLowerCase()] ?? {
@@ -132,6 +146,33 @@ export default function AgentCard({ agent }: { agent: Agent }) {
       >
         {hc.label}
       </div>
+
+      {/* Active Quests */}
+      {activeQuests.length > 0 && (
+        <div className="mt-3">
+          <p className="text-xs mb-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>Active Quests</p>
+          <div className="flex flex-wrap gap-1.5">
+            {activeQuests.map(q => (
+              <div
+                key={q.id}
+                className="flex items-center gap-1 px-2 py-1 rounded text-xs max-w-full"
+                style={{
+                  background: "rgba(139,92,246,0.1)",
+                  border: "1px solid rgba(139,92,246,0.25)",
+                  color: "rgba(255,255,255,0.6)",
+                }}
+                title={q.title}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                  style={{ background: priorityDot[q.priority] ?? "#888" }}
+                />
+                <span className="truncate" style={{ maxWidth: "120px" }}>{q.title}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
