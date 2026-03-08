@@ -22,7 +22,7 @@ app.use(express.json());
 // ─── Rate Limiting ──────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 500, // Increased for development/testing
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -353,7 +353,7 @@ const API_DOCS = {
   info: {
     title: 'Agent Dashboard API',
     version: '1.0.0',
-    description: 'REST API for managing and monitoring AI agents. Agents report status, receive commands, and can be queried by operators or other AI systems. POST endpoints always require an X-API-Key header. GET endpoints are public. Rate limited to 100 requests per 15 minutes per IP.',
+    description: 'REST API for managing and monitoring AI agents. Agents report status, receive commands, and can be queried by operators or other AI systems. POST endpoints always require an X-API-Key header. GET endpoints are public. Rate limited to 500 requests per 15 minutes per IP.',
   },
   servers: [
     { url: 'http://localhost:3001', description: 'Local server' },
