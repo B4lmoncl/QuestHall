@@ -93,3 +93,42 @@ curl -X POST http://localhost:3001/api/quests \
 The dashboard auto-detects whether the live API is available. If not, it falls back to reading `/data/agents.json` (served from `public/data/`).
 
 The `update-dashboard.sh` script writes agent data to `public/data/agents.json` and triggers a rebuild via GitHub Actions.
+
+## Production Deployment
+
+### API Key Configuration
+
+**DO NOT commit API keys to Git!**
+
+The repository contains a placeholder API key. On your VPS:
+
+**Option 1 - .env file (recommended):**
+```bash
+cd /opt/agent-dashboard
+cp .env.example .env
+nano .env  # Set API_KEY=your-actual-key
+```
+
+**Option 2 - docker-compose.override.yml:**
+```bash
+cd /opt/agent-dashboard
+cat > docker-compose.override.yml << 'YAML'
+version: '3.8'
+services:
+  api:
+    environment:
+      - API_KEY=fa795d27fd02db7474b7ee1a0aca8e17
+YAML
+```
+
+The override file is gitignored and will not be overwritten by `git pull`.
+
+### Rebuild Without Losing Config
+
+```bash
+git pull  # Updates docker-compose.yml with placeholder
+docker compose build --no-cache
+docker compose up -d
+```
+
+Your `.env` or `docker-compose.override.yml` stays intact!
