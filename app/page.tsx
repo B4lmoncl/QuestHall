@@ -26,6 +26,7 @@ interface Quest {
   title: string;
   description: string;
   priority: "low" | "medium" | "high";
+  category: string | null;
   status: "open" | "in_progress" | "completed";
   createdAt: string;
   claimedBy: string | null;
@@ -43,6 +44,16 @@ const priorityConfig = {
   low:    { label: "Low",    color: "#22c55e", bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)"   },
   medium: { label: "Med",   color: "#eab308", bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.3)"   },
   high:   { label: "High",  color: "#ef4444", bg: "rgba(239,68,68,0.12)",   border: "rgba(239,68,68,0.3)"   },
+};
+
+const categoryConfig: Record<string, { color: string; bg: string }> = {
+  "Coding":         { color: "#10b981", bg: "rgba(16,185,129,0.1)"  },
+  "Research":       { color: "#6366f1", bg: "rgba(99,102,241,0.1)"  },
+  "Content":        { color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
+  "Sales":          { color: "#ef4444", bg: "rgba(239,68,68,0.1)"   },
+  "Infrastructure": { color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
+  "Bug Fix":        { color: "#ff4444", bg: "rgba(255,68,68,0.1)"   },
+  "Feature":        { color: "#e879f9", bg: "rgba(232,121,249,0.1)" },
 };
 
 async function fetchAgents(): Promise<Agent[]> {
@@ -96,7 +107,13 @@ export default function Dashboard() {
 
   const refresh = useCallback(async () => {
     const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
-    setAgents(a);
+    // Lyra is team lead — always first
+    const sorted = [...a].sort((x, y) => {
+      if (x.id === "lyra") return -1;
+      if (y.id === "lyra") return 1;
+      return x.name.localeCompare(y.name);
+    });
+    setAgents(sorted);
     setQuests(q);
     try {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
@@ -400,6 +417,18 @@ export default function Dashboard() {
   );
 }
 
+function CategoryBadge({ category }: { category: string }) {
+  const cfg = categoryConfig[category] ?? { color: "rgba(255,255,255,0.4)", bg: "rgba(255,255,255,0.06)" };
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+      style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.color}30` }}
+    >
+      {category}
+    </span>
+  );
+}
+
 function PriorityBadge({ priority }: { priority: Quest["priority"] }) {
   const cfg = priorityConfig[priority] ?? priorityConfig.medium;
   return (
@@ -443,9 +472,12 @@ function QuestCard({ quest }: { quest: Quest }) {
             <p className="text-xs font-medium truncate flex-1" style={{ color: "#e8e8e8" }}>{quest.title}</p>
             <PriorityBadge priority={quest.priority} />
           </div>
-          {isInProgress && quest.claimedBy && (
-            <p className="text-xs mt-0.5" style={{ color: "rgba(139,92,246,0.7)" }}>→ {quest.claimedBy}</p>
-          )}
+          <div className="flex items-center gap-2 mt-1">
+            {quest.category && <CategoryBadge category={quest.category} />}
+            {isInProgress && quest.claimedBy && (
+              <span className="text-xs" style={{ color: "rgba(139,92,246,0.7)" }}>→ {quest.claimedBy}</span>
+            )}
+          </div>
           {expanded && quest.description && (
             <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{quest.description}</p>
           )}

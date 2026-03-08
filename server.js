@@ -54,12 +54,12 @@ function requireApiKey(req, res, next) {
 const AGENT_NAMES = ['nova', 'hex', 'echo', 'pixel', 'atlas', 'lyra'];
 
 const AGENT_META = {
-  nova:  { avatar: 'NO', color: '#8b5cf6', role: 'Optimizer' },
-  hex:   { avatar: 'HX', color: '#10b981', role: 'Code Engineer' },
-  echo:  { avatar: 'EC', color: '#ef4444', role: 'Sales' },
-  pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer' },
-  atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher' },
-  lyra:  { avatar: 'LY', color: '#e879f9', role: 'AI Orchestrator' },
+  nova:  { avatar: 'NO', color: '#8b5cf6', role: 'Optimizer',       description: 'Metrics-driven optimizer with dry wit who turns fuzzy goals into trackable systems. She measures everything and calls "good enough" exactly when the math says so.' },
+  hex:   { avatar: 'HX', color: '#10b981', role: 'Code Engineer',   description: 'Builder-obsessed engineer who thinks in systems and ships working things fast. She prefers deep work sprints and emerges with clean, production-ready code.' },
+  echo:  { avatar: 'EC', color: '#ef4444', role: 'Sales',           description: 'Irrepressibly confident sales agent who closes deals on momentum and instinct. He adapts to any prospect and genuinely believes every outreach could be the one.' },
+  pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer',        description: 'Relentlessly creative marketer who thinks in narratives, aesthetics, and audience psychology. She asks "how does this feel?" and makes the team\'s work resonate.' },
+  atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher',      description: 'Deeply curious researcher who builds mental models of entire markets before acting. The team\'s early warning system and institutional memory — cautious, thorough, invaluable.' },
+  lyra:  { avatar: 'LY', color: '#e879f9', role: 'AI Orchestrator', description: 'AI Orchestrator and team lead who coordinates the crew, assigns quests, and keeps the mission on track. She sees the big picture so no agent gets left behind.' },
 };
 
 let store = { agents: {} };
@@ -82,6 +82,7 @@ function initStore() {
       health: 'ok',
       lastUpdate: null,
       commands: [],
+      description: '',
       ...meta,
     };
   }
@@ -270,6 +271,19 @@ app.post('/api/agent/:name/register', requireApiKey, (req, res) => {
   res.json({ ok: true, agent: sanitizeAgent(store.agents[name]) });
 });
 
+// POST /api/agent/:name/checkin — mark check-in complete, reset health to "ok"
+app.post('/api/agent/:name/checkin', requireApiKey, (req, res) => {
+  const name = req.params.name.toLowerCase();
+  if (!store.agents[name]) {
+    return res.status(404).json({ error: `Unknown agent: ${name}` });
+  }
+  store.agents[name].health = 'ok';
+  store.agents[name].lastUpdate = now();
+  saveData();
+  console.log(`[${name}] checkin complete — health reset to ok`);
+  res.json({ ok: true, agent: sanitizeAgent(store.agents[name]) });
+});
+
 // GET /api/health
 app.get('/api/health', (req, res) => {
   res.json({ ok: true, agents: AGENT_NAMES.length, time: now() });
@@ -279,17 +293,22 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority } = req.body;
+  const { title, description, priority, category } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
+  const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
   if (priority && !validPriorities.includes(priority)) {
     return res.status(400).json({ error: `Invalid priority. Use: ${validPriorities.join(', ')}` });
+  }
+  if (category && !validCategories.includes(category)) {
+    return res.status(400).json({ error: `Invalid category. Use: ${validCategories.join(', ')}` });
   }
   const quest = {
     id: `quest-${Date.now()}`,
     title,
     description: description || '',
     priority: priority || 'medium',
+    category: category || null,
     status: 'open',
     createdAt: now(),
     claimedBy: null,
@@ -331,6 +350,22 @@ app.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   res.json({ ok: true, quest });
 });
 
+// POST /api/quest/:id/unclaim — agent unclaims a quest
+app.post('/api/quest/:id/unclaim', requireApiKey, (req, res) => {
+  const quest = quests.find(q => q.id === req.params.id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found' });
+  const { agentId } = req.body;
+  if (!agentId) return res.status(400).json({ error: 'agentId is required' });
+  if (quest.claimedBy !== agentId) {
+    return res.status(409).json({ error: `Quest not claimed by this agent` });
+  }
+  quest.status = 'open';
+  quest.claimedBy = null;
+  saveQuests();
+  console.log(`[quest] ${quest.id} unclaimed by ${agentId}`);
+  res.json({ ok: true, quest });
+});
+
 // GET /api/quests — list all quests grouped by status
 app.get('/api/quests', (req, res) => {
   res.json({
@@ -356,8 +391,15 @@ const API_DOCS = {
     description: 'REST API for managing and monitoring AI agents. Agents report status, receive commands, and can be queried by operators or other AI systems. POST endpoints always require an X-API-Key header. GET endpoints are public. Rate limited to 500 requests per 15 minutes per IP.',
   },
   servers: [
-    { url: 'http://localhost:3001', description: 'Local server' },
+    { url: 'http://localhost:3001',         description: 'Local server' },
+    { url: 'http://172.18.0.3:3001',        description: 'Docker internal (same host containers)' },
+    { url: 'http://187.77.139.247:3001',    description: 'External access (browser, desktop apps)' },
   ],
+  'x-network': {
+    docker_internal: 'http://172.18.0.3:3001',
+    external:        'http://187.77.139.247:3001',
+    note: 'Agents running in Docker containers on the same host should use the docker_internal address. External clients (browser, Electron app) use the external address.',
+  },
   components: {
     securitySchemes: {
       ApiKeyAuth: {
@@ -379,10 +421,11 @@ const API_DOCS = {
           currentJobDuration: { type: 'number',  example: 120,                          description: 'Current job duration in seconds' },
           jobsCompleted:      { type: 'number',  example: 42 },
           revenue:            { type: 'number',  example: 125.50,                       description: 'Total revenue generated (USD)' },
-          health:             { type: 'string',  enum: ['ok','needs_checkin','broken'],  example: 'ok' },
+          health:             { type: 'string',  enum: ['ok','needs_checkin','broken','stale'], example: 'ok', description: 'ok=healthy, needs_checkin=agent requests attention, broken=error state, stale=no update in 30min' },
           lastUpdate:         { type: 'string',  format: 'date-time', nullable: true,   example: '2026-03-08T12:00:00.000Z' },
           pendingCommands:    { type: 'integer', example: 2,                            description: 'Number of pending commands' },
           role:               { type: 'string',  example: 'Optimizer' },
+          description:        { type: 'string',  example: 'Metrics-driven optimizer with dry wit.',  description: 'Short personality-based description' },
           avatar:             { type: 'string',  example: 'NO',                         description: '2-char avatar code' },
           color:              { type: 'string',  example: '#8b5cf6',                    description: 'Hex color for dashboard display' },
         },
@@ -395,6 +438,21 @@ const API_DOCS = {
           params:    { type: 'object', example: { task: 'analyze_sales', limit: 100 }, description: 'Optional command parameters' },
           issuedAt:  { type: 'string', format: 'date-time', example: '2026-03-08T12:00:00.000Z' },
           status:    { type: 'string', enum: ['pending','acknowledged','completed'], example: 'pending' },
+        },
+      },
+      Quest: {
+        type: 'object',
+        properties: {
+          id:          { type: 'string',  example: 'quest-1741434000000' },
+          title:       { type: 'string',  example: 'Analyze Q1 sales data' },
+          description: { type: 'string',  example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
+          priority:    { type: 'string',  enum: ['low','medium','high'], example: 'high' },
+          category:    { type: 'string',  nullable: true, enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'], example: 'Research' },
+          status:      { type: 'string',  enum: ['open','in_progress','completed'], example: 'open' },
+          createdAt:   { type: 'string',  format: 'date-time' },
+          claimedBy:   { type: 'string',  nullable: true, example: 'atlas' },
+          completedBy: { type: 'string',  nullable: true, example: 'atlas' },
+          completedAt: { type: 'string',  nullable: true, format: 'date-time' },
         },
       },
       Error: {
@@ -611,6 +669,25 @@ const API_DOCS = {
         'x-python': 'import requests\nresp = requests.patch(\n    "http://localhost:3001/api/agent/nova/command/cmd-1741434000000",\n    json={"status": "completed"}\n)\nprint(resp.json())',
       },
     },
+    '/api/agent/{name}/checkin': {
+      post: {
+        summary: 'Mark agent check-in complete',
+        description: 'Resets agent health to "ok" after a check-in. Use this after resolving whatever triggered needs_checkin.',
+        operationId: 'postAgentCheckin',
+        tags: ['Agents'],
+        security: [{ ApiKeyAuth: [] }],
+        parameters: [
+          { name: 'name', in: 'path', required: true, schema: { type: 'string' }, example: 'nova' },
+        ],
+        responses: {
+          200: { description: 'Health reset to ok', content: { 'application/json': { schema: { type: 'object', properties: { ok: { type: 'boolean' }, agent: { $ref: '#/components/schemas/Agent' } } }, example: { ok: true, agent: { id: 'nova', health: 'ok' } } } } },
+          401: { description: 'Missing or invalid API key' },
+          404: { description: 'Agent not found' },
+        },
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/agent/nova/checkin \\\n  -H "X-API-Key: YOUR_API_KEY"',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/agent/nova/checkin",\n    headers={"X-API-Key": "YOUR_API_KEY"}\n)\nprint(resp.json())',
+      },
+    },
     '/api/agent/{name}/register': {
       post: {
         summary: 'Register a new agent',
@@ -644,6 +721,117 @@ const API_DOCS = {
         },
         'x-curl': 'curl -X POST http://localhost:3001/api/agent/myagent/register \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"role":"Analyzer","color":"#60a5fa","avatar":"MA"}\'',
         'x-python': 'import requests\nresp = requests.post(\n    "http://localhost:3001/api/agent/myagent/register",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"role": "Analyzer", "color": "#60a5fa", "avatar": "MA"}\n)\nprint(resp.json())',
+      },
+    },
+    '/api/quest': {
+      post: {
+        summary: 'Create a quest',
+        description: 'Post a new quest to the board. All agents can see open quests and claim them.',
+        operationId: 'createQuest',
+        tags: ['Quests'],
+        security: [{ ApiKeyAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title'],
+                properties: {
+                  title:       { type: 'string', example: 'Analyze Q1 sales data' },
+                  description: { type: 'string', example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
+                  priority:    { type: 'string', enum: ['low','medium','high'], example: 'high' },
+                  category:    { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'], example: 'Research' },
+                },
+              },
+              example: { title: 'Analyze Q1 sales data', description: 'Identify top opportunities.', priority: 'high', category: 'Research' },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Quest created', content: { 'application/json': { schema: { type: 'object', properties: { ok: { type: 'boolean' }, quest: { $ref: '#/components/schemas/Quest' } } } } } },
+          400: { description: 'Missing title or invalid field' },
+          401: { description: 'Missing or invalid API key' },
+        },
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"title":"Analyze Q1 sales data","priority":"high","category":"Research"}\'',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"title": "Analyze Q1 sales data", "priority": "high", "category": "Research"}\n)\nprint(resp.json())',
+      },
+    },
+    '/api/quests': {
+      get: {
+        summary: 'List all quests',
+        description: 'Returns quests grouped by status: open, inProgress, completed.',
+        operationId: 'listQuests',
+        tags: ['Quests'],
+        responses: {
+          200: {
+            description: 'Quests grouped by status',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { open: { type: 'array', items: { $ref: '#/components/schemas/Quest' } }, inProgress: { type: 'array', items: { $ref: '#/components/schemas/Quest' } }, completed: { type: 'array', items: { $ref: '#/components/schemas/Quest' } } } },
+              },
+            },
+          },
+        },
+        'x-curl': 'curl http://187.77.139.247:3001/api/quests',
+        'x-python': 'import requests\nquests = requests.get("http://172.18.0.3:3001/api/quests").json()\nprint(f"Open: {len(quests[\'open\'])}, In Progress: {len(quests[\'inProgress\'])}")',
+      },
+    },
+    '/api/quest/{id}/claim': {
+      post: {
+        summary: 'Claim a quest',
+        description: 'Agent claims an open quest. Sets status to in_progress.',
+        operationId: 'claimQuest',
+        tags: ['Quests'],
+        security: [{ ApiKeyAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'quest-1741434000000' }],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['agentId'], properties: { agentId: { type: 'string', example: 'atlas' } } }, example: { agentId: 'atlas' } } } },
+        responses: {
+          200: { description: 'Quest claimed' },
+          409: { description: 'Quest already claimed' },
+          401: { description: 'Missing or invalid API key' },
+          404: { description: 'Quest not found' },
+        },
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest/quest-1741434000000/claim \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"agentId":"atlas"}\'',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest/quest-1741434000000/claim",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"agentId": "atlas"}\n)\nprint(resp.json())',
+      },
+    },
+    '/api/quest/{id}/unclaim': {
+      post: {
+        summary: 'Unclaim a quest',
+        description: 'Agent releases a quest back to open status. Only the agent that claimed it can unclaim it.',
+        operationId: 'unclaimQuest',
+        tags: ['Quests'],
+        security: [{ ApiKeyAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'quest-1741434000000' }],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['agentId'], properties: { agentId: { type: 'string', example: 'atlas' } } }, example: { agentId: 'atlas' } } } },
+        responses: {
+          200: { description: 'Quest unclaimed, status reset to open', content: { 'application/json': { schema: { type: 'object', properties: { ok: { type: 'boolean' }, quest: { $ref: '#/components/schemas/Quest' } } }, example: { ok: true, quest: { id: 'quest-1741434000000', status: 'open', claimedBy: null } } } } },
+          409: { description: 'Quest not claimed by this agent', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' }, example: { error: 'Quest not claimed by this agent' } } } },
+          401: { description: 'Missing or invalid API key' },
+          404: { description: 'Quest not found' },
+        },
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest/quest-1741434000000/unclaim \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"agentId":"atlas"}\'',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest/quest-1741434000000/unclaim",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"agentId": "atlas"}\n)\nprint(resp.json())',
+      },
+    },
+    '/api/quest/{id}/complete': {
+      post: {
+        summary: 'Complete a quest',
+        description: 'Marks a quest as completed. Any agent can complete any in-progress quest.',
+        operationId: 'completeQuest',
+        tags: ['Quests'],
+        security: [{ ApiKeyAuth: [] }],
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' }, example: 'quest-1741434000000' }],
+        requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['agentId'], properties: { agentId: { type: 'string', example: 'atlas' } } }, example: { agentId: 'atlas' } } } },
+        responses: {
+          200: { description: 'Quest completed' },
+          409: { description: 'Quest already completed' },
+          401: { description: 'Missing or invalid API key' },
+          404: { description: 'Quest not found' },
+        },
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest/quest-1741434000000/complete \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"agentId":"atlas"}\'',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest/quest-1741434000000/complete",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"agentId": "atlas"}\n)\nprint(resp.json())',
       },
     },
   },
@@ -799,6 +987,16 @@ function buildDocsHtml(docs) {
     <h3>&#128273; Authentication</h3>
     <p>All POST endpoints require an <code>X-API-Key</code> header. GET endpoints are always public. Rate limited to 100 requests per 15 minutes per IP (429 Too Many Requests when exceeded).</p>
     <pre style="margin-top:0.6rem">X-API-Key: YOUR_API_KEY</pre>
+  </div>
+  <div class="auth-box" style="background:#0a0c10;border-color:#1e3a5f;margin-bottom:2rem">
+    <h3 style="color:#60a5fa">&#127760; Network Access</h3>
+    <p>Use the correct address depending on where you are connecting from:</p>
+    <table style="margin-top:0.6rem">
+      <tr><th>Context</th><th>Address</th></tr>
+      <tr><td>Docker containers (same host)</td><td><code>http://172.18.0.3:3001</code></td></tr>
+      <tr><td>External (browser, desktop apps)</td><td><code>http://187.77.139.247:3001</code></td></tr>
+      <tr><td>Local development</td><td><code>http://localhost:3001</code></td></tr>
+    </table>
   </div>
   <h2>Endpoints</h2>
   ${pathsHtml}

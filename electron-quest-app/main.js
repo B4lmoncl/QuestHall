@@ -4,8 +4,10 @@ const path = require('path');
 function createWindow() {
   const win = new BrowserWindow({
     width: 420,
-    height: 540,
-    resizable: false,
+    height: 620,
+    minWidth: 360,
+    minHeight: 500,
+    resizable: true,
     title: 'Quest Poster',
     backgroundColor: '#1a1a1a',
     webPreferences: {

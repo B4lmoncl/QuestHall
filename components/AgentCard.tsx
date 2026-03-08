@@ -12,6 +12,7 @@ interface Agent {
   health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
   role?: string;
+  description?: string;
   avatar?: string;
   color?: string;
   pendingCommands?: number;
@@ -39,11 +40,11 @@ const statusConfig: Record<string, { label: string; color: string; dot: string }
   offline: { label: "Offline", color: "rgba(255,255,255,0.25)", dot: "rgba(255,255,255,0.2)" },
 };
 
-const healthConfig: Record<string, { label: string; color: string; bg: string }> = {
-  ok:            { label: "Health: OK",          color: "#22c55e", bg: "rgba(34,197,94,0.08)"   },
-  needs_checkin: { label: "Health: Needs Check",  color: "#f59e0b", bg: "rgba(245,158,11,0.08)"  },
-  broken:        { label: "Health: Broken",       color: "#ff4444", bg: "rgba(255,68,68,0.1)"    },
-  stale:         { label: "Health: Stale",        color: "#6b7280", bg: "rgba(107,114,128,0.1)"  },
+const healthConfig: Record<string, { label: string; color: string; bg: string; pulse?: boolean }> = {
+  ok:            { label: "Health: OK",           color: "#22c55e", bg: "rgba(34,197,94,0.08)"   },
+  needs_checkin: { label: "⚠ Needs Check-In",     color: "#f59e0b", bg: "rgba(245,158,11,0.12)", pulse: true },
+  broken:        { label: "✕ Broken",              color: "#ff4444", bg: "rgba(255,68,68,0.12)"   },
+  stale:         { label: "Health: Stale",         color: "#6b7280", bg: "rgba(107,114,128,0.1)"  },
 };
 
 const priorityDot: Record<string, string> = {
@@ -52,13 +53,13 @@ const priorityDot: Record<string, string> = {
   high: "#ef4444",
 };
 
-const agentMeta: Record<string, { avatar: string; color: string; role: string }> = {
-  nova:  { avatar: "NO", color: "#8b5cf6", role: "Optimizer"       },
-  hex:   { avatar: "HX", color: "#10b981", role: "Code Engineer"   },
-  echo:  { avatar: "EC", color: "#ef4444", role: "Sales"           },
-  pixel: { avatar: "PX", color: "#f59e0b", role: "Marketer"        },
-  atlas: { avatar: "AT", color: "#6366f1", role: "Researcher"      },
-  lyra:  { avatar: "LY", color: "#e879f9", role: "AI Orchestrator" },
+const agentMeta: Record<string, { avatar: string; color: string; role: string; description: string }> = {
+  nova:  { avatar: "NO", color: "#8b5cf6", role: "Optimizer",       description: 'Metrics-driven optimizer with dry wit who turns fuzzy goals into trackable systems. Calls "good enough" exactly when the math says so.' },
+  hex:   { avatar: "HX", color: "#10b981", role: "Code Engineer",   description: 'Builder-obsessed engineer who thinks in systems and ships working things fast. Deep work sprints, clean code, no spaghetti.' },
+  echo:  { avatar: "EC", color: "#ef4444", role: "Sales",           description: 'Irrepressibly confident sales agent who closes on momentum and instinct. He adapts to any prospect and never takes no for an answer.' },
+  pixel: { avatar: "PX", color: "#f59e0b", role: "Marketer",        description: 'Relentlessly creative marketer who thinks in narratives and audience psychology. Asks "how does this feel?" and makes the work resonate.' },
+  atlas: { avatar: "AT", color: "#6366f1", role: "Researcher",      description: "Deeply curious researcher who builds mental models before acting. The team's early warning system and institutional memory." },
+  lyra:  { avatar: "LY", color: "#e879f9", role: "AI Orchestrator", description: 'AI Orchestrator and team lead who coordinates the crew and keeps the mission on track. She sees the big picture so no agent gets left behind.' },
 };
 
 export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; activeQuests?: Quest[] }) {
@@ -71,7 +72,8 @@ export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; 
   };
   const avatar = agent.avatar ?? meta.avatar;
   const color = agent.color ?? meta.color;
-  const role = agent.role ?? meta.role;
+  const description = agent.description ?? meta.description ?? meta.role;
+  const needsCheckin = agent.health === "needs_checkin";
   const isActive = agent.status === "online" || agent.status === "working";
 
   return (
@@ -79,16 +81,16 @@ export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; 
       className="group relative rounded-xl p-5 transition-all duration-200"
       style={{
         background: "#252525",
-        border: `1px solid ${isActive ? "rgba(255,68,68,0.2)" : "rgba(255,255,255,0.06)"}`,
-        boxShadow: isActive ? "0 0 20px rgba(255,68,68,0.06)" : "none",
+        border: `1px solid ${needsCheckin ? "rgba(245,158,11,0.35)" : isActive ? "rgba(255,68,68,0.2)" : "rgba(255,255,255,0.06)"}`,
+        boxShadow: needsCheckin ? "0 0 20px rgba(245,158,11,0.1)" : isActive ? "0 0 20px rgba(255,68,68,0.06)" : "none",
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLDivElement).style.border = "1px solid rgba(255,68,68,0.35)";
-        (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 24px rgba(255,68,68,0.1)";
+        (e.currentTarget as HTMLDivElement).style.border = needsCheckin ? "1px solid rgba(245,158,11,0.6)" : "1px solid rgba(255,68,68,0.35)";
+        (e.currentTarget as HTMLDivElement).style.boxShadow = needsCheckin ? "0 0 24px rgba(245,158,11,0.15)" : "0 0 24px rgba(255,68,68,0.1)";
       }}
       onMouseLeave={(e) => {
-        (e.currentTarget as HTMLDivElement).style.border = `1px solid ${isActive ? "rgba(255,68,68,0.2)" : "rgba(255,255,255,0.06)"}`;
-        (e.currentTarget as HTMLDivElement).style.boxShadow = isActive ? "0 0 20px rgba(255,68,68,0.06)" : "none";
+        (e.currentTarget as HTMLDivElement).style.border = `1px solid ${needsCheckin ? "rgba(245,158,11,0.35)" : isActive ? "rgba(255,68,68,0.2)" : "rgba(255,255,255,0.06)"}`;
+        (e.currentTarget as HTMLDivElement).style.boxShadow = needsCheckin ? "0 0 20px rgba(245,158,11,0.1)" : isActive ? "0 0 20px rgba(255,68,68,0.06)" : "none";
       }}
     >
       {/* Header row: avatar + name + status badge */}
@@ -117,7 +119,7 @@ export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; 
               {st.label}
             </div>
           </div>
-          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{role}</p>
+          <p className="text-xs mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.35)" }}>{description}</p>
         </div>
       </div>
 
@@ -142,7 +144,13 @@ export default function AgentCard({ agent, activeQuests = [] }: { agent: Agent; 
       {/* Health badge */}
       <div
         className="mt-4 px-3 py-1.5 rounded-lg text-xs font-medium text-center"
-        style={{ background: hc.bg, color: hc.color, border: `1px solid ${hc.color}30` }}
+        style={{
+          background: hc.bg,
+          color: hc.color,
+          border: `1px solid ${hc.color}${needsCheckin ? "60" : "30"}`,
+          animation: needsCheckin ? "pulse 1.5s ease-in-out infinite" : "none",
+          fontWeight: needsCheckin ? 700 : undefined,
+        }}
       >
         {hc.label}
       </div>

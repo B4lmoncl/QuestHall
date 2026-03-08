@@ -19,6 +19,7 @@ form.addEventListener('submit', async (e) => {
   const title       = document.getElementById('title').value.trim();
   const description = document.getElementById('description').value.trim();
   const priority    = document.getElementById('priority').value;
+  const category    = document.getElementById('category').value || undefined;
 
   if (!title) return;
 
@@ -32,7 +33,7 @@ form.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify({ title, description, priority }),
+      body: JSON.stringify({ title, description, priority, category }),
     });
 
     if (resp.ok) {
@@ -40,6 +41,7 @@ form.addEventListener('submit', async (e) => {
       showMessage(`Quest posted! ID: ${data.quest.id}`);
       form.reset();
       document.getElementById('priority').value = 'medium';
+      document.getElementById('category').value = '';
     } else {
       const err = await resp.json().catch(() => ({}));
       showMessage(`Error ${resp.status}: ${err.error || resp.statusText}`, true);
