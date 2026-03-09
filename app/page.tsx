@@ -138,6 +138,60 @@ export default function Dashboard() {
   const [apiLive, setApiLive] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
   const [versions, setVersions] = useState<{ dashboard: string; app: string } | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Particle system — white dust drifting upward
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+    resize();
+    window.addEventListener("resize", resize);
+
+    type Particle = { x: number; y: number; size: number; speedY: number; speedX: number; opacity: number; maxOpacity: number };
+
+    const createParticle = (randomY = false): Particle => ({
+      x: Math.random() * canvas.width,
+      y: randomY ? Math.random() * canvas.height : canvas.height + 4,
+      size: Math.random() * 1.5 + 0.4,
+      speedY: -(Math.random() * 0.25 + 0.08),
+      speedX: (Math.random() - 0.5) * 0.18,
+      opacity: 0,
+      maxOpacity: Math.random() * 0.35 + 0.08,
+    });
+
+    const particles: Particle[] = Array.from({ length: 15 }, () => createParticle(true));
+    let animId: number;
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.y += p.speedY;
+        p.x += p.speedX;
+        const fade = canvas.height * 0.18;
+        if (p.y > canvas.height - fade) {
+          p.opacity = p.maxOpacity * ((canvas.height - p.y) / fade);
+        } else if (p.y < fade) {
+          p.opacity = p.maxOpacity * (p.y / fade);
+        } else {
+          p.opacity = p.maxOpacity;
+        }
+        if (p.y < -4) particles[i] = createParticle();
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,255,255,${p.opacity.toFixed(3)})`;
+        ctx.fill();
+      }
+      animId = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+  }, []);
 
   const refresh = useCallback(async () => {
     const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
@@ -202,10 +256,15 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: "transparent", color: "#e8e8e8" }}>
+    <div className="min-h-screen" style={{ background: "transparent", color: "#e8e8e8", position: "relative" }}>
+      <canvas
+        ref={canvasRef}
+        style={{ position: "fixed", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }}
+      />
       {/* Header */}
       <header
         className="sticky top-0 z-40 backdrop-blur-xl"
+        style={{ position: "relative", zIndex: 40 }}
         style={{
           background: "rgba(26,26,26,0.97)",
           borderBottom: "1px solid rgba(255,68,68,0.15)",
@@ -260,7 +319,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 1 }}>
         <div>
           <h1 className="text-xl font-bold" style={{ color: "#f0f0f0" }}>
             Operations Center
@@ -433,7 +492,7 @@ export default function Dashboard() {
         )}
       </main>
 
-      <footer className="mt-12 py-6" style={{ borderTop: "1px solid rgba(255,68,68,0.07)" }}>
+      <footer className="mt-12 py-6" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 1 }}>
         <div
           className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
           style={{ color: "rgba(255,255,255,0.15)" }}

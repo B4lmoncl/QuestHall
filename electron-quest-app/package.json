@@ -1,6 +1,6 @@
 {
   "name": "quest-forge",
-  "version": "1.1.0",
+  "version": "1.2.2",
   "description": "Post quests to Quest Hall",
   "main": "main.js",
   "scripts": {

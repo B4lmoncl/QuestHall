@@ -12,9 +12,9 @@
 }
 
 body {
-  background: linear-gradient(180deg, #0b0d11 0%, #1a0f1a 50%, #0b0d11 100%);
+  background: linear-gradient(180deg, #0b0d11 0%, #220f24 50%, #0b0d11 100%);
   background-size: 100% 200%;
-  animation: gradient-shift 20s ease infinite;
+  animation: gradient-shift 18s ease infinite;
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
 }

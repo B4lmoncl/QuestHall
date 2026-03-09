@@ -23,16 +23,26 @@ function createWindow() {
   win.setMenuBarVisibility(false);
 }
 
-// IPC: write bat script to copy new exe over current exe, then relaunch
+// IPC: write bat script to replace running exe after process exits, then relaunch
 ipcMain.handle('perform-update', async (event, newExePath) => {
   const currentExe = process.execPath;
+  const exeName = path.basename(currentExe);
   const batPath = path.join(os.tmpdir(), 'quest-forge-update.bat');
 
+  // Wait for app to exit, force-kill any lingering process, then replace & relaunch
   const bat = [
     '@echo off',
-    'timeout /t 2 /nobreak >nul',
+    'timeout /t 3 /nobreak >nul',
+    `taskkill /F /IM "${exeName}" >nul 2>&1`,
+    'timeout /t 1 /nobreak >nul',
     `copy /Y "${newExePath}" "${currentExe}"`,
+    `if errorlevel 1 (`,
+    `  echo Copy failed, retrying...`,
+    `  timeout /t 2 /nobreak >nul`,
+    `  copy /Y "${newExePath}" "${currentExe}"`,
+    `)`,
     `start "" "${currentExe}"`,
+    `del "${newExePath}" >nul 2>&1`,
     'del "%~f0"',
   ].join('\r\n');
 
@@ -44,7 +54,8 @@ ipcMain.handle('perform-update', async (event, newExePath) => {
     windowsHide: true,
   }).unref();
 
-  setTimeout(() => app.quit(), 500);
+  // Force-exit immediately so the bat can replace the file
+  app.exit(0);
   return true;
 });
 

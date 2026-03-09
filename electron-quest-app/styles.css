@@ -6,14 +6,24 @@
 
 body {
   font-family: system-ui, -apple-system, sans-serif;
-  background: linear-gradient(180deg, #0b0d11 0%, #1a0f1a 50%, #0b0d11 100%);
+  background: linear-gradient(180deg, #0b0d11 0%, #2a0f0f 50%, #0b0d11 100%);
   background-size: 100% 200%;
-  animation: gradient-shift 20s ease infinite;
+  animation: gradient-shift 18s ease infinite;
   color: #e8e8e8;
   -webkit-font-smoothing: antialiased;
   user-select: none;
   overflow-y: auto;
   height: 100vh;
+}
+
+#particle-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
 }
 
 @keyframes gradient-shift {
@@ -32,6 +42,8 @@ body {
 }
 
 .app {
+  position: relative;
+  z-index: 1;
   padding: 20px 20px 16px;
   display: flex;
   flex-direction: column;

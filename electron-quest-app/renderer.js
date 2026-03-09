@@ -321,3 +321,85 @@ if (!isConfigured()) {
 }
 
 checkConnection();
+
+// ─── Ember particle system ────────────────────────────────────────────────────
+(function initEmbers() {
+  const canvas = document.getElementById('particle-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; };
+  resize();
+  window.addEventListener('resize', resize);
+
+  const COLORS = [
+    [255, 107, 0],   // #ff6b00
+    [255, 69,  0],   // #ff4500
+    [255, 140, 0],   // #ff8c00
+    [255, 165, 0],   // #ffa500
+    [255, 200, 50],  // warm yellow
+  ];
+
+  function createEmber(randomY) {
+    const rgb = COLORS[Math.floor(Math.random() * COLORS.length)];
+    return {
+      x: Math.random() * canvas.width,
+      y: randomY ? Math.random() * canvas.height : canvas.height + 4,
+      size: Math.random() * 2.0 + 0.5,
+      speedY: -(Math.random() * 0.55 + 0.2),
+      speedX: (Math.random() - 0.5) * 0.35,
+      maxOpacity: Math.random() * 0.65 + 0.25,
+      opacity: 0,
+      rgb: rgb,
+      flicker: Math.random() * Math.PI * 2,
+      flickerSpeed: Math.random() * 0.07 + 0.03,
+    };
+  }
+
+  const COUNT = 20;
+  const particles = Array.from({ length: COUNT }, () => createEmber(true));
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.y += p.speedY;
+      p.x += p.speedX;
+      p.flicker += p.flickerSpeed;
+
+      const flicker = Math.sin(p.flicker) * 0.25 + 0.75;
+      const fade = canvas.height * 0.2;
+      let base;
+      if (p.y < fade) {
+        base = p.maxOpacity * (p.y / fade);
+      } else {
+        base = p.maxOpacity;
+      }
+      p.opacity = base * flicker;
+
+      if (p.y < -6) { particles[i] = createEmber(false); continue; }
+
+      const [r, g, b] = p.rgb;
+
+      // Glow halo
+      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 5);
+      glow.addColorStop(0, `rgba(${r},${g},${b},${(p.opacity * 0.35).toFixed(3)})`);
+      glow.addColorStop(1, `rgba(${r},${g},${b},0)`);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 5, 0, Math.PI * 2);
+      ctx.fillStyle = glow;
+      ctx.fill();
+
+      // Bright core
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255,240,200,${(p.opacity * 0.9).toFixed(3)})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+})();
