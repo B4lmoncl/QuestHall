@@ -166,42 +166,149 @@ form.addEventListener('submit', async (e) => {
   }
 });
 
-// ─── Auto-update check ────────────────────────────────────────────────────────
+// ─── Auto-update check + one-click install ────────────────────────────────────
 const GITHUB_REPO = 'b4lmoncl/agent-dashboard';
-const updateBtn  = document.getElementById('check-update-btn');
-const updateMsgEl = document.getElementById('update-message');
+const updateBtn       = document.getElementById('check-update-btn');
+const updateMsgEl     = document.getElementById('update-message');
+const updateProgressEl = document.getElementById('update-progress');
+
+let pendingUpdateUrl = null;
+
+function setUpdateProgress(fraction) {
+  if (!updateProgressEl) return;
+  if (fraction === null) { updateProgressEl.style.display = 'none'; return; }
+  updateProgressEl.style.display = 'block';
+  updateProgressEl.querySelector('.progress-fill').style.width = `${Math.round(fraction * 100)}%`;
+  updateProgressEl.querySelector('.progress-label').textContent = `${Math.round(fraction * 100)}%`;
+}
+
+function downloadFile(url, destPath, onProgress) {
+  return new Promise((resolve, reject) => {
+    const https = require('https');
+    const http  = require('http');
+    const fs    = require('fs');
+
+    const makeRequest = (targetUrl) => {
+      const mod = targetUrl.startsWith('https') ? https : http;
+      mod.get(targetUrl, { headers: { 'User-Agent': 'quest-forge-app' } }, (res) => {
+        if (res.statusCode === 301 || res.statusCode === 302) {
+          return makeRequest(res.headers.location);
+        }
+        if (res.statusCode !== 200) {
+          return reject(new Error(`HTTP ${res.statusCode}`));
+        }
+        const total = parseInt(res.headers['content-length'], 10) || 0;
+        let downloaded = 0;
+        const file = fs.createWriteStream(destPath);
+        res.on('data', chunk => {
+          downloaded += chunk.length;
+          if (onProgress && total) onProgress(downloaded / total);
+        });
+        res.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+        file.on('error', reject);
+        res.on('error', reject);
+      }).on('error', reject);
+    };
+
+    makeRequest(url);
+  });
+}
+
+async function doInstallUpdate(downloadUrl) {
+  const os  = require('os');
+  const path = require('path');
+  const { ipcRenderer } = require('electron');
+
+  if (updateBtn) { updateBtn.disabled = true; updateBtn.textContent = 'Downloading…'; }
+  if (updateMsgEl) { updateMsgEl.textContent = 'Downloading update…'; updateMsgEl.className = 'update-available'; }
+  setUpdateProgress(0);
+
+  const tempPath = path.join(os.tmpdir(), 'quest-forge-update.exe');
+
+  try {
+    await downloadFile(downloadUrl, tempPath, (p) => {
+      setUpdateProgress(p);
+      if (updateBtn) updateBtn.textContent = `Downloading… ${Math.round(p * 100)}%`;
+    });
+
+    setUpdateProgress(1);
+    if (updateMsgEl) { updateMsgEl.textContent = 'Installing… App will restart shortly.'; }
+    if (updateBtn) updateBtn.textContent = 'Restarting…';
+
+    await ipcRenderer.invoke('perform-update', tempPath);
+  } catch (err) {
+    setUpdateProgress(null);
+    if (updateMsgEl) { updateMsgEl.textContent = `Update failed: ${err.message}`; updateMsgEl.className = 'update-ok'; }
+    if (updateBtn) { updateBtn.disabled = false; updateBtn.textContent = 'Retry Update'; }
+  }
+}
 
 if (updateBtn) {
   updateBtn.addEventListener('click', async () => {
+    // If a .exe asset was already found, install immediately
+    if (pendingUpdateUrl) {
+      doInstallUpdate(pendingUpdateUrl);
+      return;
+    }
+
     updateBtn.disabled = true;
     updateBtn.textContent = 'Checking…';
     if (updateMsgEl) { updateMsgEl.textContent = ''; updateMsgEl.className = ''; }
+    setUpdateProgress(null);
+
     try {
       const r = await fetch(
         `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`,
         { headers: { 'User-Agent': 'quest-forge-app' }, signal: AbortSignal.timeout(5000) }
       );
-      if (r.ok) {
-        const data = await r.json();
-        const latest = (data.tag_name || '').replace(/^v/, '');
-        if (latest && latest !== APP_VERSION) {
-          if (updateMsgEl) {
-            updateMsgEl.textContent = `v${latest} available! Download at github.com/${GITHUB_REPO}/releases`;
-            updateMsgEl.className = 'update-available';
-          }
-        } else if (latest) {
-          if (updateMsgEl) { updateMsgEl.textContent = 'You\'re up to date!'; updateMsgEl.className = 'update-ok'; }
-        } else {
-          if (updateMsgEl) { updateMsgEl.textContent = 'Could not parse version.'; updateMsgEl.className = 'update-ok'; }
-        }
-      } else {
+      if (!r.ok) {
         if (updateMsgEl) { updateMsgEl.textContent = 'No releases found.'; updateMsgEl.className = 'update-ok'; }
+        updateBtn.disabled = false; updateBtn.textContent = 'Check for Updates';
+        return;
+      }
+
+      const data   = await r.json();
+      const latest = (data.tag_name || '').replace(/^v/, '');
+
+      if (!latest) {
+        if (updateMsgEl) { updateMsgEl.textContent = 'Could not parse version.'; updateMsgEl.className = 'update-ok'; }
+        updateBtn.disabled = false; updateBtn.textContent = 'Check for Updates';
+        return;
+      }
+
+      if (latest === APP_VERSION) {
+        if (updateMsgEl) { updateMsgEl.textContent = "You're up to date!"; updateMsgEl.className = 'update-ok'; }
+        updateBtn.disabled = false; updateBtn.textContent = 'Check for Updates';
+        return;
+      }
+
+      // Newer version found — look for a portable .exe asset
+      const assets   = data.assets || [];
+      const exeAsset =
+        assets.find(a => /portable.*\.exe$/i.test(a.name)) ||
+        assets.find(a => /\.exe$/i.test(a.name) && !/setup/i.test(a.name)) ||
+        assets.find(a => /\.exe$/i.test(a.name));
+
+      if (exeAsset) {
+        pendingUpdateUrl = exeAsset.browser_download_url;
+        if (updateMsgEl) {
+          updateMsgEl.textContent = `v${latest} ready — click to install & restart.`;
+          updateMsgEl.className = 'update-available';
+        }
+        updateBtn.disabled = false;
+        updateBtn.textContent = 'Install Update';
+      } else {
+        // No .exe asset attached — just show a link
+        if (updateMsgEl) {
+          updateMsgEl.textContent = `v${latest} available — no .exe found. Visit github.com/${GITHUB_REPO}/releases`;
+          updateMsgEl.className = 'update-available';
+        }
+        updateBtn.disabled = false; updateBtn.textContent = 'Check for Updates';
       }
     } catch (_) {
       if (updateMsgEl) { updateMsgEl.textContent = 'Could not reach GitHub.'; updateMsgEl.className = 'update-ok'; }
-    } finally {
-      updateBtn.disabled = false;
-      updateBtn.textContent = 'Check for Updates';
+      updateBtn.disabled = false; updateBtn.textContent = 'Check for Updates';
     }
   });
 }

@@ -482,6 +482,28 @@ button[type="submit"]:disabled,
   color: #22c55e;
 }
 
+/* ─── Progress bar ─────────────────────────────────────────────────────────── */
+.progress-bar {
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 3px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4444, #f59e0b);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+  width: 0%;
+}
+
+.progress-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
 /* ─── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 4px;

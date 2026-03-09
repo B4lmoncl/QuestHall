@@ -42,6 +42,11 @@
     },
     "linux": {
       "target": "AppImage"
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "B4lmoncl",
+      "repo": "agent-dashboard"
     }
   },
   "keywords": [],
