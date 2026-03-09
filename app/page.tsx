@@ -264,8 +264,9 @@ export default function Dashboard() {
       {/* Header */}
       <header
         className="sticky top-0 z-40 backdrop-blur-xl"
-        style={{ position: "relative", zIndex: 40 }}
         style={{
+          position: "relative",
+          zIndex: 40,
           background: "rgba(26,26,26,0.97)",
           borderBottom: "1px solid rgba(255,68,68,0.15)",
         }}
