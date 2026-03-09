@@ -309,7 +309,9 @@ function onQuestCompletedByUser(userId, quest) {
   u.questsCompleted = (u.questsCompleted || 0) + 1;
   const xpBase = XP_BY_PRIORITY[quest.priority] || 10;
   const xpMulti = getXpMultiplier(userId);
-  u.xp = (u.xp || 0) + Math.round(xpBase * xpMulti);
+  const gear = getUserGear(userId);
+  const gearBonus = 1 + (gear.xpBonus || 0) / 100;
+  u.xp = (u.xp || 0) + Math.round(xpBase * xpMulti * gearBonus);
   updateUserStreak(userId);
   awardUserGold(userId, quest.priority, u.streakDays);
   updateUserForgeTemp(userId, quest.priority);
@@ -713,6 +715,7 @@ app.post('/api/quest/:id/approve', requireApiKey, (req, res) => {
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
   if (quest.status !== 'suggested') return res.status(409).json({ error: `Quest is not in suggested state (current: ${quest.status})` });
   quest.status = 'open';
+  if (req.body && req.body.comment) quest.comment = req.body.comment;
   saveQuests();
   console.log(`[quest] ${quest.id} approved → open`);
   res.json({ ok: true, quest });
@@ -724,16 +727,17 @@ app.post('/api/quest/:id/reject', requireApiKey, (req, res) => {
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
   if (quest.status === 'completed') return res.status(409).json({ error: 'Cannot reject a completed quest' });
   quest.status = 'rejected';
+  if (req.body && req.body.comment) quest.comment = req.body.comment;
   saveQuests();
   console.log(`[quest] ${quest.id} rejected`);
   res.json({ ok: true, quest });
 });
 
-// PATCH /api/quest/:id — update quest fields (priority, proof, title, description, etc.)
+// PATCH /api/quest/:id — update quest fields (priority, proof, title, description, claimedBy, etc.)
 app.patch('/api/quest/:id', requireApiKey, (req, res) => {
   const quest = quests.find(q => q.id === req.params.id);
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
-  const { priority, proof, title, description, status } = req.body;
+  const { priority, proof, title, description, status, claimedBy } = req.body;
   if (priority !== undefined) {
     if (!['low', 'medium', 'high'].includes(priority)) return res.status(400).json({ error: 'Invalid priority' });
     quest.priority = priority;
@@ -741,6 +745,11 @@ app.patch('/api/quest/:id', requireApiKey, (req, res) => {
   if (proof !== undefined) quest.proof = proof;
   if (title !== undefined) quest.title = title;
   if (description !== undefined) quest.description = description;
+  if (claimedBy !== undefined) {
+    quest.claimedBy = claimedBy;
+    if (claimedBy && quest.status === 'open') quest.status = 'in_progress';
+    if (!claimedBy && quest.status === 'in_progress') quest.status = 'open';
+  }
   if (status !== undefined) {
     const validStatuses = ['open', 'in_progress', 'completed', 'suggested', 'rejected'];
     if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
@@ -1648,6 +1657,54 @@ const SHOP_ITEMS = [
   { id: 'movie_night', name: 'Movie Night',     cost: 150, icon: '🎬', desc: 'Evening off for a movie' },
   { id: 'sleep_in',    name: 'Sleep In',        cost: 75,  icon: '😴', desc: 'Extra hour of sleep, guilt-free' },
 ];
+
+// ─── Gear / Workshop Tools ───────────────────────────────────────────────────
+const GEAR_TIERS = [
+  { id: 'worn',       name: 'Worn Tools',       cost: 0,    tier: 0, xpBonus: 0,  icon: '🔨', desc: 'Starting gear. No bonus.' },
+  { id: 'sturdy',     name: 'Sturdy Tools',     cost: 100,  tier: 1, xpBonus: 5,  icon: '⚒',  desc: '+5% XP on all quests' },
+  { id: 'masterwork', name: 'Masterwork Tools', cost: 300,  tier: 2, xpBonus: 10, icon: '🛠',  desc: '+10% XP on all quests' },
+  { id: 'legendary',  name: 'Legendary Tools',  cost: 700,  tier: 3, xpBonus: 15, icon: '⚙',  desc: '+15% XP on all quests' },
+  { id: 'mythic',     name: 'Mythic Forge',     cost: 1500, tier: 4, xpBonus: 25, icon: '🔱', desc: '+25% XP on all quests' },
+];
+
+function getUserGear(userId) {
+  const u = users[userId];
+  if (!u) return GEAR_TIERS[0];
+  const gearId = u.gear || 'worn';
+  return GEAR_TIERS.find(g => g.id === gearId) || GEAR_TIERS[0];
+}
+
+// GET /api/shop/gear — list gear tiers
+app.get('/api/shop/gear', (req, res) => {
+  res.json(GEAR_TIERS);
+});
+
+// POST /api/shop/gear/buy — upgrade gear
+app.post('/api/shop/gear/buy', requireApiKey, (req, res) => {
+  const { userId, gearId } = req.body;
+  if (!userId || !gearId) return res.status(400).json({ error: 'userId and gearId are required' });
+  const uid = userId.toLowerCase();
+  const u = users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const gear = GEAR_TIERS.find(g => g.id === gearId);
+  if (!gear) return res.status(404).json({ error: 'Gear not found' });
+  const currentGear = getUserGear(uid);
+  if (gear.tier <= currentGear.tier) return res.status(400).json({ error: 'Already have equal or better gear' });
+  if ((u.gold || 0) < gear.cost) return res.status(400).json({ error: `Insufficient gold. Need ${gear.cost}, have ${u.gold || 0}` });
+  u.gold -= gear.cost;
+  u.gear = gear.id;
+  saveUsers();
+  console.log(`[gear] ${uid} upgraded to "${gear.name}" for ${gear.cost} gold`);
+  res.json({ ok: true, gear, remainingGold: u.gold });
+});
+
+// GET /api/user/:id/gear — get user's current gear
+app.get('/api/user/:id/gear', (req, res) => {
+  const uid = req.params.id.toLowerCase();
+  const u = users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  res.json(getUserGear(uid));
+});
 
 // GET /api/shop — list available shop items
 app.get('/api/shop', (req, res) => {

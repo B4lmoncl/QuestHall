@@ -69,7 +69,16 @@ interface User {
   streakLastDate?: string | null;
   forgeTemp?: number;
   gold?: number;
+  gear?: string;
   createdAt?: string;
+}
+
+interface AchievementDef {
+  id: string;
+  name: string;
+  icon: string;
+  desc: string;
+  category: string;
 }
 
 interface LeaderboardEntry {
@@ -172,6 +181,14 @@ async function fetchLeaderboard(): Promise<LeaderboardEntry[]> {
   return [];
 }
 
+async function fetchAchievementCatalogue(): Promise<AchievementDef[]> {
+  try {
+    const r = await fetch(`/api/achievements`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* ignore */ }
+  return [];
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -226,10 +243,16 @@ export default function Dashboard() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [dashView, setDashView] = useState<"ops" | "campaign" | "leaderboard">("ops");
+  const [dashView, setDashView] = useState<"ops" | "campaign" | "leaderboard" | "honors">("ops");
   const [shopUserId, setShopUserId] = useState<string | null>(null);
   const [toast, setToast] = useState<EarnedAchievement | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [achievementCatalogue, setAchievementCatalogue] = useState<AchievementDef[]>([]);
+  const [playerName, setPlayerName] = useState<string>(() => {
+    try { return localStorage.getItem("dash_player_name") || ""; } catch { return ""; }
+  });
+  const [playerNameInput, setPlayerNameInput] = useState("");
+  const [guideOpen, setGuideOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -286,7 +309,7 @@ export default function Dashboard() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [a, q, u, lb] = await Promise.all([fetchAgents(), fetchQuests(), fetchUsers(), fetchLeaderboard()]);
+    const [a, q, u, lb, ac] = await Promise.all([fetchAgents(), fetchQuests(), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue()]);
     // Lyra always first, then online/working agents, then rest
     const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
     const sorted = [...a].sort((x, y) => {
@@ -301,6 +324,7 @@ export default function Dashboard() {
     setQuests(q);
     setUsers(u);
     if (lb.length > 0) setLeaderboard(lb);
+    if (ac.length > 0) setAchievementCatalogue(ac);
     try {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
       setApiLive(r.ok);
@@ -388,6 +412,34 @@ export default function Dashboard() {
     }
   }, [reviewApiKey, selectedIds, refresh]);
 
+  const handleClaim = useCallback(async (questId: string) => {
+    const key = reviewApiKey;
+    const pName = playerName;
+    if (!key || !pName) return;
+    try {
+      const r = await fetch(`/api/quest/${questId}/claim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": key },
+        body: JSON.stringify({ agentId: pName }),
+      });
+      if (r.ok) await refresh();
+    } catch { /* ignore */ }
+  }, [reviewApiKey, playerName, refresh]);
+
+  const handleUnclaim = useCallback(async (questId: string) => {
+    const key = reviewApiKey;
+    const pName = playerName;
+    if (!key || !pName) return;
+    try {
+      const r = await fetch(`/api/quest/${questId}/unclaim`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": key },
+        body: JSON.stringify({ agentId: pName }),
+      });
+      if (r.ok) await refresh();
+    } catch { /* ignore */ }
+  }, [reviewApiKey, playerName, refresh]);
+
   const handleShopBuy = useCallback(async (itemId: string) => {
     const key = reviewApiKey;
     if (!key || !shopUserId) return;
@@ -396,6 +448,19 @@ export default function Dashboard() {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-API-Key": key },
         body: JSON.stringify({ userId: shopUserId, itemId }),
+      });
+      if (r.ok) { setShopUserId(null); await refresh(); }
+    } catch { /* ignore */ }
+  }, [reviewApiKey, shopUserId, refresh]);
+
+  const handleGearBuy = useCallback(async (gearId: string) => {
+    const key = reviewApiKey;
+    if (!key || !shopUserId) return;
+    try {
+      const r = await fetch("/api/shop/gear/buy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": key },
+        body: JSON.stringify({ userId: shopUserId, gearId }),
       });
       if (r.ok) { setShopUserId(null); await refresh(); }
     } catch { /* ignore */ }
@@ -493,6 +558,13 @@ export default function Dashboard() {
           </div>
 
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => setGuideOpen(true)}
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+            >
+              📖 Guide
+            </button>
             {needsAttention > 0 && (
               <div
                 className="text-xs px-2 py-0.5 rounded font-medium"
@@ -573,11 +645,12 @@ export default function Dashboard() {
           {[
             { key: "ops",         label: "⚔ Operations" },
             { key: "leaderboard", label: "🏆 Leaderboard" },
+            { key: "honors",      label: "🏅 Honors" },
             { key: "campaign",    label: "🐉 Campaign" },
           ].map(v => (
             <button
               key={v.key}
-              onClick={() => setDashView(v.key as "ops" | "campaign" | "leaderboard")}
+              onClick={() => setDashView(v.key as "ops" | "campaign" | "leaderboard" | "honors")}
               className="text-xs font-semibold px-3 py-1.5 rounded transition-all"
               style={{
                 background: dashView === v.key ? "#252525" : "transparent",
@@ -592,6 +665,11 @@ export default function Dashboard() {
         {/* Leaderboard View */}
         {dashView === "leaderboard" && (
           <LeaderboardView entries={leaderboard} agents={agents} />
+        )}
+
+        {/* Honors View */}
+        {dashView === "honors" && (
+          <HonorsView catalogue={achievementCatalogue} users={users} />
         )}
 
         {/* Campaign View */}
@@ -745,7 +823,10 @@ export default function Dashboard() {
               ) : (
                 visibleOpen.map(q => q.children && q.children.length > 0
                   ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                  : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                  : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined}
+                      onClaim={reviewApiKey && playerName ? handleClaim : undefined}
+                      onUnclaim={reviewApiKey && playerName ? handleUnclaim : undefined}
+                      playerName={playerName} />
                 )
               )}
 
@@ -758,7 +839,10 @@ export default function Dashboard() {
                   </div>
                   {visibleInProgress.map(q => q.children && q.children.length > 0
                     ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                    : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                    : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined}
+                        onClaim={reviewApiKey && playerName ? handleClaim : undefined}
+                        onUnclaim={reviewApiKey && playerName ? handleUnclaim : undefined}
+                        playerName={playerName} />
                   )}
                 </>
               )}
@@ -781,7 +865,17 @@ export default function Dashboard() {
             </div>
             {!reviewApiKey ? (
               <div className="rounded-xl p-4" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.2)" }}>
-                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Enter API key to review quests:</p>
+                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Enter API key to review quests &amp; claim:</p>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={playerNameInput}
+                    onChange={e => setPlayerNameInput(e.target.value)}
+                    placeholder="Your name (for claiming)"
+                    className="flex-1 text-xs px-2 py-1 rounded"
+                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                  />
+                </div>
                 <div className="flex gap-2">
                   <input
                     type="password"
@@ -792,7 +886,11 @@ export default function Dashboard() {
                     style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
                   />
                   <button
-                    onClick={() => { localStorage.setItem("dash_api_key", reviewKeyInput); setReviewApiKey(reviewKeyInput); }}
+                    onClick={() => {
+                      localStorage.setItem("dash_api_key", reviewKeyInput);
+                      if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
+                      setReviewApiKey(reviewKeyInput);
+                    }}
                     className="text-xs px-3 py-1 rounded font-medium"
                     style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }}
                   >
@@ -1040,14 +1138,19 @@ export default function Dashboard() {
             userId={u.id}
             userName={u.name}
             gold={u.gold ?? 0}
+            currentGear={u.gear}
             onClose={() => setShopUserId(null)}
             onBuy={handleShopBuy}
+            onGearBuy={handleGearBuy}
           />
         );
       })()}
 
       {/* Achievement Toast */}
       {toast && <AchievementToast achievement={toast} onClose={() => setToast(null)} />}
+
+      {/* Guide Modal */}
+      {guideOpen && <GuideModal onClose={() => setGuideOpen(false)} />}
     </div>
   );
 }
@@ -1386,10 +1489,18 @@ function ClickablePriorityBadge({ priority, onClick }: { priority: Quest["priori
   );
 }
 
-function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boolean; onToggle?: (id: string) => void }) {
+function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, playerName }: {
+  quest: Quest;
+  selected?: boolean;
+  onToggle?: (id: string) => void;
+  onClaim?: (id: string) => void;
+  onUnclaim?: (id: string) => void;
+  playerName?: string;
+}) {
   const [expanded, setExpanded] = useState(false);
   const isInProgress = quest.status === "in_progress";
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
+  const isClaimedByMe = playerName && quest.claimedBy?.toLowerCase() === playerName.toLowerCase();
 
   return (
     <div
@@ -1464,7 +1575,28 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
               ))}
             </div>
           )}
-          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
+            {/* Claim / Unclaim */}
+            {onClaim && quest.status === "open" && (
+              <button
+                onClick={e => { e.stopPropagation(); onClaim(quest.id); }}
+                className="text-xs px-2 py-0.5 rounded font-medium"
+                style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+              >
+                ⚔ Claim
+              </button>
+            )}
+            {onUnclaim && isClaimedByMe && (
+              <button
+                onClick={e => { e.stopPropagation(); onUnclaim(quest.id); }}
+                className="text-xs px-2 py-0.5 rounded font-medium"
+                style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}
+              >
+                ✕ Unclaim
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -1693,6 +1825,25 @@ function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: stri
         </div>
       </div>
 
+      {/* Gear badge */}
+      {user.gear && user.gear !== "worn" && (() => {
+        const GEAR_ICONS: Record<string, { icon: string; name: string; bonus: number }> = {
+          sturdy:     { icon: "⚒",  name: "Sturdy Tools",     bonus: 5  },
+          masterwork: { icon: "🛠",  name: "Masterwork Tools", bonus: 10 },
+          legendary:  { icon: "⚙",  name: "Legendary Tools",  bonus: 15 },
+          mythic:     { icon: "🔱", name: "Mythic Forge",     bonus: 25 },
+        };
+        const g = GEAR_ICONS[user.gear];
+        if (!g) return null;
+        return (
+          <div className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)" }}>
+            <span className="text-sm">{g.icon}</span>
+            <span className="text-xs font-semibold" style={{ color: "#818cf8" }}>{g.name}</span>
+            <span className="text-xs ml-auto" style={{ color: "rgba(99,102,241,0.6)" }}>+{g.bonus}% XP</span>
+          </div>
+        );
+      })()}
+
       {/* Achievement badges */}
       {achs.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
@@ -1715,12 +1866,22 @@ function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: stri
 // ─── Shop Modal ───────────────────────────────────────────────────────────────
 interface ShopItem { id: string; name: string; cost: number; icon: string; desc: string; }
 
-function ShopModal({ userId, userName, gold, onClose, onBuy }: {
+const GEAR_TIERS_CLIENT = [
+  { id: "worn",       name: "Worn Tools",       cost: 0,    tier: 0, xpBonus: 0,  icon: "🔨", desc: "Starting gear. No bonus." },
+  { id: "sturdy",     name: "Sturdy Tools",     cost: 100,  tier: 1, xpBonus: 5,  icon: "⚒",  desc: "+5% XP on all quests" },
+  { id: "masterwork", name: "Masterwork Tools", cost: 300,  tier: 2, xpBonus: 10, icon: "🛠",  desc: "+10% XP on all quests" },
+  { id: "legendary",  name: "Legendary Tools",  cost: 700,  tier: 3, xpBonus: 15, icon: "⚙",  desc: "+15% XP on all quests" },
+  { id: "mythic",     name: "Mythic Forge",     cost: 1500, tier: 4, xpBonus: 25, icon: "🔱", desc: "+25% XP on all quests" },
+];
+
+function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy, onGearBuy }: {
   userId: string;
   userName: string;
   gold: number;
+  currentGear?: string;
   onClose: () => void;
   onBuy: (itemId: string) => void;
+  onGearBuy?: (gearId: string) => void;
 }) {
   const ITEMS: ShopItem[] = [
     { id: "gaming_1h",   name: "1h Gaming",    cost: 100, icon: "🎮", desc: "1 hour of guilt-free gaming" },
@@ -1747,7 +1908,7 @@ function ShopModal({ userId, userName, gold, onClose, onBuy }: {
           </div>
           <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)" }}>✕</button>
         </div>
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-96 overflow-y-auto">
           {ITEMS.map(item => (
             <div
               key={item.id}
@@ -1774,6 +1935,54 @@ function ShopModal({ userId, userName, gold, onClose, onBuy }: {
               </button>
             </div>
           ))}
+
+          {/* Gear upgrade section */}
+          {onGearBuy && (
+            <>
+              <div className="pt-2 pb-1">
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.7)" }}>⚒ Workshop Tools</p>
+              </div>
+              {GEAR_TIERS_CLIENT.filter(g => g.tier > 0).map(gear => {
+                const currentTier = GEAR_TIERS_CLIENT.find(g => g.id === (currentGear || "worn"))?.tier ?? 0;
+                const owned = gear.tier <= currentTier;
+                const canBuy = !owned && gear.tier === currentTier + 1 && gold >= gear.cost;
+                return (
+                  <div
+                    key={gear.id}
+                    className="flex items-center gap-3 p-3 rounded-xl"
+                    style={{
+                      background: owned ? "rgba(99,102,241,0.1)" : "#252525",
+                      border: `1px solid ${owned ? "rgba(99,102,241,0.35)" : "rgba(255,255,255,0.07)"}`,
+                      opacity: owned || canBuy || gear.tier === currentTier + 1 ? 1 : 0.4,
+                    }}
+                  >
+                    <span className="text-xl flex-shrink-0">{gear.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold" style={{ color: owned ? "#818cf8" : "#f0f0f0" }}>
+                        {gear.name} {owned ? "✓" : ""}
+                      </p>
+                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{gear.desc}</p>
+                    </div>
+                    {!owned && (
+                      <button
+                        onClick={() => onGearBuy(gear.id)}
+                        disabled={!canBuy}
+                        className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                        style={{
+                          background: canBuy ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
+                          color: canBuy ? "#818cf8" : "rgba(255,255,255,0.2)",
+                          border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
+                          cursor: canBuy ? "pointer" : "not-allowed",
+                        }}
+                      >
+                        🪙 {gear.cost}
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -1946,6 +2155,260 @@ function LeaderboardView({ entries, agents }: { entries: LeaderboardEntry[]; age
           );
         })}
       </div>
+    </div>
+  );
+}
+
+// ─── Guide Modal ─────────────────────────────────────────────────────────────
+function GuideModal({ onClose }: { onClose: () => void }) {
+  const [tab, setTab] = useState<"quests" | "xp" | "forge" | "achievements">("quests");
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-2xl w-full max-w-lg overflow-hidden"
+        style={{ background: "#1a1a1a", border: "1px solid rgba(255,140,68,0.3)", boxShadow: "0 0 60px rgba(255,100,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div>
+            <h2 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>📖 Player Guide</h2>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Everything you need to know</p>
+          </div>
+          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>✕</button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+          {([
+            { key: "quests", label: "⚔ Quests" },
+            { key: "xp", label: "⭐ XP & Levels" },
+            { key: "forge", label: "🔥 Forge" },
+            { key: "achievements", label: "🏅 Achievements" },
+          ] as { key: typeof tab; label: string }[]).map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className="flex-1 py-2.5 text-xs font-semibold transition-colors"
+              style={{
+                color: tab === t.key ? "#ff8c44" : "rgba(255,255,255,0.3)",
+                background: tab === t.key ? "rgba(255,140,68,0.08)" : "transparent",
+                borderBottom: tab === t.key ? "2px solid #ff8c44" : "2px solid transparent",
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="p-5 space-y-4 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
+          {tab === "quests" && (
+            <>
+              <GuideSection icon="⚔" title="Quest Types">
+                <ul className="space-y-1 mt-1">
+                  <li><span style={{ color: "#8b5cf6" }}>⚙ Development</span> — Coding, features, bugs</li>
+                  <li><span style={{ color: "#22c55e" }}>🏠 Personal</span> — Household chores, errands</li>
+                  <li><span style={{ color: "#3b82f6" }}>📚 Learning</span> — Study, courses, reading (requires proof)</li>
+                  <li><span style={{ color: "#f97316" }}>💪 Fitness</span> — Workouts, sports, health</li>
+                  <li><span style={{ color: "#ec4899" }}>❤️ Social</span> — Thoughtful gestures, dates, quality time</li>
+                </ul>
+              </GuideSection>
+              <GuideSection icon="🎯" title="Quest Priorities">
+                <ul className="space-y-1 mt-1">
+                  <li><span style={{ color: "#ef4444" }}>High</span> — 30 XP · 50 Gold</li>
+                  <li><span style={{ color: "#eab308" }}>Medium</span> — 20 XP · 25 Gold</li>
+                  <li><span style={{ color: "#22c55e" }}>Low</span> — 10 XP · 10 Gold</li>
+                </ul>
+              </GuideSection>
+              <GuideSection icon="🔁" title="Recurring Quests">
+                Quests can be set to repeat daily, weekly, or monthly. They auto-reset after the interval. Great for habits and household tasks.
+              </GuideSection>
+              <GuideSection icon="🔍" title="Learning Proof">
+                When completing a learning quest, attach proof: notes, links, or a screenshot URL. This appears in your Quest Journal.
+              </GuideSection>
+              <GuideSection icon="⚔" title="Claiming Quests">
+                Enter your name and API key in the Review Board section to unlock Claim buttons on open quests. Claiming moves a quest to In Progress and assigns it to you.
+              </GuideSection>
+            </>
+          )}
+          {tab === "xp" && (
+            <>
+              <GuideSection icon="⭐" title="XP & Levels">
+                <div className="space-y-2 mt-1">
+                  {[
+                    { name: "Novice",     range: "0 – 99 XP",     color: "#9ca3af" },
+                    { name: "Apprentice", range: "100 – 299 XP",  color: "#22c55e" },
+                    { name: "Knight",     range: "300 – 599 XP",  color: "#3b82f6" },
+                    { name: "Archmage",   range: "600+ XP",       color: "#a855f7" },
+                  ].map(l => (
+                    <div key={l.name} className="flex items-center gap-2">
+                      <span className="w-16 text-xs font-semibold" style={{ color: l.color }}>{l.name}</span>
+                      <span style={{ color: "rgba(255,255,255,0.4)" }}>{l.range}</span>
+                    </div>
+                  ))}
+                </div>
+              </GuideSection>
+              <GuideSection icon="🪙" title="Gold">
+                Earn gold by completing quests. Gold is multiplied by your streak (up to 3×). Spend it in the Forge Shop on rewards like Gaming time, Snack breaks, or Days Off.
+              </GuideSection>
+              <GuideSection icon="⚒" title="Workshop Gear">
+                <p>Upgrade your Workshop Tools to earn more XP per quest:</p>
+                <div className="space-y-1 mt-1">
+                  {[
+                    { icon: "🔨", name: "Worn Tools",       bonus: "+0%",  cost: "Free" },
+                    { icon: "⚒",  name: "Sturdy Tools",     bonus: "+5%",  cost: "100g" },
+                    { icon: "🛠",  name: "Masterwork Tools", bonus: "+10%", cost: "300g" },
+                    { icon: "⚙",  name: "Legendary Tools",  bonus: "+15%", cost: "700g" },
+                    { icon: "🔱", name: "Mythic Forge",     bonus: "+25%", cost: "1500g" },
+                  ].map(g => (
+                    <div key={g.name} className="flex items-center gap-2">
+                      <span>{g.icon}</span>
+                      <span className="flex-1">{g.name}</span>
+                      <span style={{ color: "#22c55e" }}>{g.bonus}</span>
+                      <span style={{ color: "#f59e0b" }}>{g.cost}</span>
+                    </div>
+                  ))}
+                </div>
+              </GuideSection>
+            </>
+          )}
+          {tab === "forge" && (
+            <>
+              <GuideSection icon="🔥" title="Forge Temperature">
+                Your Forge Temperature (0–100%) shows how active you are. Complete quests to heat it up. If it drops to 0%, you suffer a <span style={{ color: "#ef4444" }}>50% XP penalty</span>. Keep the forge burning!
+              </GuideSection>
+              <GuideSection icon="🔥" title="Streaks">
+                Complete at least one quest each day to maintain your streak. Longer streaks increase your Gold multiplier (up to 3× at 20+ days). Streak milestones unlock achievements.
+                <div className="space-y-1 mt-1">
+                  <div>🔥 <span style={{ color: "#fb923c" }}>Active</span> — 1–6 days</div>
+                  <div>🔥 <span style={{ color: "#f59e0b" }}>Hot</span> — 7–29 days</div>
+                  <div>🔥 <span style={{ color: "#ef4444" }}>Blazing</span> — 30+ days</div>
+                </div>
+              </GuideSection>
+              <GuideSection icon="🏪" title="Forge Shop">
+                Spend your gold on real-world rewards. Open the Shop from your Player Card (requires API key). All purchases are tracked so you can redeem them.
+              </GuideSection>
+            </>
+          )}
+          {tab === "achievements" && (
+            <>
+              <GuideSection icon="🏅" title="Achievements">
+                Achievements are automatically awarded when you hit milestones. Check the <strong>🏅 Honors</strong> tab to see all achievements and who earned them.
+              </GuideSection>
+              <GuideSection icon="📋" title="Achievement List">
+                <div className="space-y-1 mt-1">
+                  {[
+                    { icon: "⚔", name: "First Quest",         desc: "Complete your first quest" },
+                    { icon: "📜", name: "Apprentice",           desc: "Complete 10 quests" },
+                    { icon: "🛡", name: "Knight",               desc: "Complete 50 quests" },
+                    { icon: "👑", name: "Legend",               desc: "Complete 100 quests" },
+                    { icon: "🔥", name: "Week Warrior",         desc: "7-day quest streak" },
+                    { icon: "💎", name: "Monthly Champion",     desc: "30-day quest streak" },
+                    { icon: "⚡", name: "Lightning Hands",      desc: "Complete 3 quests in one day" },
+                    { icon: "🎯", name: "Jack of All Trades",   desc: "Complete all 5 quest types" },
+                  ].map(a => (
+                    <div key={a.name} className="flex items-center gap-2">
+                      <span className="text-base w-5 flex-shrink-0">{a.icon}</span>
+                      <div>
+                        <span className="font-semibold" style={{ color: "#f0f0f0" }}>{a.name}</span>
+                        <span className="ml-2" style={{ color: "rgba(255,255,255,0.4)" }}>{a.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </GuideSection>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GuideSection({ icon, title, children }: { icon: string; title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+      <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0" }}>{icon} {title}</p>
+      <div style={{ color: "rgba(255,255,255,0.55)" }}>{children}</div>
+    </div>
+  );
+}
+
+// ─── Honors / Achievements Gallery View ──────────────────────────────────────
+function HonorsView({ catalogue, users }: { catalogue: AchievementDef[]; users: User[] }) {
+  const categories = Array.from(new Set(catalogue.map(a => a.category)));
+
+  return (
+    <div className="space-y-6">
+      <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg, #1a1208 0%, #1a1a1a 100%)", border: "1px solid rgba(245,158,11,0.3)", boxShadow: "0 0 40px rgba(245,158,11,0.07)" }}>
+        <div className="flex items-center gap-3 mb-1">
+          <span style={{ fontSize: 28 }}>🏅</span>
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#fef3c7" }}>Hall of Honors</h2>
+            <p className="text-xs" style={{ color: "rgba(253,230,138,0.5)" }}>Achievements earned across all players</p>
+          </div>
+        </div>
+      </div>
+
+      {catalogue.length === 0 ? (
+        <div className="rounded-xl p-8 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+          <p className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>No achievements data. Connect to the API.</p>
+        </div>
+      ) : (
+        categories.map(cat => {
+          const catAchs = catalogue.filter(a => a.category === cat);
+          return (
+            <div key={cat}>
+              <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
+                {cat}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                {catAchs.map(ach => {
+                  const earners = users.filter(u =>
+                    (u.earnedAchievements ?? []).some(e => e.id === ach.id)
+                  );
+                  const earned = earners.length > 0;
+                  return (
+                    <div
+                      key={ach.id}
+                      className="rounded-xl p-3"
+                      style={{
+                        background: earned ? "rgba(245,158,11,0.08)" : "#252525",
+                        border: `1px solid ${earned ? "rgba(245,158,11,0.3)" : "rgba(255,255,255,0.06)"}`,
+                        opacity: earned ? 1 : 0.5,
+                      }}
+                    >
+                      <div className="flex items-start gap-2.5">
+                        <span className="text-2xl flex-shrink-0" style={{ filter: earned ? "none" : "grayscale(1)" }}>{ach.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold" style={{ color: earned ? "#f0f0f0" : "rgba(255,255,255,0.4)" }}>{ach.name}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{ach.desc}</p>
+                          {earners.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1.5">
+                              {earners.map(u => (
+                                <span
+                                  key={u.id}
+                                  className="text-xs px-1.5 py-0.5 rounded"
+                                  style={{ background: `${u.color}20`, color: u.color, border: `1px solid ${u.color}40` }}
+                                >
+                                  {u.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })
+      )}
     </div>
   );
 }
