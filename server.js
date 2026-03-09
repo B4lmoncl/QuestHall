@@ -424,6 +424,23 @@ app.get('/api/quests', (req, res) => {
   });
 });
 
+// PATCH /api/quests/:id/complete — mark a quest as completed
+app.patch('/api/quests/:id/complete', requireApiKey, (req, res) => {
+  const { id } = req.params;
+  const { completedBy } = req.body;
+
+  const quest = quests.find(q => q.id === id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found' });
+  if (quest.status === 'completed') return res.status(409).json({ error: 'Quest already completed' });
+
+  quest.status = 'completed';
+  quest.completedBy = completedBy || 'unknown';
+  quest.completedAt = now();
+
+  saveQuests();
+  res.json({ success: true, message: 'Quest completed', quest });
+});
+
 // GET /api/agent/:name/quests — get agent's active quests
 app.get('/api/agent/:name/quests', (req, res) => {
   const name = req.params.name.toLowerCase();
