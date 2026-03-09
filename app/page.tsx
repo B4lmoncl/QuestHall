@@ -44,6 +44,17 @@ interface Quest {
   recurrence?: string | null;
 }
 
+interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+  xp: number;
+  questsCompleted: number;
+  achievements?: { reason: string; xp: number; at: string }[];
+  createdAt?: string;
+}
+
 interface QuestsData {
   open: Quest[];
   inProgress: Quest[];
@@ -116,6 +127,14 @@ async function fetchQuests(): Promise<QuestsData> {
   return empty;
 }
 
+async function fetchUsers(): Promise<User[]> {
+  try {
+    const r = await fetch(`/api/users`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* API not running */ }
+  return [];
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -150,6 +169,7 @@ function useCountUp(target: number, decimals = 0, duration = 1000): string {
 
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [quests, setQuests] = useState<QuestsData>({ open: [], inProgress: [], completed: [], suggested: [], rejected: [] });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -223,7 +243,7 @@ export default function Dashboard() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
+    const [a, q, u] = await Promise.all([fetchAgents(), fetchQuests(), fetchUsers()]);
     // Lyra always first, then online/working agents, then rest
     const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
     const sorted = [...a].sort((x, y) => {
@@ -236,6 +256,7 @@ export default function Dashboard() {
     });
     setAgents(sorted);
     setQuests(q);
+    setUsers(u);
     try {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
       setApiLive(r.ok);
@@ -530,6 +551,23 @@ export default function Dashboard() {
               />
             )}
           </section>
+
+          {/* User Cards (Household Gamification) */}
+          {users.length > 0 && (
+            <section className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Players
+                </h2>
+                <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)" }}>
+                  {users.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {users.map(u => <UserCard key={u.id} user={u} />)}
+              </div>
+            </section>
+          )}
 
           {/* Quest Board */}
           <aside className="w-full lg:w-80 flex-shrink-0">
@@ -1185,6 +1223,68 @@ function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?:
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── XP helpers (shared with UserCard) ──────────────────────────────────────
+const USER_LEVELS = [
+  { name: "Novice",     min: 0,   max: 99,  color: "#9ca3af" },
+  { name: "Apprentice", min: 100, max: 299, color: "#22c55e" },
+  { name: "Knight",     min: 300, max: 599, color: "#3b82f6" },
+  { name: "Archmage",   min: 600, max: Infinity, color: "#a855f7" },
+];
+function getUserLevel(xp: number) { return USER_LEVELS.findLast(l => xp >= l.min) ?? USER_LEVELS[0]; }
+function getUserXpProgress(xp: number) {
+  const l = getUserLevel(xp);
+  if (l.max === Infinity) return 1;
+  return (xp - l.min) / (l.max - l.min + 1);
+}
+
+function UserCard({ user }: { user: User }) {
+  const xp = user.xp ?? 0;
+  const lvl = getUserLevel(xp);
+  const progress = getUserXpProgress(xp);
+  const nextLvl = USER_LEVELS[USER_LEVELS.indexOf(lvl) + 1];
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: "#252525", border: `1px solid ${lvl.color}30`, boxShadow: `0 0 16px ${lvl.color}10` }}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0"
+          style={{ background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`, boxShadow: `0 4px 14px ${user.color}50`, color: "#fff" }}
+        >
+          {user.avatar}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold" style={{ color: "#f0f0f0" }}>{user.name}</p>
+          <p className="text-xs font-semibold" style={{ color: lvl.color }}>{lvl.name}</p>
+        </div>
+        <span
+          className="text-xs px-1.5 py-0.5 rounded font-semibold"
+          style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          👤 User
+        </span>
+      </div>
+      <div className="space-y-1.5 mb-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Quests Completed</span>
+          <span className="text-xs font-mono font-medium" style={{ color: "#8b5cf6" }}>{user.questsCompleted ?? 0}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>XP</span>
+          <span className="text-xs font-mono font-medium" style={{ color: lvl.color }}>{xp} XP{nextLvl ? ` / ${nextLvl.min}` : " — MAX"}</span>
+        </div>
+      </div>
+      <div className="rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.07)" }}>
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${Math.round(progress * 100)}%`, background: `linear-gradient(90deg, ${lvl.color}99, ${lvl.color})`, boxShadow: `0 0 6px ${lvl.color}80` }}
+        />
+      </div>
     </div>
   );
 }

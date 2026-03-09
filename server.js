@@ -17,6 +17,7 @@ const DATA_DIR = path.join(__dirname, 'public', 'data');
 const AGENTS_FILE = path.join(DATA_DIR, 'agents.json');
 const QUESTS_FILE = path.join(DATA_DIR, 'quests.json');
 const KEYS_FILE   = path.join(DATA_DIR, 'keys.json');
+const USERS_FILE  = path.join(DATA_DIR, 'users.json');
 
 app.use(cors());
 app.use(express.json());
@@ -1350,6 +1351,70 @@ function buildDocsHtml(docs) {
 </html>`;
 }
 
+// ─── User System ──────────────────────────────────────────────────────────────
+let users = {};
+
+function loadUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+      if (raw && typeof raw === 'object') users = raw;
+    }
+  } catch (e) { console.warn('[users] Failed to load:', e.message); }
+  // Ensure default user Leon exists
+  if (!users['leon']) {
+    users['leon'] = { id: 'leon', name: 'Leon', avatar: 'L', color: '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], createdAt: now() };
+  }
+}
+
+function saveUsers() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (e) { console.warn('[users] Failed to save:', e.message); }
+}
+
+// GET /api/users
+app.get('/api/users', (req, res) => {
+  res.json(Object.values(users));
+});
+
+// GET /api/users/:id
+app.get('/api/users/:id', (req, res) => {
+  const user = users[req.params.id.toLowerCase()];
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json(user);
+});
+
+// POST /api/users/:id/register — create or update user
+app.post('/api/users/:id/register', requireApiKey, (req, res) => {
+  const id = req.params.id.toLowerCase();
+  const { name, avatar, color } = req.body;
+  if (!users[id]) {
+    users[id] = { id, name: name || id, avatar: avatar || id[0].toUpperCase(), color: color || '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], createdAt: now() };
+  } else {
+    if (name) users[id].name = name;
+    if (avatar) users[id].avatar = avatar;
+    if (color) users[id].color = color;
+  }
+  saveUsers();
+  res.json({ ok: true, user: users[id] });
+});
+
+// POST /api/users/:id/award-xp — award XP to a user
+app.post('/api/users/:id/award-xp', requireApiKey, (req, res) => {
+  const id = req.params.id.toLowerCase();
+  if (!users[id]) return res.status(404).json({ error: 'User not found' });
+  const { amount = 10, reason } = req.body;
+  users[id].xp = (users[id].xp || 0) + parseInt(amount, 10);
+  if (reason) {
+    users[id].achievements = users[id].achievements || [];
+    users[id].achievements.push({ reason, xp: amount, at: now() });
+  }
+  saveUsers();
+  res.json({ ok: true, xp: users[id].xp });
+});
+
 // Serve index.html for non-API routes (SPA fallback)
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'out', 'index.html');
@@ -1365,6 +1430,7 @@ initStore();
 loadData();
 loadQuests();
 loadManagedKeys();
+loadUsers();
 
 app.listen(PORT, () => {
   console.log(`\n🔴 Agent Dashboard API running on http://localhost:${PORT}`);
