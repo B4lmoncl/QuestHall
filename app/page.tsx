@@ -152,6 +152,8 @@ export default function Dashboard() {
     try { return localStorage.getItem("dash_api_key") || ""; } catch { return ""; }
   });
   const [reviewKeyInput, setReviewKeyInput] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkLoading, setBulkLoading] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -266,6 +268,31 @@ export default function Dashboard() {
       }));
     } catch { /* ignore */ }
   }, [reviewApiKey]);
+
+  const toggleSelect = useCallback((id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleBulkUpdate = useCallback(async (status: Quest["status"]) => {
+    const key = reviewApiKey;
+    if (!key || selectedIds.size === 0) return;
+    setBulkLoading(true);
+    try {
+      await fetch("/api/quests/bulk-update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": key },
+        body: JSON.stringify({ ids: Array.from(selectedIds), status }),
+      });
+      setSelectedIds(new Set());
+      await refresh();
+    } catch { /* ignore */ } finally {
+      setBulkLoading(false);
+    }
+  }, [reviewApiKey, selectedIds, refresh]);
 
   useEffect(() => {
     refresh();
@@ -534,7 +561,7 @@ export default function Dashboard() {
                   {!searchFilter && <p className="text-xs mt-1 font-mono" style={{ color: "rgba(255,68,68,0.3)" }}>POST /api/quest</p>}
                 </div>
               ) : (
-                visibleOpen.map(q => <QuestCard key={q.id} quest={q} />)
+                visibleOpen.map(q => <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />)
               )}
 
               {visibleInProgress.length > 0 && (
@@ -544,7 +571,7 @@ export default function Dashboard() {
                       In Progress
                     </span>
                   </div>
-                  {visibleInProgress.map(q => <QuestCard key={q.id} quest={q} />)}
+                  {visibleInProgress.map(q => <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />)}
                 </>
               )}
             </div>
@@ -717,6 +744,46 @@ export default function Dashboard() {
         )}
       </main>
 
+      {/* Bulk Action Bar */}
+      {selectedIds.size > 0 && (
+        <div
+          className="fixed bottom-6 left-1/2 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl shadow-2xl"
+          style={{
+            transform: "translateX(-50%)",
+            background: "#252525",
+            border: "1px solid rgba(255,102,51,0.4)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(255,102,51,0.1)",
+          }}
+        >
+          <span className="text-xs font-medium mr-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+            {selectedIds.size} selected
+          </span>
+          {(["open", "completed", "rejected"] as Quest["status"][]).map(s => (
+            <button
+              key={s}
+              onClick={() => handleBulkUpdate(s)}
+              disabled={bulkLoading}
+              className="text-xs px-2.5 py-1 rounded-lg font-medium"
+              style={{
+                background: s === "completed" ? "rgba(34,197,94,0.15)" : s === "rejected" ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.07)",
+                color: s === "completed" ? "#22c55e" : s === "rejected" ? "#ef4444" : "rgba(255,255,255,0.6)",
+                border: `1px solid ${s === "completed" ? "rgba(34,197,94,0.3)" : s === "rejected" ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.12)"}`,
+                opacity: bulkLoading ? 0.5 : 1,
+              }}
+            >
+              → {s}
+            </button>
+          ))}
+          <button
+            onClick={() => setSelectedIds(new Set())}
+            className="text-xs px-2 py-1 rounded-lg ml-1"
+            style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <footer className="mt-12 py-6" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 1 }}>
         <div
           className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
@@ -863,7 +930,7 @@ function ClickablePriorityBadge({ priority, onClick }: { priority: Quest["priori
   );
 }
 
-function QuestCard({ quest }: { quest: Quest }) {
+function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boolean; onToggle?: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const isInProgress = quest.status === "in_progress";
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
@@ -872,27 +939,39 @@ function QuestCard({ quest }: { quest: Quest }) {
     <div
       className="rounded-lg p-3 cursor-pointer"
       style={{
-        background: "#252525",
-        border: `1px solid ${isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)"}`,
+        background: selected ? "rgba(255,102,51,0.06)" : "#252525",
+        border: `1px solid ${selected ? "rgba(255,102,51,0.4)" : isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)"}`,
         transform: "translateY(0)",
         transition: "border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease",
       }}
       onClick={() => setExpanded(v => !v)}
       onMouseEnter={(e) => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = isInProgress ? "rgba(139,92,246,0.5)" : "rgba(255,255,255,0.18)";
+        el.style.borderColor = selected ? "rgba(255,102,51,0.6)" : isInProgress ? "rgba(139,92,246,0.5)" : "rgba(255,255,255,0.18)";
         el.style.boxShadow = isInProgress ? "0 8px 24px rgba(139,92,246,0.2)" : "0 8px 24px rgba(255,68,68,0.2)";
         el.style.transform = "translateY(-2px)";
       }}
       onMouseLeave={(e) => {
         const el = e.currentTarget as HTMLDivElement;
-        el.style.borderColor = isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)";
+        el.style.borderColor = selected ? "rgba(255,102,51,0.4)" : isInProgress ? "rgba(139,92,246,0.25)" : "rgba(255,255,255,0.07)";
         el.style.boxShadow = "none";
         el.style.transform = "translateY(0)";
       }}
     >
       <div className="flex items-start gap-2">
-        {isInProgress && (
+        {onToggle && (
+          <button
+            onClick={e => { e.stopPropagation(); onToggle(quest.id); }}
+            className="mt-0.5 flex-shrink-0 w-3.5 h-3.5 rounded flex items-center justify-center"
+            style={{
+              background: selected ? "rgba(255,102,51,0.8)" : "rgba(255,255,255,0.06)",
+              border: `1px solid ${selected ? "rgba(255,102,51,0.9)" : "rgba(255,255,255,0.15)"}`,
+            }}
+          >
+            {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>✓</span>}
+          </button>
+        )}
+        {!onToggle && isInProgress && (
           <span
             className="mt-0.5 w-1.5 h-1.5 rounded-full flex-shrink-0"
             style={{ background: "#8b5cf6", boxShadow: "0 0 6px #8b5cf6", animation: "pulse 1.5s ease-in-out infinite" }}

@@ -167,6 +167,14 @@ function sanitizeAgent(agent) {
   return { ...safe, pendingCommands: (commands || []).filter(c => c.status === 'pending').length };
 }
 
+const XP_BY_PRIORITY = { high: 30, medium: 20, low: 10 };
+
+function awardXP(agentKey, priority) {
+  if (!agentKey || !store.agents[agentKey]) return;
+  const xp = XP_BY_PRIORITY[priority] || 10;
+  store.agents[agentKey].xp = (store.agents[agentKey].xp || 0) + xp;
+}
+
 // ─── Agent API ─────────────────────────────────────────────────────────────────
 
 // POST /api/agent/:name/status — agent posts its current status
@@ -264,8 +272,8 @@ app.patch('/api/agent/:name/command/:cmdId', (req, res) => {
 // POST /api/agent/:name/register — auto-register a new agent if not known
 app.post('/api/agent/:name/register', requireApiKey, (req, res) => {
   const name = req.params.name.toLowerCase();
+  const { role, description, color, avatar } = req.body;
   if (!store.agents[name]) {
-    const { role, description, color, avatar } = req.body;
     store.agents[name] = {
       id: name,
       name: name.charAt(0).toUpperCase() + name.slice(1),
@@ -285,9 +293,15 @@ app.post('/api/agent/:name/register', requireApiKey, (req, res) => {
       avatar: avatar || name.slice(0, 2).toUpperCase(),
     };
     AGENT_NAMES.push(name);
-    saveData();
     console.log(`[register] new agent: ${name}`);
+  } else {
+    // Update meta fields if provided in the request body
+    if (avatar !== undefined) store.agents[name].avatar = avatar;
+    if (role !== undefined) store.agents[name].role = role;
+    if (description !== undefined) store.agents[name].description = description;
+    if (color !== undefined) store.agents[name].color = color;
   }
+  saveData();
   res.json({ ok: true, agent: sanitizeAgent(store.agents[name]) });
 });
 
@@ -396,10 +410,11 @@ app.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   quest.completedBy = agentId;
   quest.completedAt = now();
   saveQuests();
-  // Increment the completing agent's questsCompleted counter
+  // Increment questsCompleted and award XP
   const agentKey = agentId.toLowerCase();
   if (store.agents[agentKey]) {
     store.agents[agentKey].questsCompleted = (store.agents[agentKey].questsCompleted || 0) + 1;
+    awardXP(agentKey, quest.priority);
     saveData();
   }
   console.log(`[quest] ${quest.id} completed by ${agentId}`);
@@ -480,9 +495,59 @@ app.patch('/api/quests/:id/complete', requireApiKey, (req, res) => {
   quest.status = 'completed';
   quest.completedBy = completedBy || 'unknown';
   quest.completedAt = now();
-
   saveQuests();
+  const agentKey2 = (completedBy || '').toLowerCase();
+  if (store.agents[agentKey2]) {
+    store.agents[agentKey2].questsCompleted = (store.agents[agentKey2].questsCompleted || 0) + 1;
+    awardXP(agentKey2, quest.priority);
+    saveData();
+  }
   res.json({ success: true, message: 'Quest completed', quest });
+});
+
+// POST /api/quests/bulk-update — update status of multiple quests at once
+app.post('/api/quests/bulk-update', requireApiKey, (req, res) => {
+  const { ids, status } = req.body;
+  if (!Array.isArray(ids) || ids.length === 0) return res.status(400).json({ error: 'ids must be a non-empty array' });
+  const validStatuses = ['open', 'in_progress', 'completed', 'suggested', 'rejected'];
+  if (!validStatuses.includes(status)) return res.status(400).json({ error: `Invalid status. Use: ${validStatuses.join(', ')}` });
+
+  const updated = [];
+  const notFound = [];
+  for (const id of ids) {
+    const quest = quests.find(q => q.id === id);
+    if (!quest) { notFound.push(id); continue; }
+    const wasNotCompleted = quest.status !== 'completed';
+    quest.status = status;
+    if (status === 'completed' && !quest.completedAt) {
+      quest.completedAt = now();
+      // Award XP to the agent who claimed it (if any)
+      if (wasNotCompleted && quest.claimedBy) {
+        awardXP(quest.claimedBy.toLowerCase(), quest.priority);
+      }
+    }
+    updated.push(id);
+  }
+  if (updated.length > 0) { saveQuests(); saveData(); }
+  console.log(`[bulk-update] status=${status} updated=${updated.length} notFound=${notFound.length}`);
+  res.json({ ok: true, updated, notFound });
+});
+
+// GET /api/leaderboard — agents ranked by XP
+app.get('/api/leaderboard', (req, res) => {
+  const ranked = Object.values(store.agents)
+    .map(a => ({
+      id: a.id,
+      name: a.name,
+      avatar: a.avatar,
+      color: a.color,
+      role: a.role,
+      xp: a.xp || 0,
+      questsCompleted: a.questsCompleted || 0,
+    }))
+    .sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted)
+    .map((a, i) => ({ ...a, rank: i + 1 }));
+  res.json(ranked);
 });
 
 // GET /api/agent/:name/quests — get agent's active quests
