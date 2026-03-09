@@ -52,6 +52,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="quest">Post Quest</button>
       <button class="tab" data-tab="review">Review <span id="review-badge" class="review-badge" style="display:none">0</span></button>
+      <button class="tab" data-tab="admin">Admin</button>
       <button class="tab" data-tab="settings">Settings</button>
     </div>
 
@@ -132,6 +133,23 @@
           </select>
         </div>
 
+        <!-- Proof field — visible only for learning quests -->
+        <div id="learning-proof-section" class="field" style="display:none">
+          <label>Learning Proof <span class="optional">(notes, links, screenshots)</span></label>
+          <textarea
+            id="learning-proof"
+            placeholder="What did you learn? Add notes, links, or references…"
+            rows="3"
+            maxlength="2000"
+          ></textarea>
+          <div id="learning-templates" class="learning-templates">
+            <span class="learning-template-label">Templates:</span>
+            <button type="button" class="learning-tpl-btn" data-tpl="networking">Networking</button>
+            <button type="button" class="learning-tpl-btn" data-tpl="coding">Coding</button>
+            <button type="button" class="learning-tpl-btn" data-tpl="general">General</button>
+          </div>
+        </div>
+
         <div class="field">
           <label>Product <span class="optional">(optional)</span></label>
           <select id="product" class="product-select">
@@ -148,6 +166,29 @@
           <select id="parent-quest" class="product-select">
             <option value="">— None —</option>
           </select>
+        </div>
+
+        <label class="human-input-row recurring-row">
+          <input type="checkbox" id="recurring" />
+          <span class="human-input-label">
+            <span class="human-icon">🔁</span>
+            Recurring Quest
+          </span>
+        </label>
+
+        <div id="recurring-config" class="field" style="display:none">
+          <label>Schedule</label>
+          <select id="recurrence" class="product-select">
+            <option value="daily">Daily</option>
+            <option value="weekly" selected>Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
+
+        <!-- Checklist — shown for recurring quests -->
+        <div id="checklist-section" class="field" style="display:none">
+          <label>Checklist <span class="optional">(one item per line)</span></label>
+          <textarea id="checklist-items" placeholder="e.g.&#10;Buy milk&#10;Clean kitchen&#10;Take out trash" rows="4" maxlength="1000"></textarea>
         </div>
 
         <label class="human-input-row">
@@ -176,6 +217,37 @@
       </div>
     </div>
 
+    <!-- Admin tab -->
+    <div id="tab-admin" class="tab-content hidden">
+      <div class="settings-section">
+        <h3 class="settings-title">Master Key</h3>
+        <div class="field">
+          <label for="cfg-masterkey">Master Key</label>
+          <input type="password" id="cfg-masterkey" placeholder="Enter master key to manage API keys" />
+        </div>
+        <button id="admin-load-btn" class="btn-primary">Load Keys</button>
+      </div>
+
+      <div id="admin-keys-section" class="settings-section hidden" style="margin-top:0">
+        <h3 class="settings-title">API Keys <span id="admin-key-count" style="opacity:0.4;font-weight:400">0</span></h3>
+        <div id="admin-keys-list" class="admin-keys-list"></div>
+
+        <div class="admin-new-key">
+          <h3 class="settings-title" style="margin-bottom:6px">New Key</h3>
+          <div class="field">
+            <label for="admin-key-label">Label</label>
+            <input type="text" id="admin-key-label" placeholder="e.g. Lyra Agent" maxlength="60" />
+          </div>
+          <button id="admin-create-btn" class="btn-primary">Generate Key</button>
+          <div id="admin-new-key-result" class="admin-new-key-result hidden">
+            <span class="admin-new-key-label">New key (copy now — shown once):</span>
+            <code id="admin-new-key-value" class="admin-key-code"></code>
+            <button class="admin-copy-btn" id="admin-copy-btn">Copy</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Settings tab -->
     <div id="tab-settings" class="tab-content hidden">
       <div class="settings-section">
@@ -197,6 +269,22 @@
           />
         </div>
         <button id="save-settings-btn" class="btn-primary">Save Settings</button>
+      </div>
+
+      <div class="settings-section about-section">
+        <h3 class="settings-title">Sound</h3>
+        <div class="about-row">
+          <span class="about-label">Sound Effects</span>
+          <label class="sound-toggle" title="Mute/unmute sounds">
+            <input type="checkbox" id="snd-mute" />
+            <span class="sound-toggle-track"></span>
+            <span class="sound-toggle-label" id="snd-mute-label">On</span>
+          </label>
+        </div>
+        <div class="about-row" id="snd-volume-row">
+          <span class="about-label">Volume</span>
+          <input type="range" id="snd-volume" min="0" max="100" value="100" style="width:100px;accent-color:#ff6b00" />
+        </div>
       </div>
 
       <div class="settings-section about-section">

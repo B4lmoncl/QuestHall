@@ -41,6 +41,20 @@ interface Quest {
   parentQuestId?: string | null;
   children?: Quest[];
   progress?: { completed: number; total: number };
+  recurrence?: string | null;
+  proof?: string | null;
+  checklist?: { text: string; done: boolean }[] | null;
+}
+
+interface User {
+  id: string;
+  name: string;
+  avatar: string;
+  color: string;
+  xp: number;
+  questsCompleted: number;
+  achievements?: { reason: string; xp: number; at: string }[];
+  createdAt?: string;
 }
 
 interface QuestsData {
@@ -115,6 +129,14 @@ async function fetchQuests(): Promise<QuestsData> {
   return empty;
 }
 
+async function fetchUsers(): Promise<User[]> {
+  try {
+    const r = await fetch(`/api/users`, { signal: AbortSignal.timeout(2000) });
+    if (r.ok) return r.json();
+  } catch { /* API not running */ }
+  return [];
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -149,6 +171,7 @@ function useCountUp(target: number, decimals = 0, duration = 1000): string {
 
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [quests, setQuests] = useState<QuestsData>({ open: [], inProgress: [], completed: [], suggested: [], rejected: [] });
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
@@ -166,6 +189,7 @@ export default function Dashboard() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [dashView, setDashView] = useState<"ops" | "campaign">("ops");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -222,7 +246,7 @@ export default function Dashboard() {
   }, []);
 
   const refresh = useCallback(async () => {
-    const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
+    const [a, q, u] = await Promise.all([fetchAgents(), fetchQuests(), fetchUsers()]);
     // Lyra always first, then online/working agents, then rest
     const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
     const sorted = [...a].sort((x, y) => {
@@ -235,6 +259,7 @@ export default function Dashboard() {
     });
     setAgents(sorted);
     setQuests(q);
+    setUsers(u);
     try {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
       setApiLive(r.ok);
@@ -472,8 +497,33 @@ export default function Dashboard() {
           />
         </div>
 
+        {/* View toggle */}
+        <div className="flex gap-1" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
+          {[
+            { key: "ops",      label: "⚔ Operations" },
+            { key: "campaign", label: "🐉 Campaign" },
+          ].map(v => (
+            <button
+              key={v.key}
+              onClick={() => setDashView(v.key as "ops" | "campaign")}
+              className="text-xs font-semibold px-3 py-1.5 rounded transition-all"
+              style={{
+                background: dashView === v.key ? "#252525" : "transparent",
+                color: dashView === v.key ? "#f0f0f0" : "rgba(255,255,255,0.3)",
+              }}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Campaign View */}
+        {dashView === "campaign" && (
+          <CampaignView agents={agents} quests={quests} users={users} />
+        )}
+
         {/* Agent Roster + Quest Board */}
-        <div className="flex flex-col lg:flex-row gap-6 items-start">
+        {dashView === "ops" && <div className="flex flex-col lg:flex-row gap-6 items-start">
 
           {/* Agent Roster */}
           <section className="flex-1 min-w-0">
@@ -529,6 +579,23 @@ export default function Dashboard() {
               />
             )}
           </section>
+
+          {/* User Cards (Household Gamification) */}
+          {users.length > 0 && (
+            <section className="mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Players
+                </h2>
+                <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)" }}>
+                  {users.length}
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {users.map(u => <UserCard key={u.id} user={u} />)}
+              </div>
+            </section>
+          )}
 
           {/* Quest Board */}
           <aside className="w-full lg:w-80 flex-shrink-0">
@@ -617,7 +684,7 @@ export default function Dashboard() {
               )}
             </div>
           </aside>
-        </div>
+        </div>}
 
         {/* Review Board — Agent Suggestions */}
         {quests.suggested.length > 0 && (
@@ -706,6 +773,11 @@ export default function Dashboard() {
               </div>
             )}
           </section>
+        )}
+
+        {/* AI Smart Suggestions */}
+        {dashView === "ops" && (
+          <SmartSuggestionsPanel quests={quests} agents={agents} />
         )}
 
         {/* Rejected Quests (Mülleimer) */}
@@ -849,6 +921,185 @@ export default function Dashboard() {
   );
 }
 
+// ─── Smart Suggestions Panel ──────────────────────────────────────────────────
+
+interface Suggestion {
+  id: string;
+  icon: string;
+  title: string;
+  body: string;
+  accent: string;
+  accentBg: string;
+}
+
+function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestion[] {
+  const suggestions: Suggestion[] = [];
+  const now = Date.now();
+  const DAY = 86_400_000;
+
+  // 1. Stale epic quests — parent open but no child activity for 7+ days
+  const epics = quests.open.filter(q => q.children && q.children.length > 0);
+  for (const epic of epics) {
+    const lastActivity = Math.max(
+      new Date(epic.createdAt).getTime(),
+      ...(epic.children ?? []).map(c => new Date(c.createdAt).getTime()),
+    );
+    const staleDays = Math.floor((now - lastActivity) / DAY);
+    if (staleDays >= 7) {
+      suggestions.push({
+        id: `stale-${epic.id}`,
+        icon: "🕸",
+        title: `Epic "${epic.title}" is stale`,
+        body: `No sub-quest activity for ${staleDays} days. Consider breaking it down or reassigning.`,
+        accent: "#f59e0b",
+        accentBg: "rgba(245,158,11,0.08)",
+      });
+    }
+  }
+
+  // 2. Recurring quests not recently completed (no completion in last recurrence window)
+  const recurringOpen = quests.open.filter(q => q.recurrence);
+  for (const q of recurringOpen) {
+    const windowDays = q.recurrence === "daily" ? 1 : q.recurrence === "weekly" ? 7 : 30;
+    const age = (now - new Date(q.createdAt).getTime()) / DAY;
+    if (age >= windowDays) {
+      suggestions.push({
+        id: `recurring-${q.id}`,
+        icon: "🔁",
+        title: `Recurring quest overdue: "${q.title}"`,
+        body: `Scheduled ${q.recurrence} — created ${Math.floor(age)}d ago with no completion recorded.`,
+        accent: "#6366f1",
+        accentBg: "rgba(99,102,241,0.08)",
+      });
+    }
+  }
+
+  // 3. High-priority pile — 3+ high-priority open quests unclaimed
+  const highOpen = quests.open.filter(q => q.priority === "high" && !q.claimedBy);
+  if (highOpen.length >= 3) {
+    suggestions.push({
+      id: "high-pile",
+      icon: "🔥",
+      title: `${highOpen.length} high-priority quests unclaimed`,
+      body: `High-value work is piling up: ${highOpen.slice(0, 2).map(q => `"${q.title}"`).join(", ")}${highOpen.length > 2 ? ` +${highOpen.length - 2} more` : ""}. Consider assigning them.`,
+      accent: "#ef4444",
+      accentBg: "rgba(239,68,68,0.08)",
+    });
+  }
+
+  // 4. Quest type imbalance — one type dominates > 70% of open quests
+  if (quests.open.length >= 5) {
+    const typeCounts: Record<string, number> = {};
+    for (const q of quests.open) {
+      const t = q.type ?? "development";
+      typeCounts[t] = (typeCounts[t] ?? 0) + 1;
+    }
+    const dominant = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+    if (dominant && dominant[1] / quests.open.length > 0.7) {
+      const cfg = typeConfig[dominant[0]];
+      suggestions.push({
+        id: "type-imbalance",
+        icon: "⚖",
+        title: `Quest type imbalance: ${Math.round((dominant[1] / quests.open.length) * 100)}% ${cfg?.label ?? dominant[0]}`,
+        body: `${dominant[1]} of ${quests.open.length} open quests are ${dominant[0]}. Consider diversifying with personal, learning, or social quests.`,
+        accent: cfg?.color ?? "#9ca3af",
+        accentBg: cfg?.bg ?? "rgba(156,163,175,0.08)",
+      });
+    }
+  }
+
+  // 5. Idle agents with open quests available
+  const idleAgents = agents.filter(a => a.status === "idle");
+  if (idleAgents.length > 0 && quests.open.length > 0) {
+    suggestions.push({
+      id: "idle-agents",
+      icon: "💤",
+      title: `${idleAgents.length} agent${idleAgents.length > 1 ? "s" : ""} idle with ${quests.open.length} open quest${quests.open.length > 1 ? "s" : ""}`,
+      body: `${idleAgents.map(a => a.name).join(", ")} ${idleAgents.length > 1 ? "are" : "is"} idle. There are open quests waiting to be claimed.`,
+      accent: "#22c55e",
+      accentBg: "rgba(34,197,94,0.08)",
+    });
+  }
+
+  // 6. No learning quests — encourage knowledge capture
+  const hasLearning = [...quests.open, ...quests.inProgress].some(q => q.type === "learning");
+  if (!hasLearning && quests.open.length >= 3) {
+    suggestions.push({
+      id: "no-learning",
+      icon: "📚",
+      title: "No learning quests active",
+      body: "Knowledge capture is missing from the queue. Consider adding a learning quest to build team knowledge.",
+      accent: "#3b82f6",
+      accentBg: "rgba(59,130,246,0.08)",
+    });
+  }
+
+  return suggestions;
+}
+
+function SmartSuggestionsPanel({ quests, agents }: { quests: QuestsData; agents: Agent[] }) {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("dismissed_suggestions") ?? "[]")); } catch { return new Set(); }
+  });
+  const [open, setOpen] = useState(true);
+
+  const allSuggestions = buildSuggestions(quests, agents);
+  const visible = allSuggestions.filter(s => !dismissed.has(s.id));
+
+  const dismiss = (id: string) => {
+    const next = new Set(dismissed).add(id);
+    setDismissed(next);
+    try { localStorage.setItem("dismissed_suggestions", JSON.stringify([...next])); } catch { /* ignore */ }
+  };
+
+  if (visible.length === 0) return null;
+
+  return (
+    <section className="mb-6">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-2 mb-3 w-full text-left"
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#a855f7" }}>
+          ✦ Smart Suggestions
+        </h2>
+        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+          {visible.length}
+        </span>
+        <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="space-y-2">
+          {visible.map(s => (
+            <div
+              key={s.id}
+              className="rounded-xl p-4 flex items-start gap-3"
+              style={{ background: s.accentBg, border: `1px solid ${s.accent}30` }}
+            >
+              <span className="text-lg flex-shrink-0 leading-none mt-0.5">{s.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: s.accent }}>{s.title}</p>
+                <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.body}</p>
+              </div>
+              <button
+                onClick={() => dismiss(s.id)}
+                className="flex-shrink-0 text-xs px-2 py-1 rounded transition-all"
+                style={{ color: "rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.04)" }}
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function CategoryBadge({ category }: { category: string }) {
   const cfg = categoryConfig[category] ?? { color: "rgba(255,255,255,0.4)", bg: "rgba(255,255,255,0.06)" };
   return (
@@ -909,6 +1160,18 @@ function AgentBadge({ name }: { name: string }) {
   );
 }
 
+function RecurringBadge({ recurrence }: { recurrence: string }) {
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+      style={{ color: "#6366f1", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)" }}
+      title={`Recurring: ${recurrence}`}
+    >
+      🔁 {recurrence}
+    </span>
+  );
+}
+
 function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
@@ -949,6 +1212,14 @@ function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean })
             {cats.map(c => <CategoryBadge key={c} category={c} />)}
             {quest.product && <ProductBadge product={quest.product} />}
           </div>
+          {quest.proof && (
+            <div className="mt-2 p-2 rounded" style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)" }}>
+              <p className="text-xs font-semibold mb-1" style={{ color: "rgba(59,130,246,0.7)" }}>📖 Learning Proof</p>
+              <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.4)" }}>
+                {quest.proof.length > 300 ? quest.proof.slice(0, 297) + "…" : quest.proof}
+              </p>
+            </div>
+          )}
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
             Completed {quest.completedAt ? timeAgo(quest.completedAt) : "—"} · by {quest.completedBy}
           </p>
@@ -1042,6 +1313,7 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <TypeBadge type={quest.type} />
+            {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
             {cats.map(c => <CategoryBadge key={c} category={c} />)}
             {quest.product && <ProductBadge product={quest.product} />}
             {isInProgress && quest.claimedBy && (
@@ -1050,6 +1322,16 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
           </div>
           {expanded && quest.description && (
             <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{quest.description}</p>
+          )}
+          {expanded && quest.checklist && quest.checklist.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {quest.checklist.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "☑" : "☐"}</span>
+                  <span style={{ color: item.done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.6)", textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
           )}
           <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
         </div>
@@ -1132,6 +1414,7 @@ function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?:
             )}
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <TypeBadge type={quest.type} />
+              {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
               {cats.map(c => <CategoryBadge key={c} category={c} />)}
               {quest.product && <ProductBadge product={quest.product} />}
               {isInProgress && quest.claimedBy && (
@@ -1174,6 +1457,68 @@ function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?:
   );
 }
 
+// ─── XP helpers (shared with UserCard) ──────────────────────────────────────
+const USER_LEVELS = [
+  { name: "Novice",     min: 0,   max: 99,  color: "#9ca3af" },
+  { name: "Apprentice", min: 100, max: 299, color: "#22c55e" },
+  { name: "Knight",     min: 300, max: 599, color: "#3b82f6" },
+  { name: "Archmage",   min: 600, max: Infinity, color: "#a855f7" },
+];
+function getUserLevel(xp: number) { return USER_LEVELS.findLast(l => xp >= l.min) ?? USER_LEVELS[0]; }
+function getUserXpProgress(xp: number) {
+  const l = getUserLevel(xp);
+  if (l.max === Infinity) return 1;
+  return (xp - l.min) / (l.max - l.min + 1);
+}
+
+function UserCard({ user }: { user: User }) {
+  const xp = user.xp ?? 0;
+  const lvl = getUserLevel(xp);
+  const progress = getUserXpProgress(xp);
+  const nextLvl = USER_LEVELS[USER_LEVELS.indexOf(lvl) + 1];
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{ background: "#252525", border: `1px solid ${lvl.color}30`, boxShadow: `0 0 16px ${lvl.color}10` }}
+    >
+      <div className="flex items-center gap-3 mb-3">
+        <div
+          className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0"
+          style={{ background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`, boxShadow: `0 4px 14px ${user.color}50`, color: "#fff" }}
+        >
+          {user.avatar}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold" style={{ color: "#f0f0f0" }}>{user.name}</p>
+          <p className="text-xs font-semibold" style={{ color: lvl.color }}>{lvl.name}</p>
+        </div>
+        <span
+          className="text-xs px-1.5 py-0.5 rounded font-semibold"
+          style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}
+        >
+          👤 User
+        </span>
+      </div>
+      <div className="space-y-1.5 mb-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Quests Completed</span>
+          <span className="text-xs font-mono font-medium" style={{ color: "#8b5cf6" }}>{user.questsCompleted ?? 0}</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>XP</span>
+          <span className="text-xs font-mono font-medium" style={{ color: lvl.color }}>{xp} XP{nextLvl ? ` / ${nextLvl.min}` : " — MAX"}</span>
+        </div>
+      </div>
+      <div className="rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.07)" }}>
+        <div
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${Math.round(progress * 100)}%`, background: `linear-gradient(90deg, ${lvl.color}99, ${lvl.color})`, boxShadow: `0 0 6px ${lvl.color}80` }}
+        />
+      </div>
+    </div>
+  );
+}
+
 function EmptyState({ message, sub }: { message: string; sub?: string }) {
   return (
     <div className="rounded-xl p-8 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
@@ -1189,5 +1534,120 @@ function SkeletonCard() {
       className="rounded-xl animate-pulse"
       style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)", height: 260 }}
     />
+  );
+}
+
+// ─── D&D Campaign View ────────────────────────────────────────────────────────
+function CampaignView({ agents, quests, users }: { agents: Agent[]; quests: QuestsData; users: User[] }) {
+  const allQuests = [...quests.open, ...quests.inProgress, ...quests.completed];
+  const sessions  = allQuests.filter(q => q.type === "social").slice(0, 10);
+  const plotHooks = quests.open.filter(q => q.type !== "social").slice(0, 8);
+  const npcAgents = agents.filter(a => a.status !== "offline");
+
+  return (
+    <div className="space-y-8">
+      <div className="rounded-2xl p-6" style={{ background: "linear-gradient(135deg, #1a0d2e 0%, #0d1a1a 100%)", border: "1px solid rgba(139,92,246,0.3)", boxShadow: "0 0 40px rgba(139,92,246,0.1)" }}>
+        <div className="flex items-center gap-3 mb-2">
+          <span style={{ fontSize: 28 }}>🐉</span>
+          <div>
+            <h2 className="text-lg font-bold" style={{ color: "#e9d5ff" }}>The Guild Chronicle</h2>
+            <p className="text-xs" style={{ color: "rgba(167,139,250,0.6)" }}>Fantasy RPG overlay — agents are NPCs, quests are adventures</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Active NPCs */}
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(167,139,250,0.7)" }}>⚔ Active NPCs</h3>
+          <div className="space-y-2">
+            {npcAgents.length === 0 && <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>No NPCs online</p>}
+            {npcAgents.map(a => {
+              const agentMeta: Record<string, { avatar: string; color: string }> = {
+                nova: { avatar: "NO", color: "#8b5cf6" }, hex: { avatar: "HX", color: "#10b981" },
+                echo: { avatar: "EC", color: "#ef4444" }, pixel: { avatar: "PX", color: "#f59e0b" },
+                atlas: { avatar: "AT", color: "#6366f1" }, lyra: { avatar: "✦", color: "#e879f9" },
+                forge: { avatar: "⚒", color: "#f59e0b" },
+              };
+              const meta = agentMeta[a.id?.toLowerCase()] ?? { avatar: a.id?.slice(0, 2).toUpperCase() ?? "??", color: a.color ?? "#666" };
+              const color = a.color ?? meta.color;
+              return (
+                <div key={a.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(139,92,246,0.07)", border: "1px solid rgba(139,92,246,0.15)" }}>
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0" style={{ background: `linear-gradient(135deg, ${color}, ${color}99)`, color: "#fff" }}>
+                    {a.avatar ?? meta.avatar}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold truncate" style={{ color: "#e9d5ff" }}>{a.name}</p>
+                    <p className="text-xs truncate" style={{ color: "rgba(167,139,250,0.5)" }}>{a.role ?? "NPC"}</p>
+                  </div>
+                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: a.status === "working" ? "rgba(16,185,129,0.15)" : "rgba(139,92,246,0.1)", color: a.status === "working" ? "#34d399" : "rgba(167,139,250,0.7)", border: `1px solid ${a.status === "working" ? "rgba(16,185,129,0.3)" : "rgba(139,92,246,0.2)"}` }}>
+                    {a.status === "working" ? "On Quest" : a.status}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Plot Hooks (open quests) */}
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(251,191,36,0.7)" }}>📜 Plot Hooks</h3>
+          <div className="space-y-2">
+            {plotHooks.length === 0 && <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>No plot hooks available</p>}
+            {plotHooks.map(q => (
+              <div key={q.id} className="p-2.5 rounded-lg" style={{ background: "rgba(251,191,36,0.05)", border: "1px solid rgba(251,191,36,0.15)" }}>
+                <div className="flex items-start gap-2">
+                  <span className="text-xs flex-shrink-0 mt-0.5" style={{ color: "rgba(251,191,36,0.7)" }}>◆</span>
+                  <p className="text-xs font-medium" style={{ color: "#fde68a" }}>{q.title}</p>
+                </div>
+                {q.description && <p className="text-xs mt-1 leading-relaxed" style={{ color: "rgba(253,230,138,0.4)" }}>{q.description.slice(0, 80)}{q.description.length > 80 ? "…" : ""}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sessions (social quests + completed) */}
+        <div>
+          <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(52,211,153,0.7)" }}>📅 Session Log</h3>
+          <div className="space-y-2">
+            {sessions.length === 0 && <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>No sessions logged yet. Create a quest with type &quot;Social&quot;.</p>}
+            {sessions.map(q => (
+              <div key={q.id} className="p-2.5 rounded-lg" style={{ background: "rgba(52,211,153,0.05)", border: "1px solid rgba(52,211,153,0.15)" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs" style={{ color: q.status === "completed" ? "#34d399" : "rgba(52,211,153,0.5)" }}>
+                    {q.status === "completed" ? "✓" : "◌"}
+                  </span>
+                  <p className="text-xs font-medium flex-1 truncate" style={{ color: "#a7f3d0" }}>{q.title}</p>
+                  <span className="text-xs" style={{ color: "rgba(52,211,153,0.4)" }}>{timeAgo(q.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Party Members (users) */}
+          {users.length > 0 && (
+            <div className="mt-4">
+              <h4 className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(252,165,165,0.7)" }}>🧙 Party</h4>
+              <div className="space-y-2">
+                {users.map(u => {
+                  const lvl = getUserLevel(u.xp ?? 0);
+                  return (
+                    <div key={u.id} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: "rgba(252,165,165,0.05)", border: "1px solid rgba(252,165,165,0.1)" }}>
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs flex-shrink-0" style={{ background: `linear-gradient(135deg, ${u.color}, ${u.color}99)`, color: "#fff" }}>
+                        {u.avatar}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold" style={{ color: "#fca5a5" }}>{u.name}</p>
+                        <p className="text-xs" style={{ color: lvl.color }}>{lvl.name} · {u.xp ?? 0} XP</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

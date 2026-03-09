@@ -12,6 +12,7 @@ interface Agent {
   jobsCompleted: number;
   questsCompleted?: number;
   revenue: number;
+  xp?: number;
   health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
   role?: string;
@@ -19,6 +20,24 @@ interface Agent {
   avatar?: string;
   color?: string;
   pendingCommands?: number;
+}
+
+// ─── XP / Level system ────────────────────────────────────────────────────────
+const LEVELS = [
+  { name: "Novice",     min: 0,   max: 99,  color: "#9ca3af" },
+  { name: "Apprentice", min: 100, max: 299, color: "#22c55e" },
+  { name: "Knight",     min: 300, max: 599, color: "#3b82f6" },
+  { name: "Archmage",   min: 600, max: Infinity, color: "#a855f7" },
+];
+
+function getLevel(xp: number) {
+  return LEVELS.findLast(l => xp >= l.min) ?? LEVELS[0];
+}
+
+function getXpProgress(xp: number): number {
+  const lvl = getLevel(xp);
+  if (lvl.max === Infinity) return 1;
+  return (xp - lvl.min) / (lvl.max - lvl.min + 1);
 }
 
 interface Quest {
@@ -259,6 +278,34 @@ export default function AgentCard({ agent, activeQuests = [], isWide = false }: 
       >
         {hc.label}
       </div>
+
+      {/* XP Bar */}
+      {(() => {
+        const xp = agent.xp ?? 0;
+        const lvl = getLevel(xp);
+        const progress = getXpProgress(xp);
+        const nextLvl = LEVELS[LEVELS.indexOf(lvl) + 1];
+        return (
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-xs font-semibold" style={{ color: lvl.color }}>{lvl.name}</span>
+              <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {xp} XP{nextLvl ? ` / ${nextLvl.min}` : " — MAX"}
+              </span>
+            </div>
+            <div className="rounded-full overflow-hidden" style={{ height: 4, background: "rgba(255,255,255,0.07)" }}>
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{
+                  width: `${Math.round(progress * 100)}%`,
+                  background: `linear-gradient(90deg, ${lvl.color}99, ${lvl.color})`,
+                  boxShadow: `0 0 6px ${lvl.color}80`,
+                }}
+              />
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Active Quests */}
       {activeQuests.length > 0 && (

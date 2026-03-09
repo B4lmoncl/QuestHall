@@ -1,3 +1,15 @@
+// ─── Sound system ─────────────────────────────────────────────────────────────
+let sounds = null;
+try {
+  const path = require('path');
+  sounds = require(path.join(__dirname, 'sounds.js'));
+  // Restore persisted settings
+  const savedMute   = localStorage.getItem('snd_mute');
+  const savedVolume = localStorage.getItem('snd_volume');
+  if (savedMute === '1') sounds.setSoundEnabled(false);
+  if (savedVolume !== null) sounds.setVolume(parseFloat(savedVolume));
+} catch (_) {}
+
 // ─── Config (localStorage) ───────────────────────────────────────────────────
 const DEFAULT_SERVER = 'http://187.77.139.247:3001';
 
@@ -57,12 +69,14 @@ const dashVersionEl     = document.getElementById('dashboard-version');
 const aboutServerEl     = document.getElementById('about-server');
 
 const tabReview  = document.getElementById('tab-review');
+const tabAdmin   = document.getElementById('tab-admin');
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(name) {
   tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   tabQuest.classList.toggle('hidden', name !== 'quest');
   tabReview.classList.toggle('hidden', name !== 'review');
+  tabAdmin.classList.toggle('hidden', name !== 'admin');
   tabSettings.classList.toggle('hidden', name !== 'settings');
   if (name === 'settings') populateSettingsFields();
   if (name === 'review') loadReviewQuests();
@@ -102,6 +116,27 @@ function populateSettingsFields() {
   appVersionEl.textContent = `v${APP_VERSION}`;
   aboutServerEl.textContent = API_BASE || DEFAULT_SERVER;
   fetchDashboardVersion();
+  // Sound controls
+  const muteCb  = document.getElementById('snd-mute');
+  const volEl   = document.getElementById('snd-volume');
+  const muteLabel = document.getElementById('snd-mute-label');
+  if (muteCb && sounds) {
+    muteCb.checked = !sounds.isSoundEnabled();
+    if (muteLabel) muteLabel.textContent = sounds.isSoundEnabled() ? 'On' : 'Off';
+    muteCb.onchange = () => {
+      sounds.setSoundEnabled(!muteCb.checked);
+      localStorage.setItem('snd_mute', muteCb.checked ? '1' : '0');
+      if (muteLabel) muteLabel.textContent = muteCb.checked ? 'Off' : 'On';
+    };
+  }
+  if (volEl && sounds) {
+    volEl.value = Math.round(sounds.getVolume() * 100);
+    volEl.oninput = () => {
+      const v = parseInt(volEl.value, 10) / 100;
+      sounds.setVolume(v);
+      localStorage.setItem('snd_volume', v);
+    };
+  }
 }
 
 async function fetchDashboardVersion() {
@@ -120,12 +155,40 @@ async function fetchDashboardVersion() {
   }
 }
 
+// ─── Learning Proof visibility + templates ────────────────────────────────────
+const questTypeEl      = document.getElementById('quest-type');
+const proofSection     = document.getElementById('learning-proof-section');
+const LEARNING_TEMPLATES = {
+  networking: `## Topic\n\n## Key Concepts\n- \n- \n\n## Resources\n- \n\n## Notes\n`,
+  coding:     `## Feature / API\n\n## What I Learned\n- \n- \n\n## Code Snippet\n\`\`\`\n\`\`\`\n\n## Source\n`,
+  general:    `## Subject\n\n## Summary\n\n## Takeaways\n- \n\n## Links\n- `,
+};
+
+function updateProofVisibility() {
+  if (!questTypeEl || !proofSection) return;
+  proofSection.style.display = questTypeEl.value === 'learning' ? 'flex' : 'none';
+}
+
+if (questTypeEl) {
+  questTypeEl.addEventListener('change', updateProofVisibility);
+  updateProofVisibility();
+}
+
+document.querySelectorAll('.learning-tpl-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tpl = btn.dataset.tpl;
+    const el = document.getElementById('learning-proof');
+    if (el && LEARNING_TEMPLATES[tpl]) el.value = LEARNING_TEMPLATES[tpl];
+  });
+});
+
 // ─── Save settings ────────────────────────────────────────────────────────────
 saveBtn.addEventListener('click', () => {
   const server = cfgServer.value.trim().replace(/\/$/, '') || DEFAULT_SERVER;
   const apiKey = cfgApiKey.value.trim();
   saveConfig(server, apiKey);
   aboutServerEl.textContent = server;
+  sounds?.playSyncZisch();
   showMessage('Settings saved!');
   checkConnection();
   setTimeout(() => switchTab('quest'), 1200);
@@ -138,6 +201,18 @@ function showMessage(text, isError = false) {
   setTimeout(() => {
     msgEl.className = 'message hidden';
   }, 4000);
+}
+
+// ─── Recurring toggle visibility ──────────────────────────────────────────────
+const recurringCb       = document.getElementById('recurring');
+const recurringConfig   = document.getElementById('recurring-config');
+const checklistSection  = document.getElementById('checklist-section');
+if (recurringCb) {
+  recurringCb.addEventListener('change', () => {
+    const on = recurringCb.checked;
+    if (recurringConfig)  recurringConfig.style.display  = on ? 'flex' : 'none';
+    if (checklistSection) checklistSection.style.display = on ? 'flex' : 'none';
+  });
 }
 
 // ─── Quest form submit ────────────────────────────────────────────────────────
@@ -153,6 +228,12 @@ form.addEventListener('submit', async (e) => {
   const humanInputRequired = document.getElementById('human-input').checked;
   const questType        = document.getElementById('quest-type').value || 'development';
   const parentQuestId    = document.getElementById('parent-quest').value || undefined;
+  const isRecurring      = document.getElementById('recurring')?.checked;
+  const recurrence       = isRecurring ? (document.getElementById('recurrence')?.value || 'weekly') : undefined;
+  const proof            = questType === 'learning' ? (document.getElementById('learning-proof')?.value.trim() || undefined) : undefined;
+  const checklistRaw     = isRecurring ? (document.getElementById('checklist-items')?.value || '') : '';
+  const checklist        = checklistRaw.split('\n').map(s => s.trim()).filter(Boolean).map(text => ({ text, done: false }));
+  const checklistPayload = checklist.length ? checklist : undefined;
 
   // Collect checked categories
   const checkedBoxes = document.querySelectorAll('.category-cb:checked');
@@ -171,10 +252,11 @@ form.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined, createdBy: 'leon', type: questType, parentQuestId }),
+      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined, createdBy: 'leon', type: questType, parentQuestId, recurrence, proof, checklist: checklistPayload }),
     });
 
     if (resp.ok) {
+      sounds?.playForgeHammer();
       const data = await resp.json();
       showMessage(`Quest posted! ID: ${data.quest.id}`);
       form.reset();
@@ -182,14 +264,23 @@ form.addEventListener('submit', async (e) => {
       document.getElementById('quest-type').value = 'development';
       document.getElementById('parent-quest').value = '';
       document.querySelectorAll('.category-cb').forEach(cb => { cb.checked = false; });
+      if (recurringConfig)  recurringConfig.style.display  = 'none';
+      if (checklistSection) checklistSection.style.display = 'none';
+      const checklistEl = document.getElementById('checklist-items');
+      if (checklistEl) checklistEl.value = '';
+      if (proofSection) proofSection.style.display = 'none';
+      const proofEl = document.getElementById('learning-proof');
+      if (proofEl) proofEl.value = '';
       // Success shimmer on form
       form.classList.add('form-shimmer');
       setTimeout(() => form.classList.remove('form-shimmer'), 800);
     } else {
+      sounds?.playErrorScratch();
       const err = await resp.json().catch(() => ({}));
       showMessage(`Error ${resp.status}: ${err.error || resp.statusText}`, true);
     }
   } catch (err) {
+    sounds?.playErrorScratch();
     showMessage(`Network error: ${err.message}`, true);
   } finally {
     submitBtn.disabled = false;
@@ -518,6 +609,129 @@ setInterval(async () => {
     }
   } catch (_) {}
 }, 15000);
+
+// ─── Admin Panel — API Key Management ─────────────────────────────────────────
+(function initAdmin() {
+  const loadBtn      = document.getElementById('admin-load-btn');
+  const createBtn    = document.getElementById('admin-create-btn');
+  const copyBtn      = document.getElementById('admin-copy-btn');
+  const masterKeyEl  = document.getElementById('cfg-masterkey');
+  const keysSection  = document.getElementById('admin-keys-section');
+  const keysList     = document.getElementById('admin-keys-list');
+  const keyCountEl   = document.getElementById('admin-key-count');
+  const keyLabelEl   = document.getElementById('admin-key-label');
+  const newKeyResult = document.getElementById('admin-new-key-result');
+  const newKeyValue  = document.getElementById('admin-new-key-value');
+
+  function getMasterKey() { return masterKeyEl?.value.trim() || ''; }
+
+  async function loadKeys() {
+    const { API_BASE } = loadConfig();
+    const base = API_BASE || DEFAULT_SERVER;
+    const master = getMasterKey();
+    if (!master) { showMessage('Enter master key first', true); return; }
+
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    try {
+      const r = await fetch(`${base}/api/admin/keys`, {
+        headers: { 'X-Master-Key': master },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        showMessage(`Error ${r.status}: ${e.error || r.statusText}`, true);
+        return;
+      }
+      const keys = await r.json();
+      keysSection.classList.remove('hidden');
+      keyCountEl.textContent = keys.length;
+      keysList.innerHTML = '';
+      keys.forEach(k => {
+        const row = document.createElement('div');
+        row.className = 'admin-key-row';
+        row.innerHTML = `
+          <div class="admin-key-info">
+            <span class="admin-key-label-text">${escapeHtml(k.label)}${k.isMaster ? ' <span class="admin-master-badge">MASTER</span>' : ''}</span>
+            <code class="admin-key-masked">${escapeHtml(k.masked)}</code>
+            ${k.created ? `<span class="admin-key-date">${new Date(k.created).toLocaleDateString()}</span>` : ''}
+          </div>
+          ${!k.isMaster ? `<button class="admin-revoke-btn" data-key="${escapeHtml(k.key)}">Revoke</button>` : ''}
+        `;
+        if (!k.isMaster) {
+          row.querySelector('.admin-revoke-btn').addEventListener('click', async () => {
+            if (!confirm(`Revoke key "${k.label}"?`)) return;
+            await revokeKey(k.key);
+            loadKeys();
+          });
+        }
+        keysList.appendChild(row);
+      });
+    } catch (err) {
+      showMessage(`Network error: ${err.message}`, true);
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load Keys';
+    }
+  }
+
+  async function revokeKey(key) {
+    const { API_BASE } = loadConfig();
+    const base = API_BASE || DEFAULT_SERVER;
+    const master = getMasterKey();
+    try {
+      const r = await fetch(`${base}/api/admin/keys/${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: { 'X-Master-Key': master },
+      });
+      if (r.ok) showMessage('Key revoked.');
+      else { const e = await r.json().catch(() => ({})); showMessage(`Error: ${e.error || r.statusText}`, true); }
+    } catch (err) {
+      showMessage(`Network error: ${err.message}`, true);
+    }
+  }
+
+  if (createBtn) {
+    createBtn.addEventListener('click', async () => {
+      const { API_BASE } = loadConfig();
+      const base = API_BASE || DEFAULT_SERVER;
+      const master = getMasterKey();
+      if (!master) { showMessage('Enter master key first', true); return; }
+      const label = keyLabelEl?.value.trim() || `Key ${Date.now()}`;
+      createBtn.disabled = true; createBtn.textContent = 'Generating…';
+      try {
+        const r = await fetch(`${base}/api/admin/keys`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': master },
+          body: JSON.stringify({ label }),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (newKeyValue) newKeyValue.textContent = data.key;
+          if (newKeyResult) newKeyResult.classList.remove('hidden');
+          if (keyLabelEl) keyLabelEl.value = '';
+          loadKeys();
+        } else {
+          const e = await r.json().catch(() => ({}));
+          showMessage(`Error: ${e.error || r.statusText}`, true);
+        }
+      } catch (err) {
+        showMessage(`Network error: ${err.message}`, true);
+      } finally {
+        createBtn.disabled = false; createBtn.textContent = 'Generate Key';
+      }
+    });
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const val = newKeyValue?.textContent;
+      if (val) { navigator.clipboard.writeText(val).then(() => showMessage('Copied!')).catch(() => {}); }
+    });
+  }
+
+  if (loadBtn) loadBtn.addEventListener('click', loadKeys);
+})();
 
 // ─── Ember particle system ────────────────────────────────────────────────────
 (function initEmbers() {

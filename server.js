@@ -17,6 +17,7 @@ const DATA_DIR = path.join(__dirname, 'public', 'data');
 const AGENTS_FILE = path.join(DATA_DIR, 'agents.json');
 const QUESTS_FILE = path.join(DATA_DIR, 'quests.json');
 const KEYS_FILE   = path.join(DATA_DIR, 'keys.json');
+const USERS_FILE  = path.join(DATA_DIR, 'users.json');
 
 app.use(cors());
 app.use(express.json());
@@ -182,6 +183,8 @@ function loadQuests() {
           if (q.recurrence === undefined) q.recurrence = null;
           if (q.streak === undefined) q.streak = 0;
           if (q.lastCompletedAt === undefined) q.lastCompletedAt = null;
+          if (q.proof === undefined) q.proof = null;
+          if (q.checklist === undefined) q.checklist = null;
           return q;
         });
       }
@@ -383,7 +386,7 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence } = req.body;
+  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
@@ -442,11 +445,43 @@ app.post('/api/quest', requireApiKey, (req, res) => {
     recurrence: validRecurrences.includes(recurrence) ? recurrence : null,
     streak: 0,
     lastCompletedAt: null,
+    proof: proof || null,
+    checklist: null,
   };
   quests.push(quest);
   saveQuests();
   console.log(`[quest] created: ${quest.id} — "${title}"`);
   res.json({ ok: true, quest });
+});
+
+// PATCH /api/quest/:id/checklist — update checklist items on a quest
+// Body: { items: [{ text: string, done: boolean }] }
+app.patch('/api/quest/:id/checklist', requireApiKey, (req, res) => {
+  const quest = quests.find(q => q.id === req.params.id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found' });
+  const { items } = req.body;
+  if (!Array.isArray(items)) return res.status(400).json({ error: 'items must be an array' });
+  quest.checklist = items.map(i => ({ text: String(i.text || ''), done: !!i.done }));
+  saveQuests();
+  res.json({ ok: true, checklist: quest.checklist });
+});
+
+// POST /api/quests/household-rotate — rotate auto_assign for recurring household quests
+// Cycles through the provided assignees list and assigns the next person
+app.post('/api/quests/household-rotate', requireApiKey, (req, res) => {
+  const { assignees } = req.body; // e.g. ["leon", "user2"]
+  if (!Array.isArray(assignees) || assignees.length === 0) {
+    return res.status(400).json({ error: 'assignees must be a non-empty array' });
+  }
+  const household = quests.filter(q => q.recurrence && q.status === 'open' && !q.claimedBy);
+  let rotated = 0;
+  household.forEach((q, i) => {
+    q.claimedBy = assignees[i % assignees.length];
+    q.status = 'in_progress';
+    rotated++;
+  });
+  if (rotated > 0) saveQuests();
+  res.json({ ok: true, rotated });
 });
 
 // POST /api/quest/:id/claim — agent claims a quest
@@ -555,16 +590,29 @@ app.post('/api/quest/:id/reject', requireApiKey, (req, res) => {
   res.json({ ok: true, quest });
 });
 
-// PATCH /api/quest/:id — update priority of a suggested quest
+// PATCH /api/quest/:id — update quest fields (priority, proof, title, description, etc.)
 app.patch('/api/quest/:id', requireApiKey, (req, res) => {
   const quest = quests.find(q => q.id === req.params.id);
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
-  if (quest.status !== 'suggested') return res.status(409).json({ error: 'Can only update priority of suggested quests' });
-  const { priority } = req.body;
-  if (!['low', 'medium', 'high'].includes(priority)) return res.status(400).json({ error: 'Invalid priority. Use: low, medium, high' });
-  quest.priority = priority;
+  const { priority, proof, title, description, status } = req.body;
+  if (priority !== undefined) {
+    if (!['low', 'medium', 'high'].includes(priority)) return res.status(400).json({ error: 'Invalid priority' });
+    quest.priority = priority;
+  }
+  if (proof !== undefined) quest.proof = proof;
+  if (title !== undefined) quest.title = title;
+  if (description !== undefined) quest.description = description;
+  if (status !== undefined) {
+    const validStatuses = ['open', 'in_progress', 'completed', 'suggested', 'rejected'];
+    if (!validStatuses.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+    const wasCompleted = quest.status === 'completed';
+    quest.status = status;
+    if (status === 'completed' && !wasCompleted) {
+      quest.completedAt = quest.completedAt || now();
+      if (quest.claimedBy) awardXP(quest.claimedBy.toLowerCase(), quest.priority);
+    }
+  }
   saveQuests();
-  console.log(`[quest] ${quest.id} priority updated → ${priority}`);
   res.json({ ok: true, quest });
 });
 
@@ -1350,6 +1398,70 @@ function buildDocsHtml(docs) {
 </html>`;
 }
 
+// ─── User System ──────────────────────────────────────────────────────────────
+let users = {};
+
+function loadUsers() {
+  try {
+    if (fs.existsSync(USERS_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+      if (raw && typeof raw === 'object') users = raw;
+    }
+  } catch (e) { console.warn('[users] Failed to load:', e.message); }
+  // Ensure default user Leon exists
+  if (!users['leon']) {
+    users['leon'] = { id: 'leon', name: 'Leon', avatar: 'L', color: '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], createdAt: now() };
+  }
+}
+
+function saveUsers() {
+  try {
+    if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+  } catch (e) { console.warn('[users] Failed to save:', e.message); }
+}
+
+// GET /api/users
+app.get('/api/users', (req, res) => {
+  res.json(Object.values(users));
+});
+
+// GET /api/users/:id
+app.get('/api/users/:id', (req, res) => {
+  const user = users[req.params.id.toLowerCase()];
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json(user);
+});
+
+// POST /api/users/:id/register — create or update user
+app.post('/api/users/:id/register', requireApiKey, (req, res) => {
+  const id = req.params.id.toLowerCase();
+  const { name, avatar, color } = req.body;
+  if (!users[id]) {
+    users[id] = { id, name: name || id, avatar: avatar || id[0].toUpperCase(), color: color || '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], createdAt: now() };
+  } else {
+    if (name) users[id].name = name;
+    if (avatar) users[id].avatar = avatar;
+    if (color) users[id].color = color;
+  }
+  saveUsers();
+  res.json({ ok: true, user: users[id] });
+});
+
+// POST /api/users/:id/award-xp — award XP to a user
+app.post('/api/users/:id/award-xp', requireApiKey, (req, res) => {
+  const id = req.params.id.toLowerCase();
+  if (!users[id]) return res.status(404).json({ error: 'User not found' });
+  const { amount = 10, reason } = req.body;
+  users[id].xp = (users[id].xp || 0) + parseInt(amount, 10);
+  if (reason) {
+    users[id].achievements = users[id].achievements || [];
+    users[id].achievements.push({ reason, xp: amount, at: now() });
+  }
+  saveUsers();
+  res.json({ ok: true, xp: users[id].xp });
+});
+
 // Serve index.html for non-API routes (SPA fallback)
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'out', 'index.html');
@@ -1365,6 +1477,7 @@ initStore();
 loadData();
 loadQuests();
 loadManagedKeys();
+loadUsers();
 
 app.listen(PORT, () => {
   console.log(`\n🔴 Agent Dashboard API running on http://localhost:${PORT}`);
