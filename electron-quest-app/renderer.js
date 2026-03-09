@@ -146,7 +146,7 @@ form.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined }),
+      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined, createdBy: 'leon' }),
     });
 
     if (resp.ok) {

@@ -207,10 +207,14 @@ export default function Dashboard() {
 
   const refresh = useCallback(async () => {
     const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
-    // Lyra is team lead — always first
+    // Lyra always first, then online/working agents, then rest
+    const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
     const sorted = [...a].sort((x, y) => {
       if (x.id === "lyra") return -1;
       if (y.id === "lyra") return 1;
+      const sx = statusOrder[x.status] ?? 3;
+      const sy = statusOrder[y.status] ?? 3;
+      if (sx !== sy) return sx - sy;
       return x.name.localeCompare(y.name);
     });
     setAgents(sorted);

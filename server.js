@@ -66,6 +66,7 @@ const AGENT_META = {
   pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer',        description: 'Creative marketer. Eye for aesthetics.' },
   atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher',      description: 'Deep researcher. Pattern finder.' },
   lyra:  { avatar: '✦', color: '#e879f9', role: 'AI Orchestrator', description: 'AI Orchestrator. Team lead. Gets shit done.' },
+  forge: { avatar: '⚒', color: '#f59e0b', role: 'Idea Smith', description: 'Feature ideation. Hammers out quest suggestions.' },
 };
 
 let store = { agents: {} };
