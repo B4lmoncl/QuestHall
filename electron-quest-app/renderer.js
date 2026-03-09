@@ -57,12 +57,14 @@ const dashVersionEl     = document.getElementById('dashboard-version');
 const aboutServerEl     = document.getElementById('about-server');
 
 const tabReview  = document.getElementById('tab-review');
+const tabAdmin   = document.getElementById('tab-admin');
 
 // ─── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(name) {
   tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === name));
   tabQuest.classList.toggle('hidden', name !== 'quest');
   tabReview.classList.toggle('hidden', name !== 'review');
+  tabAdmin.classList.toggle('hidden', name !== 'admin');
   tabSettings.classList.toggle('hidden', name !== 'settings');
   if (name === 'settings') populateSettingsFields();
   if (name === 'review') loadReviewQuests();
@@ -530,6 +532,129 @@ setInterval(async () => {
     }
   } catch (_) {}
 }, 15000);
+
+// ─── Admin Panel — API Key Management ─────────────────────────────────────────
+(function initAdmin() {
+  const loadBtn      = document.getElementById('admin-load-btn');
+  const createBtn    = document.getElementById('admin-create-btn');
+  const copyBtn      = document.getElementById('admin-copy-btn');
+  const masterKeyEl  = document.getElementById('cfg-masterkey');
+  const keysSection  = document.getElementById('admin-keys-section');
+  const keysList     = document.getElementById('admin-keys-list');
+  const keyCountEl   = document.getElementById('admin-key-count');
+  const keyLabelEl   = document.getElementById('admin-key-label');
+  const newKeyResult = document.getElementById('admin-new-key-result');
+  const newKeyValue  = document.getElementById('admin-new-key-value');
+
+  function getMasterKey() { return masterKeyEl?.value.trim() || ''; }
+
+  async function loadKeys() {
+    const { API_BASE } = loadConfig();
+    const base = API_BASE || DEFAULT_SERVER;
+    const master = getMasterKey();
+    if (!master) { showMessage('Enter master key first', true); return; }
+
+    loadBtn.disabled = true;
+    loadBtn.textContent = 'Loading…';
+    try {
+      const r = await fetch(`${base}/api/admin/keys`, {
+        headers: { 'X-Master-Key': master },
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        showMessage(`Error ${r.status}: ${e.error || r.statusText}`, true);
+        return;
+      }
+      const keys = await r.json();
+      keysSection.classList.remove('hidden');
+      keyCountEl.textContent = keys.length;
+      keysList.innerHTML = '';
+      keys.forEach(k => {
+        const row = document.createElement('div');
+        row.className = 'admin-key-row';
+        row.innerHTML = `
+          <div class="admin-key-info">
+            <span class="admin-key-label-text">${escapeHtml(k.label)}${k.isMaster ? ' <span class="admin-master-badge">MASTER</span>' : ''}</span>
+            <code class="admin-key-masked">${escapeHtml(k.masked)}</code>
+            ${k.created ? `<span class="admin-key-date">${new Date(k.created).toLocaleDateString()}</span>` : ''}
+          </div>
+          ${!k.isMaster ? `<button class="admin-revoke-btn" data-key="${escapeHtml(k.key)}">Revoke</button>` : ''}
+        `;
+        if (!k.isMaster) {
+          row.querySelector('.admin-revoke-btn').addEventListener('click', async () => {
+            if (!confirm(`Revoke key "${k.label}"?`)) return;
+            await revokeKey(k.key);
+            loadKeys();
+          });
+        }
+        keysList.appendChild(row);
+      });
+    } catch (err) {
+      showMessage(`Network error: ${err.message}`, true);
+    } finally {
+      loadBtn.disabled = false;
+      loadBtn.textContent = 'Load Keys';
+    }
+  }
+
+  async function revokeKey(key) {
+    const { API_BASE } = loadConfig();
+    const base = API_BASE || DEFAULT_SERVER;
+    const master = getMasterKey();
+    try {
+      const r = await fetch(`${base}/api/admin/keys/${encodeURIComponent(key)}`, {
+        method: 'DELETE',
+        headers: { 'X-Master-Key': master },
+      });
+      if (r.ok) showMessage('Key revoked.');
+      else { const e = await r.json().catch(() => ({})); showMessage(`Error: ${e.error || r.statusText}`, true); }
+    } catch (err) {
+      showMessage(`Network error: ${err.message}`, true);
+    }
+  }
+
+  if (createBtn) {
+    createBtn.addEventListener('click', async () => {
+      const { API_BASE } = loadConfig();
+      const base = API_BASE || DEFAULT_SERVER;
+      const master = getMasterKey();
+      if (!master) { showMessage('Enter master key first', true); return; }
+      const label = keyLabelEl?.value.trim() || `Key ${Date.now()}`;
+      createBtn.disabled = true; createBtn.textContent = 'Generating…';
+      try {
+        const r = await fetch(`${base}/api/admin/keys`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-Master-Key': master },
+          body: JSON.stringify({ label }),
+        });
+        if (r.ok) {
+          const data = await r.json();
+          if (newKeyValue) newKeyValue.textContent = data.key;
+          if (newKeyResult) newKeyResult.classList.remove('hidden');
+          if (keyLabelEl) keyLabelEl.value = '';
+          loadKeys();
+        } else {
+          const e = await r.json().catch(() => ({}));
+          showMessage(`Error: ${e.error || r.statusText}`, true);
+        }
+      } catch (err) {
+        showMessage(`Network error: ${err.message}`, true);
+      } finally {
+        createBtn.disabled = false; createBtn.textContent = 'Generate Key';
+      }
+    });
+  }
+
+  if (copyBtn) {
+    copyBtn.addEventListener('click', () => {
+      const val = newKeyValue?.textContent;
+      if (val) { navigator.clipboard.writeText(val).then(() => showMessage('Copied!')).catch(() => {}); }
+    });
+  }
+
+  if (loadBtn) loadBtn.addEventListener('click', loadKeys);
+})();
 
 // ─── Ember particle system ────────────────────────────────────────────────────
 (function initEmbers() {

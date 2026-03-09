@@ -52,6 +52,7 @@
     <div class="tabs">
       <button class="tab active" data-tab="quest">Post Quest</button>
       <button class="tab" data-tab="review">Review <span id="review-badge" class="review-badge" style="display:none">0</span></button>
+      <button class="tab" data-tab="admin">Admin</button>
       <button class="tab" data-tab="settings">Settings</button>
     </div>
 
@@ -190,6 +191,37 @@
       <div id="rejected-section" class="rejected-section hidden">
         <button id="rejected-toggle" class="rejected-toggle">🗑 Rejected <span id="rejected-count">0</span></button>
         <div id="rejected-list" class="rejected-list hidden"></div>
+      </div>
+    </div>
+
+    <!-- Admin tab -->
+    <div id="tab-admin" class="tab-content hidden">
+      <div class="settings-section">
+        <h3 class="settings-title">Master Key</h3>
+        <div class="field">
+          <label for="cfg-masterkey">Master Key</label>
+          <input type="password" id="cfg-masterkey" placeholder="Enter master key to manage API keys" />
+        </div>
+        <button id="admin-load-btn" class="btn-primary">Load Keys</button>
+      </div>
+
+      <div id="admin-keys-section" class="settings-section hidden" style="margin-top:0">
+        <h3 class="settings-title">API Keys <span id="admin-key-count" style="opacity:0.4;font-weight:400">0</span></h3>
+        <div id="admin-keys-list" class="admin-keys-list"></div>
+
+        <div class="admin-new-key">
+          <h3 class="settings-title" style="margin-bottom:6px">New Key</h3>
+          <div class="field">
+            <label for="admin-key-label">Label</label>
+            <input type="text" id="admin-key-label" placeholder="e.g. Lyra Agent" maxlength="60" />
+          </div>
+          <button id="admin-create-btn" class="btn-primary">Generate Key</button>
+          <div id="admin-new-key-result" class="admin-new-key-result hidden">
+            <span class="admin-new-key-label">New key (copy now — shown once):</span>
+            <code id="admin-new-key-value" class="admin-key-code"></code>
+            <button class="admin-copy-btn" id="admin-copy-btn">Copy</button>
+          </div>
+        </div>
       </div>
     </div>
 
