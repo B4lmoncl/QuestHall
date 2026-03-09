@@ -286,7 +286,7 @@ export default function Dashboard() {
               className="text-xs font-mono px-2 py-0.5 rounded"
               style={{ color: "#ff4444", background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.18)" }}
             >
-              Revenue Team
+              The Guild
             </span>
           </div>
 
@@ -326,7 +326,7 @@ export default function Dashboard() {
             Operations Center
           </h1>
           <p className="text-sm mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-            Live revenue agent overview
+            Live agent guild command center
           </p>
         </div>
 
@@ -499,7 +499,7 @@ export default function Dashboard() {
           style={{ color: "rgba(255,255,255,0.15)" }}
         >
           <div className="flex items-center gap-3">
-            <span>OpenClaw · Quest Hall · Revenue Team</span>
+            <span>OpenClaw · Quest Hall · The Guild</span>
             {versions && (
               <span style={{ color: "rgba(255,255,255,0.25)" }}>
                 Dashboard v{versions.dashboard} | Companion App v{versions.app}
