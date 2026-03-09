@@ -41,6 +41,7 @@ interface Quest {
   parentQuestId?: string | null;
   children?: Quest[];
   progress?: { completed: number; total: number };
+  recurrence?: string | null;
 }
 
 interface QuestsData {
@@ -909,6 +910,18 @@ function AgentBadge({ name }: { name: string }) {
   );
 }
 
+function RecurringBadge({ recurrence }: { recurrence: string }) {
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+      style={{ color: "#6366f1", background: "rgba(99,102,241,0.1)", border: "1px solid rgba(99,102,241,0.25)" }}
+      title={`Recurring: ${recurrence}`}
+    >
+      🔁 {recurrence}
+    </span>
+  );
+}
+
 function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
@@ -1042,6 +1055,7 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <TypeBadge type={quest.type} />
+            {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
             {cats.map(c => <CategoryBadge key={c} category={c} />)}
             {quest.product && <ProductBadge product={quest.product} />}
             {isInProgress && quest.claimedBy && (
@@ -1132,6 +1146,7 @@ function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?:
             )}
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               <TypeBadge type={quest.type} />
+              {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
               {cats.map(c => <CategoryBadge key={c} category={c} />)}
               {quest.product && <ProductBadge product={quest.product} />}
               {isInProgress && quest.claimedBy && (
