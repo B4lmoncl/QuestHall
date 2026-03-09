@@ -43,6 +43,7 @@ interface Quest {
   progress?: { completed: number; total: number };
   recurrence?: string | null;
   proof?: string | null;
+  checklist?: { text: string; done: boolean }[] | null;
 }
 
 interface User {
@@ -774,6 +775,11 @@ export default function Dashboard() {
           </section>
         )}
 
+        {/* AI Smart Suggestions */}
+        {dashView === "ops" && (
+          <SmartSuggestionsPanel quests={quests} agents={agents} />
+        )}
+
         {/* Rejected Quests (Mülleimer) */}
         {quests.rejected.length > 0 && (
           <section className="mb-6">
@@ -912,6 +918,185 @@ export default function Dashboard() {
         </div>
       </footer>
     </div>
+  );
+}
+
+// ─── Smart Suggestions Panel ──────────────────────────────────────────────────
+
+interface Suggestion {
+  id: string;
+  icon: string;
+  title: string;
+  body: string;
+  accent: string;
+  accentBg: string;
+}
+
+function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestion[] {
+  const suggestions: Suggestion[] = [];
+  const now = Date.now();
+  const DAY = 86_400_000;
+
+  // 1. Stale epic quests — parent open but no child activity for 7+ days
+  const epics = quests.open.filter(q => q.children && q.children.length > 0);
+  for (const epic of epics) {
+    const lastActivity = Math.max(
+      new Date(epic.createdAt).getTime(),
+      ...(epic.children ?? []).map(c => new Date(c.createdAt).getTime()),
+    );
+    const staleDays = Math.floor((now - lastActivity) / DAY);
+    if (staleDays >= 7) {
+      suggestions.push({
+        id: `stale-${epic.id}`,
+        icon: "🕸",
+        title: `Epic "${epic.title}" is stale`,
+        body: `No sub-quest activity for ${staleDays} days. Consider breaking it down or reassigning.`,
+        accent: "#f59e0b",
+        accentBg: "rgba(245,158,11,0.08)",
+      });
+    }
+  }
+
+  // 2. Recurring quests not recently completed (no completion in last recurrence window)
+  const recurringOpen = quests.open.filter(q => q.recurrence);
+  for (const q of recurringOpen) {
+    const windowDays = q.recurrence === "daily" ? 1 : q.recurrence === "weekly" ? 7 : 30;
+    const age = (now - new Date(q.createdAt).getTime()) / DAY;
+    if (age >= windowDays) {
+      suggestions.push({
+        id: `recurring-${q.id}`,
+        icon: "🔁",
+        title: `Recurring quest overdue: "${q.title}"`,
+        body: `Scheduled ${q.recurrence} — created ${Math.floor(age)}d ago with no completion recorded.`,
+        accent: "#6366f1",
+        accentBg: "rgba(99,102,241,0.08)",
+      });
+    }
+  }
+
+  // 3. High-priority pile — 3+ high-priority open quests unclaimed
+  const highOpen = quests.open.filter(q => q.priority === "high" && !q.claimedBy);
+  if (highOpen.length >= 3) {
+    suggestions.push({
+      id: "high-pile",
+      icon: "🔥",
+      title: `${highOpen.length} high-priority quests unclaimed`,
+      body: `High-value work is piling up: ${highOpen.slice(0, 2).map(q => `"${q.title}"`).join(", ")}${highOpen.length > 2 ? ` +${highOpen.length - 2} more` : ""}. Consider assigning them.`,
+      accent: "#ef4444",
+      accentBg: "rgba(239,68,68,0.08)",
+    });
+  }
+
+  // 4. Quest type imbalance — one type dominates > 70% of open quests
+  if (quests.open.length >= 5) {
+    const typeCounts: Record<string, number> = {};
+    for (const q of quests.open) {
+      const t = q.type ?? "development";
+      typeCounts[t] = (typeCounts[t] ?? 0) + 1;
+    }
+    const dominant = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0];
+    if (dominant && dominant[1] / quests.open.length > 0.7) {
+      const cfg = typeConfig[dominant[0]];
+      suggestions.push({
+        id: "type-imbalance",
+        icon: "⚖",
+        title: `Quest type imbalance: ${Math.round((dominant[1] / quests.open.length) * 100)}% ${cfg?.label ?? dominant[0]}`,
+        body: `${dominant[1]} of ${quests.open.length} open quests are ${dominant[0]}. Consider diversifying with personal, learning, or social quests.`,
+        accent: cfg?.color ?? "#9ca3af",
+        accentBg: cfg?.bg ?? "rgba(156,163,175,0.08)",
+      });
+    }
+  }
+
+  // 5. Idle agents with open quests available
+  const idleAgents = agents.filter(a => a.status === "idle");
+  if (idleAgents.length > 0 && quests.open.length > 0) {
+    suggestions.push({
+      id: "idle-agents",
+      icon: "💤",
+      title: `${idleAgents.length} agent${idleAgents.length > 1 ? "s" : ""} idle with ${quests.open.length} open quest${quests.open.length > 1 ? "s" : ""}`,
+      body: `${idleAgents.map(a => a.name).join(", ")} ${idleAgents.length > 1 ? "are" : "is"} idle. There are open quests waiting to be claimed.`,
+      accent: "#22c55e",
+      accentBg: "rgba(34,197,94,0.08)",
+    });
+  }
+
+  // 6. No learning quests — encourage knowledge capture
+  const hasLearning = [...quests.open, ...quests.inProgress].some(q => q.type === "learning");
+  if (!hasLearning && quests.open.length >= 3) {
+    suggestions.push({
+      id: "no-learning",
+      icon: "📚",
+      title: "No learning quests active",
+      body: "Knowledge capture is missing from the queue. Consider adding a learning quest to build team knowledge.",
+      accent: "#3b82f6",
+      accentBg: "rgba(59,130,246,0.08)",
+    });
+  }
+
+  return suggestions;
+}
+
+function SmartSuggestionsPanel({ quests, agents }: { quests: QuestsData; agents: Agent[] }) {
+  const [dismissed, setDismissed] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("dismissed_suggestions") ?? "[]")); } catch { return new Set(); }
+  });
+  const [open, setOpen] = useState(true);
+
+  const allSuggestions = buildSuggestions(quests, agents);
+  const visible = allSuggestions.filter(s => !dismissed.has(s.id));
+
+  const dismiss = (id: string) => {
+    const next = new Set(dismissed).add(id);
+    setDismissed(next);
+    try { localStorage.setItem("dismissed_suggestions", JSON.stringify([...next])); } catch { /* ignore */ }
+  };
+
+  if (visible.length === 0) return null;
+
+  return (
+    <section className="mb-6">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className="flex items-center gap-2 mb-3 w-full text-left"
+      >
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#a855f7" }}>
+          ✦ Smart Suggestions
+        </h2>
+        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
+          {visible.length}
+        </span>
+        <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="space-y-2">
+          {visible.map(s => (
+            <div
+              key={s.id}
+              className="rounded-xl p-4 flex items-start gap-3"
+              style={{ background: s.accentBg, border: `1px solid ${s.accent}30` }}
+            >
+              <span className="text-lg flex-shrink-0 leading-none mt-0.5">{s.icon}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: s.accent }}>{s.title}</p>
+                <p className="text-xs mt-0.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{s.body}</p>
+              </div>
+              <button
+                onClick={() => dismiss(s.id)}
+                className="flex-shrink-0 text-xs px-2 py-1 rounded transition-all"
+                style={{ color: "rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.04)" }}
+                title="Dismiss"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -1137,6 +1322,16 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
           </div>
           {expanded && quest.description && (
             <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.45)" }}>{quest.description}</p>
+          )}
+          {expanded && quest.checklist && quest.checklist.length > 0 && (
+            <div className="mt-2 space-y-1">
+              {quest.checklist.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 text-xs">
+                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "☑" : "☐"}</span>
+                  <span style={{ color: item.done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.6)", textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
+                </div>
+              ))}
+            </div>
           )}
           <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
         </div>
