@@ -1078,7 +1078,7 @@ loadQuests();
 app.listen(PORT, () => {
   console.log(`\n🔴 Agent Dashboard API running on http://localhost:${PORT}`);
   console.log(`   Agents: ${AGENT_NAMES.join(', ')}`);
-  console.log(`   API Key: ${API_KEY}`);
+  console.log(`   API Keys: ${API_KEYS.length} configured`);
   console.log(`   Rate limit: 100 req / 15 min per IP`);
   console.log(`   Endpoints:`);
   console.log(`     GET  /api/agents`);
