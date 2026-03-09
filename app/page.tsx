@@ -28,6 +28,9 @@ interface Quest {
   description: string;
   priority: "low" | "medium" | "high";
   category: string | null;
+  categories: string[];
+  product: string | null;
+  humanInputRequired: boolean;
   status: "open" | "in_progress" | "completed";
   createdAt: string;
   claimedBy: string | null;
@@ -55,6 +58,13 @@ const categoryConfig: Record<string, { color: string; bg: string }> = {
   "Infrastructure": { color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
   "Bug Fix":        { color: "#ff4444", bg: "rgba(255,68,68,0.1)"   },
   "Feature":        { color: "#e879f9", bg: "rgba(232,121,249,0.1)" },
+};
+
+const productConfig: Record<string, { color: string; bg: string }> = {
+  "Dashboard":      { color: "#ff6633", bg: "rgba(255,102,51,0.1)"  },
+  "Companion App":  { color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
+  "Infrastructure": { color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
+  "Other":          { color: "#9ca3af", bg: "rgba(156,163,175,0.1)" },
 };
 
 async function fetchAgents(): Promise<Agent[]> {
@@ -380,25 +390,11 @@ export default function Dashboard() {
                 ) : (
                   <div>
                     {quests.completed.map((q, i) => (
-                      <div
+                      <CompletedQuestRow
                         key={q.id}
-                        className="flex items-center gap-3 px-4 py-3"
-                        style={{
-                          borderBottom: i < quests.completed.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
-                        }}
-                      >
-                        <span className="text-xs font-mono" style={{ color: "rgba(34,197,94,0.6)" }}>✓</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.6)" }}>{q.title}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>
-                            by <span style={{ color: "rgba(255,255,255,0.35)" }}>{q.completedBy}</span>
-                          </p>
-                        </div>
-                        <PriorityBadge priority={q.priority} />
-                        <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>
-                          {q.completedAt ? timeAgo(q.completedAt) : "—"}
-                        </span>
-                      </div>
+                        quest={q}
+                        isLast={i === quests.completed.length - 1}
+                      />
                     ))}
                   </div>
                 )}
@@ -444,6 +440,78 @@ function CategoryBadge({ category }: { category: string }) {
   );
 }
 
+function ProductBadge({ product }: { product: string }) {
+  const cfg = productConfig[product] ?? { color: "rgba(255,255,255,0.4)", bg: "rgba(255,255,255,0.06)" };
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+      style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.color}30`, fontStyle: "italic" }}
+    >
+      {product}
+    </span>
+  );
+}
+
+function HumanInputBadge() {
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 font-medium"
+      style={{ color: "#f59e0b", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)" }}
+    >
+      👤 Needs Leon
+    </span>
+  );
+}
+
+function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean }) {
+  const [expanded, setExpanded] = useState(false);
+  const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
+  return (
+    <div
+      style={{ borderBottom: isLast ? "none" : "1px solid rgba(255,255,255,0.04)" }}
+    >
+      <button
+        onClick={() => setExpanded(v => !v)}
+        className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
+      >
+        <span className="text-xs font-mono flex-shrink-0" style={{ color: "rgba(34,197,94,0.6)" }}>✓</span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.6)" }}>{quest.title}</p>
+          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+              by <span style={{ color: "rgba(255,255,255,0.35)" }}>{quest.completedBy}</span>
+            </span>
+            {quest.humanInputRequired && (
+              <span className="text-xs" style={{ color: "rgba(245,158,11,0.6)" }}>👤</span>
+            )}
+          </div>
+        </div>
+        <PriorityBadge priority={quest.priority} />
+        <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {quest.completedAt ? timeAgo(quest.completedAt) : "—"}
+        </span>
+        <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {expanded ? "▲" : "▼"}
+        </span>
+      </button>
+      {expanded && (
+        <div className="px-4 pb-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}>
+          {quest.description && (
+            <p className="text-xs leading-relaxed pt-2" style={{ color: "rgba(255,255,255,0.4)" }}>{quest.description}</p>
+          )}
+          <div className="flex items-center gap-2 flex-wrap pt-1">
+            {cats.map(c => <CategoryBadge key={c} category={c} />)}
+            {quest.product && <ProductBadge product={quest.product} />}
+          </div>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+            Completed {quest.completedAt ? timeAgo(quest.completedAt) : "—"} · by {quest.completedBy}
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PriorityBadge({ priority }: { priority: Quest["priority"] }) {
   const cfg = priorityConfig[priority] ?? priorityConfig.medium;
   return (
@@ -459,6 +527,7 @@ function PriorityBadge({ priority }: { priority: Quest["priority"] }) {
 function QuestCard({ quest }: { quest: Quest }) {
   const [expanded, setExpanded] = useState(false);
   const isInProgress = quest.status === "in_progress";
+  const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
 
   return (
     <div
@@ -485,10 +554,12 @@ function QuestCard({ quest }: { quest: Quest }) {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <p className="text-xs font-medium truncate flex-1" style={{ color: "#e8e8e8" }}>{quest.title}</p>
+            {quest.humanInputRequired && <HumanInputBadge />}
             <PriorityBadge priority={quest.priority} />
           </div>
-          <div className="flex items-center gap-2 mt-1">
-            {quest.category && <CategoryBadge category={quest.category} />}
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            {cats.map(c => <CategoryBadge key={c} category={c} />)}
+            {quest.product && <ProductBadge product={quest.product} />}
             {isInProgress && quest.claimedBy && (
               <span className="text-xs" style={{ color: "rgba(139,92,246,0.7)" }}>→ {quest.claimedBy}</span>
             )}

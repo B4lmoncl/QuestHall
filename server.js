@@ -37,14 +37,20 @@ app.use(express.static(path.join(__dirname, 'out')));
 app.use('/data', express.static(DATA_DIR));
 
 // ─── Auth ───────────────────────────────────────────────────────────────────────
-const API_KEY = process.env.API_KEY;
-if (!API_KEY) {
-  console.error('[fatal] API_KEY environment variable is not set. Exiting.');
+// Supports multiple API keys via API_KEYS (comma-separated) or single API_KEY (backward compat)
+const validApiKeys = new Set(
+  [
+    ...(process.env.API_KEYS ? process.env.API_KEYS.split(',').map(k => k.trim()).filter(Boolean) : []),
+    ...(process.env.API_KEY ? [process.env.API_KEY.trim()] : []),
+  ]
+);
+if (validApiKeys.size === 0) {
+  console.error('[fatal] No API keys configured. Set API_KEY or API_KEYS environment variable. Exiting.');
   process.exit(1);
 }
 function requireApiKey(req, res, next) {
   const key = req.headers['x-api-key'];
-  if (!key || key !== API_KEY) {
+  if (!key || !validApiKeys.has(key)) {
     return res.status(401).json({ error: 'Unauthorized', hint: 'Set X-API-Key header' });
   }
   next();
@@ -120,7 +126,17 @@ function loadQuests() {
   try {
     if (fs.existsSync(QUESTS_FILE)) {
       const raw = JSON.parse(fs.readFileSync(QUESTS_FILE, 'utf8'));
-      if (Array.isArray(raw)) quests = raw;
+      if (Array.isArray(raw)) {
+        quests = raw.map(q => {
+          // Backward compat: normalize category (string) → categories (array)
+          if (!q.categories) {
+            q.categories = q.category ? [q.category] : [];
+          }
+          if (q.product === undefined) q.product = null;
+          if (q.humanInputRequired === undefined) q.humanInputRequired = false;
+          return q;
+        });
+      }
     }
   } catch (e) {
     console.warn('[quests] Failed to load quests:', e.message);
@@ -305,22 +321,37 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority, category } = req.body;
+  const { title, description, priority, category, categories, product, humanInputRequired } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
+  const validProducts = ['Dashboard', 'Companion App', 'Infrastructure', 'Other'];
   if (priority && !validPriorities.includes(priority)) {
     return res.status(400).json({ error: `Invalid priority. Use: ${validPriorities.join(', ')}` });
   }
-  if (category && !validCategories.includes(category)) {
-    return res.status(400).json({ error: `Invalid category. Use: ${validCategories.join(', ')}` });
+  // Normalize: support both category (string, backward compat) and categories (array)
+  let resolvedCategories = [];
+  if (categories && Array.isArray(categories)) {
+    const invalid = categories.find(c => !validCategories.includes(c));
+    if (invalid) return res.status(400).json({ error: `Invalid category: ${invalid}. Use: ${validCategories.join(', ')}` });
+    resolvedCategories = categories;
+  } else if (category) {
+    if (!validCategories.includes(category)) {
+      return res.status(400).json({ error: `Invalid category. Use: ${validCategories.join(', ')}` });
+    }
+    resolvedCategories = [category];
+  }
+  if (product && !validProducts.includes(product)) {
+    return res.status(400).json({ error: `Invalid product. Use: ${validProducts.join(', ')}` });
   }
   const quest = {
     id: `quest-${Date.now()}`,
     title,
     description: description || '',
     priority: priority || 'medium',
-    category: category || null,
+    categories: resolvedCategories,
+    product: product || null,
+    humanInputRequired: humanInputRequired === true || humanInputRequired === 'true',
     status: 'open',
     createdAt: now(),
     claimedBy: null,
@@ -424,7 +455,7 @@ const API_DOCS = {
         type: 'apiKey',
         in: 'header',
         name: 'X-API-Key',
-        description: 'Required for all POST operations. GET endpoints are public.',
+        description: 'Required for all POST operations. GET endpoints are public. Multiple keys supported via API_KEYS env var (comma-separated). Each agent can have its own key.',
       },
     },
     schemas: {
@@ -461,16 +492,18 @@ const API_DOCS = {
       Quest: {
         type: 'object',
         properties: {
-          id:          { type: 'string',  example: 'quest-1741434000000' },
-          title:       { type: 'string',  example: 'Analyze Q1 sales data' },
-          description: { type: 'string',  example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
-          priority:    { type: 'string',  enum: ['low','medium','high'], example: 'high' },
-          category:    { type: 'string',  nullable: true, enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'], example: 'Research' },
-          status:      { type: 'string',  enum: ['open','in_progress','completed'], example: 'open' },
-          createdAt:   { type: 'string',  format: 'date-time' },
-          claimedBy:   { type: 'string',  nullable: true, example: 'atlas' },
-          completedBy: { type: 'string',  nullable: true, example: 'atlas' },
-          completedAt: { type: 'string',  nullable: true, format: 'date-time' },
+          id:                 { type: 'string',  example: 'quest-1741434000000' },
+          title:              { type: 'string',  example: 'Analyze Q1 sales data' },
+          description:        { type: 'string',  example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
+          priority:           { type: 'string',  enum: ['low','medium','high'], example: 'high' },
+          categories:         { type: 'array',   items: { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'] }, example: ['Research','Coding'], description: 'Array of categories. Replaces the old category field. Send category (string) for backward compat.' },
+          product:            { type: 'string',  nullable: true, enum: ['Dashboard','Companion App','Infrastructure','Other'], example: 'Dashboard', description: 'Optional product this quest belongs to.' },
+          humanInputRequired: { type: 'boolean', example: false, description: 'If true, this quest requires human input and agents should not claim it alone.' },
+          status:             { type: 'string',  enum: ['open','in_progress','completed'], example: 'open' },
+          createdAt:          { type: 'string',  format: 'date-time' },
+          claimedBy:          { type: 'string',  nullable: true, example: 'atlas' },
+          completedBy:        { type: 'string',  nullable: true, example: 'atlas' },
+          completedAt:        { type: 'string',  nullable: true, format: 'date-time' },
         },
       },
       Error: {
@@ -744,7 +777,7 @@ const API_DOCS = {
     '/api/quest': {
       post: {
         summary: 'Create a quest',
-        description: 'Post a new quest to the board. All agents can see open quests and claim them.',
+        description: 'Post a new quest to the board. All agents can see open quests and claim them. Use categories (array) for multi-category or category (string) for backward compat.',
         operationId: 'createQuest',
         tags: ['Quests'],
         security: [{ ApiKeyAuth: [] }],
@@ -756,13 +789,16 @@ const API_DOCS = {
                 type: 'object',
                 required: ['title'],
                 properties: {
-                  title:       { type: 'string', example: 'Analyze Q1 sales data' },
-                  description: { type: 'string', example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
-                  priority:    { type: 'string', enum: ['low','medium','high'], example: 'high' },
-                  category:    { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'], example: 'Research' },
+                  title:              { type: 'string', example: 'Analyze Q1 sales data' },
+                  description:        { type: 'string', example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
+                  priority:           { type: 'string', enum: ['low','medium','high'], example: 'high' },
+                  categories:         { type: 'array', items: { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'] }, example: ['Research','Coding'], description: 'Preferred: array of categories.' },
+                  category:           { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'], example: 'Research', description: 'Backward compat: single category string. Converted to categories array internally.' },
+                  product:            { type: 'string', enum: ['Dashboard','Companion App','Infrastructure','Other'], example: 'Dashboard', description: 'Optional product this quest belongs to.' },
+                  humanInputRequired: { type: 'boolean', example: false, description: 'Set true if this quest requires human input. Agents will avoid claiming it.' },
                 },
               },
-              example: { title: 'Analyze Q1 sales data', description: 'Identify top opportunities.', priority: 'high', category: 'Research' },
+              example: { title: 'Analyze Q1 sales data', description: 'Identify top opportunities.', priority: 'high', categories: ['Research'], product: 'Dashboard', humanInputRequired: false },
             },
           },
         },
@@ -771,8 +807,8 @@ const API_DOCS = {
           400: { description: 'Missing title or invalid field' },
           401: { description: 'Missing or invalid API key' },
         },
-        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"title":"Analyze Q1 sales data","priority":"high","category":"Research"}\'',
-        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"title": "Analyze Q1 sales data", "priority": "high", "category": "Research"}\n)\nprint(resp.json())',
+        'x-curl': 'curl -X POST http://187.77.139.247:3001/api/quest \\\n  -H "Content-Type: application/json" \\\n  -H "X-API-Key: YOUR_API_KEY" \\\n  -d \'{"title":"Fix login bug","priority":"high","categories":["Coding","Bug Fix"],"product":"Dashboard","humanInputRequired":false}\'',
+        'x-python': 'import requests\nresp = requests.post(\n    "http://172.18.0.3:3001/api/quest",\n    headers={"X-API-Key": "YOUR_API_KEY"},\n    json={"title": "Fix login bug", "priority": "high", "categories": ["Coding", "Bug Fix"], "product": "Dashboard", "humanInputRequired": False}\n)\nprint(resp.json())',
       },
     },
     '/api/quests': {

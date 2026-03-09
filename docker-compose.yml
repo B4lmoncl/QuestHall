@@ -8,7 +8,10 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3001
-      - API_KEY=${API_KEY:-YOUR_API_KEY_HERE}
+      # Single key (backward compat): API_KEY=your-secret-key
+      - API_KEY=${API_KEY:-}
+      # Multiple keys (one per agent): API_KEYS=lyra-key,hex-key,nova-key
+      - API_KEYS=${API_KEYS:-}
     volumes:
       - quest-data:/app/public/data
 
