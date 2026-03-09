@@ -66,6 +66,29 @@ function switchTab(name) {
   tabSettings.classList.toggle('hidden', name !== 'settings');
   if (name === 'settings') populateSettingsFields();
   if (name === 'review') loadReviewQuests();
+  if (name === 'quest') loadParentQuestOptions();
+}
+
+async function loadParentQuestOptions() {
+  const { API_BASE } = loadConfig();
+  const base = API_BASE || DEFAULT_SERVER;
+  const select = document.getElementById('parent-quest');
+  if (!select) return;
+  try {
+    const r = await fetch(`${base}/api/quests`, { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return;
+    const data = await r.json();
+    const openQuests = [...(data.open || []), ...(data.inProgress || [])];
+    // Keep only top-level quests (no parentQuestId)
+    const epics = openQuests.filter(q => !q.parentQuestId);
+    select.innerHTML = '<option value="">— None —</option>';
+    epics.forEach(q => {
+      const opt = document.createElement('option');
+      opt.value = q.id;
+      opt.textContent = q.title.length > 50 ? q.title.slice(0, 47) + '…' : q.title;
+      select.appendChild(opt);
+    });
+  } catch (_) { /* ignore, dropdown stays empty */ }
 }
 
 tabBtns.forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
@@ -128,6 +151,8 @@ form.addEventListener('submit', async (e) => {
   const description      = document.getElementById('description').value.trim();
   const priority         = document.getElementById('priority').value;
   const humanInputRequired = document.getElementById('human-input').checked;
+  const questType        = document.getElementById('quest-type').value || 'development';
+  const parentQuestId    = document.getElementById('parent-quest').value || undefined;
 
   // Collect checked categories
   const checkedBoxes = document.querySelectorAll('.category-cb:checked');
@@ -146,7 +171,7 @@ form.addEventListener('submit', async (e) => {
         'Content-Type': 'application/json',
         'X-API-Key': API_KEY,
       },
-      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined, createdBy: 'leon' }),
+      body: JSON.stringify({ title, description, priority, category, categories, humanInputRequired, product: document.getElementById('product').value || undefined, createdBy: 'leon', type: questType, parentQuestId }),
     });
 
     if (resp.ok) {
@@ -154,6 +179,8 @@ form.addEventListener('submit', async (e) => {
       showMessage(`Quest posted! ID: ${data.quest.id}`);
       form.reset();
       document.getElementById('priority').value = 'medium';
+      document.getElementById('quest-type').value = 'development';
+      document.getElementById('parent-quest').value = '';
       document.querySelectorAll('.category-cb').forEach(cb => { cb.checked = false; });
       // Success shimmer on form
       form.classList.add('form-shimmer');
@@ -322,6 +349,7 @@ if (!isConfigured()) {
   switchTab('settings');
 } else {
   switchTab('quest');
+  loadParentQuestOptions();
 }
 
 checkConnection();

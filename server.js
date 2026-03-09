@@ -136,6 +136,8 @@ function loadQuests() {
           if (q.product === undefined) q.product = null;
           if (q.humanInputRequired === undefined) q.humanInputRequired = false;
           if (q.createdBy === undefined) q.createdBy = 'unknown';
+          if (q.type === undefined) q.type = 'development';
+          if (q.parentQuestId === undefined) q.parentQuestId = null;
           return q;
         });
       }
@@ -337,13 +339,17 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority, category, categories, product, humanInputRequired, createdBy } = req.body;
+  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
   const validProducts = ['Dashboard', 'Companion App', 'Infrastructure', 'Other'];
+  const validTypes = ['development', 'personal', 'learning', 'social'];
   if (priority && !validPriorities.includes(priority)) {
     return res.status(400).json({ error: `Invalid priority. Use: ${validPriorities.join(', ')}` });
+  }
+  if (type && !validTypes.includes(type)) {
+    return res.status(400).json({ error: `Invalid type. Use: ${validTypes.join(', ')}` });
   }
   // Normalize: support both category (string, backward compat) and categories (array)
   let resolvedCategories = [];
@@ -360,6 +366,11 @@ app.post('/api/quest', requireApiKey, (req, res) => {
   if (product && !validProducts.includes(product)) {
     return res.status(400).json({ error: `Invalid product. Use: ${validProducts.join(', ')}` });
   }
+  // Validate parentQuestId if provided
+  if (parentQuestId) {
+    const parent = quests.find(q => q.id === parentQuestId);
+    if (!parent) return res.status(400).json({ error: `Parent quest not found: ${parentQuestId}` });
+  }
   const resolvedCreatedBy = typeof createdBy === 'string' && createdBy.trim() ? createdBy.trim() : 'unknown';
   // Agent-created quests go to 'suggested' for human review; human-created stay 'open'
   const HUMAN_CREATORS = ['leon', 'unknown'];
@@ -369,6 +380,7 @@ app.post('/api/quest', requireApiKey, (req, res) => {
     title,
     description: description || '',
     priority: priority || 'medium',
+    type: type || 'development',
     categories: resolvedCategories,
     product: product || null,
     humanInputRequired: humanInputRequired === true || humanInputRequired === 'true',
@@ -378,6 +390,7 @@ app.post('/api/quest', requireApiKey, (req, res) => {
     claimedBy: null,
     completedBy: null,
     completedAt: null,
+    parentQuestId: parentQuestId || null,
   };
   quests.push(quest);
   saveQuests();
@@ -439,12 +452,29 @@ app.post('/api/quest/:id/unclaim', requireApiKey, (req, res) => {
 
 // GET /api/quests — list all quests grouped by status
 app.get('/api/quests', (req, res) => {
+  const typeFilter = req.query.type;
+
+  function enrichEpics(list) {
+    return list.map(q => {
+      const children = quests.filter(c => c.parentQuestId === q.id);
+      if (children.length === 0) return q;
+      const completedCount = children.filter(c => c.status === 'completed').length;
+      return { ...q, children, progress: { completed: completedCount, total: children.length } };
+    });
+  }
+
+  function filterAndEnrich(statusFilter) {
+    let list = quests.filter(q => q.status === statusFilter && !q.parentQuestId);
+    if (typeFilter) list = list.filter(q => q.type === typeFilter);
+    return enrichEpics(list);
+  }
+
   res.json({
-    open:       quests.filter(q => q.status === 'open'),
-    inProgress: quests.filter(q => q.status === 'in_progress'),
-    completed:  quests.filter(q => q.status === 'completed'),
-    suggested:  quests.filter(q => q.status === 'suggested'),
-    rejected:   quests.filter(q => q.status === 'rejected'),
+    open:       filterAndEnrich('open'),
+    inProgress: filterAndEnrich('in_progress'),
+    completed:  filterAndEnrich('completed'),
+    suggested:  filterAndEnrich('suggested'),
+    rejected:   filterAndEnrich('rejected'),
   });
 });
 
@@ -622,6 +652,7 @@ const API_DOCS = {
           title:              { type: 'string',  example: 'Analyze Q1 sales data' },
           description:        { type: 'string',  example: 'Pull the full Q1 sales report and identify top 3 opportunities.' },
           priority:           { type: 'string',  enum: ['low','medium','high'], example: 'high' },
+          type:               { type: 'string',  enum: ['development','personal','learning','social'], example: 'development', description: 'Quest type. development=coding/dev work, personal=life tasks, learning=study/research, social=events/networking. Defaults to development.' },
           categories:         { type: 'array',   items: { type: 'string', enum: ['Coding','Research','Content','Sales','Infrastructure','Bug Fix','Feature'] }, example: ['Research','Coding'], description: 'Array of categories. Replaces the old category field. Send category (string) for backward compat.' },
           product:            { type: 'string',  nullable: true, enum: ['Dashboard','Companion App','Infrastructure','Other'], example: 'Dashboard', description: 'Optional product this quest belongs to.' },
           humanInputRequired: { type: 'boolean', example: false, description: 'If true, this quest requires human input and agents should not claim it alone.' },
@@ -631,6 +662,9 @@ const API_DOCS = {
           claimedBy:          { type: 'string',  nullable: true, example: 'atlas' },
           completedBy:        { type: 'string',  nullable: true, example: 'atlas' },
           completedAt:        { type: 'string',  nullable: true, format: 'date-time' },
+          parentQuestId:      { type: 'string',  nullable: true, example: null, description: 'If set, this quest is a sub-quest of the referenced epic quest.' },
+          children:           { type: 'array',   description: 'Populated in GET /api/quests for epic quests. Contains child quest objects.', items: { type: 'object' } },
+          progress:           { type: 'object',  description: 'Populated in GET /api/quests for epic quests with children.', properties: { completed: { type: 'integer' }, total: { type: 'integer' } } },
         },
       },
       Error: {
@@ -924,9 +958,11 @@ const API_DOCS = {
                   product:            { type: 'string', enum: ['Dashboard','Companion App','Infrastructure','Other'], example: 'Dashboard', description: 'Optional product this quest belongs to.' },
                   humanInputRequired: { type: 'boolean', example: false, description: 'Set true if this quest requires human input. Agents will avoid claiming it.' },
                   createdBy:          { type: 'string', example: 'forge', description: 'Optional. Who created this quest. Use agent names for agent-generated quests. Defaults to "unknown".' },
+                  type:               { type: 'string', enum: ['development','personal','learning','social'], example: 'development', description: 'Quest type. Defaults to development.' },
+                  parentQuestId:      { type: 'string', example: 'quest-1741434000000', description: 'Optional. ID of parent epic quest. Makes this a sub-quest.' },
                 },
               },
-              example: { title: 'Analyze Q1 sales data', description: 'Identify top opportunities.', priority: 'high', categories: ['Research'], product: 'Dashboard', humanInputRequired: false, createdBy: 'forge' },
+              example: { title: 'Analyze Q1 sales data', description: 'Identify top opportunities.', priority: 'high', categories: ['Research'], product: 'Dashboard', humanInputRequired: false, createdBy: 'forge', type: 'development' },
             },
           },
         },
@@ -942,9 +978,12 @@ const API_DOCS = {
     '/api/quests': {
       get: {
         summary: 'List all quests',
-        description: 'Returns quests grouped by status: open, inProgress, completed, suggested (agent-created, pending review), rejected.',
+        description: 'Returns quests grouped by status: open, inProgress, completed, suggested (agent-created, pending review), rejected. Supports ?type=personal|development|learning|social filter. Only top-level quests returned; epic quests include children[] and progress{}.',
         operationId: 'listQuests',
         tags: ['Quests'],
+        parameters: [
+          { name: 'type', in: 'query', required: false, schema: { type: 'string', enum: ['development','personal','learning','social'] }, description: 'Filter quests by type.' },
+        ],
         responses: {
           200: {
             description: 'Quests grouped by status',

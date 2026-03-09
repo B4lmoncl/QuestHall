@@ -27,6 +27,7 @@ interface Quest {
   title: string;
   description: string;
   priority: "low" | "medium" | "high";
+  type?: "development" | "personal" | "learning" | "social";
   category: string | null;
   categories: string[];
   product: string | null;
@@ -37,6 +38,9 @@ interface Quest {
   claimedBy: string | null;
   completedBy: string | null;
   completedAt: string | null;
+  parentQuestId?: string | null;
+  children?: Quest[];
+  progress?: { completed: number; total: number };
 }
 
 interface QuestsData {
@@ -68,6 +72,13 @@ const productConfig: Record<string, { color: string; bg: string }> = {
   "Companion App":  { color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
   "Infrastructure": { color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
   "Other":          { color: "#9ca3af", bg: "rgba(156,163,175,0.1)" },
+};
+
+const typeConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  development: { label: "Dev",      color: "#8b5cf6", bg: "rgba(139,92,246,0.1)",  border: "rgba(139,92,246,0.3)"  },
+  personal:    { label: "Personal", color: "#22c55e", bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.3)"   },
+  learning:    { label: "Learn",    color: "#3b82f6", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.3)"  },
+  social:      { label: "Social",   color: "#ec4899", bg: "rgba(236,72,153,0.1)",  border: "rgba(236,72,153,0.3)"  },
 };
 
 async function fetchAgents(): Promise<Agent[]> {
@@ -154,6 +165,7 @@ export default function Dashboard() {
   const [reviewKeyInput, setReviewKeyInput] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -325,13 +337,15 @@ export default function Dashboard() {
     ? secondsAgo < 5 ? "just now" : `${secondsAgo}s ago`
     : "—";
 
-  // Quest search + sort
+  // Quest search + sort + type filter
   const priorityOrder: Record<string, number> = { high: 0, medium: 1, low: 2 };
   const applyFilter = useCallback((qs: Quest[]) => {
-    if (!searchFilter) return qs;
+    let result = qs;
+    if (typeFilter !== "all") result = result.filter(q => (q.type ?? "development") === typeFilter);
+    if (!searchFilter) return result;
     const s = searchFilter.toLowerCase();
-    return qs.filter(q => q.title.toLowerCase().includes(s) || (q.description || "").toLowerCase().includes(s));
-  }, [searchFilter]);
+    return result.filter(q => q.title.toLowerCase().includes(s) || (q.description || "").toLowerCase().includes(s));
+  }, [searchFilter, typeFilter]);
   const applySort = useCallback((qs: Quest[]) => {
     if (sortMode === "newest") return qs;
     return [...qs].sort((a, b) => (priorityOrder[a.priority] ?? 1) - (priorityOrder[b.priority] ?? 1));
@@ -540,6 +554,27 @@ export default function Dashboard() {
                   {sortMode === "newest" ? "⇅ Newest" : "⇅ Priority"}
                 </button>
               </div>
+              {/* Type filter tabs */}
+              <div className="flex gap-1 flex-wrap mb-2">
+                {(["all", "development", "personal", "learning", "social"] as const).map(t => {
+                  const cfg = t === "all" ? null : typeConfig[t];
+                  const isActive = typeFilter === t;
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => setTypeFilter(t)}
+                      className="text-xs px-2 py-0.5 rounded"
+                      style={{
+                        background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)",
+                        color: isActive ? (cfg ? cfg.color : "#e8e8e8") : "rgba(255,255,255,0.3)",
+                        border: `1px solid ${isActive ? (cfg ? cfg.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}`,
+                      }}
+                    >
+                      {t === "all" ? "All" : cfg!.label}
+                    </button>
+                  );
+                })}
+              </div>
               <input
                 type="text"
                 value={searchFilter}
@@ -561,7 +596,10 @@ export default function Dashboard() {
                   {!searchFilter && <p className="text-xs mt-1 font-mono" style={{ color: "rgba(255,68,68,0.3)" }}>POST /api/quest</p>}
                 </div>
               ) : (
-                visibleOpen.map(q => <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />)
+                visibleOpen.map(q => q.children && q.children.length > 0
+                  ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                  : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                )
               )}
 
               {visibleInProgress.length > 0 && (
@@ -571,7 +609,10 @@ export default function Dashboard() {
                       In Progress
                     </span>
                   </div>
-                  {visibleInProgress.map(q => <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />)}
+                  {visibleInProgress.map(q => q.children && q.children.length > 0
+                    ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                    : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                  )}
                 </>
               )}
             </div>
@@ -843,6 +884,19 @@ function HumanInputBadge() {
   );
 }
 
+function TypeBadge({ type }: { type?: string }) {
+  const cfg = typeConfig[type ?? "development"] ?? typeConfig.development;
+  if (!type || type === "development") return null;
+  return (
+    <span
+      className="text-xs px-1.5 py-0.5 rounded flex-shrink-0"
+      style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}` }}
+    >
+      {cfg.label}
+    </span>
+  );
+}
+
 function AgentBadge({ name }: { name: string }) {
   const label = name.charAt(0).toUpperCase() + name.slice(1);
   return (
@@ -987,6 +1041,7 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
             <PriorityBadge priority={quest.priority} />
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <TypeBadge type={quest.type} />
             {cats.map(c => <CategoryBadge key={c} category={c} />)}
             {quest.product && <ProductBadge product={quest.product} />}
             {isInProgress && quest.claimedBy && (
@@ -999,6 +1054,122 @@ function QuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boo
           <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
         </div>
       </div>
+    </div>
+  );
+}
+
+function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boolean; onToggle?: (id: string) => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const isInProgress = quest.status === "in_progress";
+  const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
+  const progress = quest.progress;
+  const children = quest.children ?? [];
+  const progressPct = progress && progress.total > 0 ? (progress.completed / progress.total) * 100 : 0;
+
+  return (
+    <div
+      className="rounded-lg cursor-pointer"
+      style={{
+        background: selected ? "rgba(255,102,51,0.06)" : "#252525",
+        border: `1px solid ${selected ? "rgba(255,102,51,0.4)" : "rgba(255,165,0,0.3)"}`,
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+      }}
+      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 6px 20px rgba(255,165,0,0.15)"; }}
+      onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "none"; }}
+    >
+      {/* Header row */}
+      <div className="p-3" onClick={() => setExpanded(v => !v)}>
+        <div className="flex items-start gap-2">
+          {onToggle && (
+            <button
+              onClick={e => { e.stopPropagation(); onToggle(quest.id); }}
+              className="mt-0.5 flex-shrink-0 w-3.5 h-3.5 rounded flex items-center justify-center"
+              style={{
+                background: selected ? "rgba(255,102,51,0.8)" : "rgba(255,255,255,0.06)",
+                border: `1px solid ${selected ? "rgba(255,102,51,0.9)" : "rgba(255,255,255,0.15)"}`,
+              }}
+            >
+              {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>✓</span>}
+            </button>
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,165,0,0.7)" }}>◆</span>
+              <p className="text-xs font-semibold truncate flex-1" style={{ color: "#e8e8e8" }}>{quest.title}</p>
+              {quest.humanInputRequired && <HumanInputBadge />}
+              <PriorityBadge priority={quest.priority} />
+              <span className="text-xs flex-shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>
+                {expanded ? "▲" : "▼"}
+              </span>
+            </div>
+            {/* Progress bar */}
+            {progress && progress.total > 0 && (
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    {progress.completed}/{progress.total} sub-quests
+                  </span>
+                  <span className="text-xs font-mono" style={{ color: progressPct === 100 ? "#22c55e" : "rgba(255,165,0,0.7)" }}>
+                    {Math.round(progressPct)}%
+                  </span>
+                </div>
+                <div className="w-full rounded-full" style={{ height: 4, background: "rgba(255,255,255,0.06)" }}>
+                  <div
+                    className="rounded-full"
+                    style={{
+                      height: 4,
+                      width: `${progressPct}%`,
+                      background: progressPct === 0
+                        ? "#ef4444"
+                        : progressPct === 100
+                          ? "#22c55e"
+                          : `linear-gradient(90deg, #ef4444 0%, #f59e0b ${Math.round(progressPct * 0.8)}%, #22c55e 100%)`,
+                      transition: "width 0.4s ease",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              <TypeBadge type={quest.type} />
+              {cats.map(c => <CategoryBadge key={c} category={c} />)}
+              {quest.product && <ProductBadge product={quest.product} />}
+              {isInProgress && quest.claimedBy && (
+                <span className="text-xs" style={{ color: "rgba(139,92,246,0.7)" }}>→ {quest.claimedBy}</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Sub-quests */}
+      {expanded && children.length > 0 && (
+        <div style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          {children.map((child, i) => (
+            <div
+              key={child.id}
+              className="flex items-center gap-2 px-3 py-2"
+              style={{
+                borderBottom: i === children.length - 1 ? "none" : "1px solid rgba(255,255,255,0.03)",
+                background: "rgba(0,0,0,0.15)",
+              }}
+            >
+              <span className="text-xs flex-shrink-0" style={{ color: child.status === "completed" ? "#22c55e" : "rgba(255,255,255,0.2)", marginLeft: 12 }}>
+                {child.status === "completed" ? "✓" : "◦"}
+              </span>
+              <p
+                className="text-xs flex-1 truncate"
+                style={{ color: child.status === "completed" ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.65)", textDecoration: child.status === "completed" ? "line-through" : "none" }}
+              >
+                {child.title}
+              </p>
+              <PriorityBadge priority={child.priority} />
+              {child.claimedBy && (
+                <span className="text-xs flex-shrink-0" style={{ color: "rgba(139,92,246,0.6)" }}>{child.claimedBy}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
