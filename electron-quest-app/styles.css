@@ -13,16 +13,25 @@ body {
 }
 
 .app {
-  padding: 24px 20px;
+  padding: 20px 20px 16px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 header {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.header-actions {
+  flex-shrink: 0;
 }
 
 .logo {
@@ -53,16 +62,89 @@ h1 {
   margin-top: 2px;
 }
 
-form {
+/* ─── Tabs ─────────────────────────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 4px;
+  background: #111;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.tab:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.tab.active {
+  background: #252525;
+  color: #f0f0f0;
+}
+
+.tab-content {
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
+.tab-content.hidden {
+  display: none;
+}
+
+/* ─── Icon button ──────────────────────────────────────────────────────────── */
+.icon-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 15px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.icon-btn:hover {
+  background: rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ─── Form ─────────────────────────────────────────────────────────────────── */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
 .field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
+}
+
+.field-row {
+  display: flex;
+  gap: 10px;
+}
+
+.field-row .field {
+  flex: 1;
 }
 
 label {
@@ -73,7 +155,15 @@ label {
   color: rgba(255, 255, 255, 0.35);
 }
 
+.optional {
+  opacity: 0.5;
+  font-size: 0.75em;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 input[type="text"],
+input[type="password"],
 textarea,
 select {
   background: #252525;
@@ -89,6 +179,7 @@ select {
 }
 
 input[type="text"]:focus,
+input[type="password"]:focus,
 textarea:focus,
 select:focus {
   border-color: rgba(255, 68, 68, 0.4);
@@ -96,7 +187,7 @@ select:focus {
 
 textarea {
   resize: vertical;
-  min-height: 90px;
+  min-height: 80px;
   line-height: 1.5;
 }
 
@@ -109,7 +200,8 @@ select {
   padding-right: 32px;
 }
 
-button[type="submit"] {
+button[type="submit"],
+.btn-primary {
   background: linear-gradient(135deg, #ff4444, #cc2200);
   color: white;
   border: none;
@@ -121,22 +213,67 @@ button[type="submit"] {
   transition: opacity 0.15s, transform 0.1s;
   box-shadow: 0 0 16px rgba(255, 68, 68, 0.25);
   margin-top: 4px;
+  width: 100%;
+  font-family: inherit;
 }
 
-button[type="submit"]:hover {
+button[type="submit"]:hover,
+.btn-primary:hover {
   opacity: 0.9;
 }
 
-button[type="submit"]:active {
+button[type="submit"]:active,
+.btn-primary:active {
   transform: scale(0.98);
 }
 
-button[type="submit"]:disabled {
+button[type="submit"]:disabled,
+.btn-primary:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
 }
 
+/* ─── Settings ─────────────────────────────────────────────────────────────── */
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-title {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.about-section {
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.about-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.about-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.about-value {
+  font-size: 12px;
+  font-family: monospace;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ─── Message ──────────────────────────────────────────────────────────────── */
 .message {
   font-size: 12px;
   padding: 10px 14px;
@@ -161,7 +298,7 @@ button[type="submit"]:disabled {
   color: #ef4444;
 }
 
-/* Scrollbar */
+/* ─── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 4px;
 }

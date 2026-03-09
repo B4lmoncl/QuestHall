@@ -10,59 +10,113 @@
   <div class="app">
     <header>
       <div class="logo">OC</div>
-      <div>
+      <div class="header-text">
         <h1>Quest Poster</h1>
         <p class="subtitle">Post a quest to the Agent Dashboard</p>
       </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="settings-btn" title="Settings">⚙</button>
+      </div>
     </header>
 
-    <form id="quest-form">
-      <div class="field">
-        <label for="title">Quest Title</label>
-        <input
-          type="text"
-          id="title"
-          placeholder="e.g. Analyze Q1 sales data"
-          maxlength="120"
-          required
-        />
+    <!-- Tab bar -->
+    <div class="tabs">
+      <button class="tab active" data-tab="quest">Post Quest</button>
+      <button class="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <!-- Quest tab -->
+    <div id="tab-quest" class="tab-content">
+      <form id="quest-form">
+        <div class="field">
+          <label for="title">Quest Title</label>
+          <input
+            type="text"
+            id="title"
+            placeholder="e.g. Analyze Q1 sales data"
+            maxlength="120"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea
+            id="description"
+            placeholder="What needs to be done and why…"
+            rows="4"
+            maxlength="1000"
+          ></textarea>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="priority">Priority</label>
+            <select id="priority">
+              <option value="low">Low</option>
+              <option value="medium" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="category">Category <span class="optional">(optional)</span></label>
+            <select id="category">
+              <option value="">— None —</option>
+              <option value="Coding">Coding</option>
+              <option value="Research">Research</option>
+              <option value="Content">Content</option>
+              <option value="Sales">Sales</option>
+              <option value="Infrastructure">Infrastructure</option>
+              <option value="Bug Fix">Bug Fix</option>
+              <option value="Feature">Feature</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" id="submit-btn">Quest Posten</button>
+      </form>
+    </div>
+
+    <!-- Settings tab -->
+    <div id="tab-settings" class="tab-content hidden">
+      <div class="settings-section">
+        <h3 class="settings-title">Connection</h3>
+        <div class="field">
+          <label for="cfg-server">Server URL</label>
+          <input
+            type="text"
+            id="cfg-server"
+            placeholder="http://187.77.139.247:3001"
+          />
+        </div>
+        <div class="field">
+          <label for="cfg-apikey">API Key</label>
+          <input
+            type="password"
+            id="cfg-apikey"
+            placeholder="Enter your API key"
+          />
+        </div>
+        <button id="save-settings-btn" class="btn-primary">Save Settings</button>
       </div>
 
-      <div class="field">
-        <label for="description">Description</label>
-        <textarea
-          id="description"
-          placeholder="What needs to be done and why…"
-          rows="5"
-          maxlength="1000"
-        ></textarea>
+      <div class="settings-section about-section">
+        <h3 class="settings-title">About</h3>
+        <div class="about-row">
+          <span class="about-label">App Version</span>
+          <span class="about-value" id="app-version">—</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">Dashboard Version</span>
+          <span class="about-value" id="dashboard-version">—</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">Server</span>
+          <span class="about-value" id="about-server" style="font-size:10px">—</span>
+        </div>
       </div>
-
-      <div class="field">
-        <label for="priority">Priority</label>
-        <select id="priority">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
-        </select>
-      </div>
-
-      <div class="field">
-        <label for="category">Category <span style="opacity:0.5;font-size:0.75em">(optional)</span></label>
-        <select id="category">
-          <option value="">— None —</option>
-          <option value="Coding">Coding</option>
-          <option value="Research">Research</option>
-          <option value="Content">Content</option>
-          <option value="Sales">Sales</option>
-          <option value="Infrastructure">Infrastructure</option>
-          <option value="Bug Fix">Bug Fix</option>
-          <option value="Feature">Feature</option>
-        </select>
-      </div>
-
-      <button type="submit" id="submit-btn">Quest Posten</button>
-    </form>
+    </div>
 
     <div id="message" class="message hidden"></div>
   </div>

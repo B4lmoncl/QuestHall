@@ -12,6 +12,7 @@ interface Agent {
   uptime: number;
   currentJobDuration: number;
   jobsCompleted: number;
+  questsCompleted?: number;
   revenue: number;
   health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
@@ -104,6 +105,7 @@ export default function Dashboard() {
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [apiLive, setApiLive] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
+  const [versions, setVersions] = useState<{ dashboard: string; app: string } | null>(null);
 
   const refresh = useCallback(async () => {
     const [a, q] = await Promise.all([fetchAgents(), fetchQuests()]);
@@ -119,6 +121,10 @@ export default function Dashboard() {
       const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
       setApiLive(r.ok);
     } catch { setApiLive(false); }
+    try {
+      const r = await fetch(`/api/version`, { signal: AbortSignal.timeout(1500) });
+      if (r.ok) setVersions(await r.json());
+    } catch { /* ignore */ }
     setLoading(false);
     setLastRefresh(new Date());
   }, []);
@@ -407,7 +413,14 @@ export default function Dashboard() {
           className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs font-mono"
           style={{ color: "rgba(255,255,255,0.15)" }}
         >
-          <span>OpenClaw · Agent Dashboard · Revenue Team</span>
+          <div className="flex items-center gap-3">
+            <span>OpenClaw · Agent Dashboard · Revenue Team</span>
+            {versions && (
+              <span style={{ color: "rgba(255,255,255,0.25)" }}>
+                Dashboard v{versions.dashboard} | Companion App v{versions.app}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-4" style={{ color: "rgba(255,68,68,0.35)" }}>
             <span>GET /api/quests</span>
             <span>POST /api/quest</span>

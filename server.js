@@ -78,6 +78,7 @@ function initStore() {
       uptime: 0,
       currentJobDuration: 0,
       jobsCompleted: 0,
+      questsCompleted: 0,
       revenue: 0.00,
       health: 'ok',
       lastUpdate: null,
@@ -255,6 +256,7 @@ app.post('/api/agent/:name/register', requireApiKey, (req, res) => {
       uptime: 0,
       currentJobDuration: 0,
       jobsCompleted: 0,
+      questsCompleted: 0,
       revenue: 0.00,
       health: 'ok',
       lastUpdate: null,
@@ -282,6 +284,16 @@ app.post('/api/agent/:name/checkin', requireApiKey, (req, res) => {
   saveData();
   console.log(`[${name}] checkin complete — health reset to ok`);
   res.json({ ok: true, agent: sanitizeAgent(store.agents[name]) });
+});
+
+// GET /api/version
+const dashboardPkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+const electronPkg  = (() => {
+  try { return JSON.parse(fs.readFileSync(path.join(__dirname, 'electron-quest-app', 'package.json'), 'utf8')); }
+  catch (_) { return { version: '1.0.0' }; }
+})();
+app.get('/api/version', (req, res) => {
+  res.json({ dashboard: dashboardPkg.version, app: electronPkg.version });
 });
 
 // GET /api/health
@@ -346,6 +358,12 @@ app.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   quest.completedBy = agentId;
   quest.completedAt = now();
   saveQuests();
+  // Increment the completing agent's questsCompleted counter
+  const agentKey = agentId.toLowerCase();
+  if (store.agents[agentKey]) {
+    store.agents[agentKey].questsCompleted = (store.agents[agentKey].questsCompleted || 0) + 1;
+    saveData();
+  }
   console.log(`[quest] ${quest.id} completed by ${agentId}`);
   res.json({ ok: true, quest });
 });

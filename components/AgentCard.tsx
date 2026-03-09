@@ -8,6 +8,7 @@ interface Agent {
   uptime: number; // seconds
   currentJobDuration: number; // seconds
   jobsCompleted: number;
+  questsCompleted?: number;
   revenue: number;
   health: "ok" | "needs_checkin" | "broken" | "stale";
   lastUpdate: string | null;
@@ -133,6 +134,12 @@ export default function AgentCard({ agent, activeQuests = [], isWide = false }: 
           highlight={agent.status === "working"}
         />
         <MetricRow label="Jobs Completed" value={String(agent.jobsCompleted ?? 0)} />
+        <MetricRow
+          label="Quests Completed"
+          value={String(agent.questsCompleted ?? 0)}
+          highlight={(agent.questsCompleted ?? 0) > 0}
+          highlightColor="#8b5cf6"
+        />
         <MetricRow
           label="Revenue"
           value={`$${(agent.revenue ?? 0).toFixed(2)}`}
