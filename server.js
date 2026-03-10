@@ -4446,6 +4446,73 @@ app.get('/api/stats/content', (req, res) => {
   });
 });
 
+// ─── Changelog (GitHub Commits) ──────────────────────────────────────────────
+let changelogCache = null;
+let changelogLastFetch = 0;
+const CHANGELOG_TTL = 30 * 60 * 1000; // 30 minutes
+
+async function fetchAndCacheChangelog() {
+  try {
+    const res = await fetch(
+      'https://api.github.com/repos/B4lmoncl/agent-dashboard/commits?per_page=50',
+      { headers: { 'User-Agent': 'agent-dashboard-server', 'Accept': 'application/vnd.github.v3+json' } }
+    );
+    if (!res.ok) {
+      console.warn('[changelog] GitHub API returned', res.status);
+      return;
+    }
+    const commits = await res.json();
+    if (!Array.isArray(commits)) return;
+
+    // Group by date
+    const byDate = {};
+    for (const c of commits) {
+      const date = c.commit?.author?.date
+        ? c.commit.author.date.slice(0, 10)
+        : null;
+      if (!date) continue;
+
+      const msg = c.commit?.message?.split('\n')[0] || '';
+      let type = 'chore';
+      let message = msg;
+      if (msg.startsWith('feat:')) { type = 'feat'; message = msg.slice(5).trim(); }
+      else if (msg.startsWith('fix:')) { type = 'fix'; message = msg.slice(4).trim(); }
+      else if (msg.startsWith('chore:')) { type = 'chore'; message = msg.slice(6).trim(); }
+      else if (msg.startsWith('docs:')) { type = 'docs'; message = msg.slice(5).trim(); }
+      else if (msg.startsWith('refactor:')) { type = 'refactor'; message = msg.slice(9).trim(); }
+
+      if (!byDate[date]) byDate[date] = [];
+      byDate[date].push({
+        sha: c.sha ? c.sha.slice(0, 7) : '',
+        type,
+        message,
+        author: c.commit?.author?.name || c.author?.login || '',
+        url: c.html_url || null,
+      });
+    }
+
+    const entries = Object.entries(byDate)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([date, commits]) => ({ date, commits }));
+
+    changelogCache = { entries, fetchedAt: new Date().toISOString() };
+    changelogLastFetch = Date.now();
+    console.log(`[changelog] Cached ${commits.length} commits across ${entries.length} days`);
+  } catch (err) {
+    console.warn('[changelog] Failed to fetch from GitHub:', err.message);
+  }
+}
+
+app.get('/api/changelog', async (req, res) => {
+  if (!changelogCache || Date.now() - changelogLastFetch > CHANGELOG_TTL) {
+    await fetchAndCacheChangelog();
+  }
+  if (!changelogCache) {
+    return res.json({ entries: [], error: 'Could not fetch changelog from GitHub' });
+  }
+  res.json(changelogCache);
+});
+
 // Serve index.html for non-API routes (SPA fallback)
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'out', 'index.html');
@@ -4473,6 +4540,9 @@ loadRoadmap();
 loadRituals();
 loadHabits();
 loadLootTables();
+
+fetchAndCacheChangelog();
+setInterval(fetchAndCacheChangelog, CHANGELOG_TTL);
 
 app.listen(PORT, () => {
   console.log(`\n🔴 Agent Dashboard API running on http://localhost:${PORT}`);

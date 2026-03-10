@@ -196,6 +196,19 @@ interface LootItem {
   effect: { type: string; amount?: number };
 }
 
+interface ChangelogCommit {
+  sha: string;
+  type: string;
+  message: string;
+  author: string;
+  url: string | null;
+}
+
+interface ChangelogEntry {
+  date: string;
+  commits: ChangelogCommit[];
+}
+
 const priorityConfig = {
   low:    { label: "Low",    color: "#22c55e", bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)"   },
   medium: { label: "Med",   color: "#eab308", bg: "rgba(234,179,8,0.12)",   border: "rgba(234,179,8,0.3)"   },
@@ -323,6 +336,17 @@ async function fetchHabits(playerName: string): Promise<Habit[]> {
   return [];
 }
 
+async function fetchChangelog(): Promise<ChangelogEntry[]> {
+  try {
+    const r = await fetch(`/api/changelog`, { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const data = await r.json();
+      return Array.isArray(data.entries) ? data.entries : [];
+    }
+  } catch { /* ignore */ }
+  return [];
+}
+
 async function createStarterQuestsIfNew(playerName: string, apiKey: string) {
   try {
     const key = `starter_quests_${playerName.toLowerCase()}`;
@@ -395,7 +419,7 @@ export default function Dashboard() {
   const [bulkLoading, setBulkLoading] = useState(false);
   const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [dashView, setDashView] = useState<"questBoard" | "npcBoard" | "campaign" | "leaderboard" | "honors" | "season" | "shop" | "roadmap">("questBoard");
+  const [dashView, setDashView] = useState<"questBoard" | "npcBoard" | "campaign" | "leaderboard" | "honors" | "season" | "shop" | "roadmap" | "changelog">("questBoard");
   const [lbSubTab, setLbSubTab] = useState<"agents" | "players">("players");
   const [createQuestOpen, setCreateQuestOpen] = useState(false);
   const [questBoardAgentOpen, setQuestBoardAgentOpen] = useState(false);
@@ -444,6 +468,8 @@ export default function Dashboard() {
   const [newHabitTitle, setNewHabitTitle] = useState("");
   const [newHabitPositive, setNewHabitPositive] = useState(true);
   const [newHabitNegative, setNewHabitNegative] = useState(false);
+  const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
+  const [changelogLoading, setChangelogLoading] = useState(false);
 
   // Particle system — white dust drifting upward
   useEffect(() => {
@@ -784,6 +810,13 @@ export default function Dashboard() {
     } catch { /* ignore */ }
   }, []);
 
+  useEffect(() => {
+    if (dashView === "changelog" && changelog.length === 0 && !changelogLoading) {
+      setChangelogLoading(true);
+      fetchChangelog().then(entries => { setChangelog(entries); setChangelogLoading(false); });
+    }
+  }, [dashView, changelog.length, changelogLoading]);
+
   const handleTutorialNext = () => {
     if (tutorialStep >= TUTORIAL_STEPS.length - 1) {
       try { localStorage.setItem("tutorialCompleted", "true"); } catch { /* ignore */ }
@@ -918,15 +951,22 @@ export default function Dashboard() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
-              style={{ background: "linear-gradient(135deg, #ff4444, #cc2200)", boxShadow: "0 0 12px rgba(255,68,68,0.35)" }}
+            <button
+              className="flex items-center gap-3 btn-interactive"
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+              onClick={() => { setDashView("questBoard"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+              title="Home — Quest Hall"
             >
-              OC
-            </div>
-            <span className="font-semibold text-sm tracking-tight" style={{ color: "#e8e8e8" }}>
-              Quest Hall
-            </span>
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center text-white font-black text-xs"
+                style={{ background: "linear-gradient(135deg, #ff4444, #cc2200)", boxShadow: "0 0 12px rgba(255,68,68,0.35)" }}
+              >
+                OC
+              </div>
+              <span className="font-semibold text-sm tracking-tight" style={{ color: "#e8e8e8" }}>
+                Quest Hall
+              </span>
+            </button>
             <span
               className="text-xs font-mono px-2 py-0.5 rounded"
               style={{ color: "#ff4444", background: "rgba(255,68,68,0.08)", border: "1px solid rgba(255,68,68,0.18)" }}
@@ -1260,6 +1300,7 @@ export default function Dashboard() {
             { key: "season",      label: `${CURRENT_SEASON.icon} Season`, tutorialKey: "season-tab" },
             { key: "shop",        label: "🛒 Shop",            tutorialKey: null },
             { key: "roadmap",     label: "🗺️ Roadmap",         tutorialKey: null },
+            { key: "changelog",   label: "📋 Changelog",        tutorialKey: null },
           ].map(v => (
             <button
               key={v.key}
@@ -1348,6 +1389,75 @@ export default function Dashboard() {
         {/* ── ROADMAP TAB ── */}
         {dashView === "roadmap" && (
           <RoadmapView isAdmin={isAdmin} reviewApiKey={reviewApiKey} />
+        )}
+
+        {/* ── CHANGELOG TAB ── */}
+        {dashView === "changelog" && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>📋 Changelog</span>
+              <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>— recent commits from GitHub</span>
+            </div>
+            {changelogLoading && (
+              <div className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>Loading commits…</div>
+            )}
+            {!changelogLoading && changelog.length === 0 && (
+              <div className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No changelog data available.</div>
+            )}
+            {changelog.map(entry => (
+              <div key={entry.date} className="space-y-1.5">
+                <div
+                  className="text-xs font-semibold uppercase tracking-widest pt-2 pb-1"
+                  style={{ color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  {entry.date}
+                </div>
+                {entry.commits.map((c, i) => {
+                  const typeStyle: Record<string, { badge: string; color: string; bg: string }> = {
+                    feat:     { badge: "🟢 feat",     color: "#4ade80", bg: "rgba(74,222,128,0.1)"  },
+                    fix:      { badge: "🔧 fix",      color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
+                    chore:    { badge: "⚙️ chore",    color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
+                    docs:     { badge: "📝 docs",     color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
+                    refactor: { badge: "♻️ refactor", color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
+                  };
+                  const ts = typeStyle[c.type] || { badge: c.type, color: "#9ca3af", bg: "rgba(156,163,175,0.1)" };
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-start gap-2 px-3 py-2 rounded"
+                      style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)" }}
+                    >
+                      <span
+                        className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+                        style={{ color: ts.color, background: ts.bg, whiteSpace: "nowrap" }}
+                      >
+                        {ts.badge}
+                      </span>
+                      <span className="text-sm flex-1 leading-snug" style={{ color: "rgba(255,255,255,0.7)" }}>
+                        {c.message}
+                      </span>
+                      {c.sha && (
+                        c.url ? (
+                          <a
+                            href={c.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs font-mono shrink-0"
+                            style={{ color: "rgba(255,255,255,0.2)", textDecoration: "none" }}
+                            title={`View commit ${c.sha}`}
+                          >
+                            {c.sha}
+                          </a>
+                        ) : (
+                          <span className="text-xs font-mono shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>{c.sha}</span>
+                        )
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
         )}
 
         {/* ── QUEST BOARD (Player Tab) ── */}
