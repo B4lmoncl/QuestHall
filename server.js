@@ -152,7 +152,7 @@ function getLevelInfo(xp) {
 // ─── Rate Limiting ──────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 500, // Increased for development/testing
+  max: 2000, // High limit — per IP, generous for active use
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
@@ -3121,7 +3121,7 @@ function buildDocsHtml(docs) {
   </header>
   <div class="auth-box">
     <h3>&#128273; Authentication</h3>
-    <p>All POST endpoints require an <code>X-API-Key</code> header. GET endpoints are always public. Rate limited to 100 requests per 15 minutes per IP (429 Too Many Requests when exceeded).</p>
+    <p>All POST endpoints require an <code>X-API-Key</code> header. GET endpoints are always public. Rate limited to 2000 requests per 15 minutes per IP (429 Too Many Requests when exceeded).</p>
     <pre style="margin-top:0.6rem">X-API-Key: YOUR_API_KEY</pre>
   </div>
   <div class="auth-box" style="background:#0a0c10;border-color:#1e3a5f;margin-bottom:2rem">
