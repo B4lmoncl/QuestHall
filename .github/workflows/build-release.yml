@@ -28,11 +28,14 @@ jobs:
         working-directory: electron-quest-app
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win portable
+        run: |
+          npx electron-builder --win nsis
+          npx electron-builder --win portable
 
       - name: Upload Release Asset
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          files: electron-quest-app/dist/*.exe
+          files: |
+            electron-quest-app/dist/*.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
