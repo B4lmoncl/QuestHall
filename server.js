@@ -23,6 +23,121 @@ const CAMPAIGNS_FILE  = path.join(DATA_DIR, 'campaigns.json');
 app.use(cors());
 app.use(express.json());
 
+// ─── Admin Key (hardcoded fallback) ─────────────────────────────────────────
+const ADMIN_KEY = '608f596d4b64d994b1f1624256f00549';
+
+// ─── Quest Flavor Text ───────────────────────────────────────────────────────
+const QUEST_FLAVOR = {
+  development: {
+    completionMessage: "⚒️ **PROTOCOL FORGED.** The anvil cools and your creation hums with power. Another artifact added to the Guild vault. The Forge Masters nod in approval — your craft grows sharper with every strike.",
+    streakBonus: {
+      "3":  "🔥 3-day Forge Streak! The anvil hasn't cooled in days. You're entering a state the old smiths called *The Endless Heat*.",
+      "7":  "⚒️🔥 7-day Forge Streak! The Guild speaks your name in whispers. They call you Ironhand — one who never lets the fire die.",
+      "14": "🌋 14-day Forge Streak! You've transcended mortal crafting. The Forge itself bends to your will. Legendary Artificer status unlocked.",
+      "30": "💎⚒️ 30-day Forge Streak! The Council of Master Smiths has no choice but to acknowledge a new peer. You are now part of the living legend of the Guild.",
+    },
+  },
+  learning: {
+    completionMessage: "📜 **KNOWLEDGE ACQUIRED.** The Archive glows as a new understanding etches itself into your mind. You feel the subtle shift — you are not who you were when you opened that first page. The Guild's Lorekeepers record your advancement.",
+    streakBonus: {
+      "3":  "📖 3-day Study Streak! The candles in the Archive burn for you alone. Your mind sharpens like a blade on the whetstone of knowledge.",
+      "7":  "🧠📖 7-day Study Streak! The Lorekeepers have taken notice. They've started leaving rare texts on your desk — they see potential for mastery.",
+      "14": "🌟 14-day Study Streak! You've entered the Scholar's Flow. Concepts that once seemed like foreign runes now read like your mother tongue.",
+      "30": "👁️📜 30-day Study Streak! The Grand Lorekeeper has granted you a key to the Restricted Section. Few have ever earned this honor. Your intellect is now a Guild-tier weapon.",
+    },
+  },
+  personal: {
+    completionMessage: "🏰 **DOMAIN SECURED.** Your quarters are fortified, your supplies restocked, your chaos tamed. It's invisible work, but the Guild knows — operational readiness is what wins wars. Respect earned where it matters most: in the foundation.",
+    streakBonus: {
+      "3":  "🧱 3-day Upkeep Streak! Your domain runs like a well-oiled siege engine. Consistency is the unsexy superpower, and you're wielding it.",
+      "7":  "🏰🧱 7-day Upkeep Streak! The Guild Quartermaster is impressed. Your personal operations are running at peak efficiency. Others are starting to ask how you do it.",
+      "14": "⚙️ 14-day Upkeep Streak! You've built something rare — sustainable order from chaos. The Guild promotes you to Keeper of the Inner Sanctum.",
+      "30": "👑🏰 30-day Upkeep Streak! A full month of unbroken discipline. Your domain is a fortress others aspire to. The Guild whispers of a new rank: Sovereign of the Hearth.",
+    },
+  },
+  fitness: {
+    completionMessage: "⚔️ **TRIAL SURVIVED.** You walked into the Arena and walked out stronger. Muscles forged, limits pushed, weakness burned away. The Warrior's Path demands everything, and today you paid the toll. The Guild salutes your iron will.",
+    streakBonus: {
+      "3":  "💪 3-day Arena Streak! Your body is beginning to remember what it was built for. The soreness is just your weakness leaving — the old warriors called it *The Shedding*.",
+      "7":  "⚔️💪 7-day Arena Streak! A full week in the Arena. The other warriors have stopped underestimating you. Your discipline echoes through the training halls like war drums.",
+      "14": "🔱 14-day Arena Streak! Two weeks of unbroken combat training. The Arena Masters have inscribed your name on the Wall of Perseverance. Your body is becoming a weapon of Guild legend.",
+      "30": "🏆⚔️ 30-day Arena Streak! Thirty days. THIRTY. The Arena has tested you with everything it has, and you are still standing. The Guild bestows upon you the title: Ironforged Champion.",
+    },
+  },
+  social: {
+    completionMessage: "🤝 **ALLIANCE STRENGTHENED.** The bonds between you and your allies grow deeper. In the quiet moments between battles, these are the connections that keep a warrior whole. The Guild knows: the strongest fighters are the ones with something worth fighting for.",
+    streakBonus: {
+      "3":  "💬 3-day Alliance Streak! You're showing up for your people consistently. Trust compounds quietly, but its power is immense. Your inner circle feels it.",
+      "7":  "🤝💬 7-day Alliance Streak! A full week of tending your alliances. The bonds are visibly stronger now. Your people know they can count on you — that's rarer than legendary loot.",
+      "14": "🛡️ 14-day Alliance Streak! Two weeks of dedicated connection. Your allies would ride into battle for you without hesitation. The Guild calls this *Unbreakable Accord*.",
+      "30": "👑🤝 30-day Alliance Streak! Thirty days of showing up for the people who matter. You've built something most adventurers never achieve — a true Fellowship. The Guild honors you as Warden of the Inner Circle.",
+    },
+  },
+};
+
+// ─── Campaign NPCs ───────────────────────────────────────────────────────────
+const CAMPAIGN_NPCS = [
+  { id: "npc_001", name: "Brenna Ironledger",   role: "Quest Hall Guildmaster",                   race: "Dwarf",    alignment: "Lawful Neutral" },
+  { id: "npc_002", name: "Silas Dawnmantle",    role: "Mysterious Stranger / Wandering Lorekeeper", race: "Half-Elf", alignment: "Chaotic Good"  },
+  { id: "npc_003", name: "Marta Hearthwine",    role: "Tavern Owner & Helpful Ally",              race: "Human",    alignment: "Neutral Good"   },
+  { id: "npc_004", name: "Vex",                 role: "Morally Gray Information Broker / Rival",  race: "Tiefling", alignment: "True Neutral"   },
+  { id: "npc_005", name: "Old Korrin",          role: "Retired Adventurer / Guild Mentor",        race: "Goliath",  alignment: "Neutral Good"   },
+];
+
+// ─── Level System ────────────────────────────────────────────────────────────
+const LEVELS = [
+  { level: 1,  title: "Forge Initiate",       xpRequired: 0     },
+  { level: 2,  title: "Anvil Striker",         xpRequired: 50    },
+  { level: 3,  title: "Coal Tender",           xpRequired: 120   },
+  { level: 4,  title: "Iron Apprentice",       xpRequired: 200   },
+  { level: 5,  title: "Flame Keeper",          xpRequired: 300   },
+  { level: 6,  title: "Bronze Shaper",         xpRequired: 420   },
+  { level: 7,  title: "Steel Crafter",         xpRequired: 560   },
+  { level: 8,  title: "Glyph Carver",          xpRequired: 720   },
+  { level: 9,  title: "Rune Binder",           xpRequired: 900   },
+  { level: 10, title: "Ironclad Journeyman",   xpRequired: 1100  },
+  { level: 11, title: "Forge Adept",           xpRequired: 1350  },
+  { level: 12, title: "Silver Tempered",       xpRequired: 1650  },
+  { level: 13, title: "Ember Warden",          xpRequired: 2000  },
+  { level: 14, title: "Mithral Seeker",        xpRequired: 2400  },
+  { level: 15, title: "Flame Warden",          xpRequired: 2850  },
+  { level: 16, title: "Knight of the Forge",   xpRequired: 3350  },
+  { level: 17, title: "Obsidian Blade",        xpRequired: 3900  },
+  { level: 18, title: "Ashbound Knight",       xpRequired: 4500  },
+  { level: 19, title: "Dawnsteel Sentinel",    xpRequired: 5150  },
+  { level: 20, title: "Ironforged Champion",   xpRequired: 5850  },
+  { level: 21, title: "Void Temperer",         xpRequired: 6700  },
+  { level: 22, title: "Stormhammer",           xpRequired: 7600  },
+  { level: 23, title: "Skyforgeling",          xpRequired: 8600  },
+  { level: 24, title: "Dragon Tempered",       xpRequired: 9700  },
+  { level: 25, title: "Master Artificer",      xpRequired: 10900 },
+  { level: 26, title: "Grandmaster Smith",     xpRequired: 12200 },
+  { level: 27, title: "Forge Sovereign",       xpRequired: 13600 },
+  { level: 28, title: "Mythic Hammerborn",     xpRequired: 15100 },
+  { level: 29, title: "Legendary Smelter",     xpRequired: 16700 },
+  { level: 30, title: "Archmage of the Forge", xpRequired: 18400 },
+];
+
+function getLevelInfo(xp) {
+  let current = LEVELS[0];
+  for (const l of LEVELS) {
+    if (xp >= l.xpRequired) current = l;
+    else break;
+  }
+  const idx = LEVELS.indexOf(current);
+  const next = LEVELS[idx + 1] || null;
+  const progress = next
+    ? Math.min(1, (xp - current.xpRequired) / (next.xpRequired - current.xpRequired))
+    : 1;
+  return {
+    level: current.level,
+    title: current.title,
+    xpRequired: current.xpRequired,
+    nextXp: next ? next.xpRequired : null,
+    progress,
+  };
+}
+
 // ─── Rate Limiting ──────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -319,29 +434,69 @@ function randGold(priority) {
 }
 const TEMP_BY_PRIORITY = { high: 15, medium: 10, low: 5 };
 
+// ─── Achievement flavor text descriptions (updated) ─────────────────────────
+const ACHIEVEMENT_FLAVOR = {
+  'first_quest':    "Every legend begins with a single step through the Quest Hall gates. You have drawn your blade and answered the call—your journey is forged.",
+  'hot_streak':     "Five quests felled between dawn and dusk—the Forge burns white-hot with your relentless fury. The Guild has not seen such fervor in an age.",
+  'dedicated':      "Seven days, seven victories. Your hammer has struck the anvil without rest, and the Forge recognizes the tempered will of a true Guild artisan.",
+  'marathoner':     "Thirty unbroken days of conquest—a feat whispered about in Guild halls across the realm. Your discipline has been smelted into something unbreakable.",
+  'boss_slayer':    "The beast is slain, its shadow lifted from the Quest Hall. Where others faltered, you stood your ground and drove your blade home.",
+  'companion_collector': "Three Forge Companions now answer your call—spirits of flame, stone, and arcana bound to your will. Together, no quest is beyond reach.",
+  'gear_master':    "You bear arms of Mythic make, forged in fires that predate the Guild itself. Few have proven worthy enough to wield such storied steel.",
+  'gold_hoarder':   "A thousand gold gleams in your vault—a fortune earned quest by quest, strike by strike. The Guild Treasury echoes with the weight of your ambition.",
+  'completionist':  "One hundred quests, inscribed and sealed in the Guild ledger. Your name is etched deep into the Quest Hall's living stone.",
+  'legend':         "Five hundred quests completed—mortal no longer in the eyes of the Guild. Bards shall sing of your deeds long after the last Forge grows cold.",
+  'early_bird':     "Three quests vanquished before the sun crests the ramparts. The Guild's dawn bell tolls in your honor—first to rise, first to conquer.",
+  'night_owl':      "While the Guild sleeps, you hunt by moonlight and ember-glow. Three quests claimed from the dark—proof that your Forge never truly dims.",
+  'master_forger':  "Seven days at maximum Forge Temperature without a single falter—a feat of mastery that crowns you among the Guild's most elite smiths. The flames themselves bend to your command.",
+  'versatile':      "Five disciplines conquered in a single week—blade, tome, shield, craft, and cunning alike. The Guild forges specialists, but legends are built from versatility.",
+};
+
 // ─── Achievements catalogue ─────────────────────────────────────────────────
 const ACHIEVEMENT_CATALOGUE = [
   // Milestones
-  { id: 'first_quest',  name: 'First Quest',        icon: '⚔',  desc: 'Complete your first quest',        category: 'milestone', trigger: (u) => (u.questsCompleted || 0) >= 1   },
-  { id: 'apprentice',   name: 'Apprentice',           icon: '📜', desc: 'Complete 10 quests',               category: 'milestone', trigger: (u) => (u.questsCompleted || 0) >= 10  },
-  { id: 'knight',       name: 'Knight',               icon: '🛡',  desc: 'Complete 50 quests',              category: 'milestone', trigger: (u) => (u.questsCompleted || 0) >= 50  },
-  { id: 'legend',       name: 'Legend',               icon: '👑', desc: 'Complete 100 quests',              category: 'milestone', trigger: (u) => (u.questsCompleted || 0) >= 100 },
+  { id: 'first_quest',  name: 'First Quest',        icon: '⚔',  desc: ACHIEVEMENT_FLAVOR['first_quest'] || 'Complete your first quest',        category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 1   },
+  { id: 'apprentice',   name: 'Apprentice',           icon: '📜', desc: 'Complete 10 quests',               category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 10  },
+  { id: 'knight',       name: 'Knight',               icon: '🛡',  desc: 'Complete 50 quests',              category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 50  },
+  { id: 'legend',       name: 'Legend',               icon: '👑', desc: ACHIEVEMENT_FLAVOR['legend'] || 'Complete 100 quests',              category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 100 },
   // Streaks
-  { id: 'week_warrior', name: 'Week Warrior',         icon: '🔥', desc: '7-day quest streak',               category: 'streak',    trigger: (u) => (u.streakDays || 0) >= 7   },
-  { id: 'monthly_champ',name: 'Monthly Champion',     icon: '💎', desc: '30-day quest streak',              category: 'streak',    trigger: (u) => (u.streakDays || 0) >= 30  },
+  { id: 'week_warrior', name: 'Week Warrior',         icon: '🔥', desc: ACHIEVEMENT_FLAVOR['dedicated'] || '7-day quest streak',               category: 'streak',    hidden: false, trigger: (u) => (u.streakDays || 0) >= 7   },
+  { id: 'monthly_champ',name: 'Monthly Champion',     icon: '💎', desc: ACHIEVEMENT_FLAVOR['marathoner'] || '30-day quest streak',              category: 'streak',    hidden: false, trigger: (u) => (u.streakDays || 0) >= 30  },
   // Speed
-  { id: 'lightning',    name: 'Lightning Hands',      icon: '⚡', desc: 'Complete 3 quests in one day',     category: 'speed',     trigger: (u) => (u._todayCount || 0) >= 3  },
+  { id: 'lightning',    name: 'Lightning Hands',      icon: '⚡', desc: ACHIEVEMENT_FLAVOR['hot_streak'] || 'Complete 3 quests in one day',     category: 'speed',     hidden: false, trigger: (u) => (u._todayCount || 0) >= 3  },
   // Variety
-  { id: 'all_trades',   name: 'Jack of All Trades',   icon: '🎯', desc: 'Complete all quest types',         category: 'variety',   trigger: (u) => (u._completedTypes || new Set()).size >= 5 },
+  { id: 'all_trades',   name: 'Jack of All Trades',   icon: '🎯', desc: ACHIEVEMENT_FLAVOR['versatile'] || 'Complete all quest types',         category: 'variety',   hidden: false, trigger: (u) => (u._completedTypes || new Set()).size >= 5 },
   // Boss Battles
-  { id: 'boss_slayer',  name: 'Boss Slayer',          icon: '🐉', desc: 'Defeat your first Boss Battle',    category: 'boss',      trigger: (u) => (u._bossDefeated || false) },
+  { id: 'boss_slayer',  name: 'Boss Slayer',          icon: '🐉', desc: ACHIEVEMENT_FLAVOR['boss_slayer'] || 'Defeat your first Boss Battle',    category: 'boss',      hidden: false, trigger: (u) => (u._bossDefeated || false) },
   // Companions
-  { id: 'ember_sprite', name: 'Ember Sprite',         icon: '🔮', desc: 'Complete 10 development quests',   category: 'companion', trigger: (u) => (u._devCount || 0) >= 10 },
-  { id: 'lore_owl',     name: 'Lore Owl',             icon: '🦉', desc: 'Complete 5 learning quests',       category: 'companion', trigger: (u) => (u._learningCount || 0) >= 5 },
-  { id: 'gear_golem',   name: 'Gear Golem',           icon: '🤖', desc: 'Reach Knight level (300 XP)',       category: 'companion', trigger: (u) => (u.xp || 0) >= 300 },
+  { id: 'ember_sprite', name: 'Ember Sprite',         icon: '🔮', desc: 'Complete 10 development quests',   category: 'companion', hidden: false, trigger: (u) => (u._devCount || 0) >= 10 },
+  { id: 'lore_owl',     name: 'Lore Owl',             icon: '🦉', desc: 'Complete 5 learning quests',       category: 'companion', hidden: false, trigger: (u) => (u._learningCount || 0) >= 5 },
+  { id: 'gear_golem',   name: 'Gear Golem',           icon: '🤖', desc: ACHIEVEMENT_FLAVOR['gear_master'] || 'Reach Knight level (300 XP)',       category: 'companion', hidden: false, trigger: (u) => (u.xp || 0) >= 300 },
   // Challenges
-  { id: 'challenge_coder',  name: 'Code Sprinter',    icon: '💻', desc: 'Complete the 30-Day Code Sprint',  category: 'challenge', trigger: (u) => (u._challengesCompleted || []).includes('code_sprint') },
-  { id: 'challenge_learner',name: 'Marathon Learner', icon: '📖', desc: 'Complete the Learning Marathon',   category: 'challenge', trigger: (u) => (u._challengesCompleted || []).includes('learning_marathon') },
+  { id: 'challenge_coder',  name: 'Code Sprinter',    icon: '💻', desc: 'Complete the 30-Day Code Sprint',  category: 'challenge', hidden: false, trigger: (u) => (u._challengesCompleted || []).includes('code_sprint') },
+  { id: 'challenge_learner',name: 'Marathon Learner', icon: '📖', desc: 'Complete the Learning Marathon',   category: 'challenge', hidden: false, trigger: (u) => (u._challengesCompleted || []).includes('learning_marathon') },
+  // New Regular Achievements
+  { id: 'night_owl',        name: 'Night Owl',        icon: '🦉',  desc: ACHIEVEMENT_FLAVOR['night_owl'] || 'Complete a quest between 23:00 and 05:00',  category: 'speed',     hidden: false, trigger: (u) => false },
+  { id: 'speed_runner',     name: 'Speed Runner',     icon: '⚡',  desc: 'Complete a quest within 1 hour of claiming it',   category: 'speed',     hidden: false, trigger: (u) => false },
+  { id: 'social_butterfly', name: 'Social Butterfly', icon: '🦋',  desc: 'Complete 5 social quests',                       category: 'variety',   hidden: false, trigger: (u) => (u._socialCount || 0) >= 5 },
+  { id: 'scholar',          name: 'Scholar',          icon: '📚',  desc: 'Complete 10 learning quests',                    category: 'variety',   hidden: false, trigger: (u) => (u._learningCount || 0) >= 10 },
+  { id: 'gym_rat',          name: 'Gym Rat',          icon: '🏋',  desc: 'Complete 10 fitness quests',                     category: 'variety',   hidden: false, trigger: (u) => (u._fitnessCount || 0) >= 10 },
+  { id: 'chain_master',     name: 'Chain Master',     icon: '🔗',  desc: 'Complete a full quest chain',                    category: 'milestone', hidden: false, trigger: (u) => false },
+  { id: 'campaign_victor',  name: 'Campaign Victor',  icon: '🏆',  desc: 'Complete a campaign',                            category: 'milestone', hidden: false, trigger: (u) => false },
+  { id: 'npc_whisperer',    name: 'NPC Whisperer',    icon: '💬',  desc: 'Have all agents online at the same time',        category: 'milestone', hidden: false, trigger: (u) => false },
+  { id: 'forge_novice',     name: 'Forge Novice',     icon: '🔨',  desc: 'Complete your first development quest',          category: 'milestone', hidden: false, trigger: (u) => (u._devCount || 0) >= 1 },
+  { id: 'arena_first',      name: 'Arena Debut',      icon: '🥊',  desc: 'Complete your first fitness quest',              category: 'milestone', hidden: false, trigger: (u) => (u._fitnessCount || 0) >= 1 },
+  { id: 'scholar_first',    name: 'First Scroll',     icon: '📜',  desc: 'Complete your first learning quest',             category: 'milestone', hidden: false, trigger: (u) => (u._learningCount || 0) >= 1 },
+  { id: 'ten_quests',       name: 'Ten Quest Mark',   icon: '🎯',  desc: 'Complete 10 quests total',                       category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 10 },
+  { id: 'fifty_quests',     name: 'Half Century',     icon: '🌟',  desc: 'Complete 50 quests total',                       category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 50 },
+  { id: 'coop_hero',        name: 'Co-op Hero',       icon: '🤜',  desc: 'Complete a co-op quest',                         category: 'milestone', hidden: false, trigger: (u) => false },
+  { id: 'early_bird',       name: 'Early Bird',       icon: '🌅',  desc: ACHIEVEMENT_FLAVOR['early_bird'] || 'Complete 3 quests before 08:00', category: 'speed', hidden: false, trigger: (u) => false },
+  // Hidden Achievements
+  { id: 'forbidden_code',   name: 'The Forbidden Code', icon: '🌑', desc: 'Complete a quest on a Sunday',      category: 'hidden', hidden: true, trigger: (u) => false },
+  { id: 'easter_egg',       name: 'Easter Egg Hunter',  icon: '🥚', desc: 'Found something secret...',         category: 'hidden', hidden: true, trigger: (u) => false },
+  { id: 'perfectionist',    name: 'Perfectionist',       icon: '💯', desc: ACHIEVEMENT_FLAVOR['completionist'] || 'Complete 100 quests', category: 'hidden', hidden: true, trigger: (u) => (u.questsCompleted || 0) >= 100 },
+  { id: 'no_rest',          name: 'No Rest for the Wicked', icon: '😈', desc: ACHIEVEMENT_FLAVOR['marathoner'] || 'Maintain a 30-day streak', category: 'hidden', hidden: true, trigger: (u) => (u.streakDays || 0) >= 30 },
+  { id: 'one_ring',         name: 'The One Ring',        icon: '💍', desc: ACHIEVEMENT_FLAVOR['gold_hoarder'] || 'Earn 1000 gold total', category: 'hidden', hidden: true, trigger: (u) => (u.gold || 0) >= 1000 },
 ];
 
 function checkAndAwardAchievements(userId) {
@@ -437,9 +592,11 @@ function onQuestCompletedByUser(userId, quest) {
     u._allCompletedTypes.push(quest.type || 'development');
   }
   u._completedTypes = new Set(u._allCompletedTypes);
-  // Track per-type counts for companions
+  // Track per-type counts for companions and achievements
   u._devCount = (u._devCount || 0) + ((quest.type === 'development' || !quest.type) ? 1 : 0);
   u._learningCount = (u._learningCount || 0) + (quest.type === 'learning' ? 1 : 0);
+  u._fitnessCount = (u._fitnessCount || 0) + (quest.type === 'fitness' ? 1 : 0);
+  u._socialCount = (u._socialCount || 0) + (quest.type === 'social' ? 1 : 0);
   // Check boss parent — if all sub-quests complete, mark boss defeated
   if (quest.parentQuestId) {
     const parent = quests.find(q => q.id === quest.parentQuestId);
@@ -647,7 +804,7 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter } = req.body;
+  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter, suggest } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
@@ -691,7 +848,12 @@ app.post('/api/quest', requireApiKey, (req, res) => {
   const isAgentCreated = !HUMAN_CREATORS.includes(resolvedCreatedBy.toLowerCase());
   const resolvedType = type || 'development';
   const isPlayerQuestType = PLAYER_QUEST_TYPES.includes(resolvedType);
-  const questStatus = (isPlayerQuestType || !isAgentCreated) ? 'open' : 'suggested';
+  const incomingKey = req.headers['x-api-key'];
+  const masterKey = getMasterKey();
+  const isAdminKey = (incomingKey === masterKey) || (incomingKey === ADMIN_KEY);
+  // If suggest=true or non-admin creates a development quest, set to suggested
+  const forceSuggested = suggest === true;
+  const questStatus = forceSuggested ? 'suggested' : ((isPlayerQuestType || !isAgentCreated) ? 'open' : 'suggested');
   // Validate nextQuestTemplate if provided
   let resolvedNextQuestTemplate = null;
   if (nextQuestTemplate && typeof nextQuestTemplate === 'object') {
@@ -1030,15 +1192,20 @@ app.post('/api/quests/bulk-update', requireApiKey, (req, res) => {
 // GET /api/leaderboard — agents ranked by XP
 app.get('/api/leaderboard', (req, res) => {
   const ranked = Object.values(store.agents)
-    .map(a => ({
-      id: a.id,
-      name: a.name,
-      avatar: a.avatar,
-      color: a.color,
-      role: a.role,
-      xp: a.xp || 0,
-      questsCompleted: a.questsCompleted || 0,
-    }))
+    .map(a => {
+      const levelInfo = getLevelInfo(a.xp || 0);
+      return {
+        id: a.id,
+        name: a.name,
+        avatar: a.avatar,
+        color: a.color,
+        role: a.role,
+        xp: a.xp || 0,
+        questsCompleted: a.questsCompleted || 0,
+        level: levelInfo.level,
+        levelTitle: levelInfo.title,
+      };
+    })
     .sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted)
     .map((a, i) => ({ ...a, rank: i + 1 }));
   res.json(ranked);
@@ -1950,7 +2117,103 @@ app.get('/api/streaks', (req, res) => {
 
 // GET /api/achievements — list all achievement definitions
 app.get('/api/achievements', (req, res) => {
-  res.json(ACHIEVEMENT_CATALOGUE.map(a => ({ id: a.id, name: a.name, icon: a.icon, desc: a.desc, category: a.category })));
+  res.json(ACHIEVEMENT_CATALOGUE.map(a => ({ id: a.id, name: a.name, icon: a.icon, desc: a.desc, category: a.category, hidden: !!a.hidden })));
+});
+
+// GET /api/quest-flavor — quest flavor text
+app.get('/api/quest-flavor', (req, res) => {
+  res.json(QUEST_FLAVOR);
+});
+
+// GET /api/levels — all level definitions
+app.get('/api/levels', (req, res) => {
+  res.json(LEVELS);
+});
+
+// GET /api/campaign/npcs — campaign NPCs
+app.get('/api/campaign/npcs', (req, res) => {
+  res.json(CAMPAIGN_NPCS);
+});
+
+// GET /api/auth/check — check API key validity and admin status
+app.get('/api/auth/check', (req, res) => {
+  const key = req.headers['x-api-key'];
+  if (!key || !validApiKeys.has(key)) {
+    return res.json({ isAdmin: false, name: null, valid: false });
+  }
+  const master = getMasterKey();
+  const isAdmin = (key === master) || (key === ADMIN_KEY);
+  // Find user with this API key
+  const user = Object.values(users).find(u => u.apiKey === key);
+  return res.json({ isAdmin, name: user ? user.name : null, userId: user ? user.id : null, valid: true });
+});
+
+// POST /api/auth/login — validate name + apiKey
+app.post('/api/auth/login', (req, res) => {
+  const { name, apiKey } = req.body;
+  if (!name || !apiKey) return res.status(400).json({ success: false, error: 'name and apiKey required' });
+  const master = getMasterKey();
+  const isAdmin = (apiKey === master) || (apiKey === ADMIN_KEY);
+  // Check against managed keys / master key
+  if (!validApiKeys.has(apiKey)) {
+    return res.json({ success: false, error: 'Invalid name or key' });
+  }
+  // Find user by name and matching apiKey
+  const nameLower = name.toLowerCase();
+  const user = Object.values(users).find(u =>
+    u.name.toLowerCase() === nameLower && u.apiKey === apiKey
+  );
+  if (!user && !isAdmin) {
+    // Allow admin to log in with any valid name if key is master/admin
+    return res.json({ success: false, error: 'Invalid name or key' });
+  }
+  const foundUser = user || Object.values(users).find(u => u.name.toLowerCase() === nameLower);
+  return res.json({
+    success: true,
+    userId: foundUser ? foundUser.id : nameLower,
+    name: foundUser ? foundUser.name : name,
+    isAdmin,
+  });
+});
+
+// POST /api/register — register a new player
+app.post('/api/register', (req, res) => {
+  const { name } = req.body;
+  if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
+  const trimmedName = String(name).trim();
+  const nameLower = trimmedName.toLowerCase();
+  // Check if name already taken
+  const existing = Object.values(users).find(u => u.name.toLowerCase() === nameLower);
+  if (existing) return res.status(409).json({ error: 'Name already taken' });
+  // Generate API key
+  const apiKey = crypto.randomBytes(16).toString('hex');
+  const userId = nameLower.replace(/\s+/g, '_');
+  const finalId = users[userId] ? `${userId}_${Date.now()}` : userId;
+  users[finalId] = {
+    id: finalId,
+    name: trimmedName,
+    avatar: trimmedName[0].toUpperCase(),
+    color: '#a78bfa',
+    xp: 0,
+    questsCompleted: 0,
+    achievements: [],
+    earnedAchievements: [],
+    streakDays: 0,
+    streakLastDate: null,
+    forgeTemp: 100,
+    gold: 0,
+    apiKey,
+    _allCompletedTypes: [],
+    createdAt: now(),
+  };
+  // Add to managed keys
+  const entry = { key: apiKey, label: `Player: ${trimmedName}`, created: now() };
+  managedKeys.push(entry);
+  validApiKeys.add(apiKey);
+  saveManagedKeys();
+  saveUsers();
+  console.log(`[register] new player: ${trimmedName} (${finalId})`);
+  res.json({ name: trimmedName, apiKey, userId: finalId });
 });
 
 // GET /api/users/:id/achievements — get earned achievements for a user

@@ -115,6 +115,7 @@ interface AchievementDef {
   icon: string;
   desc: string;
   category: string;
+  hidden?: boolean;
 }
 
 interface LeaderboardEntry {
@@ -314,6 +315,13 @@ export default function Dashboard() {
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [registerName, setRegisterName] = useState("");
+  const [registerError, setRegisterError] = useState("");
+  const [registerNewKey, setRegisterNewKey] = useState("");
+  const [cvBuilderOpen, setCvBuilderOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [tutorialStep, setTutorialStep] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -369,6 +377,18 @@ export default function Dashboard() {
     animate();
 
     return () => { cancelAnimationFrame(animId); window.removeEventListener("resize", resize); };
+  }, []);
+
+  // ─── apiFetch wrapper ─────────────────────────────────────────────────────
+  const [apiError, setApiError] = useState<string | null>(null);
+  const apiFetch = useCallback(async (url: string, options?: RequestInit): Promise<Response> => {
+    const r = await fetch(url, options);
+    if (r.status === 429) {
+      const msg = "⚒️ Zu viel geschmiedet! Der Amboss muss erst abkühlen. Warte kurz vor dem Einreichen neuer Quests.";
+      setApiError(msg);
+      throw new Error(msg);
+    }
+    return r;
   }, []);
 
   const refresh = useCallback(async () => {
@@ -787,6 +807,7 @@ export default function Dashboard() {
                       setPlayerName("");
                       setPlayerNameInput("");
                       setReviewKeyInput("");
+                      setIsAdmin(false);
                     }}
                     className="text-xs px-1.5 py-0.5 rounded"
                     style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -805,44 +826,148 @@ export default function Dashboard() {
                     🔑 Login
                   </button>
                   {loginOpen && (
-                    <div className="absolute right-0 top-7 z-50 rounded-xl p-3 shadow-xl flex flex-col gap-2" style={{ background: "#1e1e1e", border: "1px solid rgba(139,92,246,0.3)", minWidth: "200px" }}>
-                      <input
-                        type="text"
-                        value={playerNameInput}
-                        onChange={e => setPlayerNameInput(e.target.value)}
-                        placeholder="Your name"
-                        className="text-xs px-2 py-1 rounded"
-                        style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
-                      />
-                      <input
-                        type="password"
-                        value={reviewKeyInput}
-                        onChange={e => setReviewKeyInput(e.target.value)}
-                        placeholder="API Key"
-                        className="text-xs px-2 py-1 rounded"
-                        style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
-                        onKeyDown={e => {
-                          if (e.key === "Enter" && reviewKeyInput) {
-                            localStorage.setItem("dash_api_key", reviewKeyInput);
-                            if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
-                            setReviewApiKey(reviewKeyInput);
-                            setLoginOpen(false);
-                          }
-                        }}
-                      />
-                      <button
-                        onClick={() => {
-                          if (!reviewKeyInput) return;
-                          localStorage.setItem("dash_api_key", reviewKeyInput);
-                          if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
-                          setReviewApiKey(reviewKeyInput);
-                          setLoginOpen(false);
-                        }}
-                        className="text-xs px-3 py-1 rounded font-medium"
-                        style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)" }}
-                      >
-                        Sign In
-                      </button>
+                    <div className="absolute right-0 top-7 z-50 rounded-xl p-3 shadow-xl flex flex-col gap-2" style={{ background: "#1e1e1e", border: "1px solid rgba(139,92,246,0.3)", minWidth: "220px" }}>
+                      {!registerOpen ? (
+                        <>
+                          <input
+                            type="text"
+                            value={playerNameInput}
+                            onChange={e => setPlayerNameInput(e.target.value)}
+                            placeholder="Your name"
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                          />
+                          <input
+                            type="password"
+                            value={reviewKeyInput}
+                            onChange={e => setReviewKeyInput(e.target.value)}
+                            placeholder="API Key"
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                            onKeyDown={async e => {
+                              if (e.key === "Enter" && reviewKeyInput && playerNameInput) {
+                                const r = await fetch("/api/auth/login", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ name: playerNameInput, apiKey: reviewKeyInput }),
+                                });
+                                const data = await r.json();
+                                if (data.success) {
+                                  localStorage.setItem("dash_api_key", reviewKeyInput);
+                                  localStorage.setItem("dash_player_name", data.name);
+                                  setPlayerName(data.name);
+                                  setReviewApiKey(reviewKeyInput);
+                                  setIsAdmin(data.isAdmin);
+                                  setLoginOpen(false);
+                                  setLoginError("");
+                                } else {
+                                  setLoginError(data.error || "Invalid credentials");
+                                }
+                              }
+                            }}
+                          />
+                          {loginError && <p className="text-xs" style={{ color: "#ef4444" }}>{loginError}</p>}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={async () => {
+                                if (!reviewKeyInput || !playerNameInput) return;
+                                const r = await fetch("/api/auth/login", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ name: playerNameInput, apiKey: reviewKeyInput }),
+                                });
+                                const data = await r.json();
+                                if (data.success) {
+                                  localStorage.setItem("dash_api_key", reviewKeyInput);
+                                  localStorage.setItem("dash_player_name", data.name);
+                                  setPlayerName(data.name);
+                                  setReviewApiKey(reviewKeyInput);
+                                  setIsAdmin(data.isAdmin);
+                                  setLoginOpen(false);
+                                  setLoginError("");
+                                } else {
+                                  setLoginError(data.error || "Invalid credentials");
+                                }
+                              }}
+                              className="flex-1 text-xs px-3 py-1 rounded font-medium"
+                              style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)" }}
+                            >
+                              Sign In
+                            </button>
+                            <button
+                              onClick={() => { setRegisterOpen(true); setLoginError(""); setRegisterNewKey(""); }}
+                              className="text-xs px-3 py-1 rounded font-medium"
+                              style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                            >
+                              Register
+                            </button>
+                          </div>
+                        </>
+                      ) : registerNewKey ? (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold" style={{ color: "#22c55e" }}>Account Created!</p>
+                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Copy your API key — it won&apos;t be shown again:</p>
+                          <div className="flex items-center gap-1">
+                            <code className="text-xs flex-1 px-2 py-1 rounded font-mono" style={{ background: "#141414", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.3)", wordBreak: "break-all" }}>{registerNewKey}</code>
+                          </div>
+                          <button
+                            onClick={() => { setRegisterOpen(false); setRegisterNewKey(""); setLoginOpen(false); }}
+                            className="text-xs px-3 py-1 rounded font-medium"
+                            style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)" }}
+                          >
+                            Done
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <p className="text-xs font-semibold" style={{ color: "#22c55e" }}>Create Account</p>
+                          <input
+                            type="text"
+                            value={registerName}
+                            onChange={e => setRegisterName(e.target.value)}
+                            placeholder="Choose a name"
+                            className="text-xs px-2 py-1 rounded"
+                            style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                          />
+                          {registerError && <p className="text-xs" style={{ color: "#ef4444" }}>{registerError}</p>}
+                          <div className="flex gap-1">
+                            <button
+                              onClick={async () => {
+                                if (!registerName.trim()) return;
+                                const r = await fetch("/api/register", {
+                                  method: "POST",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ name: registerName.trim() }),
+                                });
+                                const data = await r.json();
+                                if (r.ok) {
+                                  setRegisterNewKey(data.apiKey);
+                                  localStorage.setItem("dash_api_key", data.apiKey);
+                                  localStorage.setItem("dash_player_name", data.name);
+                                  setPlayerName(data.name);
+                                  setReviewApiKey(data.apiKey);
+                                  setIsAdmin(false);
+                                  setRegisterError("");
+                                  await refresh();
+                                } else {
+                                  setRegisterError(data.error || "Registration failed");
+                                }
+                              }}
+                              className="flex-1 text-xs px-3 py-1 rounded font-medium"
+                              style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                            >
+                              Create
+                            </button>
+                            <button
+                              onClick={() => { setRegisterOpen(false); setRegisterError(""); }}
+                              className="text-xs px-2 py-1 rounded"
+                              style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+                            >
+                              Back
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
@@ -1031,14 +1156,19 @@ export default function Dashboard() {
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{playerVisibleOpen.length} open · {playerVisibleInProgress.length} in progress</p>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button
-                          onClick={() => setCreateQuestOpen(true)}
-                          className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
-                          style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}
-                          title="Create Quest"
-                        >
-                          ＋ Create
-                        </button>
+                        {(isAdmin || !playerName) && (
+                          <button
+                            onClick={() => setCreateQuestOpen(true)}
+                            className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
+                            style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}
+                            title="Create Quest"
+                          >
+                            ＋ Create
+                          </button>
+                        )}
+                        {!isAdmin && playerName && (
+                          <SuggestQuestButton reviewApiKey={reviewApiKey} playerName={playerName} onRefresh={refresh} />
+                        )}
                         <button
                           onClick={() => {
                             const allCollapsed = openSectionCollapsed && inProgressSectionCollapsed;
@@ -1131,6 +1261,24 @@ export default function Dashboard() {
                     )}
                   </div>
                 </aside>
+              </div>
+
+              {/* CV Builder — collapsible, bottom of Quest Board */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setCvBuilderOpen(v => !v)}
+                  className="flex items-center gap-2 w-full text-left px-3 py-2 rounded-lg"
+                  style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.15)" }}
+                >
+                  <span className="text-xs font-semibold" style={{ color: "#60a5fa" }}>📄 CV Builder</span>
+                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Track your skills from completed learning quests</span>
+                  <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{cvBuilderOpen ? "▲" : "▼"}</span>
+                </button>
+                {cvBuilderOpen && (
+                  <div className="mt-2">
+                    <CVBuilderPanel quests={quests} users={users} playerName={playerName} />
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -1230,9 +1378,9 @@ export default function Dashboard() {
                   </div>
                 </aside>
 
-                {/* Review Board — NPC tab only */}
+                {/* Review Board — NPC tab only, admin-gated */}
                 <div className="flex-1 min-w-0">
-                  {quests.suggested.length > 0 && (
+                  {isAdmin && quests.suggested.length > 0 && (
                     <section className="mb-6">
                       <div className="flex items-center gap-2 mb-3">
                         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>✦ Review Board</h2>
@@ -1478,6 +1626,18 @@ export default function Dashboard() {
         );
       })()}
 
+      {/* API Error Toast (rate limit etc) */}
+      {apiError && (
+        <div
+          className="fixed top-16 left-1/2 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-2xl"
+          style={{ transform: "translateX(-50%)", background: "#1a1a1a", border: "1px solid rgba(239,68,68,0.5)", maxWidth: "90vw" }}
+        >
+          <span className="text-sm">⚒️</span>
+          <p className="text-xs" style={{ color: "#ef4444" }}>{apiError}</p>
+          <button onClick={() => setApiError(null)} className="text-xs ml-2" style={{ color: "rgba(255,255,255,0.3)" }}>✕</button>
+        </div>
+      )}
+
       {/* Achievement Toast */}
       {toast && <AchievementToast achievement={toast} onClose={() => setToast(null)} />}
 
@@ -1513,6 +1673,140 @@ export default function Dashboard() {
         />
       )}
     </div>
+  );
+}
+
+// ─── Suggest Quest Button + Modal (for non-admin players) ────────────────────
+function SuggestQuestButton({ reviewApiKey, playerName, onRefresh }: {
+  reviewApiKey: string;
+  playerName: string;
+  onRefresh: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [type, setType] = useState<"personal" | "learning" | "fitness" | "social">("personal");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("medium");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!title.trim()) { setError("Title is required"); return; }
+    setLoading(true);
+    setError("");
+    try {
+      const r = await fetch("/api/quest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({ title: title.trim(), description: description.trim(), type, priority, createdBy: playerName, suggest: true }),
+      });
+      if (r.ok) {
+        setDone(true);
+        onRefresh();
+        setTimeout(() => { setOpen(false); setDone(false); setTitle(""); setDescription(""); }, 1800);
+      } else {
+        const d = await r.json();
+        setError(d.error || "Failed to submit");
+      }
+    } catch { setError("Network error"); } finally { setLoading(false); }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => { setOpen(true); setDone(false); setError(""); }}
+        className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
+        style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+        title="Suggest a Quest"
+      >
+        💡 Suggest
+      </button>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setOpen(false)}>
+          <div className="rounded-2xl w-full max-w-md" style={{ background: "#1a1a1a", border: "1px solid rgba(34,197,94,0.3)", boxShadow: "0 0 40px rgba(34,197,94,0.1)" }} onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+              <div>
+                <h2 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>💡 Suggest a Quest</h2>
+                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>Your suggestion goes to the admin for review</p>
+              </div>
+              <button onClick={() => setOpen(false)} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>×</button>
+            </div>
+            {done ? (
+              <div className="p-6 text-center">
+                <p className="text-2xl mb-2">⚔️</p>
+                <p className="text-sm font-semibold" style={{ color: "#22c55e" }}>Quest Suggested!</p>
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Awaiting admin review</p>
+              </div>
+            ) : (
+              <div className="p-4 flex flex-col gap-3">
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: "rgba(255,255,255,0.5)" }}>Quest Title *</label>
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={e => setTitle(e.target.value)}
+                    placeholder="What quest do you want to suggest?"
+                    className="w-full text-xs px-2 py-1.5 rounded"
+                    style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                    autoFocus
+                  />
+                </div>
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: "rgba(255,255,255,0.5)" }}>Description</label>
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Optional details…"
+                    rows={3}
+                    className="w-full text-xs px-2 py-1.5 rounded resize-none"
+                    style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs mb-1 block" style={{ color: "rgba(255,255,255,0.5)" }}>Type</label>
+                    <select
+                      value={type}
+                      onChange={e => setType(e.target.value as typeof type)}
+                      className="w-full text-xs px-2 py-1.5 rounded"
+                      style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                    >
+                      <option value="personal">🏠 Personal</option>
+                      <option value="learning">📚 Learning</option>
+                      <option value="fitness">💪 Fitness</option>
+                      <option value="social">❤️ Social</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs mb-1 block" style={{ color: "rgba(255,255,255,0.5)" }}>Priority</label>
+                    <select
+                      value={priority}
+                      onChange={e => setPriority(e.target.value as typeof priority)}
+                      className="w-full text-xs px-2 py-1.5 rounded"
+                      style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.12)", color: "#fff", outline: "none" }}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                {error && <p className="text-xs" style={{ color: "#ef4444" }}>{error}</p>}
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading || !title.trim()}
+                  className="w-full text-xs py-2 rounded font-semibold"
+                  style={{ background: loading || !title.trim() ? "rgba(34,197,94,0.05)" : "rgba(34,197,94,0.18)", color: loading || !title.trim() ? "rgba(34,197,94,0.4)" : "#22c55e", border: "1px solid rgba(34,197,94,0.3)", cursor: loading || !title.trim() ? "not-allowed" : "pointer" }}
+                >
+                  {loading ? "Submitting…" : "Submit for Review"}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
@@ -3192,36 +3486,109 @@ function getSeason() {
 }
 const CURRENT_SEASON = getSeason();
 
-// ─── XP helpers (shared with UserCard) ──────────────────────────────────────
-const USER_LEVELS = [
-  { name: "Novice",     min: 0,   max: 99,  color: "#9ca3af" },
-  { name: "Apprentice", min: 100, max: 299, color: "#22c55e" },
-  { name: "Knight",     min: 300, max: 599, color: "#3b82f6" },
-  { name: "Archmage",   min: 600, max: Infinity, color: "#a855f7" },
+// ─── XP helpers (shared with UserCard) — 30-level system ─────────────────────
+const GUILD_LEVELS = [
+  { level: 1,  title: "Forge Initiate",       xpRequired: 0,     color: "#9ca3af" },
+  { level: 2,  title: "Anvil Striker",         xpRequired: 50,    color: "#9ca3af" },
+  { level: 3,  title: "Coal Tender",           xpRequired: 120,   color: "#9ca3af" },
+  { level: 4,  title: "Iron Apprentice",       xpRequired: 200,   color: "#9ca3af" },
+  { level: 5,  title: "Flame Keeper",          xpRequired: 300,   color: "#22c55e" },
+  { level: 6,  title: "Bronze Shaper",         xpRequired: 420,   color: "#22c55e" },
+  { level: 7,  title: "Steel Crafter",         xpRequired: 560,   color: "#22c55e" },
+  { level: 8,  title: "Glyph Carver",          xpRequired: 720,   color: "#22c55e" },
+  { level: 9,  title: "Rune Binder",           xpRequired: 900,   color: "#22c55e" },
+  { level: 10, title: "Ironclad Journeyman",   xpRequired: 1100,  color: "#f59e0b" },
+  { level: 11, title: "Forge Adept",           xpRequired: 1350,  color: "#3b82f6" },
+  { level: 12, title: "Silver Tempered",       xpRequired: 1650,  color: "#3b82f6" },
+  { level: 13, title: "Ember Warden",          xpRequired: 2000,  color: "#3b82f6" },
+  { level: 14, title: "Mithral Seeker",        xpRequired: 2400,  color: "#3b82f6" },
+  { level: 15, title: "Flame Warden",          xpRequired: 2850,  color: "#3b82f6" },
+  { level: 16, title: "Knight of the Forge",   xpRequired: 3350,  color: "#6366f1" },
+  { level: 17, title: "Obsidian Blade",        xpRequired: 3900,  color: "#6366f1" },
+  { level: 18, title: "Ashbound Knight",       xpRequired: 4500,  color: "#6366f1" },
+  { level: 19, title: "Dawnsteel Sentinel",    xpRequired: 5150,  color: "#6366f1" },
+  { level: 20, title: "Ironforged Champion",   xpRequired: 5850,  color: "#ef4444" },
+  { level: 21, title: "Void Temperer",         xpRequired: 6700,  color: "#a855f7" },
+  { level: 22, title: "Stormhammer",           xpRequired: 7600,  color: "#a855f7" },
+  { level: 23, title: "Skyforgeling",          xpRequired: 8600,  color: "#a855f7" },
+  { level: 24, title: "Dragon Tempered",       xpRequired: 9700,  color: "#a855f7" },
+  { level: 25, title: "Master Artificer",      xpRequired: 10900, color: "#ec4899" },
+  { level: 26, title: "Grandmaster Smith",     xpRequired: 12200, color: "#ec4899" },
+  { level: 27, title: "Forge Sovereign",       xpRequired: 13600, color: "#ec4899" },
+  { level: 28, title: "Mythic Hammerborn",     xpRequired: 15100, color: "#fbbf24" },
+  { level: 29, title: "Legendary Smelter",     xpRequired: 16700, color: "#fbbf24" },
+  { level: 30, title: "Archmage of the Forge", xpRequired: 18400, color: "#ffffff" },
 ];
-function getUserLevel(xp: number) { return USER_LEVELS.findLast(l => xp >= l.min) ?? USER_LEVELS[0]; }
+function getUserLevel(xp: number) {
+  let current = GUILD_LEVELS[0];
+  for (const l of GUILD_LEVELS) { if (xp >= l.xpRequired) current = l; else break; }
+  return current;
+}
+// Keep backward compat alias
+const USER_LEVELS = GUILD_LEVELS.map(l => ({ name: l.title, min: l.xpRequired, max: GUILD_LEVELS[l.level] ? GUILD_LEVELS[l.level].xpRequired - 1 : Infinity, color: l.color, level: l.level }));
 function getUserXpProgress(xp: number) {
   const l = getUserLevel(xp);
-  if (l.max === Infinity) return 1;
-  return (xp - l.min) / (l.max - l.min + 1);
+  const next = GUILD_LEVELS[l.level]; // level is 1-based, array is 0-based so this is next level
+  if (!next) return 1;
+  return (xp - l.xpRequired) / (next.xpRequired - l.xpRequired);
+}
+
+// ─── Forge Temperature helpers ───────────────────────────────────────────────
+function getForgeTempInfo(temp: number): { statusMessage: string; actionSuggestion: string; tooltipText: string } {
+  if (temp === 100) return {
+    statusMessage: "⚪🔥 The Forge Burns White Hot — You Are Unstoppable",
+    actionSuggestion: "You're at the summit. Complete any quest to hold this sacred temperature.",
+    tooltipText: "Maximum Forge Temperature achieved. You are performing at the highest level.",
+  };
+  if (temp >= 80) return {
+    statusMessage: "🔴🔥 The Forge Roars — Your Hammer Strikes True",
+    actionSuggestion: "You're close to the peak. One or two more completed quests will push the Forge to white hot.",
+    tooltipText: "High Forge Temperature. Keep completing quests to reach the maximum.",
+  };
+  if (temp >= 60) return {
+    statusMessage: "🟠 The Forge Glows Steady — A Craftsman's Rhythm",
+    actionSuggestion: "Good rhythm, Guild Member. Keep feeding the Forge with completed quests.",
+    tooltipText: "Steady Forge Temperature. You're maintaining a good pace.",
+  };
+  if (temp >= 40) return {
+    statusMessage: "🟡 The Forge Cools — The Metal Stiffens",
+    actionSuggestion: "The embers still hold heat — but not for long. Complete a quest to stoke the fire.",
+    tooltipText: "Forge Temperature is dropping. Complete quests to recover.",
+  };
+  if (temp >= 20) return {
+    statusMessage: "🔵 The Forge Has Gone Cold — But the Structure Holds",
+    actionSuggestion: "Return to the anvil. Pick the smallest quest on your board and complete it.",
+    tooltipText: "Cold Forge. Your XP multiplier is reduced. Complete quests to warm it up.",
+  };
+  return {
+    statusMessage: "🧊 The Forge Is Frozen — But You Still Hold the Hammer",
+    actionSuggestion: "This is your rekindling moment. Complete one quest. Any quest.",
+    tooltipText: "Forge is frozen. XP is at minimum. One quest is all it takes to begin recovery.",
+  };
 }
 
 function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: string) => void }) {
   const xp = user.xp ?? 0;
   const lvl = getUserLevel(xp);
   const progress = getUserXpProgress(xp);
-  const nextLvl = USER_LEVELS[USER_LEVELS.indexOf(lvl) + 1];
+  const nextLvlEntry = GUILD_LEVELS[lvl.level]; // level is 1-based, array idx = level
+  const isMilestoneLevel = lvl.level === 10 || lvl.level === 20 || lvl.level === 30;
   const streak = user.streakDays ?? 0;
   const temp = user.forgeTemp ?? 100;
   const gold = user.gold ?? 0;
   const achs = user.earnedAchievements ?? [];
   const tempColor = temp >= 60 ? "#22c55e" : temp >= 30 ? "#f59e0b" : "#ef4444";
   const xpMalus = temp === 0;
+  const forgeInfo = getForgeTempInfo(temp);
 
   return (
     <div
       className="rounded-xl p-4"
-      style={{ background: "#252525", border: `1px solid ${lvl.color}30`, boxShadow: `0 0 16px ${lvl.color}10` }}
+      style={{
+        background: "#252525",
+        border: `1px solid ${isMilestoneLevel ? lvl.color : lvl.color + "30"}`,
+        boxShadow: isMilestoneLevel ? `0 0 20px ${lvl.color}30` : `0 0 16px ${lvl.color}10`,
+      }}
     >
       {/* Header */}
       <div className="flex items-center gap-3 mb-3">
@@ -3244,7 +3611,9 @@ function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: stri
               </span>
             )}
           </div>
-          <p className="text-xs font-semibold" style={{ color: lvl.color }}>{lvl.name}</p>
+          <p className="text-xs font-semibold" style={{ color: lvl.color }}>
+            {isMilestoneLevel && "✦ "}Lv {lvl.level}: {lvl.title}
+          </p>
         </div>
         {/* Gold + Shop */}
         <div className="flex flex-col items-end gap-1">
@@ -3269,7 +3638,7 @@ function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: stri
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>XP{xpMalus ? " ⚠ −50%" : ""}</span>
-          <span className="text-xs font-mono font-medium" style={{ color: xpMalus ? "#ef4444" : lvl.color }}>{xp}{nextLvl ? ` / ${nextLvl.min}` : " MAX"}</span>
+          <span className="text-xs font-mono font-medium" style={{ color: xpMalus ? "#ef4444" : lvl.color }}>{xp}{nextLvlEntry ? ` / ${nextLvlEntry.xpRequired}` : " MAX"}</span>
         </div>
       </div>
 
@@ -3282,13 +3651,12 @@ function UserCard({ user, onShopOpen }: { user: User; onShopOpen?: (userId: stri
       </div>
 
       {/* Forge Temperature */}
-      <div className="mb-2">
-        <div className="flex items-center justify-between mb-1">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
-            Forge Temp {temp < 30 ? "⚠ Cooling!" : CURRENT_SEASON.icon}
-          </span>
+      <div className="mb-2" title={forgeInfo.tooltipText}>
+        <div className="flex items-center justify-between mb-0.5">
+          <span className="text-xs font-medium" style={{ color: tempColor }}>{forgeInfo.statusMessage}</span>
           <span className="text-xs font-mono" style={{ color: tempColor }}>{temp}%</span>
         </div>
+        <p className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>{forgeInfo.actionSuggestion}</p>
         <div className="rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.07)" }}>
           <div
             className="h-full rounded-full transition-all duration-700"
@@ -3991,30 +4359,58 @@ function HonorsView({ catalogue, users, playerName = "", quests, reviewApiKey = 
         </div>
       ) : (
         categories.map(cat => {
+          // For "hidden" category: only show if player has earned one, otherwise show ??? placeholders
           const catAchs = catalogue.filter(a => a.category === cat);
+          // Filter hidden achievements: show only if earned by this player, otherwise show as ???
+          const visibleAchs = catAchs.filter(ach => {
+            if (!ach.hidden) return true;
+            // Hidden: show only if player has earned it (show as ???  if not earned)
+            return true; // we'll render ??? below
+          });
+          if (visibleAchs.length === 0) return null;
           return (
             <div key={cat}>
-              <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.3)" }}>
-                {cat}
+              <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: cat === "hidden" ? "rgba(138,43,226,0.7)" : "rgba(255,255,255,0.3)" }}>
+                {cat === "hidden" ? "🌑 Secret Achievements" : cat}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {catAchs.map(ach => {
+                {visibleAchs.map(ach => {
                   const earners = users.filter(u =>
                     (u.earnedAchievements ?? []).some(e => e.id === ach.id)
                   );
                   const myEarned = playerEarnedIds.has(ach.id);
                   const anyEarned = earners.length > 0;
+                  const isHidden = !!ach.hidden;
+                  // Hidden and not earned: show as ???
+                  const showAsLocked = isHidden && !myEarned;
                   // If logged in, highlight player's own; otherwise show all
                   const highlight = playerName ? myEarned : anyEarned;
+                  if (showAsLocked) {
+                    return (
+                      <div
+                        key={ach.id}
+                        className="rounded-xl p-3"
+                        style={{ background: "#1a1a1a", border: "1px solid rgba(138,43,226,0.2)", opacity: 0.6 }}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          <span className="text-2xl flex-shrink-0" style={{ filter: "grayscale(1)" }}>❓</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.25)" }}>??? Hidden Achievement</p>
+                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.15)" }}>Unlock to reveal...</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
                   return (
                     <div
                       key={ach.id}
                       className="rounded-xl p-3"
                       style={{
-                        background: myEarned ? "rgba(245,158,11,0.12)" : anyEarned ? "rgba(245,158,11,0.04)" : "#252525",
-                        border: `1px solid ${myEarned ? "rgba(245,158,11,0.5)" : anyEarned ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.06)"}`,
+                        background: myEarned ? (isHidden ? "rgba(138,43,226,0.15)" : "rgba(245,158,11,0.12)") : anyEarned ? "rgba(245,158,11,0.04)" : "#252525",
+                        border: `1px solid ${myEarned ? (isHidden ? "rgba(138,43,226,0.6)" : "rgba(245,158,11,0.5)") : anyEarned ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.06)"}`,
                         opacity: highlight || (!playerName && anyEarned) ? 1 : 0.45,
-                        boxShadow: myEarned ? "0 0 14px rgba(245,158,11,0.12)" : "none",
+                        boxShadow: myEarned ? (isHidden ? "0 0 14px rgba(138,43,226,0.2)" : "0 0 14px rgba(245,158,11,0.12)") : "none",
                       }}
                     >
                       <div className="flex items-start gap-2.5">
@@ -4022,7 +4418,8 @@ function HonorsView({ catalogue, users, playerName = "", quests, reviewApiKey = 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-xs font-semibold" style={{ color: highlight ? "#f0f0f0" : "rgba(255,255,255,0.4)" }}>{ach.name}</p>
-                            {myEarned && <span className="text-xs" style={{ color: "#f59e0b" }}>✓ Yours</span>}
+                            {myEarned && <span className="text-xs" style={{ color: isHidden ? "#a855f7" : "#f59e0b" }}>✓ Yours</span>}
+                            {isHidden && myEarned && <span className="text-xs px-1 rounded" style={{ background: "rgba(138,43,226,0.2)", color: "#a855f7" }}>secret</span>}
                           </div>
                           <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{ach.desc}</p>
                           {earners.length > 0 && (
