@@ -4253,7 +4253,7 @@ function UserCard({ user, classes = [] }: { user: User; classes?: ClassDef[] }) 
   const nextLvlEntry = GUILD_LEVELS[lvl.level]; // level is 1-based, array idx = level
   const isMilestoneLevel = lvl.level === 10 || lvl.level === 20 || lvl.level === 30;
   const streak = user.streakDays ?? 0;
-  const temp = user.forgeTemp ?? 100;
+  const temp = user.forgeTemp ?? 0;
   const gold = user.gold ?? 0;
   const achs = user.earnedAchievements ?? [];
   const tempColor = temp >= 60 ? "#22c55e" : temp >= 30 ? "#f59e0b" : "#ef4444";
