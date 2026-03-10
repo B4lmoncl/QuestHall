@@ -470,6 +470,10 @@ export default function Dashboard() {
   const [newHabitNegative, setNewHabitNegative] = useState(false);
   const [changelog, setChangelog] = useState<ChangelogEntry[]>([]);
   const [changelogLoading, setChangelogLoading] = useState(false);
+  const [poolRefreshing, setPoolRefreshing] = useState(false);
+  const [npcBoardFilter, setNpcBoardFilter] = useState<string | null>(null);
+  const [infoOverlayOpen, setInfoOverlayOpen] = useState(false);
+  const [infoOverlayTab, setInfoOverlayTab] = useState<"roadmap" | "changelog" | "guide" | "tutorial">("roadmap");
 
   // Particle system — white dust drifting upward
   useEffect(() => {
@@ -753,6 +757,25 @@ export default function Dashboard() {
     } catch { /* ignore */ }
   }, [reviewApiKey, chainOffer, playerName, refresh]);
 
+  const handlePoolRefresh = useCallback(async () => {
+    if (!playerName || !reviewApiKey || poolRefreshing) return;
+    setPoolRefreshing(true);
+    try {
+      const r = await fetch(`/api/quests/pool/refresh?player=${encodeURIComponent(playerName)}`, {
+        method: "POST",
+        headers: { "x-api-key": reviewApiKey },
+      });
+      if (r.ok) {
+        await refresh();
+      } else {
+        const d = await r.json().catch(() => ({}));
+        if (d.error) setApiError(d.error);
+      }
+    } catch { /* ignore */ } finally {
+      setPoolRefreshing(false);
+    }
+  }, [playerName, reviewApiKey, poolRefreshing, refresh]);
+
   const handleShopBuy = useCallback(async (itemId: string) => {
     const key = reviewApiKey;
     if (!key || !shopUserId) return;
@@ -816,6 +839,21 @@ export default function Dashboard() {
       fetchChangelog().then(entries => { setChangelog(entries); setChangelogLoading(false); });
     }
   }, [dashView, changelog.length, changelogLoading]);
+
+  // Load changelog when info overlay changelog tab is opened
+  useEffect(() => {
+    if (infoOverlayTab === "changelog" && infoOverlayOpen && changelog.length === 0 && !changelogLoading) {
+      setChangelogLoading(true);
+      fetchChangelog().then(entries => { setChangelog(entries); setChangelogLoading(false); });
+    }
+  }, [infoOverlayTab, infoOverlayOpen, changelog.length, changelogLoading]);
+
+  // ESC handler for info overlay
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setInfoOverlayOpen(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   const handleTutorialNext = () => {
     if (tutorialStep >= TUTORIAL_STEPS.length - 1) {
@@ -984,7 +1022,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-4">
             <button
-              onClick={handleRestartTutorial}
+              onClick={() => { setInfoOverlayTab("tutorial"); setInfoOverlayOpen(true); }}
               className="text-xs px-2 py-0.5 rounded"
               style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
               title="Restart Tutorial"
@@ -992,7 +1030,7 @@ export default function Dashboard() {
               🎓 Tutorial
             </button>
             <button
-              onClick={() => setGuideOpen(true)}
+              onClick={() => { setInfoOverlayTab("guide"); setInfoOverlayOpen(true); }}
               className="text-xs px-2 py-0.5 rounded"
               style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
             >
@@ -1299,8 +1337,6 @@ export default function Dashboard() {
             { key: "campaign",    label: "🐉 Campaign",        tutorialKey: "campaign-tab" },
             { key: "season",      label: `${CURRENT_SEASON.icon} Season`, tutorialKey: "season-tab" },
             { key: "shop",        label: "🛒 Shop",            tutorialKey: null },
-            { key: "roadmap",     label: "🗺️ Roadmap",         tutorialKey: null },
-            { key: "changelog",   label: "📋 Changelog",        tutorialKey: null },
           ].map(v => (
             <button
               key={v.key}
@@ -1482,7 +1518,7 @@ export default function Dashboard() {
 
               {/* Companions Widget */}
               <div className="mb-5">
-                <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => setDashView("npcBoard")} onUserRefresh={refresh} />
+                <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => { setDashView("npcBoard"); setNpcBoardFilter("dobbie"); }} onUserRefresh={refresh} />
               </div>
 
               {/* Quest Board — player types only */}
@@ -1510,6 +1546,17 @@ export default function Dashboard() {
                         )}
                         {!isAdmin && playerName && (
                           <SuggestQuestButton reviewApiKey={reviewApiKey} playerName={playerName} onRefresh={refresh} />
+                        )}
+                        {playerName && reviewApiKey && (
+                          <button
+                            onClick={handlePoolRefresh}
+                            disabled={poolRefreshing}
+                            className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
+                            style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)", opacity: poolRefreshing ? 0.6 : 1 }}
+                            title="Refresh quest pool (1x per hour)"
+                          >
+                            {poolRefreshing ? "⏳" : "🔄"} Neue Quests
+                          </button>
                         )}
                         <button
                           onClick={() => {
@@ -1573,11 +1620,21 @@ export default function Dashboard() {
                   </div>
 
                   {questBoardTab === "auftraege" && <div className="space-y-2">
-                    {loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />) :
+                    {!playerName && !loading ? (
+                      <div className="rounded-xl p-8 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-base mb-2">⚔️</p>
+                        <p className="text-sm font-semibold mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Logge dich ein um deine Quests zu sehen</p>
+                        <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>Dein persönlicher Quest-Pool wartet auf dich!</p>
+                        <button onClick={() => setLoginOpen(true)} className="text-xs px-4 py-1.5 rounded font-semibold" style={{ background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)" }}>
+                          🔑 Login
+                        </button>
+                      </div>
+                    ) :
+                    loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />) :
                     playerVisibleOpen.length === 0 && playerVisibleInProgress.length === 0 ? (
                       <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{searchFilter ? "No quests match your search" : "No player quests open"}</p>
-                        {!searchFilter && <button onClick={() => setCreateQuestOpen(true)} className="btn-interactive text-xs mt-2 px-3 py-1 rounded" style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>＋ Create Quest</button>}
+                        {!searchFilter && playerName && reviewApiKey && <button onClick={handlePoolRefresh} className="btn-interactive text-xs mt-2 px-3 py-1 rounded" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)" }}>🔄 Neue Quests laden</button>}
                       </div>
                     ) : (
                       <>
@@ -1886,9 +1943,22 @@ export default function Dashboard() {
         {dashView === "npcBoard" && (() => {
           const devVisibleOpen = applySort(applyFilter(quests.open.filter(q => (q.type ?? "development") === "development")));
           const devVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => (q.type ?? "development") === "development")));
+          // Only show Lyra as NPC quest giver
+          const npcAgents = agents.filter(a => a.id === "lyra");
           return (
             <div className="space-y-6">
-              {/* NPC Roster — collapsible */}
+              {/* Dobbie filter banner */}
+              {npcBoardFilter === "dobbie" && (
+                <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(255,107,157,0.07)", border: "1px solid rgba(255,107,157,0.2)" }}>
+                  <span className="text-lg">🐱</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Dobbie hat dich hergeschickt. Check Dobbie&apos;s Demands unten!</p>
+                  </div>
+                  <button onClick={() => setNpcBoardFilter(null)} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>×</button>
+                </div>
+              )}
+              {/* NPC Roster — collapsible, shows only Lyra */}
               <section>
                 <button
                   onClick={() => setNpcAgentRosterOpen(v => !v)}
@@ -1896,7 +1966,7 @@ export default function Dashboard() {
                 >
                   <div className="flex items-center gap-3">
                     <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>NPC Roster</h2>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{loading ? "Loading…" : agents.length > 0 ? `${agents.length} agents registered` : "Waiting for agents to check in"}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{loading ? "Loading…" : npcAgents.length > 0 ? `${npcAgents.length} NPC quest giver` : "Waiting for Lyra to check in"}</p>
                     <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
                       <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#4ade80", animation: "pulse-online 2s ease-in-out infinite" }} />Online</span>
                       <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#ff6b00", animation: "pulse-working 1.5s ease-in-out infinite" }} />Working</span>
@@ -1906,17 +1976,17 @@ export default function Dashboard() {
                   <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{npcAgentRosterOpen ? "▲" : "▼"}</span>
                 </button>
                 {npcAgentRosterOpen && (loading ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{[1,2,3,4,5,6].map(i => <SkeletonCard key={i} />)}</div>
-                ) : agents.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{[1].map(i => <SkeletonCard key={i} />)}</div>
+                ) : npcAgents.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {agents.map(agent => (
-                      <div key={agent.id} className={agent.id === "lyra" ? "col-span-1 sm:col-span-2" : ""}>
-                        <AgentCard agent={agent} activeQuests={agentQuestMap[agent.id] ?? []} isWide={agent.id === "lyra"} />
+                    {npcAgents.map(agent => (
+                      <div key={agent.id} className="col-span-1 sm:col-span-2">
+                        <AgentCard agent={agent} activeQuests={agentQuestMap[agent.id] ?? []} isWide={true} />
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <EmptyState message="No agents have checked in yet." sub="POST /api/agent/:name/status  →  { status, platform, uptime, questsCompleted, health }" />
+                  <EmptyState message="Lyra has not checked in yet." sub="POST /api/agent/lyra/status  →  { status, platform, uptime, questsCompleted, health }" />
                 ))}
               </section>
 
@@ -2050,8 +2120,8 @@ export default function Dashboard() {
           <SmartSuggestionsPanel quests={quests} agents={agents} />
         )}
 
-        {/* Rejected Quests (Mülleimer) */}
-        {quests.rejected.length > 0 && (
+        {/* Rejected Quests (Mülleimer) — only on NPC board */}
+        {dashView === "npcBoard" && quests.rejected.length > 0 && (
           <section className="mb-6">
             <button
               onClick={() => setRejectedOpen(v => !v)}
@@ -2088,65 +2158,85 @@ export default function Dashboard() {
           </section>
         )}
 
-        {/* Completed Quests Log — Quest Journal */}
-        {(quests.completed.length > 0 || !loading) && (
-          <section>
-            <button
-              onClick={() => setCompletedOpen(v => !v)}
-              className="flex items-center gap-2 mb-3 w-full text-left"
-            >
-              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
-                📖 Quest Journal
-              </h2>
-              <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
-                {quests.completed.length}
-              </span>
-              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-                {completedOpen ? "▲" : "▼"}
-              </span>
-            </button>
+        {/* Completed Quests Log — Quest Journal (context-sensitive) */}
+        {(quests.completed.length > 0 || !loading) && (() => {
+          const playerJournalTypes = ["personal", "fitness", "social", "learning", "relationship-coop"];
+          // Player board: only logged-in player's completed player-type quests (not rejected, not dev)
+          const playerJournalQuests = dashView === "questBoard" && playerName
+            ? quests.completed.filter(q =>
+                playerJournalTypes.includes(q.type ?? "") &&
+                (q.completedBy ?? "").toLowerCase() === playerName.toLowerCase() &&
+                q.status !== "rejected"
+              )
+            : null;
+          // NPC board: development completed quests
+          const npcJournalQuests = dashView === "npcBoard"
+            ? quests.completed.filter(q => (q.type ?? "development") === "development")
+            : null;
+          const journalQuests = playerJournalQuests ?? npcJournalQuests;
+          if (journalQuests === null || (journalQuests.length === 0 && loading)) return null;
 
-            {completedOpen && (
-              <div>
-                <input
-                  type="text"
-                  value={completedSearch}
-                  onChange={e => setCompletedSearch(e.target.value)}
-                  placeholder="Search completed quests…"
-                  className="w-full text-xs px-3 py-2 rounded-lg mb-2"
-                  style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }}
-                />
-                <div className="rounded-xl overflow-hidden" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  {quests.completed.length === 0 ? (
-                    <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>No completed quests yet</p>
-                  ) : (() => {
-                    const filtered = completedSearch
-                      ? quests.completed.filter(q =>
-                          q.title.toLowerCase().includes(completedSearch.toLowerCase()) ||
-                          (q.description ?? "").toLowerCase().includes(completedSearch.toLowerCase()) ||
-                          (q.completedBy ?? "").toLowerCase().includes(completedSearch.toLowerCase())
-                        )
-                      : quests.completed;
-                    if (filtered.length === 0) return (
-                      <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>No quests match &ldquo;{completedSearch}&rdquo;</p>
-                    );
-                    return (
-                      <div>
-                        {filtered.map((q, i) => (
-                          <CompletedQuestRow
-                            key={q.id}
-                            quest={q}
-                            isLast={i === filtered.length - 1}
-                          />
-                        ))}
-                      </div>
-                    );
-                  })()}
+          return (
+            <section>
+              <button
+                onClick={() => setCompletedOpen(v => !v)}
+                className="flex items-center gap-2 mb-3 w-full text-left"
+              >
+                <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+                  📖 {dashView === "npcBoard" ? "NPC Quest Log" : "Quest Journal"}
+                </h2>
+                <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
+                  {journalQuests.length}
+                </span>
+                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+                  {completedOpen ? "▲" : "▼"}
+                </span>
+              </button>
+
+              {completedOpen && (
+                <div>
+                  <input
+                    type="text"
+                    value={completedSearch}
+                    onChange={e => setCompletedSearch(e.target.value)}
+                    placeholder="Search completed quests…"
+                    className="w-full text-xs px-3 py-2 rounded-lg mb-2"
+                    style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }}
+                  />
+                  <div className="rounded-xl overflow-hidden" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    {journalQuests.length === 0 ? (
+                      <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
+                        {dashView === "questBoard" && !playerName ? "Login to see your completed quests" : "No completed quests yet"}
+                      </p>
+                    ) : (() => {
+                      const filtered = completedSearch
+                        ? journalQuests.filter(q =>
+                            q.title.toLowerCase().includes(completedSearch.toLowerCase()) ||
+                            (q.description ?? "").toLowerCase().includes(completedSearch.toLowerCase()) ||
+                            (q.completedBy ?? "").toLowerCase().includes(completedSearch.toLowerCase())
+                          )
+                        : journalQuests;
+                      if (filtered.length === 0) return (
+                        <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>No quests match &ldquo;{completedSearch}&rdquo;</p>
+                      );
+                      return (
+                        <div>
+                          {filtered.map((q, i) => (
+                            <CompletedQuestRow
+                              key={q.id}
+                              quest={q}
+                              isLast={i === filtered.length - 1}
+                            />
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 </div>
-              </div>
-            )}
-          </section>
-        )}
+              )}
+            </section>
+          );
+        })()}
       </main>
 
       {/* Bulk Action Bar */}
@@ -2279,8 +2369,159 @@ export default function Dashboard() {
         />
       )}
 
-      {/* Guide Modal */}
+      {/* Guide Modal (legacy fallback) */}
       {guideOpen && <GuideModal onClose={() => setGuideOpen(false)} onRestartTutorial={handleRestartTutorial} />}
+
+      {/* Floating Info Button */}
+      <button
+        onClick={() => setInfoOverlayOpen(true)}
+        style={{
+          position: "fixed", bottom: "1.5rem", right: "1.5rem",
+          zIndex: 50, width: 44, height: 44, borderRadius: "50%",
+          background: "rgba(30,30,30,0.95)", border: "1px solid rgba(255,255,255,0.15)",
+          color: "rgba(255,255,255,0.6)", fontSize: 20, cursor: "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+        }}
+        title="Info, Roadmap & Changelog"
+      >
+        ℹ️
+      </button>
+
+      {/* Info Overlay */}
+      {infoOverlayOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, zIndex: 60,
+            background: "rgba(0,0,0,0.7)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onClick={e => { if (e.target === e.currentTarget) setInfoOverlayOpen(false); }}
+        >
+          <div
+            style={{
+              background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)",
+              borderRadius: 16, width: "min(800px, 95vw)", maxHeight: "80vh",
+              overflow: "hidden", display: "flex", flexDirection: "column",
+            }}
+          >
+            {/* Header with tabs */}
+            <div style={{ padding: "1rem 1.25rem 0", borderBottom: "1px solid rgba(255,255,255,0.07)", display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", gap: 4, flex: 1 }}>
+                {[
+                  { key: "roadmap",   label: "🗺️ Roadmap" },
+                  { key: "changelog", label: "📋 Changelog" },
+                  { key: "guide",     label: "📖 Guide" },
+                  { key: "tutorial",  label: "❓ Tutorial" },
+                ].map(t => (
+                  <button
+                    key={t.key}
+                    onClick={() => setInfoOverlayTab(t.key as typeof infoOverlayTab)}
+                    style={{
+                      padding: "0.5rem 0.75rem", borderRadius: "8px 8px 0 0",
+                      background: infoOverlayTab === t.key ? "rgba(255,255,255,0.08)" : "transparent",
+                      color: infoOverlayTab === t.key ? "#f0f0f0" : "rgba(255,255,255,0.35)",
+                      border: "none", cursor: "pointer", fontSize: 12, fontWeight: 600,
+                    }}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setInfoOverlayOpen(false)}
+                style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 18, padding: "0 0.5rem 0.5rem" }}
+              >
+                ×
+              </button>
+            </div>
+            {/* Content */}
+            <div style={{ overflowY: "auto", flex: 1, padding: "1.25rem" }}>
+              {infoOverlayTab === "roadmap" && <RoadmapView isAdmin={isAdmin} reviewApiKey={reviewApiKey} />}
+              {infoOverlayTab === "changelog" && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>📋 Changelog</span>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>— recent commits from GitHub</span>
+                  </div>
+                  {changelogLoading && (
+                    <div className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>Loading commits…</div>
+                  )}
+                  {!changelogLoading && changelog.length === 0 && (
+                    <div className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No changelog data available.</div>
+                  )}
+                  {changelog.map(entry => (
+                    <div key={entry.date} className="space-y-1.5">
+                      <div
+                        className="text-xs font-semibold uppercase tracking-widest pt-2 pb-1"
+                        style={{ color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                      >
+                        {entry.date}
+                      </div>
+                      {entry.commits.map((c, i) => {
+                        const typeStyle: Record<string, { badge: string; color: string; bg: string }> = {
+                          feat:     { badge: "🟢 feat",     color: "#4ade80", bg: "rgba(74,222,128,0.1)"  },
+                          fix:      { badge: "🔧 fix",      color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
+                          chore:    { badge: "⚙️ chore",    color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
+                          docs:     { badge: "📝 docs",     color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
+                          refactor: { badge: "♻️ refactor", color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
+                        };
+                        const ts = typeStyle[c.type] || { badge: c.type, color: "#9ca3af", bg: "rgba(156,163,175,0.1)" };
+                        return (
+                          <div
+                            key={i}
+                            className="flex items-start gap-2 px-3 py-2 rounded"
+                            style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)" }}
+                          >
+                            <span
+                              className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
+                              style={{ color: ts.color, background: ts.bg, whiteSpace: "nowrap" }}
+                            >
+                              {ts.badge}
+                            </span>
+                            <span className="text-sm flex-1 leading-snug" style={{ color: "rgba(255,255,255,0.7)" }}>
+                              {c.message}
+                            </span>
+                            {c.sha && (
+                              c.url ? (
+                                <a
+                                  href={c.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs font-mono shrink-0"
+                                  style={{ color: "rgba(255,255,255,0.2)", textDecoration: "none" }}
+                                >
+                                  {c.sha}
+                                </a>
+                              ) : (
+                                <span className="text-xs font-mono shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>{c.sha}</span>
+                              )
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {infoOverlayTab === "guide" && (
+                <GuideContent onRestartTutorial={() => { handleRestartTutorial(); setInfoOverlayOpen(false); }} />
+              )}
+              {infoOverlayTab === "tutorial" && (
+                <div className="space-y-4 p-2">
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>Das interaktive Tutorial führt dich durch die wichtigsten Funktionen der Quest Hall.</p>
+                  <button
+                    onClick={() => { handleRestartTutorial(); setInfoOverlayOpen(false); }}
+                    style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)", padding: "0.5rem 1rem", borderRadius: 8, cursor: "pointer", fontSize: 13 }}
+                  >
+                    🎓 Tutorial neu starten
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tutorial Overlay */}
       {showTutorial && (
@@ -4721,21 +4962,26 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
 const rankMedal = ["🥇", "🥈", "🥉"];
 
 function LeaderboardView({ entries, agents, mode = "agents", users = [] }: { entries: LeaderboardEntry[]; agents: Agent[]; mode?: "agents" | "players"; users?: User[] }) {
-  // For players mode: build leaderboard from users
+  // For players mode: build leaderboard from users (registered players only, exclude agent IDs)
   // For agents mode: use entries/agents as before
+  const agentIdSet = new Set(agents.map(a => a.id));
   let merged: LeaderboardEntry[];
   if (mode === "players") {
-    merged = users.map((u, i) => ({
-      rank: i + 1,
-      id: u.id,
-      name: u.name,
-      avatar: u.avatar,
-      color: u.color,
-      xp: u.xp ?? 0,
-      questsCompleted: u.questsCompleted ?? 0,
-    })).sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted).map((e, i) => ({ ...e, rank: i + 1 }));
+    merged = users
+      .filter(u => !agentIdSet.has(u.id))
+      .map((u, i) => ({
+        rank: i + 1,
+        id: u.id,
+        name: u.name,
+        avatar: u.avatar,
+        color: u.color,
+        xp: u.xp ?? 0,
+        questsCompleted: u.questsCompleted ?? 0,
+      })).sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted).map((e, i) => ({ ...e, rank: i + 1 }));
   } else {
-    merged = entries.length > 0 ? entries : agents.map((a, i) => ({
+    // agents mode: filter entries to only agent IDs
+    const agentEntries = entries.filter(e => agentIdSet.has(e.id));
+    merged = agentEntries.length > 0 ? agentEntries : agents.map((a, i) => ({
       rank: i + 1,
       id: a.id,
       name: a.name,
@@ -4844,64 +5090,47 @@ function LeaderboardView({ entries, agents, mode = "agents", users = [] }: { ent
 }
 
 // ─── Guide Modal ─────────────────────────────────────────────────────────────
-function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void; onRestartTutorial?: () => void }) {
-  const [tab, setTab] = useState<"quests" | "xp" | "forge" | "achievements" | "start">("quests");
+function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => void }) {
+  const [tab, setTab] = useState<"quests" | "xp" | "forge" | "achievements" | "start">("start");
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: "rgba(0,0,0,0.75)" }}
-      onClick={onClose}
-    >
-      <div
-        className="rounded-2xl w-full max-w-lg overflow-hidden"
-        style={{ background: "#1a1a1a", border: "1px solid rgba(255,140,68,0.3)", boxShadow: "0 0 60px rgba(255,100,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
-          <div>
-            <h2 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>📖 Player Guide</h2>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Everything you need to know</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {onRestartTutorial && (
-              <button
-                onClick={onRestartTutorial}
-                className="text-xs px-2 py-0.5 rounded"
-                style={{ color: "#fbbf24", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}
-                title="Restart the interactive tutorial"
-              >
-                🎓 Restart Tutorial
-              </button>
-            )}
-            <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>✕</button>
-          </div>
+    <div>
+      {/* Tabs */}
+      <div className="flex border-b overflow-x-auto mb-0" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+        {([
+          { key: "start", label: "🧭 Start" },
+          { key: "quests", label: "⚔ Quests" },
+          { key: "xp", label: "⭐ XP & Levels" },
+          { key: "forge", label: "🔥 Forge" },
+          { key: "achievements", label: "🏅 Achievements" },
+        ] as { key: typeof tab; label: string }[]).map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className="flex-1 py-2.5 text-xs font-semibold transition-colors"
+            style={{
+              color: tab === t.key ? "#ff8c44" : "rgba(255,255,255,0.3)",
+              background: tab === t.key ? "rgba(255,140,68,0.08)" : "transparent",
+              borderBottom: tab === t.key ? "2px solid #ff8c44" : "2px solid transparent",
+              border: "none", cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+      {onRestartTutorial && (
+        <div className="flex justify-end pt-2 pb-0">
+          <button
+            onClick={onRestartTutorial}
+            className="text-xs px-2 py-0.5 rounded"
+            style={{ color: "#fbbf24", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}
+          >
+            🎓 Restart Tutorial
+          </button>
         </div>
+      )}
 
-        {/* Tabs */}
-        <div className="flex border-b overflow-x-auto" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-          {([
-            { key: "start", label: "🧭 Start" },
-            { key: "quests", label: "⚔ Quests" },
-            { key: "xp", label: "⭐ XP & Levels" },
-            { key: "forge", label: "🔥 Forge" },
-            { key: "achievements", label: "🏅 Achievements" },
-          ] as { key: typeof tab; label: string }[]).map(t => (
-            <button
-              key={t.key}
-              onClick={() => setTab(t.key)}
-              className="flex-1 py-2.5 text-xs font-semibold transition-colors"
-              style={{
-                color: tab === t.key ? "#ff8c44" : "rgba(255,255,255,0.3)",
-                background: tab === t.key ? "rgba(255,140,68,0.08)" : "transparent",
-                borderBottom: tab === t.key ? "2px solid #ff8c44" : "2px solid transparent",
-              }}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="p-5 space-y-4 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
+      <div className="p-5 space-y-4 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
           {tab === "start" && (
             <>
               <GuideSection icon="🧭" title="Registrierung">
@@ -5062,6 +5291,30 @@ function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void; onRes
             </>
           )}
         </div>
+    </div>
+  );
+}
+
+function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void; onRestartTutorial?: () => void }) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.75)" }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-2xl w-full max-w-lg overflow-hidden"
+        style={{ background: "#1a1a1a", border: "1px solid rgba(255,140,68,0.3)", boxShadow: "0 0 60px rgba(255,100,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
+          <div>
+            <h2 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>📖 Player Guide</h2>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Everything you need to know</p>
+          </div>
+          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16, background: "none", border: "none", cursor: "pointer" }}>✕</button>
+        </div>
+        <GuideContent onRestartTutorial={onRestartTutorial} />
       </div>
     </div>
   );

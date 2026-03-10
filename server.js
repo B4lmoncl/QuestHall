@@ -1318,6 +1318,28 @@ function getXpMultiplier(userId) {
   return temp === 0 ? 0.5 : 1;
 }
 
+// Dynamic per-player forgeTemp: based on completed quests in last 24h
+// 0 quests=0%, 1=20%, 2=40%, 3=60%, 5+=80%, 8+=100%
+function calcDynamicForgeTemp(userId) {
+  const now24h = Date.now() - 24 * 3600 * 1000;
+  const playerName = userId.toLowerCase();
+  let count = 0;
+  for (const q of quests) {
+    if (q.status === 'completed' && q.completedAt) {
+      const completor = (q.completedBy || '').toLowerCase();
+      if (completor === playerName && new Date(q.completedAt).getTime() >= now24h) {
+        count++;
+      }
+    }
+  }
+  if (count >= 8) return 100;
+  if (count >= 5) return 80;
+  if (count >= 3) return 60;
+  if (count >= 2) return 40;
+  if (count >= 1) return 20;
+  return 0;
+}
+
 // Track today's quest completions per user (in-memory, resets on restart)
 const todayCompletions = {}; // userId → { date, count, types: Set }
 
@@ -2171,9 +2193,29 @@ app.get('/api/quests', (req, res) => {
       }
     }
 
+    // Filter open player quests to the active pool (fill if empty)
+    let poolFilteredOpen = openPlayer;
+    if (POOL_TYPES.some(t => !typeFilter || typeFilter === t)) {
+      // Ensure pool is populated
+      if (!pp.activeQuestPool || pp.activeQuestPool.length === 0) {
+        pp.activeQuestPool = buildQuestPool(playerParam, playerLevel);
+        savePlayerProgress();
+      } else {
+        // Remove stale IDs from pool
+        const validIds = new Set(quests.filter(q => q.status === 'open' || q.status === 'in_progress').map(q => q.id));
+        pp.activeQuestPool = pp.activeQuestPool.filter(id => validIds.has(id));
+        if (pp.activeQuestPool.length < 3) {
+          pp.activeQuestPool = buildQuestPool(playerParam, playerLevel);
+          savePlayerProgress();
+        }
+      }
+      const poolSet = new Set(pp.activeQuestPool);
+      poolFilteredOpen = openPlayer.filter(q => poolSet.has(q.id));
+    }
+
     // Dev quest types use global status as-is
     return res.json({
-      open:       [...enrichEpics(openPlayer),       ...filterAndEnrich('open',        devTypeQuests)],
+      open:       [...enrichEpics(poolFilteredOpen),  ...filterAndEnrich('open',        devTypeQuests)],
       inProgress: [...enrichEpics(inProgressPlayer), ...filterAndEnrich('in_progress', devTypeQuests)],
       completed:  [...enrichEpics(completedPlayer),  ...filterAndEnrich('completed',   devTypeQuests)],
       suggested:  filterAndEnrich('suggested', devTypeQuests),
@@ -2302,9 +2344,13 @@ app.post('/api/quests/bulk-update', requireApiKey, (req, res) => {
   res.json({ ok: true, updated, notFound });
 });
 
-// GET /api/leaderboard — agents ranked by XP
+// GET /api/leaderboard — returns combined leaderboard
+// mode=agents: agents only; mode=players: registered users only (default: agents for backward compat)
 app.get('/api/leaderboard', (req, res) => {
-  const ranked = Object.values(store.agents)
+  const agentIds = new Set(Object.keys(store.agents));
+
+  // Build agents-only ranked list
+  const agentsRanked = Object.values(store.agents)
     .map(a => {
       const levelInfo = getLevelInfo(a.xp || 0);
       return {
@@ -2317,11 +2363,128 @@ app.get('/api/leaderboard', (req, res) => {
         questsCompleted: a.questsCompleted || 0,
         level: levelInfo.level,
         levelTitle: levelInfo.title,
+        isAgent: true,
       };
     })
     .sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted)
     .map((a, i) => ({ ...a, rank: i + 1 }));
-  res.json(ranked);
+
+  // Build players-only ranked list (registered users, exclude agent IDs)
+  const playersRanked = Object.values(users)
+    .filter(u => !agentIds.has(u.id))
+    .map(u => {
+      const levelInfo = getLevelInfo(u.xp || 0);
+      return {
+        id: u.id,
+        name: u.name,
+        avatar: u.avatar,
+        color: u.color,
+        role: null,
+        xp: u.xp || 0,
+        questsCompleted: u.questsCompleted || 0,
+        level: levelInfo.level,
+        levelTitle: levelInfo.title,
+        isAgent: false,
+      };
+    })
+    .sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted)
+    .map((a, i) => ({ ...a, rank: i + 1 }));
+
+  // Return combined list with agents first for backward compat (client separates via isAgent)
+  res.json([...agentsRanked, ...playersRanked]);
+});
+
+// ─── Quest Pool System ─────────────────────────────────────────────────────────
+// Maintains a per-player pool of up to 10 player-type quests (personal/fitness/social/learning)
+// Mix: 2-3 personal, 2-3 fitness, 2-3 social, 1-2 learning
+
+const POOL_TYPES = ['personal', 'fitness', 'social', 'learning'];
+const POOL_MIX = { personal: 3, fitness: 3, social: 2, learning: 2 }; // target counts
+
+function buildQuestPool(playerName, playerLevel) {
+  const uid = playerName.toLowerCase();
+  const pp = getPlayerProgress(uid);
+  const completedIds = new Set(Object.keys(pp.completedQuests || {}));
+  const claimedIds = new Set(pp.claimedQuests || []);
+  const pool = [];
+
+  for (const type of POOL_TYPES) {
+    const target = POOL_MIX[type] || 2;
+    const candidates = quests.filter(q =>
+      q.status === 'open' &&
+      q.type === type &&
+      !q.parentQuestId &&
+      !completedIds.has(q.id) &&
+      !claimedIds.has(q.id) &&
+      (q.minLevel || 1) <= playerLevel
+    );
+    // Shuffle candidates
+    const shuffled = candidates.sort(() => Math.random() - 0.5);
+    for (let i = 0; i < Math.min(target, shuffled.length); i++) {
+      pool.push(shuffled[i].id);
+    }
+  }
+  return pool.slice(0, 10);
+}
+
+// GET /api/quests/pool?player=X — get or initialize the quest pool
+app.get('/api/quests/pool', (req, res) => {
+  const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
+  if (!playerParam) return res.status(400).json({ error: 'player parameter required' });
+  const userRecord = users[playerParam];
+  if (!userRecord) return res.status(404).json({ error: 'Player not found' });
+  const pp = getPlayerProgress(playerParam);
+  const playerLevel = getLevelInfo(userRecord.xp || 0).level;
+
+  // Fill pool if empty or has no valid quests
+  if (!pp.activeQuestPool || pp.activeQuestPool.length === 0) {
+    pp.activeQuestPool = buildQuestPool(playerParam, playerLevel);
+    savePlayerProgress();
+  } else {
+    // Remove completed/rejected quests from pool
+    const validIds = new Set(quests.filter(q => q.status === 'open' || q.status === 'in_progress').map(q => q.id));
+    pp.activeQuestPool = pp.activeQuestPool.filter(id => validIds.has(id));
+    if (pp.activeQuestPool.length < 3) {
+      pp.activeQuestPool = buildQuestPool(playerParam, playerLevel);
+      savePlayerProgress();
+    }
+  }
+
+  const poolQuests = pp.activeQuestPool
+    .map(id => quests.find(q => q.id === id))
+    .filter(Boolean);
+
+  res.json({ pool: poolQuests, lastRefresh: pp.lastPoolRefresh || null });
+});
+
+// POST /api/quests/pool/refresh?player=X — refresh the pool (1 per hour cooldown)
+app.post('/api/quests/pool/refresh', requireApiKey, (req, res) => {
+  const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
+  if (!playerParam) return res.status(400).json({ error: 'player parameter required' });
+  const userRecord = users[playerParam];
+  if (!userRecord) return res.status(404).json({ error: 'Player not found' });
+  const pp = getPlayerProgress(playerParam);
+  const playerLevel = getLevelInfo(userRecord.xp || 0).level;
+
+  // Cooldown check: 1 refresh per hour
+  const now = Date.now();
+  if (pp.lastPoolRefresh) {
+    const elapsed = now - new Date(pp.lastPoolRefresh).getTime();
+    if (elapsed < 3600 * 1000) {
+      const waitMin = Math.ceil((3600 * 1000 - elapsed) / 60000);
+      return res.status(429).json({ error: `Pool refresh cooldown. Try again in ${waitMin} min.` });
+    }
+  }
+
+  pp.activeQuestPool = buildQuestPool(playerParam, playerLevel);
+  pp.lastPoolRefresh = new Date().toISOString();
+  savePlayerProgress();
+
+  const poolQuests = pp.activeQuestPool
+    .map(id => quests.find(q => q.id === id))
+    .filter(Boolean);
+
+  res.json({ ok: true, pool: poolQuests, lastRefresh: pp.lastPoolRefresh });
 });
 
 // GET /api/quests/reset-recurring — reset completed recurring quests based on interval
@@ -3219,7 +3382,12 @@ function getPlayerProgress(playerId) {
 
 // GET /api/users
 app.get('/api/users', (req, res) => {
-  res.json(Object.values(users));
+  // Inject dynamic per-player forgeTemp based on last 24h completions
+  const result = Object.values(users).map(u => ({
+    ...u,
+    forgeTemp: calcDynamicForgeTemp(u.id),
+  }));
+  res.json(result);
 });
 
 // GET /api/users/:id
@@ -3412,6 +3580,10 @@ app.get('/api/player/:name', (req, res) => {
   if (!userRecord) return res.status(404).json({ error: 'Player not found' });
   const pp = getPlayerProgress(uid);
   const levelInfo = getLevelInfo(userRecord.xp || 0);
+  // Dynamic per-player forgeTemp based on last 24h completions
+  const dynamicForgeTemp = calcDynamicForgeTemp(uid);
+  // Also update stored value for XP multiplier calculations
+  userRecord.forgeTemp = dynamicForgeTemp;
   res.json({
     id: uid,
     name: userRecord.name,
@@ -3424,6 +3596,7 @@ app.get('/api/player/:name', (req, res) => {
     completedQuestsCount: Object.keys(pp.completedQuests || {}).length,
     claimedQuests: pp.claimedQuests || [],
     streakDays: userRecord.streakDays || 0,
+    forgeTemp: dynamicForgeTemp,
   });
 });
 
