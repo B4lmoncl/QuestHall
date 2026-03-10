@@ -276,6 +276,8 @@ export default function Dashboard() {
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialStep, setTutorialStep] = useState(0);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -579,6 +581,39 @@ export default function Dashboard() {
     return () => clearInterval(tick);
   }, [lastRefresh]);
 
+  // Auto-trigger tutorial on first visit (no login required)
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("tutorialCompleted") !== "true") {
+        const t = setTimeout(() => { setShowTutorial(true); setTutorialStep(0); }, 800);
+        return () => clearTimeout(t);
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  const handleTutorialNext = () => {
+    if (tutorialStep >= TUTORIAL_STEPS.length - 1) {
+      try { localStorage.setItem("tutorialCompleted", "true"); } catch { /* ignore */ }
+      setShowTutorial(false);
+      setTutorialStep(0);
+    } else {
+      setTutorialStep(s => s + 1);
+    }
+  };
+
+  const handleTutorialSkip = () => {
+    try { localStorage.setItem("tutorialCompleted", "true"); } catch { /* ignore */ }
+    setShowTutorial(false);
+    setTutorialStep(0);
+  };
+
+  const handleRestartTutorial = () => {
+    try { localStorage.removeItem("tutorialCompleted"); } catch { /* ignore */ }
+    setGuideOpen(false);
+    setTutorialStep(0);
+    setShowTutorial(true);
+  };
+
   const needsAttention = agents.filter((a) => a.health === "needs_checkin" || a.health === "broken").length;
 
   // Player-specific stats (logged-in player)
@@ -684,6 +719,14 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-4">
             <button
+              onClick={handleRestartTutorial}
+              className="text-xs px-2 py-0.5 rounded"
+              style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+              title="Restart Tutorial"
+            >
+              🎓 Tutorial
+            </button>
+            <button
               onClick={() => setGuideOpen(true)}
               className="text-xs px-2 py-0.5 rounded"
               style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -691,7 +734,7 @@ export default function Dashboard() {
               📖 Guide
             </button>
             {/* Login / User area */}
-            <div className="relative">
+            <div className="relative" data-tutorial="login-btn">
               {reviewApiKey && playerName ? (
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs px-2 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.25)" }}>
@@ -814,7 +857,7 @@ export default function Dashboard() {
         </div>
 
         {/* Stats — Player-specific */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">
           {!playerName && !loading && (
             <div className="col-span-2 sm:col-span-4 rounded-xl p-3 text-center" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -851,12 +894,12 @@ export default function Dashboard() {
         {/* View toggle */}
         <div className="flex gap-1 flex-wrap" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
-            { key: "questBoard",  label: "⚔ Quest Board" },
-            { key: "npcBoard",    label: "🤖 NPC Quest Board" },
-            { key: "leaderboard", label: "🏆 Leaderboard" },
-            { key: "honors",      label: "🏅 Honors" },
-            { key: "campaign",    label: "🐉 Campaign" },
-            { key: "season",      label: `${CURRENT_SEASON.icon} Season` },
+            { key: "questBoard",  label: "⚔ Quest Board",     tutorialKey: "quest-board-tab" },
+            { key: "npcBoard",    label: "🤖 NPC Quest Board", tutorialKey: "npc-board-tab" },
+            { key: "leaderboard", label: "🏆 Leaderboard",     tutorialKey: "leaderboard-tab" },
+            { key: "honors",      label: "🏅 Honors",          tutorialKey: null },
+            { key: "campaign",    label: "🐉 Campaign",        tutorialKey: "campaign-tab" },
+            { key: "season",      label: `${CURRENT_SEASON.icon} Season`, tutorialKey: "season-tab" },
           ].map(v => (
             <button
               key={v.key}
@@ -866,6 +909,7 @@ export default function Dashboard() {
                 background: dashView === v.key ? "#252525" : "transparent",
                 color: dashView === v.key ? "#f0f0f0" : "rgba(255,255,255,0.3)",
               }}
+              {...(v.tutorialKey ? { "data-tutorial": v.tutorialKey } : {})}
             >
               {v.label}
             </button>
@@ -933,6 +977,11 @@ export default function Dashboard() {
                 </section>
               )}
 
+              {/* Companions Widget */}
+              <div className="mb-5">
+                <CompanionsWidget user={loggedInUser} streak={playerStreak} />
+              </div>
+
               {/* Quest Board — player types only */}
               <div>
                 <aside className="w-full">
@@ -975,7 +1024,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                     {/* Type filter — player types only */}
-                    <div className="flex gap-1 flex-wrap mb-2">
+                    <div className="flex gap-1 flex-wrap mb-2" data-tutorial="quest-filters">
                       {(["all", "personal", "learning", "fitness", "social", "relationship-coop"] as const).map(t => {
                         const cfg = t === "all" ? null : typeConfig[t];
                         const isActive = typeFilter === t;
@@ -1407,7 +1456,12 @@ export default function Dashboard() {
       )}
 
       {/* Guide Modal */}
-      {guideOpen && <GuideModal onClose={() => setGuideOpen(false)} />}
+      {guideOpen && <GuideModal onClose={() => setGuideOpen(false)} onRestartTutorial={handleRestartTutorial} />}
+
+      {/* Tutorial Overlay */}
+      {showTutorial && (
+        <TutorialOverlay step={tutorialStep} onNext={handleTutorialNext} onSkip={handleTutorialSkip} />
+      )}
 
       {/* Create Quest Modal */}
       {createQuestOpen && (
@@ -3667,7 +3721,7 @@ function LeaderboardView({ entries, agents, mode = "agents", users = [] }: { ent
 }
 
 // ─── Guide Modal ─────────────────────────────────────────────────────────────
-function GuideModal({ onClose }: { onClose: () => void }) {
+function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void; onRestartTutorial?: () => void }) {
   const [tab, setTab] = useState<"quests" | "xp" | "forge" | "achievements">("quests");
   return (
     <div
@@ -3685,7 +3739,19 @@ function GuideModal({ onClose }: { onClose: () => void }) {
             <h2 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>📖 Player Guide</h2>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Everything you need to know</p>
           </div>
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>✕</button>
+          <div className="flex items-center gap-2">
+            {onRestartTutorial && (
+              <button
+                onClick={onRestartTutorial}
+                className="text-xs px-2 py-0.5 rounded"
+                style={{ color: "#fbbf24", background: "rgba(251,191,36,0.1)", border: "1px solid rgba(251,191,36,0.3)" }}
+                title="Restart the interactive tutorial"
+              >
+                🎓 Restart Tutorial
+              </button>
+            )}
+            <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", fontSize: 16 }}>✕</button>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -4195,6 +4261,322 @@ function CampaignView({ agents, quests, users }: { agents: Agent[]; quests: Ques
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Tutorial Overlay (Honkai Star Rail style) ───────────────────────────────
+
+const TUTORIAL_STEPS = [
+  {
+    key: "welcome",
+    title: "Welcome to Quest Hall!",
+    desc: "Let me show you around. It'll only take a minute.",
+    target: null,
+    position: "center" as const,
+  },
+  {
+    key: "stat-cards",
+    title: "Your Stats",
+    desc: "These are your stats — Forge Streak, Active Quests, Quests Completed, and Gold. Log in to see your personal numbers.",
+    target: "stat-cards",
+    position: "bottom" as const,
+  },
+  {
+    key: "quest-board-tab",
+    title: "Quest Board",
+    desc: "This is YOUR quest board. Personal quests, learning, fitness, social — all yours to claim and complete.",
+    target: "quest-board-tab",
+    position: "bottom" as const,
+  },
+  {
+    key: "npc-board-tab",
+    title: "NPC Quest Board",
+    desc: "Agent quests live here. The NPCs (AI agents) work on development tasks — you can review their work too.",
+    target: "npc-board-tab",
+    position: "bottom" as const,
+  },
+  {
+    key: "quest-filters",
+    title: "Quest Filters",
+    desc: "Filter quests by type — Personal, Learning, Fitness, Social, or Co-op. Find what you need fast.",
+    target: "quest-filters",
+    position: "bottom" as const,
+  },
+  {
+    key: "claim-hint",
+    title: "Claim Quests",
+    desc: "See a quest you want? Click ⚔ Claim to take it on! Complete it when done to earn XP and Gold.",
+    target: null,
+    position: "center" as const,
+  },
+  {
+    key: "login-btn",
+    title: "Log In",
+    desc: "Log in with your name and API key to claim quests, earn XP, and track your personal stats.",
+    target: "login-btn",
+    position: "bottom" as const,
+  },
+  {
+    key: "companions",
+    title: "Companions",
+    desc: "Companions join your journey and grant XP bonuses. Keep your streak going to keep them happy!",
+    target: "companions-widget",
+    position: "top" as const,
+  },
+  {
+    key: "leaderboard-tab",
+    title: "Leaderboard",
+    desc: "Compete with other players and agents. Rise through the ranks to claim the top spot!",
+    target: "leaderboard-tab",
+    position: "bottom" as const,
+  },
+  {
+    key: "campaign-tab",
+    title: "Campaign",
+    desc: "Long quest chains and story arcs live here. Embark on epic adventures with your party.",
+    target: "campaign-tab",
+    position: "bottom" as const,
+  },
+  {
+    key: "season-tab",
+    title: "Season & Battle Pass",
+    desc: "Each season brings a Battle Pass with exclusive rewards. Complete quests to level it up!",
+    target: "season-tab",
+    position: "bottom" as const,
+  },
+  {
+    key: "done",
+    title: "You're Ready, Adventurer! 🔥",
+    desc: "The Forge awaits. Go forth, complete quests, and earn glory for the Guild!",
+    target: null,
+    position: "center" as const,
+  },
+];
+
+function TutorialOverlay({ step, onNext, onSkip }: { step: number; onNext: () => void; onSkip: () => void }) {
+  const stepDef = TUTORIAL_STEPS[step];
+  const isLast = step === TUTORIAL_STEPS.length - 1;
+  const [popupPos, setPopupPos] = useState<{ top: number; left: number; arrowDir: "up" | "down" | "none" } | null>(null);
+  const [confetti, setConfetti] = useState<{ x: number; y: number; color: string; id: number }[]>([]);
+
+  useEffect(() => {
+    if (isLast) {
+      const cx = window.innerWidth / 2;
+      const cy = window.innerHeight / 2;
+      const pieces = Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        x: cx + (Math.random() - 0.5) * 300,
+        y: cy + (Math.random() - 0.5) * 200,
+        color: ["#ff4444","#f59e0b","#22c55e","#3b82f6","#a855f7","#ec4899"][i % 6],
+      }));
+      setConfetti(pieces);
+      const t = setTimeout(() => setConfetti([]), 1800);
+      return () => clearTimeout(t);
+    }
+  }, [isLast]);
+
+  useEffect(() => {
+    if (!stepDef.target) { setPopupPos(null); return; }
+    const el = document.querySelector(`[data-tutorial="${stepDef.target}"]`);
+    if (!el) { setPopupPos(null); return; }
+
+    const rect = el.getBoundingClientRect();
+    const POPUP_W = 300;
+    const POPUP_H = 130;
+    const GAP = 14;
+
+    let top: number;
+    let arrowDir: "up" | "down" | "none" = "none";
+
+    if (stepDef.position === "bottom") {
+      top = rect.bottom + GAP;
+      arrowDir = "up";
+      if (top + POPUP_H > window.innerHeight - 20) {
+        top = rect.top - POPUP_H - GAP;
+        arrowDir = "down";
+      }
+    } else {
+      top = rect.top - POPUP_H - GAP;
+      arrowDir = "down";
+      if (top < 20) {
+        top = rect.bottom + GAP;
+        arrowDir = "up";
+      }
+    }
+
+    let left = rect.left + rect.width / 2 - POPUP_W / 2;
+    left = Math.max(12, Math.min(left, window.innerWidth - POPUP_W - 12));
+
+    setPopupPos({ top, left, arrowDir });
+
+    // Elevate target element
+    (el as HTMLElement).classList.add("tutorial-spotlight");
+    return () => (el as HTMLElement).classList.remove("tutorial-spotlight");
+  }, [stepDef]);
+
+  const isCentered = !stepDef.target || !popupPos;
+
+  return (
+    <>
+      {isCentered && (
+        <div
+          className="fixed inset-0"
+          style={{ background: "rgba(0,0,0,0.78)", zIndex: 9998 }}
+          onClick={onSkip}
+        />
+      )}
+      {!isCentered && (
+        <div className="fixed inset-0" style={{ zIndex: 9998, pointerEvents: "none" }} />
+      )}
+
+      {/* Confetti */}
+      {confetti.map(c => (
+        <div
+          key={c.id}
+          className="fixed pointer-events-none"
+          style={{
+            top: c.y,
+            left: c.x,
+            width: 10,
+            height: 10,
+            background: c.color,
+            borderRadius: 2,
+            zIndex: 10003,
+            animation: "tutorial-confetti-burst 1.5s ease forwards",
+          }}
+        />
+      ))}
+
+      {/* Popup */}
+      <div
+        className="tutorial-popup fixed"
+        style={{
+          zIndex: 10002,
+          ...(isCentered
+            ? { top: "50%", left: "50%", transform: "translate(-50%, -50%)" }
+            : { top: popupPos!.top, left: popupPos!.left }),
+          width: isCentered ? 340 : 300,
+          background: "#1a1a1a",
+          border: "1px solid rgba(255,200,50,0.4)",
+          borderRadius: 14,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.7), 0 0 30px rgba(255,200,50,0.12)",
+          padding: "16px 18px 14px",
+        }}
+      >
+        {!isCentered && popupPos?.arrowDir === "up" && (
+          <div style={{ position: "absolute", top: -8, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderBottom: "8px solid rgba(255,200,50,0.4)" }} />
+        )}
+        {!isCentered && popupPos?.arrowDir === "down" && (
+          <div style={{ position: "absolute", bottom: -8, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "8px solid transparent", borderRight: "8px solid transparent", borderTop: "8px solid rgba(255,200,50,0.4)" }} />
+        )}
+
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ background: "rgba(255,200,50,0.12)", color: "#fbbf24", border: "1px solid rgba(255,200,50,0.25)" }}>
+              {step + 1}/{TUTORIAL_STEPS.length}
+            </span>
+            <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>{stepDef.title}</h3>
+          </div>
+          <button onClick={onSkip} style={{ color: "rgba(255,255,255,0.25)", fontSize: 14, lineHeight: 1, flexShrink: 0 }} title="Skip tutorial">✕</button>
+        </div>
+        <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>{stepDef.desc}</p>
+        <div className="flex items-center justify-between gap-2">
+          <button
+            onClick={onSkip}
+            className="text-xs"
+            style={{ color: "rgba(255,255,255,0.25)", textDecoration: "underline" }}
+          >
+            Skip tutorial
+          </button>
+          <button
+            onClick={onNext}
+            className="action-btn btn-primary text-xs px-4 py-1.5 rounded-lg font-semibold"
+            style={{ background: "rgba(251,191,36,0.18)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.4)" }}
+          >
+            {isLast ? "Let's Go! 🔥" : "Next →"}
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ─── Companions Widget (always visible on Quest Board) ───────────────────────
+
+const COMPANION_IDS_ALL = ["ember_sprite", "lore_owl", "gear_golem"];
+const COMPANION_META_ALL: Record<string, { icon: string; name: string; quote: string }> = {
+  ember_sprite: { icon: "🔮", name: "Ember Sprite", quote: "The forge burns because YOU keep it lit!" },
+  lore_owl:     { icon: "🦉", name: "Lore Owl",     quote: "Knowledge is power, adventurer." },
+  gear_golem:   { icon: "🤖", name: "Gear Golem",   quote: "Efficiency is the path to glory." },
+};
+const DOBBIE_QUOTES = [
+  "Dobbie demands a quest! ...and also a snack.",
+  "Mrow. The Forge grows cold without quests.",
+  "Dobbie approves of your progress. Now pet me.",
+  "Have you tried completing more quests? Dobbie has opinions.",
+  "Purring softly while judging your quest log.",
+];
+
+function CompanionsWidget({ user, streak }: { user: User | null | undefined; streak: number }) {
+  const [quoteIdx] = useState(() => Math.floor(Math.random() * DOBBIE_QUOTES.length));
+
+  const earnedCompanions = (user?.earnedAchievements ?? []).filter(a => COMPANION_IDS_ALL.includes(a.id));
+  const mood = streak >= 7
+    ? { emoji: "😊", label: "Happy", color: "#22c55e", tip: "Keep the streak going!" }
+    : streak >= 3
+    ? { emoji: "😐", label: "Neutral", color: "#f59e0b", tip: "Complete quests to cheer them up!" }
+    : { emoji: "😔", label: "Sad", color: "#ef4444", tip: "Your companions miss you!" };
+
+  return (
+    <div
+      data-tutorial="companions-widget"
+      className="rounded-xl p-3"
+      style={{ background: "rgba(167,139,250,0.05)", border: "1px solid rgba(167,139,250,0.18)" }}
+    >
+      <div className="flex items-center gap-2 mb-2">
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(167,139,250,0.7)" }}>Companions</span>
+        {earnedCompanions.length > 0 && (
+          <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(99,102,241,0.1)", color: "rgba(99,102,241,0.6)", border: "1px solid rgba(99,102,241,0.2)" }}>
+            +{(earnedCompanions.length + 1) * 2}% XP
+          </span>
+        )}
+      </div>
+
+      {/* Dobbie — always shown as starter companion */}
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className={`text-lg ${mood.label === "Happy" ? "animate-bounce" : mood.label === "Sad" ? "animate-pulse" : ""}`} title={`Dobbie — ${mood.tip}`}>🐱</span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie</span>
+            <span className="text-xs" title={mood.tip} style={{ color: mood.color }}>{mood.emoji} {mood.label}</span>
+            <span className="text-xs" style={{ color: "rgba(99,102,241,0.5)" }}>+2% XP</span>
+          </div>
+          <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>{DOBBIE_QUOTES[quoteIdx]}</p>
+        </div>
+      </div>
+
+      {/* Earned companions */}
+      {earnedCompanions.map(c => {
+        const meta = COMPANION_META_ALL[c.id];
+        return (
+          <div key={c.id} className="flex items-center gap-2 mb-1">
+            <span className={`text-base ${mood.label === "Happy" ? "animate-bounce" : ""}`} title={`${meta?.name} — ${mood.tip}`}>{meta?.icon ?? c.icon}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold" style={{ color: "#a78bfa" }}>{meta?.name ?? c.name}</span>
+                <span className="text-xs" style={{ color: "rgba(99,102,241,0.5)" }}>+2% XP</span>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      {earnedCompanions.length === 0 && (
+        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.22)" }}>
+          Complete achievements to unlock more companions!
+        </p>
+      )}
     </div>
   );
 }

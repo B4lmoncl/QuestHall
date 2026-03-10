@@ -147,6 +147,37 @@ body {
   animation: ripple-spread 0.45s ease-out forwards;
 }
 
+/* ─── Tutorial Overlay ───────────────────────────────────────────────────────── */
+@keyframes tutorial-spotlight-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255,200,50,0.6), 0 0 0 9999px rgba(0,0,0,0.75); }
+  50%       { box-shadow: 0 0 0 8px rgba(255,200,50,0.9), 0 0 20px rgba(255,200,50,0.4), 0 0 0 9999px rgba(0,0,0,0.75); }
+}
+@keyframes tutorial-popup-in {
+  0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes tutorial-confetti-burst {
+  0%   { opacity: 1; transform: scale(0) rotate(0deg); }
+  60%  { opacity: 1; transform: scale(1.4) rotate(180deg); }
+  100% { opacity: 0; transform: scale(2) rotate(360deg); }
+}
+@keyframes tutorial-fade-step {
+  0%   { opacity: 0; }
+  100% { opacity: 1; }
+}
+.tutorial-spotlight {
+  position: relative;
+  z-index: 10001 !important;
+  animation: tutorial-spotlight-pulse 1.8s ease-in-out infinite;
+  border-radius: 8px;
+}
+.tutorial-popup {
+  animation: tutorial-popup-in 0.25s cubic-bezier(0.34,1.56,0.64,1) forwards;
+}
+.tutorial-step-fade {
+  animation: tutorial-fade-step 0.18s ease forwards;
+}
+
 /* Approve / complete button glow */
 .btn-approve:hover:not(:disabled) {
   animation: btn-glow-green 1.2s ease infinite;
