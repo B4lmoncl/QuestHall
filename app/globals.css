@@ -60,3 +60,68 @@ body {
   0%, 100% { background-position: 0% 0%; }
   50% { background-position: 0% 100%; }
 }
+
+/* ─── Button Animations ──────────────────────────────────────────────────── */
+@keyframes btn-pop {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(0.91); }
+  70%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+
+@keyframes btn-glow-green {
+  0%, 100% { box-shadow: 0 0 4px rgba(34,197,94,0.4); }
+  50%       { box-shadow: 0 0 14px rgba(34,197,94,0.7), 0 0 24px rgba(34,197,94,0.3); }
+}
+
+@keyframes btn-glow-red {
+  0%, 100% { box-shadow: 0 0 4px rgba(239,68,68,0.4); }
+  50%       { box-shadow: 0 0 14px rgba(239,68,68,0.7), 0 0 24px rgba(239,68,68,0.3); }
+}
+
+@keyframes btn-glow-blue {
+  0%, 100% { box-shadow: 0 0 4px rgba(59,130,246,0.4); }
+  50%       { box-shadow: 0 0 14px rgba(59,130,246,0.7), 0 0 24px rgba(59,130,246,0.3); }
+}
+
+@keyframes btn-glow-pink {
+  0%, 100% { box-shadow: 0 0 4px rgba(236,72,153,0.4); }
+  50%       { box-shadow: 0 0 14px rgba(236,72,153,0.7), 0 0 24px rgba(236,72,153,0.3); }
+}
+
+@keyframes float-particle {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(-28px) scale(0.5); }
+}
+
+/* Base action button — apply to interactive buttons for hover/click effects */
+.action-btn {
+  transition: transform 0.14s ease, box-shadow 0.14s ease, background-color 0.14s ease, border-color 0.14s ease, opacity 0.14s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.action-btn:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.03);
+}
+.action-btn:active:not(:disabled) {
+  animation: btn-pop 0.22s ease forwards;
+}
+.action-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Approve / complete button glow */
+.btn-approve:hover:not(:disabled) {
+  animation: btn-glow-green 1.2s ease infinite;
+}
+.btn-danger:hover:not(:disabled) {
+  animation: btn-glow-red 1.2s ease infinite;
+}
+.btn-primary:hover:not(:disabled) {
+  animation: btn-glow-blue 1.2s ease infinite;
+}
+.btn-social:hover:not(:disabled) {
+  animation: btn-glow-pink 1.2s ease infinite;
+}

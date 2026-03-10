@@ -1021,6 +1021,21 @@ export default function Dashboard() {
           <ForgeChallengesPanel users={users} reviewApiKey={reviewApiKey} onRefresh={refresh} />
         )}
 
+        {/* Learning Workshop */}
+        {dashView === "ops" && (
+          <LearningQuestPanel quests={quests} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+        )}
+
+        {/* Household Board */}
+        {dashView === "ops" && (
+          <HouseholdQuestBoard quests={quests} users={users} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+        )}
+
+        {/* Thoughtful Hero */}
+        {dashView === "ops" && (
+          <ThoughtfulHeroPanel quests={quests} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+        )}
+
         {/* AI Smart Suggestions */}
         {(dashView === "ops" || dashView === "leaderboard") && (
           <SmartSuggestionsPanel quests={quests} agents={agents} />
@@ -1631,6 +1646,371 @@ function SmartSuggestionsPanel({ quests, agents }: { quests: QuestsData; agents:
             </div>
           ))}
         </div>
+      )}
+    </section>
+  );
+}
+
+// ─── Learning Quest Panel ──────────────────────────────────────────────────────
+
+const LEARNING_TEMPLATES = [
+  {
+    id: "js_mastery",
+    name: "JavaScript Mastery",
+    icon: "💛",
+    steps: ["Read MDN fundamentals", "Complete 5 coding exercises", "Build a mini project", "Write what you learned (proof)"],
+  },
+  {
+    id: "design_system",
+    name: "Design System Study",
+    icon: "🎨",
+    steps: ["Study color theory & typography", "Analyze 3 design systems", "Create a component sketch", "Document findings (proof)"],
+  },
+  {
+    id: "habit_reading",
+    name: "Daily 10-Page Reading",
+    icon: "📖",
+    steps: ["Choose your book", "Read 10 pages", "Take margin notes", "Share 1 key insight (proof)"],
+  },
+  {
+    id: "language",
+    name: "Language Practice",
+    icon: "🌍",
+    steps: ["30 min Duolingo/Anki", "Learn 5 new vocab words", "Practice 1 conversation", "Journal in target language (proof)"],
+  },
+];
+
+function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
+  quests: QuestsData;
+  reviewApiKey: string;
+  onRefresh: () => void;
+}) {
+  const [creating, setCreating] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const learningActive = [...quests.open, ...quests.inProgress].filter(q => q.type === "learning");
+  const learningDone = quests.completed.filter(q => q.type === "learning").length;
+
+  const createChain = async (template: (typeof LEARNING_TEMPLATES)[0]) => {
+    if (!reviewApiKey) return;
+    setCreating(template.id);
+    try {
+      const res = await fetch("/api/quest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({
+          title: template.name,
+          description: `Learning quest chain: ${template.name}`,
+          priority: "medium",
+          type: "learning",
+          createdBy: "leon",
+        }),
+      });
+      if (!res.ok) return;
+      const { quest: parent } = await res.json();
+      for (const step of template.steps) {
+        await fetch("/api/quest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+          body: JSON.stringify({
+            title: step,
+            priority: "low",
+            type: "learning",
+            parentQuestId: parent.id,
+            createdBy: "leon",
+          }),
+        });
+      }
+      setSuccess(template.id);
+      setTimeout(() => setSuccess(null), 3000);
+      onRefresh();
+    } catch { /* ignore */ } finally {
+      setCreating(null);
+    }
+  };
+
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#3b82f6" }}>
+          📚 Learning Workshop
+        </h2>
+        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(59,130,246,0.12)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.3)" }}>
+          {learningActive.length} active · {learningDone} done
+        </span>
+      </div>
+
+      {learningActive.length > 0 && (
+        <div className="flex gap-2 flex-wrap mb-3">
+          {learningActive.slice(0, 4).map(q => (
+            <div key={q.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
+              <span className="text-xs" style={{ color: "rgba(59,130,246,0.7)" }}>📚</span>
+              <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>{q.title}</span>
+              {q.progress && (
+                <span className="text-xs font-mono" style={{ color: "#3b82f6" }}>{q.progress.completed}/{q.progress.total}</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {LEARNING_TEMPLATES.map(t => {
+          const isCreating = creating === t.id;
+          const isDone = success === t.id;
+          return (
+            <div key={t.id} className="rounded-xl p-4" style={{ background: "#252525", border: "1px solid rgba(59,130,246,0.15)" }}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xl flex-shrink-0">{t.icon}</span>
+                <p className="text-xs font-bold" style={{ color: "#f0f0f0" }}>{t.name}</p>
+              </div>
+              <div className="space-y-1 mb-3">
+                {t.steps.map((step, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className="text-xs flex-shrink-0 mt-0.5" style={{ color: "rgba(59,130,246,0.5)" }}>◦</span>
+                    <span className="text-xs leading-snug" style={{ color: "rgba(255,255,255,0.4)" }}>{step}</span>
+                  </div>
+                ))}
+              </div>
+              {reviewApiKey ? (
+                <button
+                  onClick={() => createChain(t)}
+                  disabled={!!creating}
+                  className="action-btn btn-primary w-full text-xs py-1.5 rounded-lg font-semibold"
+                  style={{
+                    background: isDone ? "rgba(34,197,94,0.15)" : isCreating ? "rgba(255,255,255,0.04)" : "rgba(59,130,246,0.15)",
+                    color: isDone ? "#22c55e" : isCreating ? "rgba(255,255,255,0.3)" : "#3b82f6",
+                    border: `1px solid ${isDone ? "rgba(34,197,94,0.3)" : "rgba(59,130,246,0.3)"}`,
+                  }}
+                >
+                  {isDone ? "✓ Quest Chain Created!" : isCreating ? "Creating…" : "📚 Start Quest Chain"}
+                </button>
+              ) : (
+                <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.2)" }}>Login to create</p>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// ─── Household Quest Board ────────────────────────────────────────────────────
+
+const CHORE_TEMPLATES = [
+  { title: "Vacuum the apartment", recurrence: "weekly", priority: "low"    as Quest["priority"] },
+  { title: "Clean bathroom",       recurrence: "weekly", priority: "medium" as Quest["priority"] },
+  { title: "Do laundry",           recurrence: "weekly", priority: "medium" as Quest["priority"] },
+  { title: "Wash dishes",          recurrence: "daily",  priority: "low"    as Quest["priority"] },
+  { title: "Take out trash",       recurrence: "weekly", priority: "low"    as Quest["priority"] },
+  { title: "Grocery shopping",     recurrence: "weekly", priority: "medium" as Quest["priority"] },
+];
+
+function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: {
+  quests: QuestsData;
+  users: User[];
+  reviewApiKey: string;
+  onRefresh: () => void;
+}) {
+  const [rotating, setRotating] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
+
+  const householdQuests = [...quests.open, ...quests.inProgress].filter(
+    q => q.type === "personal" && q.recurrence
+  );
+
+  const rotate = async () => {
+    if (!reviewApiKey || users.length === 0 || householdQuests.length === 0) return;
+    setRotating(true);
+    try {
+      await fetch("/api/quests/household-rotate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({ assignees: users.map(u => u.id) }),
+      });
+      onRefresh();
+    } catch { /* ignore */ } finally {
+      setRotating(false);
+    }
+  };
+
+  const addChore = async (chore: (typeof CHORE_TEMPLATES)[0]) => {
+    if (!reviewApiKey) return;
+    setAdding(chore.title);
+    try {
+      await fetch("/api/quest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({
+          title: chore.title,
+          type: "personal",
+          priority: chore.priority,
+          recurrence: chore.recurrence,
+          createdBy: "leon",
+        }),
+      });
+      onRefresh();
+    } catch { /* ignore */ } finally {
+      setAdding(null);
+    }
+  };
+
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#22c55e" }}>
+          🏠 Household Board
+        </h2>
+        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
+          {householdQuests.length} chores
+        </span>
+        {reviewApiKey && users.length > 0 && (
+          <button
+            onClick={rotate}
+            disabled={rotating || householdQuests.length === 0}
+            className="action-btn btn-approve ml-auto text-xs px-3 py-1 rounded-lg"
+            style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+          >
+            {rotating ? "Rotating…" : "↻ Rotate Assignments"}
+          </button>
+        )}
+      </div>
+
+      {householdQuests.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-3">
+          {householdQuests.map(q => (
+            <div key={q.id} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "#252525", border: "1px solid rgba(34,197,94,0.15)" }}>
+              <span className="text-base flex-shrink-0">🏠</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate" style={{ color: "#e8e8e8" }}>{q.title}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  {q.recurrence && <RecurringBadge recurrence={q.recurrence} />}
+                  {q.claimedBy && (
+                    <span className="text-xs" style={{ color: "rgba(34,197,94,0.7)" }}>→ {q.claimedBy}</span>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="rounded-xl p-3 mb-3" style={{ background: "#252525", border: "1px solid rgba(34,197,94,0.1)" }}>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>No recurring household chores yet. Add some below.</p>
+        </div>
+      )}
+
+      {reviewApiKey && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+          {CHORE_TEMPLATES.map(c => (
+            <button
+              key={c.title}
+              onClick={() => addChore(c)}
+              disabled={!!adding}
+              className="action-btn text-xs px-2 py-1.5 rounded-lg text-left truncate"
+              style={{
+                background: adding === c.title ? "rgba(34,197,94,0.1)" : "rgba(255,255,255,0.03)",
+                color: "rgba(255,255,255,0.4)",
+                border: "1px solid rgba(255,255,255,0.07)",
+              }}
+            >
+              + {c.title}
+            </button>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ─── Thoughtful Hero Panel ─────────────────────────────────────────────────────
+
+const THOUGHTFUL_PROMPTS = [
+  { icon: "🎁", title: "Gift Idea Reminder",  desc: "Note a gift idea for someone special",                 priority: "low"    as Quest["priority"] },
+  { icon: "📞", title: "Call Reminder",        desc: "Schedule a call with someone you care about",          priority: "medium" as Quest["priority"] },
+  { icon: "🌹", title: "Plan Date Night",      desc: "Plan a special date or quality time together",         priority: "high"   as Quest["priority"] },
+  { icon: "💌", title: "Send a Kind Message",  desc: "Reach out and say something thoughtful",               priority: "low"    as Quest["priority"] },
+  { icon: "🥂", title: "Celebrate Someone",    desc: "Celebrate an achievement or milestone in their life",  priority: "medium" as Quest["priority"] },
+  { icon: "🤝", title: "Check In",             desc: "Check in on a friend or family member",                priority: "low"    as Quest["priority"] },
+];
+
+function ThoughtfulHeroPanel({ quests, reviewApiKey, onRefresh }: {
+  quests: QuestsData;
+  reviewApiKey: string;
+  onRefresh: () => void;
+}) {
+  const [creating, setCreating] = useState<string | null>(null);
+
+  const socialActive = [...quests.open, ...quests.inProgress].filter(q => q.type === "social");
+
+  const createPrompt = async (prompt: (typeof THOUGHTFUL_PROMPTS)[0]) => {
+    if (!reviewApiKey) return;
+    setCreating(prompt.title);
+    try {
+      await fetch("/api/quest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({
+          title: prompt.title,
+          description: prompt.desc,
+          type: "social",
+          priority: prompt.priority,
+          createdBy: "leon",
+        }),
+      });
+      onRefresh();
+    } catch { /* ignore */ } finally {
+      setCreating(null);
+    }
+  };
+
+  return (
+    <section className="mb-6">
+      <div className="flex items-center gap-2 mb-3">
+        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ec4899" }}>
+          ❤ Thoughtful Hero
+        </h2>
+        {socialActive.length > 0 && (
+          <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(236,72,153,0.12)", color: "#ec4899", border: "1px solid rgba(236,72,153,0.3)" }}>
+            {socialActive.length} active
+          </span>
+        )}
+      </div>
+
+      {socialActive.length > 0 && (
+        <div className="flex gap-2 flex-wrap mb-3">
+          {socialActive.slice(0, 5).map(q => (
+            <span
+              key={q.id}
+              className="text-xs px-2 py-1 rounded-lg"
+              style={{ background: "rgba(236,72,153,0.08)", color: "rgba(236,72,153,0.8)", border: "1px solid rgba(236,72,153,0.2)" }}
+            >
+              {q.title}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        {THOUGHTFUL_PROMPTS.map(p => (
+          <button
+            key={p.title}
+            onClick={() => createPrompt(p)}
+            disabled={!reviewApiKey || !!creating}
+            title={p.desc}
+            className="action-btn btn-social rounded-xl p-3 flex flex-col items-center gap-1.5"
+            style={{
+              background: creating === p.title ? "rgba(236,72,153,0.15)" : "#252525",
+              border: `1px solid ${creating === p.title ? "rgba(236,72,153,0.45)" : "rgba(255,255,255,0.07)"}`,
+            }}
+          >
+            <span className="text-xl">{p.icon}</span>
+            <p className="text-xs font-medium leading-tight text-center" style={{ color: "#e8e8e8" }}>{p.title}</p>
+          </button>
+        ))}
+      </div>
+      {!reviewApiKey && (
+        <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.2)" }}>Log in to create social quests</p>
       )}
     </section>
   );
