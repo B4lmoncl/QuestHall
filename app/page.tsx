@@ -236,6 +236,24 @@ async function fetchAchievementCatalogue(): Promise<AchievementDef[]> {
   return [];
 }
 
+async function createStarterQuestsIfNew(playerName: string, apiKey: string) {
+  try {
+    const key = `starter_quests_${playerName.toLowerCase()}`;
+    if (localStorage.getItem(key) === "true") return;
+    localStorage.setItem(key, "true");
+    const headers = { "Content-Type": "application/json", "x-api-key": apiKey };
+    const starterQuests = [
+      { title: "🎉 Welcome to the Guild!", description: "Complete this quest to earn your first companion — Dobbie the Cat! Just click 'Complete' to claim your reward. This teaches you the claim → complete flow.", type: "personal", priority: "high", createdBy: "system" },
+      { title: "🏠 Organize Your Desk", description: "Tidy up your workspace. A clear desk leads to a clear mind!", type: "personal", priority: "low", createdBy: "system" },
+      { title: "📚 Read for 30 Minutes", description: "Pick any book, article, or topic you're curious about and read for 30 minutes.", type: "learning", priority: "low", createdBy: "system" },
+      { title: "💪 10-Minute Stretch", description: "Do a short stretching routine to warm up and get your body moving!", type: "fitness", priority: "low", createdBy: "system" },
+    ];
+    await Promise.all(starterQuests.map(q =>
+      fetch("/api/quest", { method: "POST", headers, body: JSON.stringify(q) })
+    ));
+  } catch { /* ignore */ }
+}
+
 function timeAgo(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -860,6 +878,7 @@ export default function Dashboard() {
                                   setIsAdmin(data.isAdmin);
                                   setLoginOpen(false);
                                   setLoginError("");
+                                  createStarterQuestsIfNew(data.name, reviewKeyInput).then(() => refresh());
                                 } else {
                                   setLoginError(data.error || "Invalid credentials");
                                 }
@@ -885,6 +904,7 @@ export default function Dashboard() {
                                   setIsAdmin(data.isAdmin);
                                   setLoginOpen(false);
                                   setLoginError("");
+                                  createStarterQuestsIfNew(data.name, reviewKeyInput).then(() => refresh());
                                 } else {
                                   setLoginError(data.error || "Invalid credentials");
                                 }
@@ -948,6 +968,7 @@ export default function Dashboard() {
                                   setReviewApiKey(data.apiKey);
                                   setIsAdmin(false);
                                   setRegisterError("");
+                                  await createStarterQuestsIfNew(data.name, data.apiKey);
                                   await refresh();
                                 } else {
                                   setRegisterError(data.error || "Registration failed");
@@ -1034,24 +1055,28 @@ export default function Dashboard() {
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
             sub={playerName ? "your streak" : "login to view"}
             accent="#f97316"
+            tooltip={<InfoTooltip text="Your consecutive days of quest completion. Keep the streak alive to earn bonus XP and keep companions happy!" />}
           />
           <StatBar
             label="⚔️ Active Quests"
             value={loading ? "—" : playerName ? animActive : "—"}
             sub={playerName ? `${openQuestsCount} open total` : "login to view"}
             accent="#ef4444"
+            tooltip={<InfoTooltip text="Quests you've claimed and are currently working on." />}
           />
           <StatBar
             label="✅ Quests Completed"
             value={loading ? "—" : playerName ? animCompleted : "—"}
             sub={playerName ? "your completions" : "login to view"}
             accent="#22c55e"
+            tooltip={<InfoTooltip text="Total quests you've finished. Each one earns XP toward your next level." />}
           />
           <StatBar
             label="🪙 Your Gold"
             value={loading ? "—" : playerName ? animGold : "—"}
             sub={playerName ? "your earnings" : "login to view"}
             accent="#eab308"
+            tooltip={<InfoTooltip align="right" text="Currency earned from quests. Spend it in the Shop on rewards!" />}
           />
         </div>
 
@@ -1083,6 +1108,10 @@ export default function Dashboard() {
         {/* Leaderboard View with Agent/Player sub-tabs */}
         {dashView === "leaderboard" && (
           <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>🏆 Leaderboard</span>
+              <InfoTooltip text="Rankings based on XP earned. Compete with other players and agents! Switch between Players and Agents tabs to see separate boards." />
+            </div>
             <div className="flex gap-1" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
               {[
                 { key: "players", label: "👤 Players" },
@@ -1113,12 +1142,24 @@ export default function Dashboard() {
 
         {/* Campaign View */}
         {dashView === "campaign" && (
-          <CampaignHub campaigns={campaigns} quests={quests} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>🐉 Campaign</span>
+              <InfoTooltip text="Long-term quest chains and story arcs. Complete all quests in a campaign to earn special rewards!" />
+            </div>
+            <CampaignHub campaigns={campaigns} quests={quests} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+          </div>
         )}
 
         {/* Season & Battle Pass View */}
         {dashView === "season" && (
-          <BattlePassView users={users} quests={quests} />
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{CURRENT_SEASON.icon} Season & Battle Pass</span>
+              <InfoTooltip text="Each season (3 months) brings a new Battle Pass. Earn season XP to unlock rewards at each tier." />
+            </div>
+            <BattlePassView users={users} quests={quests} />
+          </div>
         )}
 
         {/* ── QUEST BOARD (Player Tab) ── */}
@@ -1152,7 +1193,10 @@ export default function Dashboard() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>⚔ Quest Board</h2>
+                        <div className="flex items-center gap-1.5">
+                          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>⚔ Quest Board</h2>
+                          <InfoTooltip text="Your personal quest board. Claim quests to start them, complete them to earn XP and Gold. Filter by type to find what interests you." />
+                        </div>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{playerVisibleOpen.length} open · {playerVisibleInProgress.length} in progress</p>
                       </div>
                       <div className="flex items-center gap-1">
@@ -1328,7 +1372,10 @@ export default function Dashboard() {
                   <div className="mb-3">
                     <div className="flex items-center justify-between mb-2">
                       <div>
-                        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>⚙ NPC Quest Board</h2>
+                        <div className="flex items-center gap-1.5">
+                          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>⚙ NPC Quest Board</h2>
+                          <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests." />
+                        </div>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>
                       </div>
                       <div className="flex items-center gap-1">
@@ -4971,6 +5018,54 @@ function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh }: {
   );
 }
 
+// ─── Info Tooltip ─────────────────────────────────────────────────────────────
+
+function InfoTooltip({ text, align = "left" }: { text: string; align?: "left" | "right" }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
+  return (
+    <div ref={ref} className="relative inline-flex items-center" style={{ lineHeight: 1 }}>
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
+        style={{ color: "rgba(255,255,255,0.22)", cursor: "pointer", padding: "0 2px", fontSize: 11, lineHeight: 1 }}
+        title="Info"
+      >ℹ️</button>
+      {open && (
+        <div
+          className="absolute rounded-xl p-3 text-xs leading-relaxed"
+          style={{
+            background: "#1c1c1c",
+            border: "1px solid rgba(255,255,255,0.1)",
+            boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+            color: "rgba(255,255,255,0.6)",
+            width: 280,
+            top: "calc(100% + 6px)",
+            ...(align === "right" ? { right: 0 } : { left: 0 }),
+            zIndex: 9900,
+            whiteSpace: "normal",
+          }}
+        >
+          <button
+            onClick={() => setOpen(false)}
+            style={{ position: "absolute", top: 6, right: 8, color: "rgba(255,255,255,0.3)", fontSize: 12, lineHeight: 1 }}
+          >✕</button>
+          <p className="pr-5">{text}</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Tutorial Overlay (Honkai Star Rail style) ───────────────────────────────
 
 const TUTORIAL_STEPS = [
@@ -5019,7 +5114,7 @@ const TUTORIAL_STEPS = [
   {
     key: "login-btn",
     title: "Log In",
-    desc: "Log in with your name and API key to claim quests, earn XP, and track your personal stats.",
+    desc: "Log in with your name and API key to claim quests, earn XP, and track your personal stats. Don't have a key yet? No worries — click Register to create a free account!",
     target: "login-btn",
     position: "bottom" as const,
   },
@@ -5065,6 +5160,13 @@ function TutorialOverlay({ step, onNext, onSkip }: { step: number; onNext: () =>
   const isLast = step === TUTORIAL_STEPS.length - 1;
   const [popupPos, setPopupPos] = useState<{ top: number; left: number; arrowDir: "up" | "down" | "none" } | null>(null);
   const [confetti, setConfetti] = useState<{ x: number; y: number; color: string; id: number }[]>([]);
+
+  // ESC key to dismiss
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onSkip(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onSkip]);
 
   useEffect(() => {
     if (isLast) {
@@ -5129,7 +5231,7 @@ function TutorialOverlay({ step, onNext, onSkip }: { step: number; onNext: () =>
         <div
           className="fixed inset-0"
           style={{ background: "rgba(0,0,0,0.78)", zIndex: 9998 }}
-          onClick={onSkip}
+          onClick={onNext}
         />
       )}
       {!isCentered && (
@@ -5184,17 +5286,15 @@ function TutorialOverlay({ step, onNext, onSkip }: { step: number; onNext: () =>
             </span>
             <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>{stepDef.title}</h3>
           </div>
-          <button onClick={onSkip} style={{ color: "rgba(255,255,255,0.25)", fontSize: 14, lineHeight: 1, flexShrink: 0 }} title="Skip tutorial">✕</button>
-        </div>
-        <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>{stepDef.desc}</p>
-        <div className="flex items-center justify-between gap-2">
           <button
             onClick={onSkip}
-            className="text-xs"
-            style={{ color: "rgba(255,255,255,0.25)", textDecoration: "underline" }}
-          >
-            Skip tutorial
-          </button>
+            className="action-btn text-xs px-2 py-0.5 rounded font-medium"
+            style={{ color: "rgba(255,255,255,0.55)", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.12)", flexShrink: 0 }}
+            title="Skip tutorial (ESC)"
+          >✕ Skip</button>
+        </div>
+        <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>{stepDef.desc}</p>
+        <div className="flex items-center justify-end gap-2">
           <button
             onClick={onNext}
             className="action-btn btn-primary text-xs px-4 py-1.5 rounded-lg font-semibold"
@@ -5242,6 +5342,7 @@ function CompanionsWidget({ user, streak }: { user: User | null | undefined; str
     >
       <div className="flex items-center gap-2 mb-2">
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(167,139,250,0.7)" }}>Companions</span>
+        <InfoTooltip text="Companions give you XP bonuses. Dobbie is your loyal starter — his mood depends on your quest streak. Complete quests regularly to keep him happy (7+ day streak = 😊). Unlock more companions by earning achievements!" />
         {earnedCompanions.length > 0 && (
           <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(99,102,241,0.1)", color: "rgba(99,102,241,0.6)", border: "1px solid rgba(99,102,241,0.2)" }}>
             +{(earnedCompanions.length + 1) * 2}% XP

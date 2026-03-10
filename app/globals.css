@@ -149,8 +149,8 @@ body {
 
 /* ─── Tutorial Overlay ───────────────────────────────────────────────────────── */
 @keyframes tutorial-spotlight-pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(255,200,50,0.6), 0 0 0 9999px rgba(0,0,0,0.75); }
-  50%       { box-shadow: 0 0 0 8px rgba(255,200,50,0.9), 0 0 20px rgba(255,200,50,0.4), 0 0 0 9999px rgba(0,0,0,0.75); }
+  0%, 100% { box-shadow: 0 0 0 2px rgba(255,200,50,0.28), 0 0 0 9999px rgba(0,0,0,0.72); }
+  50%       { box-shadow: 0 0 0 3px rgba(255,200,50,0.42), 0 0 8px rgba(255,200,50,0.12), 0 0 0 9999px rgba(0,0,0,0.72); }
 }
 @keyframes tutorial-popup-in {
   0%   { opacity: 0; transform: translateY(12px) scale(0.95); }
