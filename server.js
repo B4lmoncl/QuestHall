@@ -28,6 +28,9 @@ const RITUALS_FILE         = path.join(DATA_DIR, 'rituals.json');
 const HABITS_FILE          = path.join(DATA_DIR, 'habits.json');
 const LOOT_TABLES_FILE     = path.join(DATA_DIR, 'lootTables.json');
 const GEAR_TEMPLATES_FILE  = path.join(DATA_DIR, 'gearTemplates.json');
+const NPC_GIVERS_FILE      = path.join(DATA_DIR, 'npcQuestGivers.json');
+const NPC_STATE_FILE       = path.join(DATA_DIR, 'npcState.json');
+const APP_STATE_FILE       = path.join(DATA_DIR, 'appState.json');
 
 // Quest types that are tracked per-player (not shared/global)
 const PLAYER_QUEST_TYPES = ['personal', 'learning', 'fitness', 'social', 'relationship-coop', 'companion'];
@@ -258,6 +261,9 @@ let rituals = [];
 let habits = [];
 let lootTables = { common: [], uncommon: [], rare: [], epic: [], legendary: [] };
 let gearTemplates = { tiers: [], items: [], setBonus: {} };
+let npcGivers = { givers: [] };
+let npcState  = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {} };
+let appState  = { version: '1.0.0' };
 
 function initStore() {
   for (const name of AGENT_NAMES) {
@@ -445,10 +451,164 @@ function loadGearTemplates() {
             });
           }
         }
-        console.log(`[gear] Loaded ${raw.items?.length || 0} gear templates`);
+        // Register named set items that aren't yet in FULL_GEAR_ITEMS
+        for (const ns of raw.namedSets || []) {
+          // namedSets reference piece IDs — items come from NPC givers; no need to add here
+          // Just store namedSets for getUserStats to reference
+        }
+        console.log(`[gear] Loaded ${raw.items?.length || 0} gear templates, ${raw.namedSets?.length || 0} named sets`);
       }
     }
   } catch (e) { console.warn('[gear] Failed to load gear templates:', e.message); }
+}
+
+// ─── NPC Quest Giver System ──────────────────────────────────────────────────
+
+function loadNpcGivers() {
+  try {
+    if (fs.existsSync(NPC_GIVERS_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(NPC_GIVERS_FILE, 'utf8'));
+      if (raw && raw.givers) {
+        npcGivers = raw;
+        // Register NPC unique reward items into FULL_GEAR_ITEMS
+        const existingIds = new Set(FULL_GEAR_ITEMS.map(g => g.id));
+        for (const giver of raw.givers) {
+          const item = giver.finalReward?.item;
+          if (item && !existingIds.has(item.id)) {
+            FULL_GEAR_ITEMS.push({
+              id: item.id,
+              slot: item.slot || 'amulet',
+              tier: 4,
+              name: item.name,
+              emoji: item.emoji || '🎒',
+              cost: 0,
+              minLevel: 1,
+              stats: item.stats || {},
+              setId: 'npc-reward',
+              rarity: item.rarity || 'rare',
+              desc: item.desc || '',
+              shopHidden: true,
+              npcGiverId: giver.id,
+            });
+            existingIds.add(item.id);
+          }
+        }
+        console.log(`[npc] Loaded ${npcGivers.givers.length} NPC quest givers`);
+      }
+    }
+  } catch (e) { console.warn('[npc] Failed to load npcQuestGivers:', e.message); }
+}
+
+function loadNpcState() {
+  try {
+    if (fs.existsSync(NPC_STATE_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(NPC_STATE_FILE, 'utf8'));
+      if (raw) npcState = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {}, ...raw };
+    }
+  } catch (e) { console.warn('[npc] Failed to load npcState:', e.message); }
+}
+
+function saveNpcState() {
+  try { fs.writeFileSync(NPC_STATE_FILE, JSON.stringify(npcState, null, 2)); } catch (e) { console.warn('[npc] Failed to save npcState:', e.message); }
+}
+
+function loadAppState() {
+  try {
+    if (fs.existsSync(APP_STATE_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(APP_STATE_FILE, 'utf8'));
+      if (raw) appState = { ...appState, ...raw };
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function saveAppState() {
+  try { fs.writeFileSync(APP_STATE_FILE, JSON.stringify(appState, null, 2)); } catch (e) {}
+}
+
+function rotateNpcs() {
+  const now = new Date();
+
+  // Remove expired NPCs and their uncompleted quests
+  const stillActive = [];
+  for (const active of npcState.activeNpcs) {
+    if (new Date(active.expiresAt) > now) {
+      stillActive.push(active);
+    } else {
+      const questIds = npcState.npcQuestIds[active.giverId] || [];
+      const before = quests.length;
+      for (let i = quests.length - 1; i >= 0; i--) {
+        if (questIds.includes(quests[i].id) && quests[i].status !== 'completed') {
+          quests.splice(i, 1);
+        }
+      }
+      if (quests.length !== before) saveQuests();
+      console.log(`[npc] ${active.giverId} has left town`);
+    }
+  }
+  npcState.activeNpcs = stillActive;
+
+  // Pick new NPCs if slots are open (aim for 1-2 active)
+  const MAX_ACTIVE = 2;
+  if (stillActive.length < MAX_ACTIVE) {
+    const available = npcGivers.givers.filter(g => {
+      if (stillActive.find(a => a.giverId === g.id)) return false;
+      const cooldownUntil = npcState.cooldowns[g.id];
+      if (cooldownUntil && new Date(cooldownUntil) > now) return false;
+      return true;
+    }).sort(() => Math.random() - 0.5);
+
+    for (const giver of available.slice(0, MAX_ACTIVE - stillActive.length)) {
+      const arrivedAt = now.toISOString();
+      const expiresAt = new Date(now.getTime() + giver.stayDays * 86400000).toISOString();
+      npcState.activeNpcs.push({ giverId: giver.id, arrivedAt, expiresAt });
+
+      const questIds = [];
+      for (const qt of giver.questChain) {
+        const quest = {
+          id: `quest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          title: qt.title,
+          description: qt.description || '',
+          priority: qt.priority || 'medium',
+          type: qt.type || 'personal',
+          categories: [],
+          product: null,
+          humanInputRequired: false,
+          createdBy: giver.id,
+          status: 'open',
+          createdAt: arrivedAt,
+          claimedBy: null,
+          completedBy: null,
+          completedAt: null,
+          parentQuestId: null,
+          recurrence: null,
+          streak: 0,
+          lastCompletedAt: null,
+          proof: null,
+          checklist: null,
+          nextQuestTemplate: null,
+          coopPartners: null,
+          coopClaimed: [],
+          coopCompletions: [],
+          skills: [],
+          lore: null,
+          chapter: null,
+          minLevel: 1,
+          npcGiverId: giver.id,
+          npcRewards: qt.rewards || { xp: 20, gold: 10 },
+        };
+        quests.push(quest);
+        questIds.push(quest.id);
+      }
+      npcState.npcQuestIds[giver.id] = questIds;
+      // Cooldown starts when they leave
+      npcState.cooldowns[giver.id] = new Date(now.getTime() + (giver.stayDays + giver.cooldownDays) * 86400000).toISOString();
+      saveQuests();
+      console.log(`[npc] ${giver.name} has arrived (${giver.stayDays} days, ${giver.questChain.length} quests)`);
+    }
+  }
+
+  npcState.lastRotation = now.toISOString();
+  saveNpcState();
 }
 
 // ─── Quest Catalog store ─────────────────────────────────────────────────────
@@ -1688,7 +1848,7 @@ function getUserStats(userId) {
       }
     }
   }
-  // Set bonus check
+  // Tier set bonus check (existing)
   const setCount = {};
   for (const item of equippedItems) {
     setCount[item.setId] = (setCount[item.setId] || 0) + 1;
@@ -1699,10 +1859,39 @@ function getUserStats(userId) {
     else if (count >= 3) setBonus = Math.max(setBonus, 1.05);
   }
   if (setBonus > 1.0) {
-    for (const stat of Object.keys(stats)) {
-      stats[stat] = Math.round(stats[stat] * setBonus);
+    for (const stat of ['kraft', 'ausdauer', 'weisheit', 'glueck']) {
+      stats[stat] = Math.round((stats[stat] || 0) * setBonus);
     }
     stats._setBonus = setBonus;
+  }
+  // Named set bonuses (NPC rewards)
+  const equippedIds = new Set(equippedItems.map(i => i.id));
+  for (const ns of gearTemplates.namedSets || []) {
+    const ownedPieces = ns.pieces.filter(pid => equippedIds.has(pid));
+    const count = ownedPieces.length;
+    if (count === 0) continue;
+    // Check partial bonuses
+    if (ns.partialBonus) {
+      for (const [threshold, bonus] of Object.entries(ns.partialBonus)) {
+        if (count >= Number(threshold)) {
+          for (const [stat, val] of Object.entries(bonus)) {
+            if (stat !== 'label') stats[stat] = (stats[stat] || 0) + val;
+          }
+        }
+      }
+    }
+    // Full bonus (all pieces equipped)
+    if (count >= ns.pieces.length && ns.fullBonus) {
+      const fb = ns.fullBonus;
+      if (fb.allStats) {
+        for (const stat of ['kraft', 'ausdauer', 'weisheit', 'glueck']) {
+          stats[stat] = (stats[stat] || 0) + fb.allStats;
+        }
+      }
+      for (const [stat, val] of Object.entries(fb)) {
+        if (stat !== 'label' && stat !== 'allStats') stats[stat] = (stats[stat] || 0) + val;
+      }
+    }
   }
   return stats;
 }
@@ -4839,7 +5028,7 @@ app.get('/api/player/:name/character', (req, res) => {
   }
   const fullStats = getUserStats(uid);
 
-  // Set bonus info
+  // Set bonus info (tier sets)
   let setBonusInfo = null;
   const setCount = {};
   for (const item of equippedItems) {
@@ -4851,6 +5040,22 @@ app.get('/api/player/:name/character', (req, res) => {
       setBonusInfo = { name: sb.name, count, total: 6 };
       break;
     }
+  }
+  // Named set bonuses
+  const equippedItemIds = new Set(equippedItems.map(i => i.id));
+  const namedSetBonuses = [];
+  for (const ns of gearTemplates.namedSets || []) {
+    const ownedCount = ns.pieces.filter(pid => equippedItemIds.has(pid)).length;
+    if (ownedCount === 0) continue;
+    const isComplete = ownedCount >= ns.pieces.length;
+    let activeLabel = null;
+    if (isComplete && ns.fullBonus) activeLabel = ns.fullBonus.label;
+    else if (ns.partialBonus) {
+      for (const [threshold, bonus] of Object.entries(ns.partialBonus)) {
+        if (ownedCount >= Number(threshold)) activeLabel = bonus.label;
+      }
+    }
+    namedSetBonuses.push({ id: ns.id, name: ns.name, rarity: ns.rarity, count: ownedCount, total: ns.pieces.length, isComplete, activeLabel });
   }
 
   // Class tier
@@ -4902,6 +5107,7 @@ app.get('/api/player/:name/character', (req, res) => {
     forgeTemp: Math.round((u.forgeTemp || 0) * 100),
     season: 'spring',
     setBonusInfo,
+    namedSetBonuses,
   });
 });
 
@@ -4917,6 +5123,75 @@ app.post('/api/player/:name/unequip/:slot', requireApiKey, (req, res) => {
   saveUsers();
   const stats = getUserStats(uid);
   res.json({ ok: true, equipment: u.equipment, stats });
+});
+
+// ─── NPC Quest Giver API ──────────────────────────────────────────────────────
+
+// GET /api/npcs/active
+app.get('/api/npcs/active', (req, res) => {
+  const now = new Date();
+  const result = npcState.activeNpcs
+    .filter(a => new Date(a.expiresAt) > now)
+    .map(active => {
+      const giver = npcGivers.givers.find(g => g.id === active.giverId);
+      if (!giver) return null;
+      const questIds = npcState.npcQuestIds[active.giverId] || [];
+      const npcQuests = quests.filter(q => questIds.includes(q.id));
+      const msLeft = new Date(active.expiresAt) - now;
+      return {
+        id: giver.id,
+        name: giver.name,
+        emoji: giver.emoji,
+        title: giver.title,
+        description: giver.description,
+        arrivedAt: active.arrivedAt,
+        expiresAt: active.expiresAt,
+        daysLeft: Math.max(0, Math.ceil(msLeft / 86400000)),
+        hoursLeft: Math.max(0, Math.ceil(msLeft / 3600000)),
+        finalReward: giver.finalReward,
+        quests: npcQuests.map(q => ({
+          id: q.id, title: q.title, description: q.description,
+          type: q.type, priority: q.priority, status: q.status,
+          claimedBy: q.claimedBy, completedBy: q.completedBy,
+          rewards: q.npcRewards,
+        })),
+      };
+    }).filter(Boolean);
+  res.json({ npcs: result });
+});
+
+// GET /api/npcs/:id
+app.get('/api/npcs/:id', (req, res) => {
+  const id = req.params.id;
+  const giver = npcGivers.givers.find(g => g.id === id);
+  if (!giver) return res.status(404).json({ error: 'NPC not found' });
+  const active = npcState.activeNpcs.find(a => a.giverId === id);
+  const questIds = npcState.npcQuestIds[id] || [];
+  const npcQuests = quests.filter(q => questIds.includes(q.id));
+  res.json({
+    ...giver,
+    active: !!active,
+    arrivedAt: active?.arrivedAt || null,
+    expiresAt: active?.expiresAt || null,
+    cooldownUntil: npcState.cooldowns[id] || null,
+    quests: npcQuests,
+  });
+});
+
+// POST /api/npcs/rotate [admin]
+app.post('/api/npcs/rotate', requireApiKey, (req, res) => {
+  const incomingKey = req.headers['x-api-key'];
+  const masterKey = getMasterKey();
+  if (incomingKey !== masterKey && incomingKey !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  rotateNpcs();
+  res.json({ ok: true, activeNpcs: npcState.activeNpcs });
+});
+
+// GET /api/app-state
+app.get('/api/app-state', (req, res) => {
+  res.json({ version: appState.version });
 });
 
 // Serve index.html for non-API routes (SPA fallback)
@@ -4947,6 +5222,19 @@ loadRituals();
 loadHabits();
 loadLootTables();
 loadGearTemplates();
+loadNpcGivers();
+loadNpcState();
+loadAppState();
+rotateNpcs();
+
+// Version tracking
+try {
+  const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));
+  if (pkg.version) {
+    appState.version = pkg.version;
+    saveAppState();
+  }
+} catch (e) { /* ignore */ }
 
 fetchAndCacheChangelog();
 setInterval(fetchAndCacheChangelog, CHANGELOG_TTL);
