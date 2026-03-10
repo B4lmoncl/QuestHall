@@ -254,6 +254,7 @@ export default function Dashboard() {
   });
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [guideOpen, setGuideOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   // Particle system — white dust drifting upward
@@ -566,6 +567,82 @@ export default function Dashboard() {
             >
               📖 Guide
             </button>
+            {/* Login / User area */}
+            <div className="relative">
+              {reviewApiKey && playerName ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs px-2 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(139,92,246,0.1)", border: "1px solid rgba(139,92,246,0.25)" }}>
+                    👤 {playerName}
+                  </span>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("dash_api_key");
+                      localStorage.removeItem("dash_player_name");
+                      setReviewApiKey("");
+                      setPlayerName("");
+                      setPlayerNameInput("");
+                      setReviewKeyInput("");
+                    }}
+                    className="text-xs px-1.5 py-0.5 rounded"
+                    style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                    title="Logout"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setLoginOpen(v => !v)}
+                    className="text-xs px-2 py-0.5 rounded"
+                    style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  >
+                    🔑 Login
+                  </button>
+                  {loginOpen && (
+                    <div className="absolute right-0 top-7 z-50 rounded-xl p-3 shadow-xl flex flex-col gap-2" style={{ background: "#1e1e1e", border: "1px solid rgba(139,92,246,0.3)", minWidth: "200px" }}>
+                      <input
+                        type="text"
+                        value={playerNameInput}
+                        onChange={e => setPlayerNameInput(e.target.value)}
+                        placeholder="Your name"
+                        className="text-xs px-2 py-1 rounded"
+                        style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                      />
+                      <input
+                        type="password"
+                        value={reviewKeyInput}
+                        onChange={e => setReviewKeyInput(e.target.value)}
+                        placeholder="API Key"
+                        className="text-xs px-2 py-1 rounded"
+                        style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter" && reviewKeyInput) {
+                            localStorage.setItem("dash_api_key", reviewKeyInput);
+                            if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
+                            setReviewApiKey(reviewKeyInput);
+                            setLoginOpen(false);
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          if (!reviewKeyInput) return;
+                          localStorage.setItem("dash_api_key", reviewKeyInput);
+                          if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
+                          setReviewApiKey(reviewKeyInput);
+                          setLoginOpen(false);
+                        }}
+                        className="text-xs px-3 py-1 rounded font-medium"
+                        style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)" }}
+                      >
+                        Sign In
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
             {needsAttention > 0 && (
               <div
                 className="text-xs px-2 py-0.5 rounded font-medium"
@@ -865,39 +942,8 @@ export default function Dashboard() {
               </span>
             </div>
             {!reviewApiKey ? (
-              <div className="rounded-xl p-4" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.2)" }}>
-                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Enter API key to review quests &amp; claim:</p>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    type="text"
-                    value={playerNameInput}
-                    onChange={e => setPlayerNameInput(e.target.value)}
-                    placeholder="Your name (for claiming)"
-                    className="flex-1 text-xs px-2 py-1 rounded"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={reviewKeyInput}
-                    onChange={e => setReviewKeyInput(e.target.value)}
-                    placeholder="API Key"
-                    className="flex-1 text-xs px-2 py-1 rounded"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
-                  />
-                  <button
-                    onClick={() => {
-                      localStorage.setItem("dash_api_key", reviewKeyInput);
-                      if (playerNameInput) { localStorage.setItem("dash_player_name", playerNameInput); setPlayerName(playerNameInput); }
-                      setReviewApiKey(reviewKeyInput);
-                    }}
-                    className="text-xs px-3 py-1 rounded font-medium"
-                    style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)" }}
-                  >
-                    Save
-                  </button>
-                </div>
+              <div className="rounded-xl p-3" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.2)" }}>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>🔑 Log in (header) to review and approve quests.</p>
               </div>
             ) : (
               <div className="space-y-2">

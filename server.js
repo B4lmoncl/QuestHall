@@ -108,7 +108,7 @@ const AGENT_META = {
   pixel: { avatar: 'PX', color: '#f59e0b', role: 'Marketer',        description: 'Creative marketer. Eye for aesthetics.' },
   atlas: { avatar: 'AT', color: '#6366f1', role: 'Researcher',      description: 'Deep researcher. Pattern finder.' },
   lyra:  { avatar: '✦', color: '#e879f9', role: 'AI Orchestrator', description: 'AI Orchestrator. Team lead. Gets shit done.' },
-  forge: { avatar: '⚒', color: '#f59e0b', role: 'Idea Smith', description: 'Feature ideation. Hammers out quest suggestions.' },
+  forge: { avatar: '⚒', color: '#f59e0b', role: 'Idea Smith', description: 'Silent craftsman' },
 };
 
 let store = { agents: {} };
@@ -217,7 +217,11 @@ function sanitizeAgent(agent) {
 }
 
 const XP_BY_PRIORITY  = { high: 30, medium: 20, low: 10 };
-const GOLD_BY_PRIORITY = { high: 50, medium: 25, low: 10 };
+const GOLD_BY_PRIORITY = { high: [20, 30], medium: [12, 20], low: [6, 12] };
+function randGold(priority) {
+  const [min, max] = GOLD_BY_PRIORITY[priority] || [6, 12];
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 const TEMP_BY_PRIORITY = { high: 15, medium: 10, low: 5 };
 
 // ─── Achievements catalogue ─────────────────────────────────────────────────
@@ -281,7 +285,7 @@ function updateUserStreak(userId) {
 function awardUserGold(userId, priority, streakDays) {
   const u = users[userId];
   if (!u) return;
-  const base = GOLD_BY_PRIORITY[priority] || 10;
+  const base = randGold(priority);
   const multiplier = Math.min(1 + (streakDays || 0) * 0.1, 3);
   u.gold = (u.gold || 0) + Math.round(base * multiplier);
 }
@@ -381,7 +385,7 @@ function updateAgentStreak(agentKey) {
 function awardAgentGold(agentKey, priority, streakDays) {
   const agent = store.agents[agentKey];
   if (!agent) return;
-  const base = GOLD_BY_PRIORITY[priority] || 10;
+  const base = randGold(priority);
   const multiplier = Math.min(1 + (streakDays || 0) * 0.1, 3);
   agent.gold = (agent.gold || 0) + Math.round(base * multiplier);
 }
@@ -1848,6 +1852,110 @@ app.post('/api/challenges/join', requireApiKey, (req, res) => {
   saveQuests();
   console.log(`[challenge] ${uid} joined "${challenge.name}"`);
   res.json({ ok: true, challenge: challenge.name, questsCreated: created.length });
+});
+
+// ─── GitHub Webhook ────────────────────────────────────────────────────────────
+// POST /api/webhooks/github — handle GitHub events
+// merged PR → create completed quest; new issue → create suggested quest
+app.post('/api/webhooks/github', (req, res) => {
+  const event = req.headers['x-github-event'];
+  const payload = req.body;
+
+  if (event === 'pull_request' && payload.action === 'closed' && payload.pull_request?.merged) {
+    const pr = payload.pull_request;
+    const quest = {
+      id: `quest-gh-pr-${pr.number}-${Date.now()}`,
+      title: `[PR #${pr.number}] ${pr.title}`,
+      description: pr.body ? pr.body.slice(0, 300) : `Merged PR by ${pr.user?.login}`,
+      priority: 'medium',
+      type: 'development',
+      categories: ['Coding'],
+      status: 'completed',
+      createdBy: 'github-bot',
+      humanInputRequired: false,
+      xp: 0,
+      claimedBy: pr.user?.login || null,
+      completedBy: pr.user?.login || null,
+      completedAt: pr.merged_at || new Date().toISOString(),
+      createdAt: pr.created_at || new Date().toISOString(),
+    };
+    quests.push(quest);
+    saveQuests();
+    console.log(`[github] PR #${pr.number} merged → completed quest ${quest.id}`);
+    return res.json({ ok: true, event: 'pr_merged', questId: quest.id });
+  }
+
+  if (event === 'issues' && payload.action === 'opened') {
+    const issue = payload.issue;
+    const quest = {
+      id: `quest-gh-issue-${issue.number}-${Date.now()}`,
+      title: `[Issue #${issue.number}] ${issue.title}`,
+      description: issue.body ? issue.body.slice(0, 300) : `GitHub issue opened by ${issue.user?.login}`,
+      priority: 'medium',
+      type: 'development',
+      categories: ['Bug Fix'],
+      status: 'suggested',
+      createdBy: 'github-bot',
+      humanInputRequired: true,
+      xp: 0,
+      claimedBy: null,
+      completedBy: null,
+      completedAt: null,
+      createdAt: issue.created_at || new Date().toISOString(),
+    };
+    quests.push(quest);
+    saveQuests();
+    console.log(`[github] Issue #${issue.number} opened → suggested quest ${quest.id}`);
+    return res.json({ ok: true, event: 'issue_opened', questId: quest.id });
+  }
+
+  res.json({ ok: true, event, action: payload.action || null, ignored: true });
+});
+
+// ─── Spotify Integration (placeholders) ────────────────────────────────────────
+// POST /api/integrations/spotify/connect
+app.post('/api/integrations/spotify/connect', requireApiKey, (req, res) => {
+  const { userId, accessToken, refreshToken } = req.body || {};
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  const u = users[userId];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  u.spotify = { connected: true, connectedAt: new Date().toISOString(), accessToken: accessToken || null, refreshToken: refreshToken || null };
+  saveUsers();
+  console.log(`[spotify] user ${userId} connected`);
+  res.json({ ok: true, message: 'Spotify connected (placeholder)' });
+});
+
+// GET /api/integrations/spotify/status
+app.get('/api/integrations/spotify/status', requireApiKey, (req, res) => {
+  const { userId } = req.query;
+  if (!userId) return res.status(400).json({ error: 'userId required' });
+  const u = users[userId];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  res.json({ ok: true, connected: !!u.spotify?.connected, connectedAt: u.spotify?.connectedAt || null });
+});
+
+// POST /api/events/quest-start
+app.post('/api/events/quest-start', (req, res) => {
+  const { questId, userId } = req.body || {};
+  console.log(`[event] quest-start questId=${questId} userId=${userId}`);
+  // Placeholder: trigger Spotify playlist, notifications, etc.
+  res.json({ ok: true, event: 'quest-start', questId, userId });
+});
+
+// POST /api/events/quest-complete
+app.post('/api/events/quest-complete', (req, res) => {
+  const { questId, userId } = req.body || {};
+  console.log(`[event] quest-complete questId=${questId} userId=${userId}`);
+  // Placeholder: trigger Spotify celebration track, etc.
+  res.json({ ok: true, event: 'quest-complete', questId, userId });
+});
+
+// POST /api/events/level-up
+app.post('/api/events/level-up', (req, res) => {
+  const { userId, newLevel } = req.body || {};
+  console.log(`[event] level-up userId=${userId} newLevel=${newLevel}`);
+  // Placeholder: trigger Spotify level-up fanfare, etc.
+  res.json({ ok: true, event: 'level-up', userId, newLevel });
 });
 
 // POST /api/forge/temp-decay — decay forgeTemp for users who missed recurring quests
