@@ -27,6 +27,7 @@ const COMPANIONS_FILE      = path.join(DATA_DIR, 'companions.json');
 const RITUALS_FILE         = path.join(DATA_DIR, 'rituals.json');
 const HABITS_FILE          = path.join(DATA_DIR, 'habits.json');
 const LOOT_TABLES_FILE     = path.join(DATA_DIR, 'lootTables.json');
+const GEAR_TEMPLATES_FILE  = path.join(DATA_DIR, 'gearTemplates.json');
 
 // Quest types that are tracked per-player (not shared/global)
 const PLAYER_QUEST_TYPES = ['personal', 'learning', 'fitness', 'social', 'relationship-coop', 'companion'];
@@ -256,6 +257,7 @@ let campaigns = [];
 let rituals = [];
 let habits = [];
 let lootTables = { common: [], uncommon: [], rare: [], epic: [], legendary: [] };
+let gearTemplates = { tiers: [], items: [], setBonus: {} };
 
 function initStore() {
   for (const name of AGENT_NAMES) {
@@ -412,6 +414,41 @@ function loadLootTables() {
       if (raw) lootTables = raw;
     }
   } catch (e) { console.warn('[loot] Failed to load:', e.message); }
+}
+
+// Slot → emoji mapping for gear template items
+const SLOT_EMOJI = { weapon: '⚔️', shield: '🛡️', helm: '🪖', armor: '🧥', amulet: '📿', boots: '👢' };
+
+function loadGearTemplates() {
+  try {
+    if (fs.existsSync(GEAR_TEMPLATES_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(GEAR_TEMPLATES_FILE, 'utf8'));
+      if (raw) {
+        gearTemplates = raw;
+        // Merge template items into FULL_GEAR_ITEMS (skip if id already exists)
+        const existingIds = new Set(FULL_GEAR_ITEMS.map(g => g.id));
+        for (const item of raw.items || []) {
+          if (!existingIds.has(item.id)) {
+            FULL_GEAR_ITEMS.push({
+              id: item.id,
+              slot: item.slot,
+              tier: item.tier,
+              name: item.name,
+              emoji: SLOT_EMOJI[item.slot] || '🎒',
+              cost: item.price || 0,
+              minLevel: item.reqLevel || 1,
+              stats: item.stats || {},
+              setId: ['adventurer','veteran','master','legendary'][item.tier - 1] || 'adventurer',
+              rarity: item.rarity || 'common',
+              desc: item.desc || '',
+              shopHidden: item.shopHidden || false,
+            });
+          }
+        }
+        console.log(`[gear] Loaded ${raw.items?.length || 0} gear templates`);
+      }
+    }
+  } catch (e) { console.warn('[gear] Failed to load gear templates:', e.message); }
 }
 
 // ─── Quest Catalog store ─────────────────────────────────────────────────────
@@ -1547,6 +1584,26 @@ function addLootToInventory(userId, lootItem) {
   if (lootItem.effect.type === 'bond' && u.companion) {
     u.companion.bondXp = (u.companion.bondXp || 0) + lootItem.effect.amount;
     u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
+  }
+  if (lootItem.effect.type === 'forge_temp') {
+    u.forgeTemp = Math.min(1, (u.forgeTemp || 0) + (lootItem.effect.amount || 0) / 100);
+  }
+  if (lootItem.effect.type === 'random_gear' || lootItem.effect.type === 'random_gear_epic') {
+    const { level: playerLvl } = getLevelInfo(u.xp || 0);
+    const minRarity = lootItem.effect.type === 'random_gear_epic' ? 'epic' : 'rare';
+    const minRarityIdx = RARITY_ORDER.indexOf(minRarity);
+    const eligible = FULL_GEAR_ITEMS.filter(g =>
+      g.minLevel <= playerLvl &&
+      !g.shopHidden &&
+      RARITY_ORDER.indexOf(g.rarity || 'common') >= minRarityIdx
+    );
+    const pool = eligible.length > 0 ? eligible : FULL_GEAR_ITEMS.filter(g => g.minLevel <= playerLvl);
+    if (pool.length > 0) {
+      const gearItem = pool[Math.floor(Math.random() * pool.length)];
+      // Add gear ID string to inventory so character screen can show it
+      if (!u.inventory.includes(gearItem.id)) u.inventory.push(gearItem.id);
+      entry.resolvedGear = { id: gearItem.id, name: gearItem.name, slot: gearItem.slot, emoji: gearItem.emoji };
+    }
   }
   saveUsers();
   return entry;
@@ -4578,16 +4635,35 @@ app.post('/api/player/:name/inventory/use/:itemId', requireApiKey, (req, res) =>
 
 // ─── Full Equipment API ───────────────────────────────────────────────────────
 
-// GET /api/shop/equipment — gear items for player's level
+// GET /api/shop/equipment — gear items for player's level (?level=X or ?player=name)
+// Also excludes shopHidden items by default (pass ?includeHidden=1 to override)
 app.get('/api/shop/equipment', (req, res) => {
-  const { player } = req.query;
+  const { player, level: levelParam, includeHidden } = req.query;
+  const showHidden = includeHidden === '1';
+  let items = FULL_GEAR_ITEMS.filter(g => showHidden || !g.shopHidden);
+  if (levelParam) {
+    const lvl = parseInt(levelParam, 10) || 1;
+    return res.json(items.filter(g => g.minLevel <= lvl));
+  }
   if (player) {
     const u = users[player.toLowerCase()];
     const playerXp = u ? (u.xp || 0) : 0;
     const { level } = getLevelInfo(playerXp);
-    return res.json(FULL_GEAR_ITEMS.filter(g => g.minLevel <= level));
+    return res.json(items.filter(g => g.minLevel <= level));
   }
-  res.json(FULL_GEAR_ITEMS);
+  res.json(items);
+});
+
+// GET /api/gear/:id — single item details
+app.get('/api/gear/:id', (req, res) => {
+  const item = FULL_GEAR_ITEMS.find(g => g.id === req.params.id);
+  if (!item) return res.status(404).json({ error: 'Item not found' });
+  res.json(item);
+});
+
+// GET /api/gear-templates — raw template data (tiers + setBonus metadata)
+app.get('/api/gear-templates', (req, res) => {
+  res.json({ tiers: gearTemplates.tiers, setBonus: gearTemplates.setBonus });
 });
 
 // POST /api/player/:name/equip/:itemId [auth]
@@ -4870,6 +4946,7 @@ loadRoadmap();
 loadRituals();
 loadHabits();
 loadLootTables();
+loadGearTemplates();
 
 fetchAndCacheChangelog();
 setInterval(fetchAndCacheChangelog, CHANGELOG_TTL);

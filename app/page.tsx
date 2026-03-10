@@ -6629,6 +6629,215 @@ interface RoadmapItem {
   category: string;
 }
 
+// ─── PixelCharacter Canvas Component ─────────────────────────────────────────
+
+interface PixelCharacterProps {
+  appearance?: { skinColor?: string; hairStyle?: string; hairColor?: string };
+  equipment?: Record<string, string | null>;
+  companion?: { name: string; emoji: string } | null;
+}
+
+function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: PixelCharacterProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number>(0);
+  const frameRef = useRef(0);
+  const blinkRef = useRef(false);
+
+  // Determine equipped tier from weapon/armor slot
+  const getTier = () => {
+    const slots = ['weapon', 'armor', 'shield', 'helm'];
+    for (const s of slots) {
+      const id = equipment[s];
+      if (!id) continue;
+      if (id.startsWith('t4-') || ['dawn-blade','aegis-shield','wise-crown','dragon-armor','luck-heart','world-boots'].includes(id)) return 4;
+      if (id.startsWith('t3-') || ['rune-sword','dragon-scale','arcane-helm','mythril-armor','gold-medallion','wind-boots'].includes(id)) return 3;
+      if (id.startsWith('t2-') || ['steel-sword','iron-shield','chain-helm','chain-armor','silver-amulet','iron-boots'].includes(id)) return 2;
+    }
+    return 1;
+  };
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const SCALE = 4;
+    const W = 32;
+    const H = 48;
+    canvas.width = W * SCALE;
+    canvas.height = H * SCALE;
+
+    const SKIN_COLORS: Record<string, string> = {
+      light: '#fdd8b5', medium: '#d4a574', tan: '#a0785a', dark: '#6b4423',
+    };
+    const HAIR_COLORS: Record<string, string> = {
+      black: '#222222', brown: '#8B4513', blonde: '#DAA520',
+      red: '#B22222', blue: '#1565C0', white: '#DDDDDD',
+    };
+
+    const skin = SKIN_COLORS[appearance.skinColor || 'medium'] || SKIN_COLORS.medium;
+    const hairColor = HAIR_COLORS[appearance.hairColor || 'brown'] || HAIR_COLORS.brown;
+    const hairStyle = appearance.hairStyle || 'short';
+    const tier = getTier();
+
+    const px = (x: number, y: number, w: number, h: number, color: string) => {
+      ctx.fillStyle = color;
+      ctx.fillRect(x * SCALE, y * SCALE, w * SCALE, h * SCALE);
+    };
+
+    let lastTimestamp = 0;
+    const FRAME_DURATION = 300; // ms per animation frame
+    const BLINK_DURATION = 200; // ms eyes closed
+
+    let blinkTimeout: ReturnType<typeof setTimeout> | null = null;
+    const scheduleBlink = () => {
+      blinkTimeout = setTimeout(() => {
+        blinkRef.current = true;
+        setTimeout(() => {
+          blinkRef.current = false;
+          scheduleBlink();
+        }, BLINK_DURATION);
+      }, 2500 + Math.random() * 1000);
+    };
+    scheduleBlink();
+
+    const draw = (timestamp: number) => {
+      if (timestamp - lastTimestamp >= FRAME_DURATION) {
+        frameRef.current = (frameRef.current + 1) % 4;
+        lastTimestamp = timestamp;
+      }
+
+      const frame = frameRef.current;
+      const bobY = frame === 1 ? 1 : frame === 3 ? -1 : 0;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // ── Armor colors by tier ──
+      let armorMain = '#8D6E63';
+      let armorAccent = '#6D4C41';
+      let weaponColor = '#A0A0A0';
+      let shieldColor = '#795548';
+      if (tier === 2) { armorMain = '#B0BEC5'; armorAccent = '#78909C'; weaponColor = '#B0BEC5'; shieldColor = '#546E7A'; }
+      if (tier === 3) { armorMain = '#78909C'; armorAccent = '#FFD54F'; weaponColor = '#FFD54F'; shieldColor = '#FFD54F'; }
+      if (tier === 4) { armorMain = '#7C4DFF'; armorAccent = '#B388FF'; weaponColor = '#B388FF'; shieldColor = '#7C4DFF'; }
+
+      const base = 4 + bobY; // top of character (head starts here)
+
+      // ── Head ──
+      px(11, base, 10, 10, skin);
+
+      // ── Eyes ──
+      if (!blinkRef.current) {
+        px(13, base + 3, 2, 2, '#333');
+        px(17, base + 3, 2, 2, '#333');
+      } else {
+        // blink: thin line
+        px(13, base + 4, 2, 1, '#555');
+        px(17, base + 4, 2, 1, '#555');
+      }
+
+      // ── Hair ──
+      if (hairStyle === 'short') {
+        px(11, base, 10, 3, hairColor);
+        px(10, base + 1, 1, 2, hairColor);
+        px(21, base + 1, 1, 2, hairColor);
+      } else if (hairStyle === 'long') {
+        px(11, base, 10, 3, hairColor);
+        px(9, base + 1, 2, 8, hairColor);
+        px(21, base + 1, 2, 8, hairColor);
+      } else if (hairStyle === 'spiky') {
+        px(11, base, 10, 2, hairColor);
+        px(11, base - 2, 2, 2, hairColor);
+        px(14, base - 3, 2, 3, hairColor);
+        px(17, base - 2, 2, 2, hairColor);
+        px(20, base - 1, 1, 1, hairColor);
+      } else if (hairStyle === 'ponytail') {
+        px(11, base, 10, 2, hairColor);
+        px(21, base + 1, 2, 10, hairColor);
+      }
+
+      // ── Torso (armor) ──
+      px(9, base + 10, 14, 12, armorMain);
+      // Shoulder pads by tier
+      if (tier >= 2) { px(7, base + 10, 3, 4, armorAccent); px(22, base + 10, 3, 4, armorAccent); }
+      if (tier >= 3) { px(6, base + 9, 4, 5, armorAccent); px(22, base + 9, 4, 5, armorAccent); }
+      // Gold trim on tier 3+
+      if (tier >= 3) {
+        px(9, base + 10, 14, 1, armorAccent);
+        px(9, base + 21, 14, 1, armorAccent);
+      }
+
+      // ── Arms ──
+      px(5, base + 10, 4, 10, armorMain);   // left arm
+      px(23, base + 10, 4, 10, armorMain);  // right arm
+
+      // ── Legs ──
+      const pantsColor = tier >= 3 ? '#546E7A' : '#5D4037';
+      px(9, base + 22, 6, 12, pantsColor);   // left leg
+      px(17, base + 22, 6, 12, pantsColor);  // right leg
+      // Boots
+      const bootColor = tier >= 2 ? '#455A64' : '#4E342E';
+      px(8, base + 32, 7, 4, bootColor);
+      px(17, base + 32, 7, 4, bootColor);
+
+      // ── Weapon (right side) ──
+      if (equipment.weapon) {
+        px(27, base + 8, 2, 16, weaponColor);  // blade
+        px(25, base + 16, 6, 2, weaponColor);  // crossguard
+      }
+
+      // ── Shield (left side) ──
+      if (equipment.shield) {
+        px(1, base + 12, 5, 7, shieldColor);
+        px(0, base + 13, 7, 5, armorAccent);
+        px(1, base + 12, 5, 7, 'transparent'); // re-clear center
+        ctx.fillStyle = shieldColor;
+        ctx.fillRect(1 * SCALE, (base + 12) * SCALE, 5 * SCALE, 7 * SCALE);
+        ctx.fillStyle = armorAccent;
+        ctx.fillRect(2 * SCALE, (base + 15) * SCALE, 3 * SCALE, 1 * SCALE);
+      }
+
+      // ── Tier 4 glow effect ──
+      if (tier === 4) {
+        const glowAlpha = 0.15 + 0.1 * Math.sin(timestamp / 400);
+        ctx.fillStyle = `rgba(124, 77, 255, ${glowAlpha})`;
+        ctx.fillRect(0, (base + 8) * SCALE, canvas.width, 20 * SCALE);
+      }
+
+      animFrameRef.current = requestAnimationFrame(draw);
+    };
+
+    animFrameRef.current = requestAnimationFrame(draw);
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      if (blinkTimeout) clearTimeout(blinkTimeout);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appearance.skinColor, appearance.hairStyle, appearance.hairColor, JSON.stringify(equipment)]);
+
+  return (
+    <div className="flex flex-col items-center gap-3">
+      <canvas
+        ref={canvasRef}
+        style={{
+          imageRendering: 'pixelated',
+          filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))',
+        }}
+      />
+      {companion && (
+        <div
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
+          style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)" }}
+        >
+          <span className="text-xl">{companion.emoji}</span>
+          <span className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{companion.name}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── CharacterView ────────────────────────────────────────────────────────────
 
 interface CharacterData {
@@ -6642,6 +6851,7 @@ interface CharacterData {
   classFantasy: string | null;
   classIcon: string | null;
   companion: { name: string; emoji: string; bondLevel: number } | null;
+  appearance?: { skinColor?: string; hairStyle?: string; hairColor?: string };
   equipment: Record<string, string | null>;
   stats: { kraft: number; ausdauer: number; weisheit: number; glueck: number; _setBonus?: number };
   baseStats: { kraft: number; ausdauer: number; weisheit: number; glueck: number };
@@ -6897,48 +7107,16 @@ function CharacterView({ playerName, apiKey, users, classesList }: { playerName:
 
         {/* CENTER: Character Area */}
         <div className="flex-1 flex flex-col items-center justify-center relative" style={{ minHeight: 360 }}>
-          {/* Hero silhouette placeholder */}
-          <div className="hero-silhouette flex flex-col items-center gap-3">
-            <svg width="90" height="160" viewBox="0 0 90 160" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ filter: "drop-shadow(0 4px 16px rgba(0,0,0,0.5))" }}>
-              {/* Head */}
-              <ellipse cx="45" cy="22" rx="16" ry="18" fill="rgba(80,80,100,0.7)" />
-              {/* Body */}
-              <rect x="28" y="40" width="34" height="52" rx="8" fill="rgba(70,70,90,0.7)" />
-              {/* Left arm */}
-              <rect x="10" y="42" width="16" height="42" rx="7" fill="rgba(75,75,95,0.7)" transform="rotate(-5 18 63)" />
-              {/* Right arm */}
-              <rect x="64" y="42" width="16" height="42" rx="7" fill="rgba(75,75,95,0.7)" transform="rotate(5 72 63)" />
-              {/* Left leg */}
-              <rect x="27" y="90" width="16" height="56" rx="7" fill="rgba(65,65,85,0.7)" transform="rotate(-3 35 118)" />
-              {/* Right leg */}
-              <rect x="47" y="90" width="16" height="56" rx="7" fill="rgba(65,65,85,0.7)" transform="rotate(3 55 118)" />
-              {/* Glow */}
-              <ellipse cx="45" cy="22" rx="16" ry="18" fill="none" stroke="rgba(167,139,250,0.3)" strokeWidth="1.5" />
-            </svg>
-
-            {/* Companion placeholder */}
-            {charData?.companion && (
-              <div
-                className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
-                style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)" }}
-              >
-                <span className="text-xl">{charData.companion.emoji}</span>
-                <div>
-                  <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{charData.companion.name}</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-                    {"❤️".repeat(Math.min(charData.companion.bondLevel, 5))}
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <p
-              className="text-sm font-semibold text-center px-4"
-              style={{ color: "rgba(255,255,255,0.45)", animation: "pulse 3s ease-in-out infinite", textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}
-            >
-              Dein Held erwacht bald...
+          <PixelCharacter
+            appearance={charData?.appearance ?? {}}
+            equipment={charData?.equipment ?? {}}
+            companion={charData?.companion ?? null}
+          />
+          {charData?.companion && (
+            <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {"❤️".repeat(Math.min(charData.companion.bondLevel, 5))}
             </p>
-          </div>
+          )}
         </div>
 
         {/* RIGHT: Stats Panel */}
