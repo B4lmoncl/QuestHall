@@ -58,8 +58,8 @@ interface Quest {
   rewards?: { xp: number; gold: number };
 }
 
-interface NpcQuestEntry {
-  id: string;
+interface NpcQuestChainEntry {
+  questId: string;
   title: string;
   description: string;
   type: string;
@@ -68,6 +68,7 @@ interface NpcQuestEntry {
   claimedBy: string | null;
   completedBy: string | null;
   rewards: { xp: number; gold: number };
+  position: number;
 }
 
 interface ActiveNpc {
@@ -76,12 +77,15 @@ interface ActiveNpc {
   emoji: string;
   title: string;
   description: string;
+  portrait: string | null;
+  greeting: string | null;
+  rarity: string;
   arrivedAt: string;
   expiresAt: string;
   daysLeft: number;
   hoursLeft: number;
   finalReward: { type: string; item: { id: string; name: string; emoji: string; rarity: string; desc: string } } | null;
-  quests: NpcQuestEntry[];
+  questChain: NpcQuestChainEntry[];
 }
 
 interface EarnedAchievement {
@@ -497,6 +501,7 @@ export default function Dashboard() {
   const [poolRefreshing, setPoolRefreshing] = useState(false);
   const [npcBoardFilter, setNpcBoardFilter] = useState<string | null>(null);
   const [activeNpcs, setActiveNpcs] = useState<ActiveNpc[]>([]);
+  const [selectedNpc, setSelectedNpc] = useState<ActiveNpc | null>(null);
   const [infoOverlayOpen, setInfoOverlayOpen] = useState(false);
   const [infoOverlayTab, setInfoOverlayTab] = useState<"roadmap" | "changelog" | "guide">("roadmap");
 
@@ -1874,91 +1879,213 @@ export default function Dashboard() {
                   <button onClick={() => setNpcBoardFilter(null)} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>×</button>
                 </div>
               )}
-              {/* ── Visiting NPCs ── */}
-              {activeNpcs.length > 0 ? (
-                <section>
-                  <div className="flex items-center gap-2 mb-3">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>✨ Besuchende Abenteurer</h2>
-                    <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>{activeNpcs.length}</span>
-                  </div>
-                  <div className="space-y-4">
-                    {activeNpcs.map(npc => {
-                      const urgent = npc.hoursLeft <= 24;
-                      const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
-                      const rewardRarity = npc.finalReward?.item?.rarity ?? "rare";
-                      const rewardColor = rarityColors[rewardRarity] ?? "#a78bfa";
-                      return (
-                        <div key={npc.id} className="rounded-2xl overflow-hidden" style={{ background: "#1e1e1e", border: `1px solid ${urgent ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.2)"}` }}>
-                          {/* NPC Header */}
-                          <div className="px-4 py-3 flex items-center gap-3" style={{ background: urgent ? "rgba(239,68,68,0.06)" : "rgba(245,158,11,0.05)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-                            <span className="text-3xl flex-shrink-0">{npc.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <p className="text-sm font-bold" style={{ color: "#f0f0f0" }}>{npc.name}</p>
-                                <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.4)" }}>{npc.title}</span>
-                              </div>
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{npc.description}</p>
-                            </div>
-                            <div className="text-right flex-shrink-0">
-                              {urgent ? (
-                                <p className="text-xs font-bold animate-pulse" style={{ color: "#ef4444" }}>⏰ Noch {npc.hoursLeft}h!</p>
-                              ) : (
-                                <p className="text-xs font-semibold" style={{ color: "#f59e0b" }}>⏳ Noch {npc.daysLeft} Tag{npc.daysLeft !== 1 ? "e" : ""}</p>
-                              )}
-                              <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>dann weg</p>
-                            </div>
-                          </div>
-                          {/* Quest chain */}
-                          <div className="px-4 py-3 space-y-2">
-                            {npc.quests.map((q, qi) => {
-                              const typeStyle: Record<string, { color: string; bg: string }> = {
-                                social: { color: "#f472b6", bg: "rgba(244,114,182,0.08)" },
-                                personal: { color: "#a78bfa", bg: "rgba(167,139,250,0.08)" },
-                                fitness: { color: "#4ade80", bg: "rgba(74,222,128,0.08)" },
-                                learning: { color: "#60a5fa", bg: "rgba(96,165,250,0.08)" },
-                              };
-                              const ts = typeStyle[q.type] ?? { color: "#e8e8e8", bg: "rgba(255,255,255,0.04)" };
-                              const isDone = q.status === "completed";
-                              return (
-                                <div key={q.id} className="rounded-xl px-3 py-2.5 flex items-center gap-3" style={{ background: isDone ? "rgba(34,197,94,0.05)" : ts.bg, border: `1px solid ${isDone ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.06)"}`, opacity: isDone ? 0.6 : 1 }}>
-                                  <span className="text-xs font-mono w-4 text-center flex-shrink-0" style={{ color: isDone ? "#22c55e" : "rgba(255,255,255,0.2)" }}>{isDone ? "✓" : `${qi + 1}.`}</span>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-semibold truncate" style={{ color: isDone ? "#22c55e" : "#e8e8e8", textDecoration: isDone ? "line-through" : "none" }}>{q.title}</p>
-                                    <p className="text-xs mt-0.5 line-clamp-2" style={{ color: "rgba(255,255,255,0.3)" }}>{q.description}</p>
-                                  </div>
-                                  <div className="text-right flex-shrink-0">
-                                    <p className="text-xs font-semibold" style={{ color: "#f59e0b" }}>+{q.rewards?.xp ?? 0} XP</p>
-                                    <p className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{q.rewards?.gold ?? 0} 🪙</p>
-                                  </div>
+              {/* ── Wandernde Besucher — Portrait Grid ── */}
+              {(() => {
+                const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
+                const rarityStars: Record<string, string> = { common: "★", uncommon: "★★", rare: "★★★", epic: "★★★★", legendary: "★★★★★" };
+                return (
+                  <section>
+                    <div className="flex items-center gap-2 mb-4">
+                      <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>🏰 Wandernde Besucher</h2>
+                      {activeNpcs.length > 0 && (
+                        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>{activeNpcs.length}</span>
+                      )}
+                    </div>
+                    {activeNpcs.length === 0 ? (
+                      <div className="rounded-xl px-4 py-6 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.25)" }}>Die Halle ist still heute...</p>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.12)" }}>Neue Besucher kommen bald.</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex flex-wrap gap-5 mb-2">
+                          {activeNpcs.map(npc => {
+                            const urgent = npc.hoursLeft <= 24;
+                            const rc = rarityColors[npc.rarity] ?? "#9ca3af";
+                            const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
+                            return (
+                              <button
+                                key={npc.id}
+                                onClick={() => setSelectedNpc(npc)}
+                                className="flex flex-col items-center gap-2 group"
+                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+                              >
+                                <div
+                                  className="relative rounded-lg overflow-hidden flex-shrink-0"
+                                  style={{
+                                    width: 128, height: 128,
+                                    border: `2px solid ${urgent ? "rgba(239,68,68,0.5)" : `${rc}40`}`,
+                                    boxShadow: `0 0 0 0 ${rc}`,
+                                    transition: "box-shadow 0.2s ease",
+                                  }}
+                                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 18px 4px ${rc}55`; }}
+                                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 0 ${rc}`; }}
+                                >
+                                  {npc.portrait ? (
+                                    <img
+                                      src={npc.portrait}
+                                      alt={npc.name}
+                                      width={128}
+                                      height={128}
+                                      style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 48 }}>
+                                      {npc.emoji}
+                                    </div>
+                                  )}
+                                  {allDone && (
+                                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.7)" }}>
+                                      <span style={{ fontSize: 36 }}>✓</span>
+                                    </div>
+                                  )}
+                                  {urgent && !allDone && (
+                                    <div className="absolute bottom-0 left-0 right-0 py-0.5 text-center" style={{ background: "rgba(239,68,68,0.85)", fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
+                                      ⏰ NOCH {npc.hoursLeft}H
+                                    </div>
+                                  )}
                                 </div>
-                              );
-                            })}
-                          </div>
-                          {/* Final reward */}
-                          {npc.finalReward?.item && (
-                            <div className="px-4 py-3 flex items-center gap-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", background: `${rewardColor}08` }}>
-                              <span className="text-lg flex-shrink-0">{npc.finalReward.item.emoji}</span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs font-semibold" style={{ color: rewardColor }}>🏆 {npc.finalReward.item.name}</p>
-                                  <span className="text-xs px-1 py-0.5 rounded font-mono capitalize" style={{ background: `${rewardColor}15`, color: rewardColor, border: `1px solid ${rewardColor}30` }}>{rewardRarity}</span>
+                                <div className="text-center" style={{ maxWidth: 128 }}>
+                                  <p className="text-xs font-semibold leading-tight" style={{ color: "#e8e8e8" }}>{npc.name}</p>
+                                  <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "★"}</p>
+                                  {!allDone && (
+                                    <p className="text-xs mt-0.5" style={{ color: urgent ? "#ef4444" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
+                                      ⏱ {urgent ? `${npc.hoursLeft}h` : `${npc.daysLeft}d`} übrig
+                                    </p>
+                                  )}
+                                  {allDone && (
+                                    <p className="text-xs mt-0.5" style={{ color: "#22c55e", fontSize: 10 }}>✓ Abgeschlossen</p>
+                                  )}
                                 </div>
-                                <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>{npc.finalReward.item.desc}</p>
-                              </div>
-                              <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Alle Quest abschließen</p>
-                            </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>Klicke einen Besucher um ihre Quest zu sehen...</p>
+                      </>
+                    )}
+                  </section>
+                );
+              })()}
+
+              {/* ── NPC Speech Bubble Modal ── */}
+              {selectedNpc && (() => {
+                const npc = selectedNpc;
+                const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
+                const rarityStars: Record<string, string> = { common: "★ Gewöhnlich", uncommon: "★★ Ungewöhnlich", rare: "★★★ Selten", epic: "★★★★ Episch", legendary: "★★★★★ Legendär" };
+                const rc = rarityColors[npc.rarity] ?? "#9ca3af";
+                const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
+                const currentQuest = npc.questChain.find(q => q.status === "open" || q.status === "in_progress" || q.status === "claimed") ?? null;
+                const completedCount = npc.questChain.filter(q => q.status === "completed").length;
+                const totalCount = npc.questChain.length;
+                return (
+                  <div
+                    className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                    style={{ background: "rgba(0,0,0,0.82)" }}
+                    onClick={e => { if (e.target === e.currentTarget) setSelectedNpc(null); }}
+                  >
+                    <div className="relative w-full max-w-md rounded-xl overflow-hidden" style={{ background: "#1a1a2e", border: `2px solid rgba(255,215,0,0.25)`, maxHeight: "90vh", overflowY: "auto" }}>
+                      {/* Close */}
+                      <button
+                        onClick={() => setSelectedNpc(null)}
+                        className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full"
+                        style={{ width: 28, height: 28, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 14 }}
+                      >✕</button>
+
+                      {/* NPC Header */}
+                      <div className="px-5 pt-5 pb-4 flex items-start gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+                        <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 96, height: 96, border: `2px solid ${rc}50` }}>
+                          {npc.portrait ? (
+                            <img src={npc.portrait} alt={npc.name} width={96} height={96} style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 40 }}>{npc.emoji}</div>
                           )}
                         </div>
-                      );
-                    })}
+                        <div className="flex-1 min-w-0 pt-1">
+                          <p className="text-sm font-bold leading-tight" style={{ color: "#f0f0f0" }}>{npc.name}</p>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{npc.title}</p>
+                          <p className="text-xs mt-1 font-semibold" style={{ color: rc }}>{rarityStars[npc.rarity] ?? npc.rarity}</p>
+                          <p className="text-xs mt-1" style={{ color: npc.hoursLeft <= 24 ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
+                            {npc.hoursLeft <= 24 ? `⏰ Noch ${npc.hoursLeft}h!` : `⏳ Noch ${npc.daysLeft} Tag${npc.daysLeft !== 1 ? "e" : ""}`}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Greeting / Speech bubble */}
+                      {npc.greeting && (
+                        <div className="mx-5 mt-4 px-4 py-3 rounded-xl relative" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                          <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>💬 &ldquo;{npc.greeting}&rdquo;</p>
+                        </div>
+                      )}
+
+                      {/* Quest content */}
+                      <div className="px-5 pt-4 pb-5">
+                        {allDone ? (
+                          <div className="text-center py-4">
+                            <p className="text-2xl mb-2">🎉</p>
+                            <p className="text-sm font-bold" style={{ color: "#22c55e" }}>Alle Quests abgeschlossen!</p>
+                            <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Vielen Dank, tapferer Abenteurer.</p>
+                          </div>
+                        ) : currentQuest ? (
+                          <>
+                            <div className="flex items-center justify-between mb-2">
+                              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>
+                                📜 Quest {currentQuest.position}/{totalCount}
+                              </p>
+                              {completedCount > 0 && (
+                                <p className="text-xs" style={{ color: "#22c55e" }}>{completedCount} abgeschlossen ✓</p>
+                              )}
+                            </div>
+                            <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                              <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
+                              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
+                              <div className="flex items-center gap-3 mt-3">
+                                <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>
+                                <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
+                                {currentQuest.status === "claimed" && (
+                                  <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Aktiv</span>
+                                )}
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          <p className="text-xs text-center py-3" style={{ color: "rgba(255,255,255,0.3)" }}>Keine aktiven Quests.</p>
+                        )}
+
+                        {/* Chain progress dots */}
+                        {totalCount > 1 && (
+                          <div className="flex items-center justify-center gap-2 mt-3">
+                            {npc.questChain.map(q => (
+                              <div
+                                key={q.questId}
+                                className="rounded-full"
+                                style={{
+                                  width: 8, height: 8,
+                                  background: q.status === "completed" ? "#22c55e" : (q === currentQuest ? "#f59e0b" : "rgba(255,255,255,0.12)"),
+                                  border: q === currentQuest ? "2px solid #f59e0b" : "none",
+                                }}
+                                title={`Quest ${q.position}: ${q.title}`}
+                              />
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Final reward */}
+                        {npc.finalReward?.item && (
+                          <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
+                            <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>💎 Ketten-Belohnung</p>
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
+                              <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </section>
-              ) : (
-                <div className="rounded-xl px-4 py-5 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>🌙 Gerade keine Besucher…</p>
-                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.12)" }}>Schau morgen wieder vorbei!</p>
-                </div>
-              )}
+                );
+              })()}
 
               {/* NPC Roster — collapsible, shows only Lyra */}
               <section>

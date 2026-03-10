@@ -5144,17 +5144,30 @@ app.get('/api/npcs/active', (req, res) => {
         emoji: giver.emoji,
         title: giver.title,
         description: giver.description,
+        portrait: giver.portrait || null,
+        greeting: giver.greeting || null,
+        rarity: giver.rarity || 'common',
         arrivedAt: active.arrivedAt,
         expiresAt: active.expiresAt,
         daysLeft: Math.max(0, Math.ceil(msLeft / 86400000)),
         hoursLeft: Math.max(0, Math.ceil(msLeft / 3600000)),
         finalReward: giver.finalReward,
-        quests: npcQuests.map(q => ({
-          id: q.id, title: q.title, description: q.description,
-          type: q.type, priority: q.priority, status: q.status,
-          claimedBy: q.claimedBy, completedBy: q.completedBy,
-          rewards: q.npcRewards,
-        })),
+        questChain: questIds.map((qid, idx) => {
+          const q = npcQuests.find(x => x.id === qid);
+          if (!q) return null;
+          return {
+            questId: q.id,
+            title: q.title,
+            description: q.description,
+            type: q.type,
+            priority: q.priority,
+            status: q.status,
+            claimedBy: q.claimedBy,
+            completedBy: q.completedBy,
+            rewards: q.npcRewards,
+            position: idx + 1,
+          };
+        }).filter(Boolean),
       };
     }).filter(Boolean);
   res.json({ npcs: result });
