@@ -1567,8 +1567,9 @@ export default function Dashboard() {
           const playerQuestTypes = ["personal", "learning", "fitness", "social", "relationship-coop"];
           const playerVisibleOpen = applySort(applyFilter(quests.open.filter(q => playerQuestTypes.includes(q.type ?? ""))));
           const playerVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => playerQuestTypes.includes(q.type ?? ""))));
-          // Cap open quests: filter by player level, then pick up to 6 (stable by date seed)
-          const levelFiltered = playerVisibleOpen.filter(q => !q.minLevel || q.minLevel <= playerLevelInfo.level);
+          // Cap open quests: filter by player level, exclude already claimed, then pick up to 6 (stable by date seed)
+          const inProgressIds = new Set(playerVisibleInProgress.map(q => q.id));
+          const levelFiltered = playerVisibleOpen.filter(q => (!q.minLevel || q.minLevel <= playerLevelInfo.level) && !inProgressIds.has(q.id));
           const boardSeed = Math.floor(Date.now() / (24 * 3600 * 1000)); // changes daily
           const boardOpen = levelFiltered.length <= 6 ? levelFiltered : (() => {
             const arr = [...levelFiltered];
@@ -1685,9 +1686,9 @@ export default function Dashboard() {
                   {/* Board Sub-Tabs */}
                   <div className="flex gap-1 mb-3">
                     {[
-                      { key: "auftraege",    label: "📜 Aufträge" },
-                      { key: "rituale",      label: "🔁 Rituale" },
-                      { key: "anti-rituale", label: "🚫 Anti-Rituale" },
+                      { key: "auftraege",    label: "📜 Quests" },
+                      { key: "rituale",      label: "🔁 Rituals" },
+                      { key: "anti-rituale", label: "⚔️ Vows" },
                     ].map(tab => (
                       <button
                         key={tab.key}
@@ -1802,7 +1803,7 @@ export default function Dashboard() {
                   {questBoardTab === "rituale" && (
                     <div>
                       <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>🔁 Rituale</h3>
+                        <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>🔁 Rituals</h3>
                         {playerName && reviewApiKey && (
                           <button onClick={() => setCreateRitualOpen(true)} className="text-xs px-2 py-1 rounded font-semibold"
                             style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
@@ -1853,35 +1854,56 @@ export default function Dashboard() {
                                       </div>
                                     )}
                                   </div>
-                                  <button
-                                    disabled={doneToday || !reviewApiKey}
-                                    onClick={async () => {
-                                      if (!reviewApiKey || !playerName) return;
-                                      try {
-                                        const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
-                                          method: 'POST',
-                                          headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
-                                          body: JSON.stringify({ playerId: playerName }),
-                                        });
-                                        const data = await r.json();
-                                        if (data.ok) {
-                                          fetchRituals(playerName).then(setRituals);
-                                          if (data.lootDrop) setLootDrop(data.lootDrop);
-                                          if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
-                                          refresh();
-                                        }
-                                      } catch { /* ignore */ }
-                                    }}
-                                    className="text-xs px-2.5 py-1.5 rounded-lg font-medium shrink-0 transition-all"
-                                    style={{
-                                      background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
-                                      color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
-                                      border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
-                                      cursor: doneToday ? 'default' : 'pointer',
-                                    }}
-                                  >
-                                    {doneToday ? "✓ Erledigt" : "Abhaken"}
-                                  </button>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button
+                                      disabled={doneToday || !reviewApiKey}
+                                      onClick={async () => {
+                                        if (!reviewApiKey || !playerName) return;
+                                        try {
+                                          const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
+                                            body: JSON.stringify({ playerId: playerName }),
+                                          });
+                                          const data = await r.json();
+                                          if (data.ok) {
+                                            fetchRituals(playerName).then(setRituals);
+                                            if (data.lootDrop) setLootDrop(data.lootDrop);
+                                            if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
+                                            refresh();
+                                          }
+                                        } catch { /* ignore */ }
+                                      }}
+                                      className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all"
+                                      style={{
+                                        background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
+                                        color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
+                                        border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
+                                        cursor: doneToday ? 'default' : 'pointer',
+                                      }}
+                                    >
+                                      {doneToday ? "✓ Erledigt" : "Abhaken"}
+                                    </button>
+                                    {reviewApiKey && (
+                                      <button
+                                        onClick={async () => {
+                                          if (!window.confirm("Ritual wirklich löschen?")) return;
+                                          try {
+                                            await fetch(`/api/rituals/${ritual.id}`, {
+                                              method: 'DELETE',
+                                              headers: { 'x-api-key': reviewApiKey },
+                                            });
+                                            if (playerName) fetchRituals(playerName).then(setRituals);
+                                          } catch { /* ignore */ }
+                                        }}
+                                        className="text-xs px-2 py-1.5 rounded-lg transition-all"
+                                        style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }}
+                                        title="Ritual löschen"
+                                      >
+                                        🗑️
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -3503,7 +3525,7 @@ function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: string; re
     <div>
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-xs font-semibold uppercase tracking-widest flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>
-          🚫 Anti-Rituale
+          ⚔️ Vows
           <span className="text-xs font-normal normal-case" style={{ color: "rgba(255,255,255,0.25)" }}>— track what you don&apos;t do</span>
         </h3>
         {playerName && reviewApiKey && (
@@ -3557,15 +3579,36 @@ function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: string; re
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => markViolated(ar.id)}
-                    disabled={!reviewApiKey}
-                    className="text-xs px-2 py-1 rounded shrink-0 transition-all"
-                    style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
-                    title="Ich hab's gemacht... Streak reset."
-                  >
-                    😔 Slip
-                  </button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      onClick={() => markViolated(ar.id)}
+                      disabled={!reviewApiKey}
+                      className="text-xs px-2 py-1 rounded transition-all"
+                      style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
+                      title="Ich hab's gemacht... Streak reset."
+                    >
+                      😔 Slip
+                    </button>
+                    {reviewApiKey && (
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm("Ritual wirklich löschen?")) return;
+                          try {
+                            await fetch(`/api/rituals/${ar.id}`, {
+                              method: 'DELETE',
+                              headers: { 'x-api-key': reviewApiKey },
+                            });
+                            loadAntiRituals();
+                          } catch { /* ignore */ }
+                        }}
+                        className="text-xs px-2 py-1 rounded transition-all"
+                        style={{ background: "rgba(239,68,68,0.06)", color: "rgba(239,68,68,0.4)", border: "1px solid rgba(239,68,68,0.12)", cursor: 'pointer' }}
+                        title="Vow löschen"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             );
