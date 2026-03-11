@@ -1200,7 +1200,7 @@ export default function Dashboard() {
                     <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Players</h2>
                     <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)" }}>{users.length}</span>
                   </div>
-                  <div className={users.length === 1 ? "grid grid-cols-1 gap-3" : "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3"}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {users.map(u => <UserCard key={u.id} user={u} classes={classesList} />)}
                   </div>
                 </section>
@@ -1727,9 +1727,13 @@ export default function Dashboard() {
                   <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
                   <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
                 </div>
-                <div className="rounded-xl px-4 py-5 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.2)" }}>Your companion rests by the fire...</p>
-                </div>
+                {playerName ? (
+                  <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => {}} onUserRefresh={refresh} />
+                ) : (
+                  <div className="rounded-xl px-4 py-5 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.2)" }}>Your companion rests by the fire...</p>
+                  </div>
+                )}
               </section>
 
               {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
@@ -1754,10 +1758,10 @@ export default function Dashboard() {
                   ))}
                   <div className="relative flex items-center gap-6 px-8 py-8" style={{ zIndex: 1 }}>
                     {/* Portal arch / gate icon */}
-                    <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 140, height: 140 }}>
+                    <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160 }}>
                       <div style={{
-                        width: 128, height: 128,
-                        borderRadius: "50% 50% 0 0",
+                        width: 144, height: 144,
+                        borderRadius: "50%",
                         border: "3px solid #FFD700",
                         boxShadow: "0 0 20px rgba(255,215,0,0.6), inset 0 0 20px rgba(100,60,200,0.3)",
                         background: "radial-gradient(ellipse at 50% 70%, rgba(100,60,200,0.4) 0%, rgba(0,0,30,0.9) 70%)",
@@ -1770,8 +1774,8 @@ export default function Dashboard() {
                         <img
                           src="/images/npcs/starweaver-final.png"
                           alt="The Starweaver"
-                          width={128}
-                          height={128}
+                          width={144}
+                          height={144}
                           style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
                           onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
                         />
