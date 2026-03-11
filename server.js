@@ -2505,10 +2505,13 @@ app.get('/api/quests', (req, res) => {
     const completedPlayer  = [];
     const lockedPlayer     = [];
 
+    const playerClassId = userRecord ? (userRecord.classId || null) : null;
     for (const q of playerTypeQuests) {
       if (typeFilter && q.type !== typeFilter) continue;
       // Skip suggested/rejected (not visible to players)
       if (q.status === 'suggested' || q.status === 'rejected') continue;
+      // Skip class-gated quests that don't match this player's class (completely invisible)
+      if (q.classRequired && q.classRequired !== playerClassId) continue;
 
       const minLvl = q.minLevel || 1;
       if (playerLevel < minLvl) {

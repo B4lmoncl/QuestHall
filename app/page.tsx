@@ -1604,7 +1604,7 @@ export default function Dashboard() {
                         </div>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
                           {playerName
-                            ? `${playerVisibleOpen.length} verfügbar · ${playerVisibleInProgress.length} in Bearbeitung`
+                            ? `${boardOpen.length + playerVisibleInProgress.length} aktive Quests`
                             : "Logge dich ein · 0 verfügbar"}
                         </p>
                       </div>
@@ -1915,7 +1915,7 @@ export default function Dashboard() {
               </div>
 
               {/* Smart Suggestions — player quest board only */}
-              <SmartSuggestionsPanel quests={quests} agents={agents} />
+              {/* <SmartSuggestionsPanel quests={quests} agents={agents} /> */}
             </div>
           );
         })()}
@@ -2599,26 +2599,52 @@ export default function Dashboard() {
               </div>
               {/* Body */}
               <div className="px-5 py-4 overflow-y-auto flex-1 space-y-3">
+                {/* Flavor / Lore text */}
+                {(() => {
+                  const FLAVOR_BY_TYPE: Record<string, string> = {
+                    personal:           "Eine persönliche Herausforderung, die dein Wesen stärkt und deinen Charakter formt.",
+                    learning:           "Das Wissen der Alten wartet darauf, entdeckt zu werden. Nur wer sucht, wird finden.",
+                    fitness:            "Nur durch körperliche Ertüchtigung wird der Geist wahrhaft frei. Stähle deinen Körper.",
+                    social:             "Verbindungen sind die stärkste Magie in dieser Welt. Knüpfe Bande, die den Sturm überdauern.",
+                    "relationship-coop":"Gemeinsam seid ihr stärker als ihr es alleine je sein könntet. Schulter an Schulter.",
+                    development:        "Der Code ist die neue Magie — und du bist der Zauberer. Erschaffe etwas Bleibendes.",
+                    boss:               "Eine dunkle Macht erhebt sich. Nur die Mutigsten können bestehen. Rüste dich gut.",
+                  };
+                  const flavorText = q.lore || FLAVOR_BY_TYPE[q.type ?? "personal"] || "Eine Herausforderung wartet. Beweise dein Können.";
+                  return (
+                    <p className="text-sm italic leading-relaxed" style={{ color: "rgba(255,255,255,0.38)" }}>
+                      &ldquo;{flavorText}&rdquo;
+                    </p>
+                  );
+                })()}
+                {/* Ornamental divider */}
+                <div className="flex items-center gap-2" style={{ color: "rgba(255,255,255,0.12)" }}>
+                  <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)", display: "block" }} />
+                  <span style={{ fontSize: 11, letterSpacing: 4 }}>✦✦✦</span>
+                  <span style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)", display: "block" }} />
+                </div>
+                {/* Task / Aufgabe */}
                 {q.description && (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Beschreibung</p>
-                    <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>{q.description}</p>
-                  </div>
-                )}
-                {q.lore && (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Lore</p>
-                    <p className="text-sm italic leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>{q.lore}</p>
+                  <div className="rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", borderLeft: `3px solid ${rarityColor}55`, border: `1px solid rgba(255,255,255,0.06)`, borderLeftColor: `${rarityColor}66` }}>
+                    <p className="text-xs font-semibold uppercase tracking-widest mb-1.5" style={{ color: `${rarityColor}99` }}>Aufgabe</p>
+                    <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>{q.description}</p>
                   </div>
                 )}
                 {/* Rewards */}
                 {((q.rewards?.xp ?? 0) > 0 || (q.rewards?.gold ?? 0) > 0) && (
-                  <div className="flex items-center gap-3 p-3 rounded-xl" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Belohnung</span>
-                    <div className="flex items-center gap-3 ml-2">
-                      {(q.rewards?.xp ?? 0) > 0 && <span className="text-sm font-mono font-bold" style={{ color: "#a78bfa" }}>✨ {q.rewards!.xp} XP</span>}
-                      {(q.rewards?.gold ?? 0) > 0 && <span className="text-sm font-mono font-bold" style={{ color: "#fbbf24" }}>🪙 {q.rewards!.gold} Gold</span>}
-                    </div>
+                  <div className="flex items-center gap-4 pt-1">
+                    {(q.rewards?.xp ?? 0) > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
+                        <span style={{ fontSize: 14 }}>⭐</span>
+                        <span className="text-sm font-mono font-bold" style={{ color: "#a78bfa" }}>{q.rewards!.xp} XP</span>
+                      </div>
+                    )}
+                    {(q.rewards?.gold ?? 0) > 0 && (
+                      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
+                        <span style={{ fontSize: 14 }}>🪙</span>
+                        <span className="text-sm font-mono font-bold" style={{ color: "#fbbf24" }}>{q.rewards!.gold} Gold</span>
+                      </div>
+                    )}
                   </div>
                 )}
                 {q.claimedBy && !isClaimedByMe && (
