@@ -914,6 +914,7 @@ export default function Dashboard() {
               </p>
             </div>
           )}
+          {/* TODO: replace 🔥⚔️✅🪙 with pixel art icons once ui-forge/ui-sword/ui-check/reward-gold assets exist */}
           <StatBar
             label="🔥 Forge Streak"
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
@@ -966,6 +967,7 @@ export default function Dashboard() {
         )}
 
         {/* View toggle */}
+        {/* TODO: replace nav-tab emojis (⚔🎓🧙🏕🏆🏅🔭🔥) with pixel art once ui-nav-* assets exist */}
         <div className="flex gap-1 flex-wrap" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
             { key: "questBoard",    label: "⚔ The Great Hall",     tutorialKey: "quest-board-tab" },
@@ -1227,10 +1229,20 @@ export default function Dashboard() {
                       {(["all", "personal", "learning", "fitness", "social", "relationship-coop"] as const).map(t => {
                         const cfg = t === "all" ? null : typeConfig[t];
                         const isActive = typeFilter === t;
+                        // Map type key to pixel art icon filename
+                        const iconFile = t === "relationship-coop" ? "coop" : t;
                         return (
-                          <button key={t} onClick={() => setTypeFilter(t)} className="btn-interactive text-xs px-2 py-0.5 rounded"
+                          <button key={t} onClick={() => setTypeFilter(t)} className="btn-interactive text-xs px-2 py-0.5 rounded inline-flex items-center gap-1"
                             style={{ background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)", color: isActive ? (cfg ? cfg.color : "#e8e8e8") : "rgba(255,255,255,0.3)", border: `1px solid ${isActive ? (cfg ? cfg.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}` }}>
-                            {t === "all" ? "All" : `${cfg!.icon} ${cfg!.label}`}
+                            {t === "all" ? "All" : (
+                              <>
+                                <img src={`/images/icons/cat-${iconFile}.png`} alt="" width={14} height={14}
+                                  style={{ imageRendering: "pixelated" }}
+                                  onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }} />
+                                <span style={{ display: "none" }}>{cfg!.icon}</span>
+                                {cfg!.label}
+                              </>
+                            )}
                           </button>
                         );
                       })}
@@ -1241,20 +1253,24 @@ export default function Dashboard() {
                   {/* Board Sub-Tabs */}
                   <div className="flex gap-1 mb-3">
                     {[
-                      { key: "auftraege",    label: "📜 Quests" },
-                      { key: "rituale",      label: "🔁 Rituals" },
-                      { key: "anti-rituale", label: "⚔️ Vows" },
+                      { key: "auftraege",    label: "Quests",  iconSrc: "/images/icons/ui-quest-scroll.png",  fallback: "📜" },
+                      { key: "rituale",      label: "Rituals", iconSrc: "/images/icons/ui-ritual-rune.png",   fallback: "🔁" },
+                      { key: "anti-rituale", label: "Vows",    iconSrc: "/images/icons/ui-vow-sword.png",     fallback: "⚔️" },
                     ].map(tab => (
                       <button
                         key={tab.key}
                         onClick={() => setQuestBoardTab(tab.key as "auftraege" | "rituale" | "anti-rituale")}
-                        className="btn-interactive text-xs px-3 py-1.5 rounded-lg font-medium transition-all"
+                        className="btn-interactive text-xs px-3 py-1.5 rounded-lg font-medium transition-all inline-flex items-center gap-1.5"
                         style={{
                           background: questBoardTab === tab.key ? "rgba(167,139,250,0.2)" : "rgba(255,255,255,0.04)",
                           color: questBoardTab === tab.key ? "#a78bfa" : "rgba(255,255,255,0.4)",
                           border: `1px solid ${questBoardTab === tab.key ? "rgba(167,139,250,0.4)" : "rgba(255,255,255,0.08)"}`,
                         }}
                       >
+                        <img src={tab.iconSrc} alt="" width={14} height={14}
+                          style={{ imageRendering: "pixelated" }}
+                          onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }} />
+                        <span style={{ display: "none" }}>{tab.fallback}</span>
                         {tab.label}
                       </button>
                     ))}

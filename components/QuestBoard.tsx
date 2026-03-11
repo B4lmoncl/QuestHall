@@ -31,14 +31,14 @@ export function CreateQuestModal({ quests, users, reviewApiKey, onRefresh, onClo
         </div>
         <div className="flex border-b overflow-x-auto" style={{ borderColor: "rgba(180,140,70,0.15)" }}>
           {([
-            { key: "personal",   label: "🏠 Personal" },
-            { key: "learning",   label: "📚 Learning" },
-            { key: "household",  label: "🏡 Household" },
-            { key: "social",     label: "💛 Social" },
-            { key: "coop",       label: "🤝 Co-op" },
-            { key: "challenges", label: "⚡ Challenges" },
-          ] as { key: typeof tab; label: string }[]).map(t => (
-            <button key={t.key} onClick={() => setTab(t.key)} className="flex-1 py-2.5 text-xs font-semibold transition-all whitespace-nowrap px-2"
+            { key: "personal",   label: "Personal",   iconSrc: "/images/icons/cat-personal.png",  fallback: "🏠" },
+            { key: "learning",   label: "Learning",   iconSrc: "/images/icons/cat-learning.png",  fallback: "📚" },
+            { key: "household",  label: "Household",  iconSrc: "/images/icons/cat-personal.png",  fallback: "🏡" },
+            { key: "social",     label: "Social",     iconSrc: "/images/icons/cat-social.png",    fallback: "💛" },
+            { key: "coop",       label: "Co-op",      iconSrc: "/images/icons/cat-coop.png",      fallback: "🤝" },
+            { key: "challenges", label: "Challenges", iconSrc: "",                                fallback: "⚡" /* TODO: no pixel art icon yet */ },
+          ] as { key: typeof tab; label: string; iconSrc: string; fallback: string }[]).map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)} className="flex-1 py-2.5 text-xs font-semibold transition-all whitespace-nowrap px-2 inline-flex items-center justify-center gap-1"
               style={{
                 color: tab === t.key ? "#e8d5a3" : "rgba(200,170,100,0.35)",
                 background: tab === t.key ? "linear-gradient(180deg, #2c2318 0%, #231d13 100%)" : "transparent",
@@ -49,6 +49,14 @@ export function CreateQuestModal({ quests, users, reviewApiKey, onRefresh, onClo
                 marginBottom: tab === t.key ? -1 : 0,
                 borderRadius: tab === t.key ? "4px 4px 0 0" : 0,
               }}>
+              {t.iconSrc ? (
+                <>
+                  <img src={t.iconSrc} alt="" width={14} height={14}
+                    style={{ imageRendering: "pixelated" }}
+                    onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }} />
+                  <span style={{ display: "none" }}>{t.fallback}</span>
+                </>
+              ) : <span>{t.fallback}</span>}
               {t.label}
             </button>
           ))}
@@ -1489,7 +1497,17 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
         {/* Card body */}
         <div className="p-3 flex-1">
           <div className="flex items-start gap-2 mb-1.5">
-            <span className="text-base flex-shrink-0" style={{ lineHeight: 1.2 }}>{typeCfg.icon}</span>
+            <span className="flex-shrink-0 inline-flex" style={{ lineHeight: 1.2 }}>
+              <img
+                src={`/images/icons/cat-${quest.type === "relationship-coop" ? "coop" : quest.type}.png`}
+                alt=""
+                width={18}
+                height={18}
+                style={{ imageRendering: "pixelated" }}
+                onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }}
+              />
+              <span style={{ display: "none" }}>{typeCfg.icon}</span>
+            </span>
             <p className="text-sm font-semibold leading-snug" style={{ color: isInProgress ? "#c4b5fd" : "#e8d5a3" }}>{quest.title}</p>
           </div>
           <p className="text-xs italic" style={{ color: "rgba(220,185,120,0.35)" }}>{flavorText}</p>
