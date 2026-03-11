@@ -1262,9 +1262,9 @@ export function TypeBadge({ type }: { type?: string }) {
       <img
         src={iconSrc}
         alt=""
-        width={14}
-        height={14}
-        style={{ imageRendering: "pixelated", display: "inline" }}
+        width={18}
+        height={18}
+        style={{ imageRendering: "pixelated", display: "inline", verticalAlign: "middle" }}
         onError={(e) => { e.currentTarget.style.display = "none"; (e.currentTarget.nextElementSibling as HTMLElement | null)?.style && ((e.currentTarget.nextElementSibling as HTMLElement).style.display = "inline"); }}
       />
       <span style={{ display: "none" }}>{cfg.icon}</span>

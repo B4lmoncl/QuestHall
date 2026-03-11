@@ -1567,6 +1567,9 @@ export default function Dashboard() {
               hearthUser={loggedInUser}
               hearthStreak={playerStreak}
               hearthApiKey={reviewApiKey}
+              handleClaim={handleClaim}
+              handleUnclaim={handleUnclaim}
+              handleComplete={handleComplete}
             />
           );
         })()}

@@ -46,6 +46,10 @@ interface WandererRestProps {
   hearthUser?: User | null;
   hearthStreak?: number;
   hearthApiKey?: string;
+  // Quest actions
+  handleClaim?: (questId: string) => void;
+  handleUnclaim?: (questId: string) => void;
+  handleComplete?: (questId: string, questTitle: string) => void;
 }
 
 const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
@@ -67,6 +71,7 @@ export function WandererRest({
   devVisibleOpen, devVisibleInProgress,
   lyraQuestsOpen, lyraQuestsInProgress, lyraAllQuests,
   hearthUser, hearthStreak, hearthApiKey,
+  handleClaim, handleUnclaim, handleComplete,
 }: WandererRestProps) {
   return (
     <div className="space-y-6">
@@ -395,6 +400,24 @@ export function WandererRest({
                           <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
                           {currentQuest.status === "claimed" && (
                             <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Active</span>
+                          )}
+                          {currentQuest.status === "open" && handleClaim && playerName && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleClaim(currentQuest.questId); }}
+                              className="text-xs px-3 py-1 rounded-lg font-semibold ml-auto"
+                              style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", transition: "all 0.2s" }}
+                              onMouseEnter={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.35)"; }}
+                              onMouseLeave={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.2)"; }}
+                            >⚔ Accept Quest</button>
+                          )}
+                          {currentQuest.status === "claimed" && currentQuest.claimedBy?.toLowerCase() === playerName?.toLowerCase() && handleComplete && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleComplete(currentQuest.questId, currentQuest.title); }}
+                              className="text-xs px-3 py-1 rounded-lg font-semibold ml-auto"
+                              style={{ background: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)", cursor: "pointer", transition: "all 0.2s" }}
+                              onMouseEnter={e => { (e.currentTarget).style.background = "rgba(34,197,94,0.35)"; }}
+                              onMouseLeave={e => { (e.currentTarget).style.background = "rgba(34,197,94,0.2)"; }}
+                            >✓ Complete</button>
                           )}
                         </div>
                       </div>
