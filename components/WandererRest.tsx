@@ -240,12 +240,12 @@ export function WandererRest({
           {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%","50%,90%","30%,10%","60%,50%","10%,45%","90%,30%"].map((pos, i) => (
             <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.2 + (i % 4) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
           ))}
-          <div className="relative flex items-center gap-6 px-8 py-8" style={{ zIndex: 1 }}>
+          <div className="relative flex items-center gap-6 px-8 py-5" style={{ zIndex: 1 }}>
             {/* Portal arch / gate icon */}
             <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160 }}>
               <div style={{
                 width: 144, height: 144,
-                borderRadius: "50%",
+                borderRadius: "50% 50% 0 0",
                 border: "3px solid #FFD700",
                 boxShadow: "0 0 20px rgba(255,215,0,0.6), inset 0 0 20px rgba(100,60,200,0.3)",
                 background: "radial-gradient(ellipse at 50% 70%, rgba(100,60,200,0.4) 0%, rgba(0,0,30,0.9) 70%)",
