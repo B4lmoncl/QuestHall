@@ -169,7 +169,7 @@ export function WandererRest({
           <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
           <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
         </div>
-        {hearthUser || playerName ? (
+        {playerName ? (
           <div
             className="rounded-xl p-4"
             style={{
@@ -190,6 +190,22 @@ export function WandererRest({
               apiKey={hearthApiKey}
               onUserRefresh={refresh}
             />
+            {/* Dobbie's Demands — collapsible */}
+            <div className="mt-4 rounded-xl overflow-hidden" style={{ background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.2)" }}>
+              <button
+                onClick={() => setDobbieOpen(v => !v)}
+                className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
+              >
+                <span className="text-sm">🐱</span>
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
+                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
+              </button>
+              {dobbieOpen && (
+                <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
+                  <DobbieQuestPanel reviewApiKey={hearthApiKey ?? ""} onRefresh={refresh} />
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div
@@ -199,9 +215,7 @@ export function WandererRest({
               border: "1px solid rgba(251,146,60,0.12)",
             }}
           >
-            <p className="text-2xl mb-2">🐱</p>
             <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.2)" }}>Your companion rests by the fire...</p>
-            <p className="text-xs mt-1" style={{ color: "rgba(251,191,36,0.25)" }}>Log in to see Dobbie</p>
           </div>
         )}
       </section>
@@ -226,12 +240,12 @@ export function WandererRest({
           {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%","50%,90%","30%,10%","60%,50%","10%,45%","90%,30%"].map((pos, i) => (
             <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.2 + (i % 4) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
           ))}
-          <div className="relative flex items-center gap-6 px-6 py-6" style={{ zIndex: 1 }}>
+          <div className="relative flex items-center gap-6 px-8 py-8" style={{ zIndex: 1 }}>
             {/* Portal arch / gate icon */}
-            <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 80, height: 80 }}>
+            <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160 }}>
               <div style={{
-                width: 64, height: 64,
-                borderRadius: "50% 50% 0 0",
+                width: 144, height: 144,
+                borderRadius: "50%",
                 border: "3px solid #FFD700",
                 boxShadow: "0 0 20px rgba(255,215,0,0.6), inset 0 0 20px rgba(100,60,200,0.3)",
                 background: "radial-gradient(ellipse at 50% 70%, rgba(100,60,200,0.4) 0%, rgba(0,0,30,0.9) 70%)",
@@ -244,8 +258,8 @@ export function WandererRest({
                 <img
                   src="/images/npcs/starweaver-final.png"
                   alt="The Starweaver"
-                  width={60}
-                  height={60}
+                  width={144}
+                  height={144}
                   style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
                 />
@@ -256,8 +270,8 @@ export function WandererRest({
             {/* Text */}
             <div className="flex-1 text-left">
               <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,215,0,0.5)", letterSpacing: "0.15em" }}>✦ Enter the Chamber</p>
-              <p className="text-xl font-bold" style={{ color: "#FFD700", textShadow: "0 0 20px rgba(255,215,0,0.45)" }}>The Starweaver&apos;s Chamber</p>
-              <p className="text-xs mt-1 italic" style={{ color: "rgba(192,169,255,0.6)" }}>Step through — if she deems you worthy</p>
+              <p className="text-2xl font-bold" style={{ color: "#FFD700", textShadow: "0 0 20px rgba(255,215,0,0.45)" }}>The Starweaver&apos;s Chamber</p>
+              <p className="text-sm mt-1 italic" style={{ color: "rgba(192,169,255,0.6)" }}>Step through — if she deems you worthy</p>
               {lyraAllQuests.length > 0 && (
                 <p className="text-xs mt-2" style={{ color: "rgba(255,215,0,0.4)" }}>✦ {lyraAllQuests.length} active quest{lyraAllQuests.length !== 1 ? "s" : ""} await</p>
               )}
