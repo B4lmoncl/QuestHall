@@ -904,7 +904,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 1 }}>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 2, background: "rgba(11,13,17,0.75)", borderRadius: 16, backdropFilter: "blur(8px)", marginTop: 8 }}>
         {/* Stats — Player-specific */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">
           {!playerName && !loading && (
@@ -1890,7 +1890,7 @@ export default function Dashboard() {
         </div>
       )}
 
-      <footer className="mt-12 py-4" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 1 }}>
+      <footer className="mt-12 py-4" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 2 }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center text-xs font-mono" style={{ color: "rgba(255,255,255,0.15)" }}>
           <span>⚔️🏰 Quest Hall v1.5.0</span>
         </div>

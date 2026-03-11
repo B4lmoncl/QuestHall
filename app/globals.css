@@ -242,3 +242,9 @@ body {
   animation: heroFloat 3s ease-in-out infinite;
 }
 
+
+/* Content readability over background */
+.quest-panel, .stat-card-row, .player-card-section {
+  position: relative;
+  z-index: 1;
+}
