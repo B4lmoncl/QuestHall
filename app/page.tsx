@@ -1413,15 +1413,15 @@ export default function Dashboard() {
         {/* View toggle */}
         <div className="flex gap-1 flex-wrap" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
-            { key: "questBoard",    label: "⚔ Quest Board",     tutorialKey: "quest-board-tab" },
-            { key: "klassenquests", label: "🎓 Klassenquests",  tutorialKey: null },
+            { key: "questBoard",    label: "⚔ The Great Hall",     tutorialKey: "quest-board-tab" },
+            { key: "klassenquests", label: "🎓 The Arcanum",  tutorialKey: null },
             ...(playerName ? [{ key: "character", label: "🧙 Character", tutorialKey: null }] : []),
-            { key: "npcBoard",      label: "🤖 NPC Quest Board", tutorialKey: "npc-board-tab" },
+            { key: "npcBoard",      label: "🏕 The Wanderer's Rest", tutorialKey: "npc-board-tab" },
             { key: "leaderboard", label: "🏆 Leaderboard",     tutorialKey: "leaderboard-tab" },
             { key: "honors",      label: "🏅 Honors",          tutorialKey: null },
-            { key: "campaign",    label: "🐉 Campaign",        tutorialKey: "campaign-tab" },
+            { key: "campaign",    label: "🔭 The Observatory",        tutorialKey: "campaign-tab" },
             { key: "season",      label: `${CURRENT_SEASON.icon} Season`, tutorialKey: "season-tab" },
-            { key: "shop",        label: "🛒 Shop",            tutorialKey: null },
+            { key: "shop",        label: "🔥 The Deepforge",            tutorialKey: null },
           ].map(v => (
             <button
               key={v.key}
@@ -1967,14 +1967,15 @@ export default function Dashboard() {
           <CharacterView playerName={playerName} apiKey={reviewApiKey} users={users} classesList={classesList} />
         )}
 
-        {/* ── NPC QUEST BOARD (Agent Tab) ── */}
+        {/* ── THE WANDERER'S REST (NPC Tab) ── */}
         {dashView === "npcBoard" && (() => {
           const devVisibleOpen = applySort(applyFilter(quests.open.filter(q => (q.type ?? "development") === "development" && (q.createdBy ?? "").toLowerCase() !== "lyra")));
           const devVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => (q.type ?? "development") === "development" && (q.createdBy ?? "").toLowerCase() !== "lyra")));
           const lyraQuestsOpen = applySort(applyFilter(quests.open.filter(q => (q.createdBy ?? "").toLowerCase() === "lyra")));
           const lyraQuestsInProgress = applySort(applyFilter(quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() === "lyra")));
-          // Only show Lyra as NPC quest giver
-          const npcAgents = agents.filter(a => a.id === "lyra");
+          const lyraAllQuests = lyraQuestsOpen.concat(lyraQuestsInProgress);
+          const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
+          const rarityStars: Record<string, string> = { common: "★", uncommon: "★★", rare: "★★★", epic: "★★★★", legendary: "★★★★★" };
           return (
             <div className="space-y-6">
               {/* Dobbie filter banner */}
@@ -1983,191 +1984,184 @@ export default function Dashboard() {
                   <span className="text-lg">🐱</span>
                   <div className="flex-1">
                     <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Dobbie hat dich hergeschickt. Check Dobbie&apos;s Demands unten!</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Dobbie sent you here. Check Dobbie&apos;s Demands below!</p>
                   </div>
                   <button onClick={() => setNpcBoardFilter(null)} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>×</button>
                 </div>
               )}
-              {/* ── Die Sternenwächterin ── */}
-              {(() => {
-                const lyraAllQuests = lyraQuestsOpen.concat(lyraQuestsInProgress);
-                return (
-                  <section style={{ maxWidth: 1000, margin: "0 auto" }}>
-                    <div className="flex items-center gap-2 mb-3">
-                      <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#c084fc" }}>✦ Die Sternenwächterin</h2>
-                    </div>
-                    <div
-                      className="rounded-2xl overflow-hidden"
-                      style={{
-                        background: "linear-gradient(135deg, #0a0a1e 0%, #1a0a3e 50%, #0d1a3a 100%)",
-                        border: "2px solid rgba(255,215,0,0.25)",
-                        boxShadow: "0 0 40px rgba(100,60,200,0.15), inset 0 0 60px rgba(0,0,20,0.5)",
-                        position: "relative",
-                      }}
-                    >
-                      {/* Star field */}
-                      {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%","50%,90%","30%,10%"].map((pos, i) => (
-                        <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.25 + (i % 3) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
-                      ))}
-                      <div className="relative flex items-center gap-6 px-6 py-5" style={{ zIndex: 1 }}>
-                        {/* Portrait */}
-                        <button
-                          onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "Die Sternenwächterin", title: "Hüterin der Quests", rarity: "legendary", emoji: "✨", greeting: "Hüterin der Quests. Geschmiedet im Sternenlicht.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
-                          style={{ background: "none", border: "none", cursor: "pointer", padding: 0, flexShrink: 0 }}
-                        >
-                          <div
-                            className="relative rounded-xl overflow-hidden"
-                            style={{
-                              width: 128, height: 128,
-                              border: "3px solid #FFD700",
-                              boxShadow: "0 0 28px rgba(255,215,0,0.55), 0 0 56px rgba(255,215,0,0.2)",
-                            }}
-                            onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 40px rgba(255,215,0,0.85), 0 0 80px rgba(255,215,0,0.35)"; }}
-                            onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 28px rgba(255,215,0,0.55), 0 0 56px rgba(255,215,0,0.2)"; }}
+
+              {/* ── SECTION 1: Wandering Visitors (TOP) ── */}
+              <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+                <div className="mb-4">
+                  <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "#f59e0b" }}>🏰 The Wanderer&apos;s Rest</h2>
+                  <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>They come. They go. They always return.</p>
+                </div>
+                {activeNpcs.length === 0 ? (
+                  <div className="rounded-xl px-4 py-8 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.25)" }}>The hall is quiet... for now. 🌙</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap justify-center gap-6 mb-2">
+                      {activeNpcs.map(npc => {
+                        const urgent = npc.hoursLeft <= 24;
+                        const rc = rarityColors[npc.rarity] ?? "#9ca3af";
+                        const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
+                        return (
+                          <button
+                            key={npc.id}
+                            onClick={() => setSelectedNpc(npc)}
+                            className="flex flex-col items-center gap-2 group"
+                            style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
                           >
-                            <img
-                              src="/images/npcs/starweaver-final.png"
-                              alt="Die Sternenwächterin"
-                              width={128}
-                              height={128}
-                              style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-                              onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
-                            />
-                            <div className="w-full h-full absolute inset-0 items-center justify-center" style={{ background: "linear-gradient(135deg, #1a1a2e, #2d1b69)", fontSize: 64, display: "none" }}>✨</div>
-                            {["10%,15%","80%,20%","20%,75%","70%,80%","50%,10%","5%,55%","90%,50%"].map((pos, i) => (
-                              <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: 10, opacity: 0.7, animation: `star-float-${i % 3} ${2 + i * 0.4}s ease-in-out infinite`, pointerEvents: "none", color: "#e0c9ff" }}>✦</span>
-                            ))}
-                            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(135deg, rgba(255,215,0,0.12) 0%, transparent 50%, rgba(255,215,0,0.08) 100%)", pointerEvents: "none" }} />
-                          </div>
-                        </button>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-lg font-bold" style={{ color: "#FFD700", textShadow: "0 0 20px rgba(255,215,0,0.45)" }}>Die Sternenwächterin</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,215,0,0.5)" }}>Hüterin der Quests · Lyra</p>
-                          <p className="text-xs mt-1 font-semibold" style={{ color: "#f59e0b" }}>★★★★★ Legendär</p>
-                          <p className="text-xs mt-1.5 italic leading-relaxed" style={{ color: "rgba(192,169,255,0.6)", maxWidth: 320 }}>&ldquo;Hüterin der Quests. Geschmiedet im Sternenlicht.&rdquo;</p>
-                          <span className="text-xs mt-2 inline-block px-2 py-0.5 rounded" style={{ background: "rgba(255,215,0,0.07)", color: "rgba(255,215,0,0.45)", border: "1px solid rgba(255,215,0,0.15)", fontSize: 10 }}>✦ Permanent · Immer hier</span>
-                        </div>
-                        {/* Quest count */}
-                        {lyraAllQuests.length > 0 && (
-                          <div className="flex-shrink-0 text-center rounded-xl px-4 py-3" style={{ background: "rgba(255,215,0,0.07)", border: "1px solid rgba(255,215,0,0.18)" }}>
-                            <p className="text-2xl font-bold" style={{ color: "#FFD700" }}>{lyraAllQuests.length}</p>
-                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,215,0,0.45)", fontSize: 10 }}>aktive Quests</p>
-                          </div>
-                        )}
+                            <div
+                              className="relative rounded-lg overflow-hidden flex-shrink-0"
+                              style={{
+                                width: 148, height: 148,
+                                border: `2px solid ${urgent ? "rgba(239,68,68,0.5)" : `${rc}40`}`,
+                                boxShadow: `0 0 0 0 ${rc}`,
+                                transition: "box-shadow 0.2s ease",
+                              }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 18px 4px ${rc}55`; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 0 ${rc}`; }}
+                            >
+                              {npc.portrait ? (
+                                <img
+                                  src={npc.portrait}
+                                  alt={npc.name}
+                                  width={148}
+                                  height={148}
+                                  style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 56 }}>
+                                  {npc.emoji}
+                                </div>
+                              )}
+                              {allDone && (
+                                <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.7)" }}>
+                                  <span style={{ fontSize: 36 }}>✓</span>
+                                </div>
+                              )}
+                              {urgent && !allDone && (
+                                <div className="absolute bottom-0 left-0 right-0 py-0.5 text-center" style={{ background: "rgba(239,68,68,0.85)", fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
+                                  ⏰ {npc.hoursLeft}H LEFT
+                                </div>
+                              )}
+                            </div>
+                            <div className="text-center" style={{ maxWidth: 148 }}>
+                              <p className="text-xs font-semibold leading-tight" style={{ color: "#e8e8e8" }}>{npc.name}</p>
+                              <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "★"}</p>
+                              {!allDone && (
+                                <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: urgent ? "#ef4444" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
+                                  Departs in {urgent ? `${npc.hoursLeft}h` : `${npc.daysLeft}d`}
+                                  <span title="Wandering NPCs visit the Guild Hall for a limited time. Check back regularly!" style={{ cursor: "help", color: "rgba(255,255,255,0.3)", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", width: 12, height: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, flexShrink: 0 }}>?</span>
+                                </p>
+                              )}
+                              {allDone && (
+                                <p className="text-xs mt-0.5" style={{ color: "#22c55e", fontSize: 10 }}>✓ Completed</p>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>Click a visitor to see their quest...</p>
+                  </>
+                )}
+              </section>
+
+              {/* ── SECTION 2: The Companion Hearth (MIDDLE) ── */}
+              <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+                <div className="mb-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
+                  <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
+                </div>
+                <div className="rounded-xl px-4 py-5 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.2)" }}>Your companion rests by the fire...</p>
+                </div>
+              </section>
+
+              {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
+              <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+                <button
+                  onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "The Starweaver", title: "Guardian of Quests", rarity: "legendary", emoji: "✨", greeting: "Guardian of Quests. Forged in starlight.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
+                  className="w-full relative overflow-hidden rounded-2xl"
+                  style={{
+                    background: "linear-gradient(135deg, #0a0a1e 0%, #1a0a3e 50%, #0d1a3a 100%)",
+                    border: "2px solid rgba(255,215,0,0.35)",
+                    boxShadow: "0 0 40px rgba(100,60,200,0.2), 0 0 80px rgba(255,215,0,0.06), inset 0 0 60px rgba(0,0,20,0.5)",
+                    cursor: "pointer",
+                    padding: 0,
+                    transition: "box-shadow 0.3s ease, border-color 0.3s ease",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 60px rgba(100,60,200,0.35), 0 0 120px rgba(255,215,0,0.12), inset 0 0 60px rgba(0,0,20,0.5)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,215,0,0.6)"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 40px rgba(100,60,200,0.2), 0 0 80px rgba(255,215,0,0.06), inset 0 0 60px rgba(0,0,20,0.5)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(255,215,0,0.35)"; }}
+                >
+                  {/* Star field */}
+                  {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%","50%,90%","30%,10%","60%,50%","10%,45%","90%,30%"].map((pos, i) => (
+                    <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.2 + (i % 4) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
+                  ))}
+                  <div className="relative flex items-center gap-6 px-6 py-6" style={{ zIndex: 1 }}>
+                    {/* Portal arch / gate icon */}
+                    <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 80, height: 80 }}>
+                      <div style={{
+                        width: 64, height: 64,
+                        borderRadius: "50% 50% 0 0",
+                        border: "3px solid #FFD700",
+                        boxShadow: "0 0 20px rgba(255,215,0,0.6), inset 0 0 20px rgba(100,60,200,0.3)",
+                        background: "radial-gradient(ellipse at 50% 70%, rgba(100,60,200,0.4) 0%, rgba(0,0,30,0.9) 70%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        position: "relative",
+                        overflow: "hidden",
+                      }}>
+                        <img
+                          src="/images/npcs/starweaver-final.png"
+                          alt="The Starweaver"
+                          width={60}
+                          height={60}
+                          style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+                          onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
+                        />
+                        <div style={{ display: "none", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", fontSize: 32 }}>✨</div>
+                        <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,215,0,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
                       </div>
                     </div>
-                  </section>
-                );
-              })()}
-
-              {/* ── Wandernde Besucher ── */}
-              {(() => {
-                const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
-                const rarityStars: Record<string, string> = { common: "★", uncommon: "★★", rare: "★★★", epic: "★★★★", legendary: "★★★★★" };
-                return (
-                  <section style={{ maxWidth: 1000, margin: "0 auto" }}>
-                    <div className="flex items-center gap-2 mb-4">
-                      <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>🏰 Wandernde Besucher</h2>
-                      {activeNpcs.length > 0 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(245,158,11,0.1)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.2)" }}>{activeNpcs.length}</span>
+                    {/* Text */}
+                    <div className="flex-1 text-left">
+                      <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,215,0,0.5)", letterSpacing: "0.15em" }}>✦ Enter the Chamber</p>
+                      <p className="text-xl font-bold" style={{ color: "#FFD700", textShadow: "0 0 20px rgba(255,215,0,0.45)" }}>The Starweaver&apos;s Chamber</p>
+                      <p className="text-xs mt-1 italic" style={{ color: "rgba(192,169,255,0.6)" }}>Step through — if she deems you worthy</p>
+                      {lyraAllQuests.length > 0 && (
+                        <p className="text-xs mt-2" style={{ color: "rgba(255,215,0,0.4)" }}>✦ {lyraAllQuests.length} active quest{lyraAllQuests.length !== 1 ? "s" : ""} await</p>
                       )}
                     </div>
-                    {activeNpcs.length === 0 ? (
-                      <div className="rounded-xl px-4 py-6 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.25)" }}>Gerade keine Besucher... 🌙</p>
-                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.12)" }}>Neue Besucher kommen bald.</p>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-wrap justify-center gap-6 mb-2">
-                          {activeNpcs.map(npc => {
-                            const urgent = npc.hoursLeft <= 24;
-                            const rc = rarityColors[npc.rarity] ?? "#9ca3af";
-                            const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
-                            return (
-                              <button
-                                key={npc.id}
-                                onClick={() => setSelectedNpc(npc)}
-                                className="flex flex-col items-center gap-2 group"
-                                style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
-                              >
-                                <div
-                                  className="relative rounded-lg overflow-hidden flex-shrink-0"
-                                  style={{
-                                    width: 148, height: 148,
-                                    border: `2px solid ${urgent ? "rgba(239,68,68,0.5)" : `${rc}40`}`,
-                                    boxShadow: `0 0 0 0 ${rc}`,
-                                    transition: "box-shadow 0.2s ease",
-                                  }}
-                                  onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 18px 4px ${rc}55`; }}
-                                  onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 0 ${rc}`; }}
-                                >
-                                  {npc.portrait ? (
-                                    <img
-                                      src={npc.portrait}
-                                      alt={npc.name}
-                                      width={148}
-                                      height={148}
-                                      style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 56 }}>
-                                      {npc.emoji}
-                                    </div>
-                                  )}
-                                  {allDone && (
-                                    <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.7)" }}>
-                                      <span style={{ fontSize: 36 }}>✓</span>
-                                    </div>
-                                  )}
-                                  {urgent && !allDone && (
-                                    <div className="absolute bottom-0 left-0 right-0 py-0.5 text-center" style={{ background: "rgba(239,68,68,0.85)", fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
-                                      ⏰ NOCH {npc.hoursLeft}H
-                                    </div>
-                                  )}
-                                </div>
-                                <div className="text-center" style={{ maxWidth: 148 }}>
-                                  <p className="text-xs font-semibold leading-tight" style={{ color: "#e8e8e8" }}>{npc.name}</p>
-                                  <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "★"}</p>
-                                  {!allDone && (
-                                    <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: urgent ? "#ef4444" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
-                                      Verweilt noch {urgent ? `${npc.hoursLeft}h` : `${npc.daysLeft}d`}
-                                      <span title="Wandernde NPCs besuchen die Gildenhalle für begrenzte Zeit. Schau regelmäßig vorbei!" style={{ cursor: "help", color: "rgba(255,255,255,0.3)", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", width: 12, height: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, flexShrink: 0 }}>?</span>
-                                    </p>
-                                  )}
-                                  {allDone && (
-                                    <p className="text-xs mt-0.5" style={{ color: "#22c55e", fontSize: 10 }}>✓ Abgeschlossen</p>
-                                  )}
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                        <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>Klicke einen Besucher um ihre Quest zu sehen...</p>
-                      </>
-                    )}
-                  </section>
-                );
-              })()}
+                    {/* Arrow */}
+                    <div className="flex-shrink-0 text-2xl" style={{ color: "rgba(255,215,0,0.35)" }}>›</div>
+                  </div>
+                </button>
+              </section>
 
               {/* ── NPC Speech Bubble Modal ── */}
               {selectedNpc && (() => {
                 const npc = selectedNpc;
-                const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
-                const rarityStars: Record<string, string> = { common: "★ Gewöhnlich", uncommon: "★★ Ungewöhnlich", rare: "★★★ Selten", epic: "★★★★ Episch", legendary: "★★★★★ Legendär" };
-                const rc = rarityColors[npc.rarity] ?? "#9ca3af";
+                const rarityColorsModal: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
+                const rarityStarsModal: Record<string, string> = { common: "★ Common", uncommon: "★★ Uncommon", rare: "★★★ Rare", epic: "★★★★ Epic", legendary: "★★★★★ Legendary" };
+                const rc = rarityColorsModal[npc.rarity] ?? "#9ca3af";
                 const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
                 const currentQuest = npc.questChain.find(q => q.status === "open" || q.status === "in_progress" || q.status === "claimed") ?? null;
                 const completedCount = npc.questChain.filter(q => q.status === "completed").length;
                 const totalCount = npc.questChain.length;
+                const isStarweaver = npc.id === "lyra-permanent";
                 return (
                   <div
                     className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     style={{ background: "rgba(0,0,0,0.82)" }}
                     onClick={e => { if (e.target === e.currentTarget) setSelectedNpc(null); }}
                   >
-                    <div className="relative w-full max-w-xl rounded-xl overflow-hidden" style={{ background: "#1a1a2e", border: `2px solid rgba(255,215,0,0.25)`, maxHeight: "90vh", overflowY: "auto" }}>
+                    <div className="relative w-full max-w-xl rounded-xl overflow-hidden" style={{ background: isStarweaver ? "linear-gradient(135deg, #0a0a1e 0%, #120830 100%)" : "#1a1a2e", border: `2px solid ${isStarweaver ? "rgba(255,215,0,0.3)" : `${rc}40`}`, maxHeight: "90vh", overflowY: "auto" }}>
                       {/* Close */}
                       <button
                         onClick={() => setSelectedNpc(null)}
@@ -2175,9 +2169,17 @@ export default function Dashboard() {
                         style={{ width: 28, height: 28, background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.5)", cursor: "pointer", fontSize: 14 }}
                       >✕</button>
 
+                      {isStarweaver && (
+                        <>
+                          {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%"].map((pos, i) => (
+                            <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.15 + (i % 3) * 0.08, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
+                          ))}
+                        </>
+                      )}
+
                       {/* NPC Header */}
-                      <div className="px-5 pt-5 pb-4 flex items-start gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-                        <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 96, height: 96, border: `2px solid ${rc}50` }}>
+                      <div className="relative px-5 pt-5 pb-4 flex items-start gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", zIndex: 1 }}>
+                        <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 96, height: 96, border: `2px solid ${isStarweaver ? "rgba(255,215,0,0.5)" : `${rc}50`}`, boxShadow: isStarweaver ? "0 0 20px rgba(255,215,0,0.3)" : "none" }}>
                           {npc.portrait ? (
                             <img src={npc.portrait} alt={npc.name} width={96} height={96} style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
                           ) : (
@@ -2185,237 +2187,245 @@ export default function Dashboard() {
                           )}
                         </div>
                         <div className="flex-1 min-w-0 pt-1">
-                          <p className="text-sm font-bold leading-tight" style={{ color: "#f0f0f0" }}>{npc.name}</p>
-                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{npc.title}</p>
-                          <p className="text-xs mt-1 font-semibold" style={{ color: rc }}>{rarityStars[npc.rarity] ?? npc.rarity}</p>
-                          {!(npc as ActiveNpc & { permanent?: boolean }).permanent && (
+                          <p className="text-sm font-bold leading-tight" style={{ color: isStarweaver ? "#FFD700" : "#f0f0f0", textShadow: isStarweaver ? "0 0 12px rgba(255,215,0,0.4)" : "none" }}>{npc.name}</p>
+                          <p className="text-xs mt-0.5" style={{ color: isStarweaver ? "rgba(255,215,0,0.5)" : "rgba(255,255,255,0.35)" }}>{npc.title}</p>
+                          <p className="text-xs mt-1 font-semibold" style={{ color: rc }}>{rarityStarsModal[npc.rarity] ?? npc.rarity}</p>
+                          {!isStarweaver && !(npc as ActiveNpc & { permanent?: boolean }).permanent && (
                             <p className="text-xs mt-1" style={{ color: npc.hoursLeft <= 24 ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
-                              {npc.hoursLeft <= 24 ? `⏰ Verweilt noch ${npc.hoursLeft}h!` : `Verweilt noch ${npc.daysLeft} Tag${npc.daysLeft !== 1 ? "en" : ""}`}
+                              {npc.hoursLeft <= 24 ? `⏰ Departs in ${npc.hoursLeft}h!` : `Departs in ${npc.daysLeft} day${npc.daysLeft !== 1 ? "s" : ""}`}
                             </p>
+                          )}
+                          {isStarweaver && (
+                            <span className="text-xs mt-2 inline-block px-2 py-0.5 rounded" style={{ background: "rgba(255,215,0,0.07)", color: "rgba(255,215,0,0.45)", border: "1px solid rgba(255,215,0,0.15)", fontSize: 10 }}>✦ Permanent · Always here</span>
                           )}
                         </div>
                       </div>
 
                       {/* Greeting / Speech bubble */}
                       {npc.greeting && (
-                        <div className="mx-5 mt-4 px-4 py-3 rounded-xl relative" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <div className="relative mx-5 mt-4 px-4 py-3 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", zIndex: 1 }}>
                           <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>💬 &ldquo;{npc.greeting}&rdquo;</p>
                         </div>
                       )}
 
-                      {/* Quest content */}
-                      <div className="px-5 pt-4 pb-5">
-                        {allDone ? (
-                          <div className="text-center py-4">
-                            <p className="text-2xl mb-2">🎉</p>
-                            <p className="text-sm font-bold" style={{ color: "#22c55e" }}>Alle Quests abgeschlossen!</p>
-                            <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Vielen Dank, tapferer Abenteurer.</p>
+                      {/* Starweaver's Quests heading */}
+                      {isStarweaver && (lyraQuestsOpen.length > 0 || lyraQuestsInProgress.length > 0) && (
+                        <div className="relative px-5 pt-4 pb-0" style={{ zIndex: 1 }}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#c084fc" }}>✦ Starweaver&apos;s Quests</h3>
+                            <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(192,132,252,0.1)", color: "#c084fc", border: "1px solid rgba(192,132,252,0.2)" }}>{lyraQuestsOpen.length + lyraQuestsInProgress.length}</span>
                           </div>
-                        ) : currentQuest ? (
-                          <>
-                            <div className="flex items-center justify-between mb-2">
-                              <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>
-                                📜 Quest {currentQuest.position}/{totalCount}
-                              </p>
-                              {completedCount > 0 && (
-                                <p className="text-xs" style={{ color: "#22c55e" }}>{completedCount} abgeschlossen ✓</p>
-                              )}
+                          <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                            {lyraQuestsOpen.map(q =>
+                              q.children && q.children.length > 0
+                                ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                                : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
+                            )}
+                            {lyraQuestsInProgress.map(q =>
+                              q.children && q.children.length > 0
+                                ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                                : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Quest content (for wandering NPCs) */}
+                      {!isStarweaver && (
+                        <div className="px-5 pt-4 pb-5">
+                          {allDone ? (
+                            <div className="text-center py-4">
+                              <p className="text-2xl mb-2">🎉</p>
+                              <p className="text-sm font-bold" style={{ color: "#22c55e" }}>All quests completed!</p>
+                              <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Well done, brave adventurer.</p>
                             </div>
-                            <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                              <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
-                              <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
-                              <div className="flex items-center gap-3 mt-3">
-                                <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>
-                                <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
-                                {currentQuest.status === "claimed" && (
-                                  <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Aktiv</span>
+                          ) : currentQuest ? (
+                            <>
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>
+                                  📜 Quest {currentQuest.position}/{totalCount}
+                                </p>
+                                {completedCount > 0 && (
+                                  <p className="text-xs" style={{ color: "#22c55e" }}>{completedCount} completed ✓</p>
                                 )}
                               </div>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-xs text-center py-3" style={{ color: "rgba(255,255,255,0.3)" }}>Keine aktiven Quests.</p>
-                        )}
+                              <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                                <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
+                                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
+                                <div className="flex items-center gap-3 mt-3">
+                                  <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>
+                                  <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
+                                  {currentQuest.status === "claimed" && (
+                                    <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Active</span>
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <p className="text-xs text-center py-3" style={{ color: "rgba(255,255,255,0.3)" }}>No active quests.</p>
+                          )}
 
-                        {/* Chain progress dots */}
-                        {totalCount > 1 && (
-                          <div className="flex items-center justify-center gap-2 mt-3">
-                            {npc.questChain.map(q => (
-                              <div
-                                key={q.questId}
-                                className="rounded-full"
-                                style={{
-                                  width: 8, height: 8,
-                                  background: q.status === "completed" ? "#22c55e" : (q === currentQuest ? "#f59e0b" : "rgba(255,255,255,0.12)"),
-                                  border: q === currentQuest ? "2px solid #f59e0b" : "none",
-                                }}
-                                title={`Quest ${q.position}: ${q.title}`}
-                              />
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Final reward */}
-                        {npc.finalReward?.item && (
-                          <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
-                            <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>💎 Ketten-Belohnung</p>
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
-                              <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
+                          {/* Chain progress dots */}
+                          {totalCount > 1 && (
+                            <div className="flex items-center justify-center gap-2 mt-3">
+                              {npc.questChain.map(q => (
+                                <div
+                                  key={q.questId}
+                                  className="rounded-full"
+                                  style={{
+                                    width: 8, height: 8,
+                                    background: q.status === "completed" ? "#22c55e" : (q === currentQuest ? "#f59e0b" : "rgba(255,255,255,0.12)"),
+                                    border: q === currentQuest ? "2px solid #f59e0b" : "none",
+                                  }}
+                                  title={`Quest ${q.position}: ${q.title}`}
+                                />
+                              ))}
                             </div>
-                          </div>
-                        )}
-                      </div>
+                          )}
+
+                          {/* Final reward */}
+                          {npc.finalReward?.item && (
+                            <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
+                              <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>💎 Chain Reward</p>
+                                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
+                                <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {isStarweaver && <div className="pb-4" />}
                     </div>
                   </div>
                 );
               })()}
 
-              {/* ── Von der Sternenwächterin ── */}
-              {(lyraQuestsOpen.length > 0 || lyraQuestsInProgress.length > 0) && (
-                <section style={{ maxWidth: 1000, margin: "0 auto" }}>
-                  <div className="flex items-center gap-2 mb-3">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#c084fc" }}>✦ Aufträge der Sternenwächterin</h2>
-                    <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(192,132,252,0.1)", color: "#c084fc", border: "1px solid rgba(192,132,252,0.2)" }}>{lyraQuestsOpen.length + lyraQuestsInProgress.length}</span>
-                  </div>
-                  <div className="space-y-2 mb-2">
-                    {lyraQuestsOpen.map(q =>
-                      q.children && q.children.length > 0
-                        ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                        : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
-                    )}
-                    {lyraQuestsInProgress.map(q =>
-                      q.children && q.children.length > 0
-                        ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                        : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
-                    )}
-                  </div>
-                </section>
-              )}
-
-              {/* NPC Quest Board (dev type only) + Review Board side-by-side */}
-              <div className="flex flex-col lg:flex-row gap-6 items-start">
-                <aside className="w-full lg:w-80 flex-shrink-0">
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <div className="flex items-center gap-1.5">
-                          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>⚙ NPC Quest Board</h2>
-                          <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests." />
+              {/* Admin-only: NPC Quest Board (dev type) + Review Board */}
+              {isAdmin && (
+                <div className="flex flex-col lg:flex-row gap-6 items-start">
+                  <aside className="w-full lg:w-80 flex-shrink-0">
+                    <div className="mb-3">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>⚙ NPC Quest Board</h2>
+                            <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests." />
+                          </div>
+                          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>
+                        <div className="flex items-center gap-1">
+                          <button onClick={() => setSortMode(s => s === "newest" ? "priority" : "newest")} className="text-xs px-2 py-1 rounded" style={{ background: sortMode === "priority" ? "rgba(255,102,51,0.15)" : "rgba(255,255,255,0.05)", color: sortMode === "priority" ? "#ff6633" : "rgba(255,255,255,0.3)", border: `1px solid ${sortMode === "priority" ? "rgba(255,102,51,0.3)" : "rgba(255,255,255,0.08)"}` }}>
+                            {sortMode === "newest" ? "⇅ Newest" : "⇅ Priority"}
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <button onClick={() => setSortMode(s => s === "newest" ? "priority" : "newest")} className="text-xs px-2 py-1 rounded" style={{ background: sortMode === "priority" ? "rgba(255,102,51,0.15)" : "rgba(255,255,255,0.05)", color: sortMode === "priority" ? "#ff6633" : "rgba(255,255,255,0.3)", border: `1px solid ${sortMode === "priority" ? "rgba(255,102,51,0.3)" : "rgba(255,255,255,0.08)"}` }}>
-                          {sortMode === "newest" ? "⇅ Newest" : "⇅ Priority"}
-                        </button>
-                      </div>
+                      <input type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search agent quests…" className="w-full text-xs px-2 py-1.5 rounded" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
                     </div>
-                    <input type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search agent quests…" className="w-full text-xs px-2 py-1.5 rounded" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
-                  </div>
-                  <div className="space-y-2">
-                    {loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />) :
-                    devVisibleOpen.length === 0 && devVisibleInProgress.length === 0 ? (
-                      <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{searchFilter ? "No quests match" : "No development quests"}</p>
-                      </div>
-                    ) : (
-                      <>
-                        {devVisibleOpen.length > 0 && (
-                          <>
-                            <button onClick={() => setDevOpenCollapsed(v => !v)} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
-                              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Open</span>
-                              <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.2)" }}>{devVisibleOpen.length}</span>
-                              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{devOpenCollapsed ? "►" : "▼"}</span>
-                            </button>
-                            {!devOpenCollapsed && devVisibleOpen.map(q =>
-                              q.children && q.children.length > 0
-                                ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                                : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
-                            )}
-                          </>
-                        )}
-                        {devVisibleInProgress.length > 0 && (
-                          <>
-                            <button onClick={() => setDevInProgressCollapsed(v => !v)} className="flex items-center gap-2 w-full text-left pt-2 pb-0.5">
-                              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>In Progress</span>
-                              <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(139,92,246,0.08)", color: "rgba(139,92,246,0.5)" }}>{devVisibleInProgress.length}</span>
-                              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{devInProgressCollapsed ? "►" : "▼"}</span>
-                            </button>
-                            {!devInProgressCollapsed && devVisibleInProgress.map(q =>
-                              q.children && q.children.length > 0
-                                ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
-                                : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </aside>
-
-                {/* Review Board — NPC tab only, admin-gated */}
-                <div className="flex-1 min-w-0">
-                  {isAdmin && quests.suggested.length > 0 && (
-                    <section className="mb-6">
-                      <div className="flex items-center gap-2 mb-3">
-                        <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>✦ Review Board</h2>
-                        <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>{quests.suggested.length}</span>
-                      </div>
-                      {!reviewApiKey ? (
-                        <div className="rounded-xl p-3" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.2)" }}>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>🔑 Log in to review and approve quests.</p>
+                    <div className="space-y-2">
+                      {loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />) :
+                      devVisibleOpen.length === 0 && devVisibleInProgress.length === 0 ? (
+                        <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{searchFilter ? "No quests match" : "No development quests"}</p>
                         </div>
                       ) : (
-                        <div className="space-y-2">
-                          {quests.suggested.map(q => (
-                            <div key={q.id} className="rounded-xl p-4" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.25)", boxShadow: "0 0 12px rgba(245,158,11,0.06)" }}>
-                              <div className="flex items-start justify-between gap-3">
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <ClickablePriorityBadge priority={q.priority} onClick={() => { const cycle: Quest["priority"][] = ["low","medium","high"]; const next = cycle[(cycle.indexOf(q.priority)+1)%3]; handleChangePriority(q.id, next); }} />
-                                    <h3 className="text-sm font-medium truncate" style={{ color: "rgba(255,255,255,0.85)" }}>{q.title}</h3>
-                                  </div>
-                                  {q.description && <p className="text-xs leading-relaxed mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>{q.description}</p>}
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    {(q.categories?.length ? q.categories : (q.category ? [q.category] : [])).map(c => <CategoryBadge key={c} category={c} />)}
-                                    {q.product && <ProductBadge product={q.product} />}
-                                    {q.createdBy && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "rgba(245,158,11,0.7)", border: "1px solid rgba(245,158,11,0.2)" }}>by {q.createdBy}</span>}
-                                  </div>
-                                  <input type="text" value={reviewComments[q.id] ?? ""} onChange={e => setReviewComments(prev => ({ ...prev, [q.id]: e.target.value }))} placeholder="Add a comment (optional)…" className="mt-2 w-full text-xs px-2 py-1.5 rounded" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
-                                </div>
-                                <div className="flex flex-col gap-1.5 flex-shrink-0">
-                                  <button onClick={() => handleApprove(q.id, reviewComments[q.id])} className="action-btn btn-approve px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>✓ Approve</button>
-                                  <button onClick={() => handleReject(q.id, reviewComments[q.id])} className="action-btn btn-danger px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{ background: "rgba(239,68,68,0.1)", color: "rgba(239,68,68,0.7)", border: "1px solid rgba(239,68,68,0.2)" }}>✕ Reject</button>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </section>
-                  )}
-                  {isAdmin && reviewApiKey && (
-                    <div className="rounded-xl overflow-hidden" style={{ background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.2)" }}>
-                      <button
-                        onClick={() => setDobbieOpen(v => !v)}
-                        className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
-                      >
-                        <span className="text-sm">🐱</span>
-                        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
-                        <span className="text-xs px-1.5 py-0.5 rounded font-mono ml-1" style={{ background: "rgba(255,107,157,0.12)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.25)" }}>NPC</span>
-                        <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
-                      </button>
-                      {dobbieOpen && (
-                        <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                          <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} />
-                        </div>
+                        <>
+                          {devVisibleOpen.length > 0 && (
+                            <>
+                              <button onClick={() => setDevOpenCollapsed(v => !v)} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
+                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Open</span>
+                                <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.2)" }}>{devVisibleOpen.length}</span>
+                                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{devOpenCollapsed ? "►" : "▼"}</span>
+                              </button>
+                              {!devOpenCollapsed && devVisibleOpen.map(q =>
+                                q.children && q.children.length > 0
+                                  ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                                  : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
+                              )}
+                            </>
+                          )}
+                          {devVisibleInProgress.length > 0 && (
+                            <>
+                              <button onClick={() => setDevInProgressCollapsed(v => !v)} className="flex items-center gap-2 w-full text-left pt-2 pb-0.5">
+                                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>In Progress</span>
+                                <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(139,92,246,0.08)", color: "rgba(139,92,246,0.5)" }}>{devVisibleInProgress.length}</span>
+                                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{devInProgressCollapsed ? "►" : "▼"}</span>
+                              </button>
+                              {!devInProgressCollapsed && devVisibleInProgress.map(q =>
+                                q.children && q.children.length > 0
+                                  ? <EpicQuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} />
+                                  : <QuestCard key={q.id} quest={q} selected={selectedIds.has(q.id)} onToggle={reviewApiKey ? toggleSelect : undefined} playerName={playerName} />
+                              )}
+                            </>
+                          )}
+                        </>
                       )}
                     </div>
-                  )}
+                  </aside>
+
+                  {/* Review Board — admin-gated */}
+                  <div className="flex-1 min-w-0">
+                    {quests.suggested.length > 0 && (
+                      <section className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>✦ Review Board</h2>
+                          <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(245,158,11,0.12)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.3)" }}>{quests.suggested.length}</span>
+                        </div>
+                        {!reviewApiKey ? (
+                          <div className="rounded-xl p-3" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.2)" }}>
+                            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>🔑 Log in to review and approve quests.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2">
+                            {quests.suggested.map(q => (
+                              <div key={q.id} className="rounded-xl p-4" style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.25)", boxShadow: "0 0 12px rgba(245,158,11,0.06)" }}>
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <ClickablePriorityBadge priority={q.priority} onClick={() => { const cycle: Quest["priority"][] = ["low","medium","high"]; const next = cycle[(cycle.indexOf(q.priority)+1)%3]; handleChangePriority(q.id, next); }} />
+                                      <h3 className="text-sm font-medium truncate" style={{ color: "rgba(255,255,255,0.85)" }}>{q.title}</h3>
+                                    </div>
+                                    {q.description && <p className="text-xs leading-relaxed mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>{q.description}</p>}
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      {(q.categories?.length ? q.categories : (q.category ? [q.category] : [])).map(c => <CategoryBadge key={c} category={c} />)}
+                                      {q.product && <ProductBadge product={q.product} />}
+                                      {q.createdBy && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.1)", color: "rgba(245,158,11,0.7)", border: "1px solid rgba(245,158,11,0.2)" }}>by {q.createdBy}</span>}
+                                    </div>
+                                    <input type="text" value={reviewComments[q.id] ?? ""} onChange={e => setReviewComments(prev => ({ ...prev, [q.id]: e.target.value }))} placeholder="Add a comment (optional)…" className="mt-2 w-full text-xs px-2 py-1.5 rounded" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
+                                  </div>
+                                  <div className="flex flex-col gap-1.5 flex-shrink-0">
+                                    <button onClick={() => handleApprove(q.id, reviewComments[q.id])} className="action-btn btn-approve px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>✓ Approve</button>
+                                    <button onClick={() => handleReject(q.id, reviewComments[q.id])} className="action-btn btn-danger px-2.5 py-1.5 rounded-lg text-xs font-medium" style={{ background: "rgba(239,68,68,0.1)", color: "rgba(239,68,68,0.7)", border: "1px solid rgba(239,68,68,0.2)" }}>✕ Reject</button>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </section>
+                    )}
+                    {reviewApiKey && (
+                      <div className="rounded-xl overflow-hidden" style={{ background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.2)" }}>
+                        <button
+                          onClick={() => setDobbieOpen(v => !v)}
+                          className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
+                        >
+                          <span className="text-sm">🐱</span>
+                          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
+                          <span className="text-xs px-1.5 py-0.5 rounded font-mono ml-1" style={{ background: "rgba(255,107,157,0.12)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.25)" }}>NPC</span>
+                          <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
+                        </button>
+                        {dobbieOpen && (
+                          <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
+                            <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         })()}
