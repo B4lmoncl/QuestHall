@@ -1991,7 +1991,7 @@ export default function Dashboard() {
               )}
 
               {/* ── SECTION 1: Wandering Visitors (TOP) ── */}
-              <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+              <section className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
                 <div className="mb-4">
                   <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "#f59e0b" }}>🏰 The Wanderer&apos;s Rest</h2>
                   <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>They come. They go. They always return.</p>
@@ -2072,7 +2072,7 @@ export default function Dashboard() {
               </section>
 
               {/* ── SECTION 2: The Companion Hearth (MIDDLE) ── */}
-              <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+              <section className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
                 <div className="mb-3">
                   <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
                   <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
@@ -2430,8 +2430,8 @@ export default function Dashboard() {
           );
         })()}
 
-        {/* Rejected Quests (Mülleimer) — only on NPC board */}
-        {dashView === "npcBoard" && quests.rejected.length > 0 && (
+        {/* Rejected Quests (Mülleimer) — only on NPC board, admin only */}
+        {isAdmin && dashView === "npcBoard" && quests.rejected.length > 0 && (
           <section className="mb-6">
             <button
               onClick={() => setRejectedOpen(v => !v)}
@@ -2479,8 +2479,8 @@ export default function Dashboard() {
                 q.status !== "rejected"
               )
             : null;
-          // NPC board: development completed quests
-          const npcJournalQuests = dashView === "npcBoard"
+          // NPC board: development completed quests (admin only)
+          const npcJournalQuests = (dashView === "npcBoard" && isAdmin)
             ? quests.completed.filter(q => (q.type ?? "development") === "development")
             : null;
           const journalQuests = playerJournalQuests ?? npcJournalQuests;

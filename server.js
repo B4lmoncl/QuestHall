@@ -36,6 +36,7 @@ const GAME_CONFIG_FILE   = path.join(DATA_DIR, 'gameConfig.json');
 const LEVELS_FILE        = path.join(DATA_DIR, 'levels.json');
 const CAMPAIGN_NPCS_FILE = path.join(DATA_DIR, 'campaignNpcs.json');
 const QUEST_FLAVOR_FILE  = path.join(DATA_DIR, 'questFlavor.json');
+const ACHIEVEMENTS_FILE  = path.join(DATA_DIR, 'achievements.json');
 
 // ─── Sync JSON load helper (used for config files at startup) ─────────────────
 function tryLoadJsonSync(file, fallback) {
@@ -364,32 +365,26 @@ function loadGearTemplates() {
       const raw = JSON.parse(fs.readFileSync(GEAR_TEMPLATES_FILE, 'utf8'));
       if (raw) {
         gearTemplates = raw;
-        // Merge template items into FULL_GEAR_ITEMS (skip if id already exists)
-        const existingIds = new Set(FULL_GEAR_ITEMS.map(g => g.id));
+        // Populate FULL_GEAR_ITEMS from gearTemplates.json (single source of truth)
+        FULL_GEAR_ITEMS.length = 0;
+        const setIds = ['adventurer', 'veteran', 'master', 'legendary'];
         for (const item of raw.items || []) {
-          if (!existingIds.has(item.id)) {
-            FULL_GEAR_ITEMS.push({
-              id: item.id,
-              slot: item.slot,
-              tier: item.tier,
-              name: item.name,
-              emoji: SLOT_EMOJI[item.slot] || '🎒',
-              cost: item.price || 0,
-              minLevel: item.reqLevel || 1,
-              stats: item.stats || {},
-              setId: ['adventurer','veteran','master','legendary'][item.tier - 1] || 'adventurer',
-              rarity: item.rarity || 'common',
-              desc: item.desc || '',
-              shopHidden: item.shopHidden || false,
-            });
-          }
+          FULL_GEAR_ITEMS.push({
+            id: item.id,
+            slot: item.slot,
+            tier: item.tier,
+            name: item.name,
+            emoji: SLOT_EMOJI[item.slot] || '🎒',
+            cost: item.price || 0,
+            minLevel: item.reqLevel || 1,
+            stats: item.stats || {},
+            setId: setIds[item.tier - 1] || 'adventurer',
+            rarity: item.rarity || 'common',
+            desc: item.desc || '',
+            shopHidden: item.shopHidden || false,
+          });
         }
-        // Register named set items that aren't yet in FULL_GEAR_ITEMS
-        for (const ns of raw.namedSets || []) {
-          // namedSets reference piece IDs — items come from NPC givers; no need to add here
-          // Just store namedSets for getUserStats to reference
-        }
-        console.log(`[gear] Loaded ${raw.items?.length || 0} gear templates, ${raw.namedSets?.length || 0} named sets`);
+        console.log(`[gear] Loaded ${FULL_GEAR_ITEMS.length} gear items, ${raw.namedSets?.length || 0} named sets`);
       }
     }
   } catch (e) { console.warn('[gear] Failed to load gear templates:', e.message); }
@@ -1388,51 +1383,46 @@ const ACHIEVEMENT_FLAVOR = {
 };
 
 // ─── Achievements catalogue ─────────────────────────────────────────────────
-const ACHIEVEMENT_CATALOGUE = [
-  // Milestones
-  { id: 'first_quest',  name: 'First Quest',        icon: '⚔',  desc: ACHIEVEMENT_FLAVOR['first_quest'] || 'Complete your first quest',        category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 1   },
-  { id: 'apprentice',   name: 'Apprentice',           icon: '📜', desc: 'Complete 10 quests',               category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 10  },
-  { id: 'knight',       name: 'Knight',               icon: '🛡',  desc: 'Complete 50 quests',              category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 50  },
-  { id: 'legend',       name: 'Legend',               icon: '👑', desc: ACHIEVEMENT_FLAVOR['legend'] || 'Complete 100 quests',              category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 100 },
-  // Streaks
-  { id: 'week_warrior', name: 'Week Warrior',         icon: '🔥', desc: ACHIEVEMENT_FLAVOR['dedicated'] || '7-day quest streak',               category: 'streak',    hidden: false, trigger: (u) => (u.streakDays || 0) >= 7   },
-  { id: 'monthly_champ',name: 'Monthly Champion',     icon: '💎', desc: ACHIEVEMENT_FLAVOR['marathoner'] || '30-day quest streak',              category: 'streak',    hidden: false, trigger: (u) => (u.streakDays || 0) >= 30  },
-  // Speed
-  { id: 'lightning',    name: 'Lightning Hands',      icon: '⚡', desc: ACHIEVEMENT_FLAVOR['hot_streak'] || 'Complete 3 quests in one day',     category: 'speed',     hidden: false, trigger: (u) => (u._todayCount || 0) >= 3  },
-  // Variety
-  { id: 'all_trades',   name: 'Jack of All Trades',   icon: '🎯', desc: ACHIEVEMENT_FLAVOR['versatile'] || 'Complete all quest types',         category: 'variety',   hidden: false, trigger: (u) => (u._completedTypes || new Set()).size >= 5 },
-  // Boss Battles
-  { id: 'boss_slayer',  name: 'Boss Slayer',          icon: '🐉', desc: ACHIEVEMENT_FLAVOR['boss_slayer'] || 'Defeat your first Boss Battle',    category: 'boss',      hidden: false, trigger: (u) => (u._bossDefeated || false) },
-  // Companions
-  { id: 'ember_sprite', name: 'Ember Sprite',         icon: '🔮', desc: 'Complete 10 development quests',   category: 'companion', hidden: false, trigger: (u) => (u._devCount || 0) >= 10 },
-  { id: 'lore_owl',     name: 'Lore Owl',             icon: '🦉', desc: 'Complete 5 learning quests',       category: 'companion', hidden: false, trigger: (u) => (u._learningCount || 0) >= 5 },
-  { id: 'gear_golem',   name: 'Gear Golem',           icon: '🤖', desc: ACHIEVEMENT_FLAVOR['gear_master'] || 'Reach Knight level (300 XP)',       category: 'companion', hidden: false, trigger: (u) => (u.xp || 0) >= 300 },
-  // Challenges
-  { id: 'challenge_coder',  name: 'Code Sprinter',    icon: '💻', desc: 'Complete the 30-Day Code Sprint',  category: 'challenge', hidden: false, trigger: (u) => (u._challengesCompleted || []).includes('code_sprint') },
-  { id: 'challenge_learner',name: 'Marathon Learner', icon: '📖', desc: 'Complete the Learning Marathon',   category: 'challenge', hidden: false, trigger: (u) => (u._challengesCompleted || []).includes('learning_marathon') },
-  // New Regular Achievements
-  { id: 'night_owl',        name: 'Night Owl',        icon: '🦉',  desc: ACHIEVEMENT_FLAVOR['night_owl'] || 'Complete a quest between 23:00 and 05:00',  category: 'speed',     hidden: false, trigger: (u) => false },
-  { id: 'speed_runner',     name: 'Speed Runner',     icon: '⚡',  desc: 'Complete a quest within 1 hour of claiming it',   category: 'speed',     hidden: false, trigger: (u) => false },
-  { id: 'social_butterfly', name: 'Social Butterfly', icon: '🦋',  desc: 'Complete 5 social quests',                       category: 'variety',   hidden: false, trigger: (u) => (u._socialCount || 0) >= 5 },
-  { id: 'scholar',          name: 'Scholar',          icon: '📚',  desc: 'Complete 10 learning quests',                    category: 'variety',   hidden: false, trigger: (u) => (u._learningCount || 0) >= 10 },
-  { id: 'gym_rat',          name: 'Gym Rat',          icon: '🏋',  desc: 'Complete 10 fitness quests',                     category: 'variety',   hidden: false, trigger: (u) => (u._fitnessCount || 0) >= 10 },
-  { id: 'chain_master',     name: 'Chain Master',     icon: '🔗',  desc: 'Complete a full quest chain',                    category: 'milestone', hidden: false, trigger: (u) => false },
-  { id: 'campaign_victor',  name: 'Campaign Victor',  icon: '🏆',  desc: 'Complete a campaign',                            category: 'milestone', hidden: false, trigger: (u) => false },
-  { id: 'npc_whisperer',    name: 'NPC Whisperer',    icon: '💬',  desc: 'Have all agents online at the same time',        category: 'milestone', hidden: false, trigger: (u) => false },
-  { id: 'forge_novice',     name: 'Forge Novice',     icon: '🔨',  desc: 'Complete your first development quest',          category: 'milestone', hidden: false, trigger: (u) => (u._devCount || 0) >= 1 },
-  { id: 'arena_first',      name: 'Arena Debut',      icon: '🥊',  desc: 'Complete your first fitness quest',              category: 'milestone', hidden: false, trigger: (u) => (u._fitnessCount || 0) >= 1 },
-  { id: 'scholar_first',    name: 'First Scroll',     icon: '📜',  desc: 'Complete your first learning quest',             category: 'milestone', hidden: false, trigger: (u) => (u._learningCount || 0) >= 1 },
-  { id: 'ten_quests',       name: 'Ten Quest Mark',   icon: '🎯',  desc: 'Complete 10 quests total',                       category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 10 },
-  { id: 'fifty_quests',     name: 'Half Century',     icon: '🌟',  desc: 'Complete 50 quests total',                       category: 'milestone', hidden: false, trigger: (u) => (u.questsCompleted || 0) >= 50 },
-  { id: 'coop_hero',        name: 'Co-op Hero',       icon: '🤜',  desc: 'Complete a co-op quest',                         category: 'milestone', hidden: false, trigger: (u) => false },
-  { id: 'early_bird',       name: 'Early Bird',       icon: '🌅',  desc: ACHIEVEMENT_FLAVOR['early_bird'] || 'Complete 3 quests before 08:00', category: 'speed', hidden: false, trigger: (u) => false },
-  // Hidden Achievements
-  { id: 'forbidden_code',   name: 'The Forbidden Code', icon: '🌑', desc: 'Complete a quest on a Sunday',      category: 'hidden', hidden: true, trigger: (u) => false },
-  { id: 'easter_egg',       name: 'Easter Egg Hunter',  icon: '🥚', desc: 'Found something secret...',         category: 'hidden', hidden: true, trigger: (u) => false },
-  { id: 'perfectionist',    name: 'Perfectionist',       icon: '💯', desc: ACHIEVEMENT_FLAVOR['completionist'] || 'Complete 100 quests', category: 'hidden', hidden: true, trigger: (u) => (u.questsCompleted || 0) >= 100 },
-  { id: 'no_rest',          name: 'No Rest for the Wicked', icon: '😈', desc: ACHIEVEMENT_FLAVOR['marathoner'] || 'Maintain a 30-day streak', category: 'hidden', hidden: true, trigger: (u) => (u.streakDays || 0) >= 30 },
-  { id: 'one_ring',         name: 'The One Ring',        icon: '💍', desc: ACHIEVEMENT_FLAVOR['gold_hoarder'] || 'Earn 1000 gold total', category: 'hidden', hidden: true, trigger: (u) => (u.gold || 0) >= 1000 },
-];
+// Static metadata loaded from achievements.json; triggers defined here
+const ACHIEVEMENT_TRIGGERS = {
+  'first_quest':       (u) => (u.questsCompleted || 0) >= 1,
+  'apprentice':        (u) => (u.questsCompleted || 0) >= 10,
+  'knight':            (u) => (u.questsCompleted || 0) >= 50,
+  'legend':            (u) => (u.questsCompleted || 0) >= 100,
+  'week_warrior':      (u) => (u.streakDays || 0) >= 7,
+  'monthly_champ':     (u) => (u.streakDays || 0) >= 30,
+  'lightning':         (u) => (u._todayCount || 0) >= 3,
+  'all_trades':        (u) => (u._completedTypes || new Set()).size >= 5,
+  'boss_slayer':       (u) => (u._bossDefeated || false),
+  'ember_sprite':      (u) => (u._devCount || 0) >= 10,
+  'lore_owl':          (u) => (u._learningCount || 0) >= 5,
+  'gear_golem':        (u) => (u.xp || 0) >= 300,
+  'challenge_coder':   (u) => (u._challengesCompleted || []).includes('code_sprint'),
+  'challenge_learner': (u) => (u._challengesCompleted || []).includes('learning_marathon'),
+  'social_butterfly':  (u) => (u._socialCount || 0) >= 5,
+  'scholar':           (u) => (u._learningCount || 0) >= 10,
+  'gym_rat':           (u) => (u._fitnessCount || 0) >= 10,
+  'forge_novice':      (u) => (u._devCount || 0) >= 1,
+  'arena_first':       (u) => (u._fitnessCount || 0) >= 1,
+  'scholar_first':     (u) => (u._learningCount || 0) >= 1,
+  'ten_quests':        (u) => (u.questsCompleted || 0) >= 10,
+  'fifty_quests':      (u) => (u.questsCompleted || 0) >= 50,
+  'perfectionist':     (u) => (u.questsCompleted || 0) >= 100,
+  'no_rest':           (u) => (u.streakDays || 0) >= 30,
+  'one_ring':          (u) => (u.gold || 0) >= 1000,
+};
+
+function loadAchievements() {
+  try {
+    const raw = JSON.parse(fs.readFileSync(ACHIEVEMENTS_FILE, 'utf8'));
+    return raw.map(a => ({ ...a, trigger: ACHIEVEMENT_TRIGGERS[a.id] || (() => false) }));
+  } catch (e) {
+    console.warn('[achievements] Failed to load:', e.message);
+    return [];
+  }
+}
+
+const ACHIEVEMENT_CATALOGUE = loadAchievements();
 
 function checkAndAwardAchievements(userId) {
   const u = users[userId];
@@ -1767,36 +1757,8 @@ function resetLootPity(userId) {
 // ─── Full Equipment System (slots from gameConfig.json) ──────────────────────
 const EQUIPMENT_SLOTS = _gameConfig.equipmentSlots || ['weapon', 'shield', 'helm', 'armor', 'amulet', 'boots'];
 
-const FULL_GEAR_ITEMS = [
-  // Tier 1 — Abenteurer-Set (Level 1-8)
-  { id: 'wood-sword',    slot: 'weapon', tier: 1, name: 'Holzschwert',      emoji: '⚔️', cost: 50,  minLevel: 1, stats: { kraft: 2 },                  setId: 'adventurer' },
-  { id: 'wood-shield',   slot: 'shield', tier: 1, name: 'Holzschild',       emoji: '🛡️', cost: 50,  minLevel: 1, stats: { ausdauer: 2 },               setId: 'adventurer' },
-  { id: 'leather-helm',  slot: 'helm',   tier: 1, name: 'Lederkappe',       emoji: '🪖', cost: 50,  minLevel: 1, stats: { weisheit: 1 },               setId: 'adventurer' },
-  { id: 'leather-armor', slot: 'armor',  tier: 1, name: 'Lederrüstung',     emoji: '🧥', cost: 75,  minLevel: 1, stats: { ausdauer: 1, kraft: 1 },     setId: 'adventurer' },
-  { id: 'copper-chain',  slot: 'amulet', tier: 1, name: 'Kupferkette',      emoji: '📿', cost: 50,  minLevel: 1, stats: { glueck: 2 },                 setId: 'adventurer' },
-  { id: 'travel-boots',  slot: 'boots',  tier: 1, name: 'Wanderstiefel',    emoji: '👢', cost: 50,  minLevel: 1, stats: { glueck: 1 },                 setId: 'adventurer' },
-  // Tier 2 — Veteranen-Set (Level 9-16)
-  { id: 'steel-sword',   slot: 'weapon', tier: 2, name: 'Stahlschwert',     emoji: '⚔️', cost: 200, minLevel: 9,  stats: { kraft: 4, ausdauer: 1 },    setId: 'veteran' },
-  { id: 'iron-shield',   slot: 'shield', tier: 2, name: 'Eisenschild',      emoji: '🛡️', cost: 200, minLevel: 9,  stats: { ausdauer: 4 },              setId: 'veteran' },
-  { id: 'chain-helm',    slot: 'helm',   tier: 2, name: 'Kettenhaube',      emoji: '🪖', cost: 200, minLevel: 9,  stats: { weisheit: 3, ausdauer: 1 }, setId: 'veteran' },
-  { id: 'chain-armor',   slot: 'armor',  tier: 2, name: 'Kettenhemd',       emoji: '🧥', cost: 300, minLevel: 9,  stats: { ausdauer: 3, kraft: 2 },    setId: 'veteran' },
-  { id: 'silver-amulet', slot: 'amulet', tier: 2, name: 'Silberamulett',    emoji: '📿', cost: 200, minLevel: 9,  stats: { glueck: 4 },                setId: 'veteran' },
-  { id: 'iron-boots',    slot: 'boots',  tier: 2, name: 'Eisenstiefel',     emoji: '👢', cost: 200, minLevel: 9,  stats: { glueck: 2, ausdauer: 1 },   setId: 'veteran' },
-  // Tier 3 — Meister-Set (Level 17-24)
-  { id: 'rune-sword',    slot: 'weapon', tier: 3, name: 'Runenschwert',     emoji: '⚔️', cost: 500, minLevel: 17, stats: { kraft: 7, weisheit: 2 },    setId: 'master' },
-  { id: 'dragon-scale',  slot: 'shield', tier: 3, name: 'Drachenschuppe',   emoji: '🛡️', cost: 500, minLevel: 17, stats: { ausdauer: 6, kraft: 2 },    setId: 'master' },
-  { id: 'arcane-helm',   slot: 'helm',   tier: 3, name: 'Arkanistenhaube',  emoji: '🪖', cost: 500, minLevel: 17, stats: { weisheit: 6, glueck: 1 },   setId: 'master' },
-  { id: 'mythril-armor', slot: 'armor',  tier: 3, name: 'Mythril-Rüstung',  emoji: '🧥', cost: 700, minLevel: 17, stats: { ausdauer: 5, kraft: 3, weisheit: 1 }, setId: 'master' },
-  { id: 'gold-medallion',slot: 'amulet', tier: 3, name: 'Gold-Medaillon',   emoji: '📿', cost: 500, minLevel: 17, stats: { glueck: 6, weisheit: 1 },   setId: 'master' },
-  { id: 'wind-boots',    slot: 'boots',  tier: 3, name: 'Windläufer-Stiefel',emoji:'👢', cost: 500, minLevel: 17, stats: { glueck: 4, kraft: 2 },      setId: 'master' },
-  // Tier 4 — Legendäres Set (Level 25-30)
-  { id: 'dawn-blade',    slot: 'weapon', tier: 4, name: 'Klinge der Morgenröte',    emoji: '⚔️', cost: 1000, minLevel: 25, stats: { kraft: 10, weisheit: 4, glueck: 2 }, setId: 'legendary' },
-  { id: 'aegis-shield',  slot: 'shield', tier: 4, name: 'Aegis des Unbesiegbaren',  emoji: '🛡️', cost: 1000, minLevel: 25, stats: { ausdauer: 10, kraft: 3 }, setId: 'legendary' },
-  { id: 'wise-crown',    slot: 'helm',   tier: 4, name: 'Krone der Weisen',          emoji: '🪖', cost: 1000, minLevel: 25, stats: { weisheit: 10, glueck: 3 }, setId: 'legendary' },
-  { id: 'dragon-armor',  slot: 'armor',  tier: 4, name: 'Drachenblut-Panzer',       emoji: '🧥', cost: 1500, minLevel: 25, stats: { ausdauer: 8, kraft: 5, weisheit: 2 }, setId: 'legendary' },
-  { id: 'luck-heart',    slot: 'amulet', tier: 4, name: 'Herz des Glücks',           emoji: '📿', cost: 1000, minLevel: 25, stats: { glueck: 10, weisheit: 2 }, setId: 'legendary' },
-  { id: 'world-boots',   slot: 'boots',  tier: 4, name: 'Stiefel des Weltenwanderers', emoji: '👢', cost: 1000, minLevel: 25, stats: { glueck: 6, kraft: 4, ausdauer: 2 }, setId: 'legendary' },
-];
+// Populated by loadGearTemplates() — single source of truth is gearTemplates.json
+let FULL_GEAR_ITEMS = [];
 
 const SET_BONUSES = {
   adventurer: { name: 'Abenteurer-Set', tier: 1 },
