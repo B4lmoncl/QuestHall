@@ -2204,6 +2204,9 @@ app.post('/api/quest/:id/claim', requireApiKey, (req, res) => {
     }
     pp.claimedQuests.push(quest.id);
     savePlayerProgress();
+    quest.status = 'in_progress';
+    quest.claimedBy = agentKey;
+    saveQuests();
     console.log(`[quest] ${quest.id} claimed (per-player) by ${agentKey}`);
     return res.json({ ok: true, quest: { ...quest, status: 'in_progress', claimedBy: agentKey } });
   }
@@ -2295,6 +2298,9 @@ app.post('/api/quest/:id/unclaim', requireApiKey, (req, res) => {
     }
     pp.claimedQuests = pp.claimedQuests.filter(id => id !== quest.id);
     savePlayerProgress();
+    quest.status = 'open';
+    quest.claimedBy = null;
+    saveQuests();
     console.log(`[quest] ${quest.id} unclaimed (per-player) by ${agentKey}`);
     return res.json({ ok: true, quest: { ...quest, status: 'open', claimedBy: null } });
   }
