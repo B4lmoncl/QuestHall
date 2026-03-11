@@ -24,6 +24,7 @@ import {
 import { CompanionsWidget } from "@/components/CompanionsWidget";
 import { RoadmapView } from "@/components/RoadmapView";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { WandererRest } from "@/components/WandererRest";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
@@ -1583,6 +1584,43 @@ export default function Dashboard() {
           const lyraQuestsOpen = applySort(applyFilter(quests.open.filter(q => (q.createdBy ?? "").toLowerCase() === "lyra")));
           const lyraQuestsInProgress = applySort(applyFilter(quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() === "lyra")));
           const lyraAllQuests = lyraQuestsOpen.concat(lyraQuestsInProgress);
+          return (
+            <WandererRest
+              npcBoardFilter={npcBoardFilter}
+              setNpcBoardFilter={setNpcBoardFilter}
+              activeNpcs={activeNpcs}
+              selectedNpc={selectedNpc}
+              setSelectedNpc={setSelectedNpc}
+              isAdmin={isAdmin}
+              reviewApiKey={reviewApiKey}
+              selectedIds={selectedIds}
+              toggleSelect={toggleSelect}
+              sortMode={sortMode}
+              setSortMode={setSortMode}
+              searchFilter={searchFilter}
+              setSearchFilter={setSearchFilter}
+              devOpenCollapsed={devOpenCollapsed}
+              setDevOpenCollapsed={setDevOpenCollapsed}
+              devInProgressCollapsed={devInProgressCollapsed}
+              setDevInProgressCollapsed={setDevInProgressCollapsed}
+              handleApprove={handleApprove}
+              handleReject={handleReject}
+              handleChangePriority={handleChangePriority}
+              reviewComments={reviewComments}
+              setReviewComments={setReviewComments}
+              dobbieOpen={dobbieOpen}
+              setDobbieOpen={setDobbieOpen}
+              loading={loading}
+              quests={quests}
+              playerName={playerName}
+              refresh={refresh}
+              devVisibleOpen={devVisibleOpen}
+              devVisibleInProgress={devVisibleInProgress}
+              lyraQuestsOpen={lyraQuestsOpen}
+              lyraQuestsInProgress={lyraQuestsInProgress}
+              lyraAllQuests={lyraAllQuests}
+            />
+          );
           const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
           const rarityStars: Record<string, string> = { common: "★", uncommon: "★★", rare: "★★★", epic: "★★★★", legendary: "★★★★★" };
           return (
@@ -1755,12 +1793,12 @@ export default function Dashboard() {
 
               {/* ── NPC Speech Bubble Modal ── */}
               {selectedNpc && (() => {
-                const npc = selectedNpc;
+                const npc = selectedNpc!;
                 const rarityColorsModal: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a78bfa", legendary: "#f59e0b" };
                 const rarityStarsModal: Record<string, string> = { common: "★ Common", uncommon: "★★ Uncommon", rare: "★★★ Rare", epic: "★★★★ Epic", legendary: "★★★★★ Legendary" };
                 const rc = rarityColorsModal[npc.rarity] ?? "#9ca3af";
                 const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
-                const currentQuest = npc.questChain.find(q => q.status === "open" || q.status === "in_progress" || q.status === "claimed") ?? null;
+                const currentQuest: NpcQuestChainEntry | null = npc.questChain.find(q => q.status === "open" || q.status === "in_progress" || q.status === "claimed") ?? null;
                 const completedCount = npc.questChain.filter(q => q.status === "completed").length;
                 const totalCount = npc.questChain.length;
                 const isStarweaver = npc.id === "lyra-permanent";
@@ -1790,7 +1828,7 @@ export default function Dashboard() {
                       <div className="relative px-5 pt-5 pb-4 flex items-start gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", zIndex: 1 }}>
                         <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: 96, height: 96, border: `2px solid ${isStarweaver ? "rgba(255,215,0,0.5)" : `${rc}50`}`, boxShadow: isStarweaver ? "0 0 20px rgba(255,215,0,0.3)" : "none" }}>
                           {npc.portrait ? (
-                            <img src={npc.portrait} alt={npc.name} width={96} height={96} style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+                            <img src={npc.portrait ?? undefined} alt={npc.name} width={96} height={96} style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 40 }}>{npc.emoji}</div>
                           )}
@@ -1852,19 +1890,19 @@ export default function Dashboard() {
                             <>
                               <div className="flex items-center justify-between mb-2">
                                 <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "rgba(255,255,255,0.3)" }}>
-                                  📜 Quest {currentQuest.position}/{totalCount}
+                                  📜 Quest {currentQuest!.position}/{totalCount}
                                 </p>
                                 {completedCount > 0 && (
                                   <p className="text-xs" style={{ color: "#22c55e" }}>{completedCount} completed ✓</p>
                                 )}
                               </div>
                               <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                                <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
-                                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
+                                <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{(currentQuest as any).title}</p>
+                                <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{(currentQuest as any).description}</p>
                                 <div className="flex items-center gap-3 mt-3">
-                                  <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>
-                                  <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
-                                  {currentQuest.status === "claimed" && (
+                                  <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{(currentQuest as any).rewards?.xp ?? 0} XP</span>
+                                  <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{(currentQuest as any).rewards?.gold ?? 0} 🪙</span>
+                                  {(currentQuest as any).status === "claimed" && (
                                     <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Active</span>
                                   )}
                                 </div>
@@ -1895,11 +1933,11 @@ export default function Dashboard() {
                           {/* Final reward */}
                           {npc.finalReward?.item && (
                             <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
-                              <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
+                              <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward!.item.emoji}</span>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>💎 Chain Reward</p>
-                                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
-                                <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
+                                <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward!.item.name}</p>
+                                <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward!.item.desc}</p>
                               </div>
                             </div>
                           )}
