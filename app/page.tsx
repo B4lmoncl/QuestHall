@@ -952,11 +952,11 @@ export default function Dashboard() {
           <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
             <div className="flex items-center gap-4">
               {/* Portrait */}
-              <div className="relative flex-shrink-0">
+              <div className="relative flex-shrink-0 cursor-pointer" onClick={() => setDashView("character")} title="Character">
                 <img
                   src="/images/portraits/hero-male.png"
                   alt={playerName}
-                  className="w-14 h-14 rounded-xl object-cover"
+                  className="w-28 h-28 rounded-xl object-cover"
                   style={{ imageRendering: "pixelated", border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
                   onError={e => {
                     const img = e.currentTarget as HTMLImageElement;
@@ -966,7 +966,7 @@ export default function Dashboard() {
                   }}
                 />
                 <div
-                  className="w-14 h-14 rounded-xl items-center justify-center font-black text-xl flex-shrink-0"
+                  className="w-28 h-28 rounded-xl items-center justify-center font-black text-3xl flex-shrink-0"
                   style={{ display: "none", background: `linear-gradient(135deg, ${loggedInUser.color ?? "#a78bfa"}, ${loggedInUser.color ?? "#a78bfa"}99)`, color: "#fff", border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
                 >
                   {playerName.slice(0, 1).toUpperCase()}
