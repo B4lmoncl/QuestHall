@@ -864,7 +864,7 @@ const DOBBIE_MOODS = [
   { mood: "🙄 Unimpressed", color: "#a78bfa", quote: "You call that a play session? I've seen dust motes with more energy." },
 ];
 
-export function DobbieQuestPanel({ reviewApiKey, onRefresh }: { reviewApiKey: string; onRefresh: () => void }) {
+export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName }: { reviewApiKey: string; onRefresh: () => void; playerName?: string }) {
   const [creating, setCreating] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const dobbieMood = DOBBIE_MOODS[Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % DOBBIE_MOODS.length];
@@ -885,7 +885,20 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh }: { reviewApiKey: st
           recurrence: "daily",
         }),
       });
-      if (res.ok) {
+      if (res.ok && playerName) {
+        const data = await res.json();
+        const questId = data.quest?.id || data.id;
+        if (questId) {
+          await fetch(`/api/quest/${questId}/claim`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+            body: JSON.stringify({ agentId: playerName }),
+          });
+        }
+        setSuccess(q.id);
+        setTimeout(() => setSuccess(null), 3000);
+        onRefresh();
+      } else if (res.ok) {
         setSuccess(q.id);
         setTimeout(() => setSuccess(null), 3000);
         onRefresh();

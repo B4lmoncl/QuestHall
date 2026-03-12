@@ -240,7 +240,7 @@ export function WandererRest({
               </button>
               {dobbieOpen && (
                 <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                  <DobbieQuestPanel reviewApiKey={hearthApiKey ?? ""} onRefresh={refresh} />
+                  <DobbieQuestPanel reviewApiKey={hearthApiKey ?? ""} onRefresh={refresh} playerName={playerName} />
                 </div>
               )}
             </div>
@@ -655,7 +655,7 @@ export function WandererRest({
                 </button>
                 {dobbieOpen && (
                   <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} />
+                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} />
                   </div>
                 )}
               </div>
