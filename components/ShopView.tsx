@@ -19,13 +19,12 @@ const SHOP_ITEMS_LIST: ShopItem[] = [
   { id: "sleep_in",    name: "Sleep In",      cost: 75,  icon: "😴", desc: "Extra hour of sleep, guilt-free" },
 ];
 
-export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGearBuy, onOpenShop }: {
+export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGearBuy }: {
   users: User[];
   playerName: string;
   reviewApiKey: string;
-  onBuy: (itemId: string) => void;
-  onGearBuy: (gearId: string) => void;
-  onOpenShop: (userId: string) => void;
+  onBuy: (userId: string, itemId: string) => void;
+  onGearBuy: (userId: string, gearId: string) => void;
 }) {
   const loggedIn = playerName && reviewApiKey;
   const user = loggedIn ? users.find(u => u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase()) : null;
@@ -42,17 +41,6 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
       </div>
     );
   }
-
-  // Set shopUserId before buying so existing handlers work
-  const handleBuy = (itemId: string) => {
-    onOpenShop(user.id);
-    // Give React a tick then call buy — use setTimeout trick
-    setTimeout(() => onBuy(itemId), 0);
-  };
-  const handleGearBuy = (gearId: string) => {
-    onOpenShop(user.id);
-    setTimeout(() => onGearBuy(gearId), 0);
-  };
 
   return (
     <div className="space-y-4">
@@ -80,14 +68,13 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>
                 </div>
                 <button
-                  onClick={() => handleBuy(item.id)}
+                  onClick={() => canAfford && onBuy(user.id, item.id)}
                   disabled={!canAfford}
-                  className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                  className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
                   style={{
                     background: canAfford ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
                     color: canAfford ? "#f59e0b" : "rgba(255,255,255,0.2)",
                     border: `1px solid ${canAfford ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
-                    cursor: canAfford ? "pointer" : "not-allowed",
                   }}
                 >
                   🪙 {item.cost}
@@ -120,14 +107,13 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                 </div>
                 {!owned && (
                   <button
-                    onClick={() => handleGearBuy(gear.id)}
+                    onClick={() => canBuy && onGearBuy(user.id, gear.id)}
                     disabled={!canBuy}
-                    className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                    className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
                     style={{
                       background: canBuy ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
                       color: canBuy ? "#a78bfa" : "rgba(255,255,255,0.2)",
                       border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
-                      cursor: canBuy ? "pointer" : "not-allowed",
                     }}
                   >
                     🪙 {gear.cost}

@@ -2287,8 +2287,8 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
   gold: number;
   currentGear?: string;
   onClose: () => void;
-  onBuy: (itemId: string) => void;
-  onGearBuy?: (gearId: string) => void;
+  onBuy: (userId: string, itemId: string) => void;
+  onGearBuy?: (userId: string, gearId: string) => void;
 }) {
   const ITEMS: ShopItem[] = [
     { id: "gaming_1h",   name: "1h Gaming",    cost: 100, icon: "🎮", desc: "1 hour of guilt-free gaming" },
@@ -2328,14 +2328,13 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>
               </div>
               <button
-                onClick={() => onBuy(item.id)}
+                onClick={() => gold >= item.cost && onBuy(userId, item.id)}
                 disabled={gold < item.cost}
-                className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
                 style={{
                   background: gold >= item.cost ? "rgba(245,158,11,0.2)" : "rgba(255,255,255,0.04)",
                   color: gold >= item.cost ? "#f59e0b" : "rgba(255,255,255,0.2)",
                   border: `1px solid ${gold >= item.cost ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
-                  cursor: gold >= item.cost ? "pointer" : "not-allowed",
                 }}
               >
                 🪙 {item.cost}
@@ -2372,14 +2371,13 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                     </div>
                     {!owned && (
                       <button
-                        onClick={() => onGearBuy(gear.id)}
+                        onClick={() => canBuy && onGearBuy(userId, gear.id)}
                         disabled={!canBuy}
-                        className="text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                        className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
                         style={{
                           background: canBuy ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
                           color: canBuy ? "#818cf8" : "rgba(255,255,255,0.2)",
                           border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
-                          cursor: canBuy ? "pointer" : "not-allowed",
                         }}
                       >
                         🪙 {gear.cost}

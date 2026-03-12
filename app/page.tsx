@@ -94,6 +94,7 @@ export default function Dashboard() {
   const [shopUserId, setShopUserId] = useState<string | null>(null);
   const [toast, setToast] = useState<EarnedAchievement | null>(null);
   const [flavorToast, setFlavorToast] = useState<{ message: string; icon: string; sub?: string } | null>(null);
+  const [purchaseToast, setPurchaseToast] = useState<string | null>(null);
   const [chainOffer, setChainOffer] = useState<{ template: { title: string; description?: string | null; type?: string; priority?: string }; parentTitle: string } | null>(null);
   const [openSectionCollapsed, setOpenSectionCollapsed] = useState<boolean>(() => {
     try { return localStorage.getItem("qb_open_collapsed") === "true"; } catch { return false; }
@@ -414,31 +415,47 @@ export default function Dashboard() {
     }
   }, [playerName, reviewApiKey, poolRefreshing, refresh]);
 
-  const handleShopBuy = useCallback(async (itemId: string) => {
+  const handleShopBuy = useCallback(async (userId: string, itemId: string) => {
     const key = reviewApiKey;
-    if (!key || !shopUserId) return;
+    if (!key || !userId) return;
     try {
       const r = await fetch("/api/shop/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-API-Key": key },
-        body: JSON.stringify({ userId: shopUserId, itemId }),
+        body: JSON.stringify({ userId, itemId }),
       });
-      if (r.ok) { setShopUserId(null); await refresh(); }
+      if (r.ok) {
+        const data = await r.json();
+        setShopUserId(null);
+        if (data.item?.name) setPurchaseToast(`${data.item.name} acquired!`);
+        await refresh();
+      }
     } catch { /* ignore */ }
-  }, [reviewApiKey, shopUserId, refresh]);
+  }, [reviewApiKey, refresh]);
 
-  const handleGearBuy = useCallback(async (gearId: string) => {
+  const handleGearBuy = useCallback(async (userId: string, gearId: string) => {
     const key = reviewApiKey;
-    if (!key || !shopUserId) return;
+    if (!key || !userId) return;
     try {
       const r = await fetch("/api/shop/gear/buy", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-API-Key": key },
-        body: JSON.stringify({ userId: shopUserId, gearId }),
+        body: JSON.stringify({ userId, gearId }),
       });
-      if (r.ok) { setShopUserId(null); await refresh(); }
+      if (r.ok) {
+        const data = await r.json();
+        setShopUserId(null);
+        if (data.gear?.name) setPurchaseToast(`${data.gear.name} acquired!`);
+        await refresh();
+      }
     } catch { /* ignore */ }
-  }, [reviewApiKey, shopUserId, refresh]);
+  }, [reviewApiKey, refresh]);
+
+  useEffect(() => {
+    if (!purchaseToast) return;
+    const t = setTimeout(() => setPurchaseToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [purchaseToast]);
 
   useEffect(() => {
     refresh();
@@ -1221,7 +1238,6 @@ export default function Dashboard() {
             reviewApiKey={reviewApiKey}
             onBuy={handleShopBuy}
             onGearBuy={handleGearBuy}
-            onOpenShop={setShopUserId}
           />
         )}
 
@@ -2213,7 +2229,11 @@ export default function Dashboard() {
                 {lootDrop.effect.type === 'bond' && `＋${lootDrop.effect.amount} Bond XP`}
               </div>
             )}
-            <button onClick={() => setLootDrop(null)} className="w-full py-2.5 rounded-xl text-sm font-semibold" style={{ background: `${lootDrop.rarityColor}22`, color: lootDrop.rarityColor, border: `1px solid ${lootDrop.rarityColor}55` }}>
+            <button
+              onClick={() => { setPurchaseToast(`${lootDrop.name} added to inventory!`); setLootDrop(null); }}
+              className="shop-buy-btn w-full py-2.5 rounded-xl text-sm font-semibold"
+              style={{ background: `${lootDrop.rarityColor}22`, color: lootDrop.rarityColor, border: `1px solid ${lootDrop.rarityColor}55` }}
+            >
               Einsammeln ✓
             </button>
           </div>
@@ -2280,6 +2300,17 @@ export default function Dashboard() {
 
       {/* Flavor Toast */}
       {flavorToast && <FlavorToast toast={flavorToast} onClose={() => setFlavorToast(null)} />}
+
+      {/* Purchase / Loot Toast */}
+      {purchaseToast && (
+        <div
+          className="purchase-toast fixed z-[150] flex items-center gap-2 px-4 py-3 rounded-xl shadow-2xl"
+          style={{ bottom: "24px", right: "24px", background: "#1a1a1a", border: "1px solid rgba(245,158,11,0.5)", boxShadow: "0 8px 32px rgba(0,0,0,0.6)", maxWidth: "280px" }}
+        >
+          <span style={{ fontSize: "16px" }}>🪙</span>
+          <span className="text-sm font-semibold" style={{ color: "#f0f0f0" }}>{purchaseToast}</span>
+        </div>
+      )}
 
       {/* Chain Quest Toast */}
       {chainOffer && (

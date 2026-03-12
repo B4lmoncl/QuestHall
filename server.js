@@ -1725,21 +1725,22 @@ function addLootToInventory(userId, lootItem) {
   };
   u.inventory.push(entry);
   // Apply immediate effects
-  if (lootItem.effect.type === 'gold') u.gold = (u.gold || 0) + lootItem.effect.amount;
-  if (lootItem.effect.type === 'xp') u.xp = (u.xp || 0) + lootItem.effect.amount;
-  if (lootItem.effect.type === 'streak_shield') {
+  const effectType = lootItem.effect?.type;
+  if (effectType === 'gold') u.gold = (u.gold || 0) + lootItem.effect.amount;
+  if (effectType === 'xp') u.xp = (u.xp || 0) + lootItem.effect.amount;
+  if (effectType === 'streak_shield') {
     u.streakShields = Math.min(3, (u.streakShields || 0) + lootItem.effect.amount);
     // Remove from inventory (consumed immediately)
     u.inventory = u.inventory.filter(i => i.id !== entry.id);
   }
-  if (lootItem.effect.type === 'bond' && u.companion) {
+  if (effectType === 'bond' && u.companion) {
     u.companion.bondXp = (u.companion.bondXp || 0) + lootItem.effect.amount;
     u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   }
-  if (lootItem.effect.type === 'forge_temp') {
+  if (effectType === 'forge_temp') {
     u.forgeTemp = Math.min(1, (u.forgeTemp || 0) + (lootItem.effect.amount || 0) / 100);
   }
-  if (lootItem.effect.type === 'random_gear' || lootItem.effect.type === 'random_gear_epic') {
+  if (effectType === 'random_gear' || effectType === 'random_gear_epic') {
     const { level: playerLvl } = getLevelInfo(u.xp || 0);
     const minRarity = lootItem.effect.type === 'random_gear_epic' ? 'epic' : 'rare';
     const minRarityIdx = RARITY_ORDER.indexOf(minRarity);
