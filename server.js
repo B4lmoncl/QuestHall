@@ -1020,14 +1020,10 @@ function checkCompanionQuestTimeLimits() {
   if (changed) saveQuests();
 }
 
-/** NPC departure check — runs every 30 minutes, handles departures only (no spawns) */
-function checkNpcDepartures() {
+/** Periodic check — runs every 30 minutes, ONLY companion time limits (no NPC departures/spawns) */
+function checkPeriodicTasks() {
   const now = new Date();
-  console.log(`[npc] Departure check at ${now.toISOString()} — ${npcState.activeNpcs.length} active`);
-  processNpcDepartures(now);
   checkCompanionQuestTimeLimits();
-  // Guarantee: tavern should never be empty
-  forceSpawnMinimumNpc(now);
   npcState.lastRotationCheck = now.toISOString();
   saveNpcState();
 }
@@ -5937,7 +5933,7 @@ loadNpcState();
 loadAppState();
 loadFeedback();
 startupNpcCheck();
-setInterval(checkNpcDepartures, NPC_ROTATION_MS);
+setInterval(checkPeriodicTasks, NPC_ROTATION_MS);
 checkAndRunDailyRotation();
 
 // Version tracking
