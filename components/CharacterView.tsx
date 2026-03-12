@@ -332,7 +332,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
     left: Math.random() * 100,
     delay: Math.random() * 15,
     duration: 10 + Math.random() * 15,
-    size: 12 + Math.random() * 16,
+    size: 8 + Math.random() * 10,
     drift: -30 + Math.random() * 60,
     rotation: Math.random() * 360,
   })), []);
