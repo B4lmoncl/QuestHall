@@ -233,6 +233,52 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
+/* Speech bubbles that appear between portrait and modal */
+.npc-speech-bubble {
+  position: absolute;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-style: italic;
+  line-height: 1.6;
+  width: 160px;
+  pointer-events: none;
+  animation: npc-speech-in 0.5s ease forwards;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  z-index: 12;
+}
+/* Gold (Seraine) — portrait on left, bubble to the right of portrait */
+.npc-speech-bubble-gold {
+  left: calc(100% - 16px);
+  top: 18%;
+  background: rgba(28,22,14,0.96);
+  border: 1px solid rgba(245,158,11,0.35);
+  color: #c9a46a;
+}
+/* Indigo (Vael) — portrait on right, bubble to the left of portrait */
+.npc-speech-bubble-indigo {
+  right: calc(100% - 16px);
+  top: 18%;
+  background: rgba(14,14,24,0.96);
+  border: 1px solid rgba(99,102,241,0.35);
+  color: #a5b4fc;
+  text-align: right;
+}
+
+/* ─── Ritual section + Vow section tinting ───────────────────────────────── */
+.section-ritual {
+  background: rgba(245,158,11,0.04);
+  border: 1px solid rgba(245,158,11,0.1);
+  border-radius: 1rem;
+  padding: 12px;
+}
+.section-vow {
+  background: rgba(99,102,241,0.04);
+  border: 1px solid rgba(99,102,241,0.1);
+  border-radius: 1rem;
+  padding: 12px;
+}
+
 @keyframes blood-pact-pulse {
   0%, 100% { box-shadow: 0 0 8px rgba(239,68,68,0.4), inset 0 0 8px rgba(239,68,68,0.08); }
   50%       { box-shadow: 0 0 28px rgba(239,68,68,0.9), inset 0 0 16px rgba(239,68,68,0.18); }

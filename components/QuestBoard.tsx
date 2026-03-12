@@ -303,12 +303,12 @@ export function ForgeChallengesPanel({ users, reviewApiKey, onRefresh }: {
 // ─── Anti-Rituale Panel ───────────────────────────────────────────────────────
 
 const COMMITMENT_TIERS_VOW = [
-  { id: "none",     label: "None",     days: 0,   color: "rgba(255,255,255,0.25)", bonusGold: 0,  bonusXp: 0,  flavorShort: "Kein Versprechen" },
-  { id: "spark",    label: "Spark",    days: 7,   color: "#94a3b8",                bonusGold: 3,  bonusXp: 5,  flavorShort: "Erster Funken" },
-  { id: "flame",    label: "Flame",    days: 21,  color: "#6366f1",                bonusGold: 7,  bonusXp: 10, flavorShort: "Entsagung formt sich" },
-  { id: "ember",    label: "Ember",    days: 60,  color: "#818cf8",                bonusGold: 13, bonusXp: 20, flavorShort: "Tief verwurzelt" },
-  { id: "crucible", label: "Crucible", days: 180, color: "#c7d2fe",                bonusGold: 20, bonusXp: 35, flavorShort: "Stahl der Seele" },
-  { id: "eternity", label: "Eternity", days: 365, color: "#e0e7ff",                bonusGold: 30, bonusXp: 50, flavorShort: "Ewige Entsagung" },
+  { id: "none",     label: "None",     days: 0,   color: "rgba(255,255,255,0.25)", bonusGold: 0,  bonusXp: 0,  flavorShort: "No commitment" },
+  { id: "spark",    label: "Spark",    days: 7,   color: "#94a3b8",                bonusGold: 3,  bonusXp: 5,  flavorShort: "First spark" },
+  { id: "flame",    label: "Flame",    days: 21,  color: "#6366f1",                bonusGold: 7,  bonusXp: 10, flavorShort: "Renunciation forms" },
+  { id: "ember",    label: "Ember",    days: 60,  color: "#818cf8",                bonusGold: 13, bonusXp: 20, flavorShort: "Deep-rooted" },
+  { id: "crucible", label: "Crucible", days: 180, color: "#c7d2fe",                bonusGold: 20, bonusXp: 35, flavorShort: "Steel of the soul" },
+  { id: "eternity", label: "Eternity", days: 365, color: "#e0e7ff",                bonusGold: 30, bonusXp: 50, flavorShort: "Eternal renunciation" },
 ];
 
 function getVaelSpeech(commitment: string, bloodPact: boolean): string {
@@ -398,10 +398,10 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
     [...ANTI_RITUAL_MILESTONES].reverse().find(m => days >= m.days) ?? null;
 
   return (
-    <div>
+    <div className="section-vow">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <img src="/images/portraits/npc-vael.png" alt="" width={28} height={42} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(99,102,241,0.35)", flexShrink: 0 }} />
+          <img src="/images/portraits/npc-vael.png" alt="" width={48} height={72} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(99,102,241,0.35)", flexShrink: 0 }} />
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#818cf8" }}>
               Vow Shrine
@@ -413,7 +413,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         {playerName && reviewApiKey && (
           <button onClick={() => setCreateOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
             style={{ background: "rgba(99,102,241,0.14)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.35)", boxShadow: "0 0 10px rgba(99,102,241,0.08)" }}>
-            ＋ Vow ablegen
+            ＋ Swear Vow
           </button>
         )}
       </div>
@@ -467,7 +467,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                       disabled={!reviewApiKey}
                       className="text-xs px-2 py-1 rounded transition-all"
                       style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
-                      title="Ich hab's gemacht... Streak reset."
+                      title="I slipped... Streak reset."
                     >
                       Slip
                     </button>
@@ -476,7 +476,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                         onClick={() => setDeleteConfirmId(ar.id)}
                         className="text-xs px-2 py-1 rounded transition-all"
                         style={{ background: "rgba(239,68,68,0.06)", color: "rgba(239,68,68,0.4)", border: "1px solid rgba(239,68,68,0.12)", cursor: 'pointer' }}
-                        title="Vow löschen"
+                        title="Delete vow"
                       >
                         ×
                       </button>
@@ -501,41 +501,39 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
             <div className="relative flex items-end" style={{ maxWidth: 820, width: "100%" }} onClick={e => e.stopPropagation()}>
 
               {/* ── Modal Panel (65% width) ── */}
-              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", overflow: "hidden", maxHeight: "80vh", overflowY: "auto", background: newVowBloodPact ? "linear-gradient(160deg, #1a1a2e 0%, #0f0f1e 100%)" : "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.3)"}`, boxShadow: newVowBloodPact ? "0 0 60px rgba(99,102,241,0.14)" : "0 0 40px rgba(99,102,241,0.07)", transition: "all 0.4s ease" }}>
+              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", background: newVowBloodPact ? "linear-gradient(160deg, #1a1a2e 0%, #0f0f1e 100%)" : "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.3)"}`, boxShadow: newVowBloodPact ? "0 0 60px rgba(99,102,241,0.14)" : "0 0 40px rgba(99,102,241,0.07)", transition: "all 0.4s ease" }}>
 
-                {/* NPC Speech */}
-                <div style={{ background: "rgba(99,102,241,0.06)", borderBottom: "1px solid rgba(99,102,241,0.12)", padding: "16px 20px", minHeight: 52 }}>
-                  {vaelSpeech ? (
-                    <p className="npc-speech-text text-xs italic" key={`vael-${newVowBloodPact}-${newVowCommitment}`} style={{ color: "#a5b4fc", lineHeight: 1.7, fontSize: "0.7rem" }}>
+                {/* Mobile NPC speech fallback (hidden on md+) */}
+                {vaelSpeech && (
+                  <div className="md:hidden" style={{ background: "rgba(99,102,241,0.06)", borderBottom: "1px solid rgba(99,102,241,0.12)", padding: "12px 20px" }}>
+                    <p className="npc-speech-text text-xs italic" key={`vael-m-${newVowBloodPact}-${newVowCommitment}`} style={{ color: "#a5b4fc", lineHeight: 1.7, fontSize: "0.7rem" }}>
                       „{vaelSpeech}"
                     </p>
-                  ) : (
-                    <p className="text-xs italic" style={{ color: "rgba(165,180,252,0.25)", fontSize: "0.7rem" }}>...</p>
-                  )}
-                </div>
+                  </div>
+                )}
 
                 {/* Header */}
                 <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(99,102,241,0.12)" }}>
                   <img src="/images/icons/ui-vow-sword.png" alt="" width={28} height={28} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
                   <div>
-                    <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Schwur ablegen</h3>
+                    <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Swear a Vow</h3>
                     <p className="text-xs" style={{ color: "rgba(165,180,252,0.4)" }}>Vael the Silent — Vow Shrine</p>
                   </div>
                 </div>
 
                 {/* Form */}
-                <div className="p-5 space-y-4" style={{ maxHeight: "58vh", overflowY: "auto" }}>
+                <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
 
                   {/* Name */}
                   <div>
-                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Was schwörst du ab?</label>
-                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="z.B. Kein Social Media vor dem Mittag..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>What are you vowing to avoid?</label>
+                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. No social media before noon..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
                   </div>
 
                   {/* Category + Frequency */}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Kategorie</label>
+                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Category</label>
                       <select value={newVowCategory} onChange={e => setNewVowCategory(e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(99,102,241,0.2)", color: "#e2e8f0", outline: "none" }}>
                         <option value="fitness">Fitness</option>
                         <option value="learning">Learning</option>
@@ -546,10 +544,10 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                       </select>
                     </div>
                     <div>
-                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Frequenz</label>
+                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Frequency</label>
                       <div className="flex gap-1.5">
-                        {[{ v: "daily", label: "Täglich" }, { v: "triggered", label: "Bei Reiz" }].map(({ v, label }) => (
-                          <button key={v} onClick={() => {}} className="flex-1 text-xs py-2 rounded-lg font-medium" style={{ background: v === "daily" ? "rgba(99,102,241,0.18)" : "rgba(0,0,0,0.25)", color: v === "daily" ? "#818cf8" : "rgba(165,180,252,0.35)", border: `1px solid ${v === "daily" ? "rgba(99,102,241,0.4)" : "rgba(99,102,241,0.1)"}` }}>{label}</button>
+                        {[{ v: "daily", label: "Daily" }, { v: "triggered", label: "On Trigger" }].map(({ v, label }) => (
+                          <button key={v} onClick={() => {}} className="ritual-freq-btn flex-1 text-xs py-2 rounded-lg font-medium" style={{ background: v === "daily" ? "rgba(99,102,241,0.18)" : "rgba(0,0,0,0.25)", color: v === "daily" ? "#818cf8" : "rgba(165,180,252,0.35)", border: `1px solid ${v === "daily" ? "rgba(99,102,241,0.4)" : "rgba(99,102,241,0.1)"}` }}>{label}</button>
                         ))}
                       </div>
                     </div>
@@ -571,30 +569,42 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
 
                   {/* Blood Pact Toggle */}
                   <div>
-                    <button onClick={() => setNewVowBloodPact(p => !p)} className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all ${newVowBloodPact ? "blood-pact-active-indigo" : ""}`} style={{ background: newVowBloodPact ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)", color: newVowBloodPact ? "#818cf8" : "rgba(255,255,255,0.25)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
-                      {newVowBloodPact ? "Blutpakt besiegelt" : "Blutpakt besiegeln"}
+                    <button onClick={() => setNewVowBloodPact(p => !p)} className={`action-btn w-full py-2.5 px-4 rounded-xl font-semibold text-sm ${newVowBloodPact ? "blood-pact-active-indigo" : ""}`} style={{ background: newVowBloodPact ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)", color: newVowBloodPact ? "#818cf8" : "rgba(255,255,255,0.25)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
+                      {newVowBloodPact ? "Blood Pact Sealed" : "Seal Blood Pact"}
                     </button>
-                    {newVowBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(99,102,241,0.8)" }}>! Blutpakt: Scheitern = alle Belohnungen verfallen.</p>}
+                    {newVowBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(99,102,241,0.8)" }}>! Blood Pact: Failure = all rewards forfeit.</p>}
                   </div>
 
                   {/* Reward Preview */}
                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(99,102,241,0.12)" }}>
-                    <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(165,180,252,0.4)" }}>Vorschau Belohnungen</p>
-                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Täglich: <span style={{ color: "#818cf8" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bindungsbonus: <span style={{ color: "#818cf8" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
+                    <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(165,180,252,0.4)" }}>Reward Preview</p>
+                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Daily: <span style={{ color: "#818cf8" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bond Bonus: <span style={{ color: "#818cf8" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
                   </div>
 
                   {/* Buttons */}
                   <div className="flex gap-2 pt-1">
-                    <button onClick={closeVowModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(165,180,252,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Zurücktreten</button>
-                    <button onClick={createAntiRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(67,56,202,0.32)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.6)", boxShadow: "0 0 16px rgba(99,102,241,0.12)" }}>Schwur leisten</button>
+                    <button onClick={closeVowModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(165,180,252,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+                    <button onClick={createAntiRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(67,56,202,0.32)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.6)", boxShadow: "0 0 16px rgba(99,102,241,0.12)" }}>Seal Vow</button>
                   </div>
                 </div>
               </div>
 
               {/* ── Vael Portrait (hidden on small screens) ── */}
-              <div className="hidden md:block" style={{ position: "absolute", right: -160, top: "50%", transform: "translateY(-50%)", width: 180, pointerEvents: "none", zIndex: 10 }}>
+              <div className="hidden md:block" style={{ position: "absolute", right: -200, top: "50%", transform: "translateY(-50%)", width: 210, pointerEvents: "none", zIndex: 10 }}>
                 <img src="/images/portraits/npc-vael.png" alt="Vael the Silent" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newVowBloodPact ? "drop-shadow(0 0 22px rgba(99,102,241,0.8))" : "drop-shadow(0 0 18px rgba(99,102,241,0.45))", transition: "filter 0.5s ease" }} />
+                {/* Speech bubble — overlaps slightly with modal */}
+                {vaelSpeech && (
+                  <div
+                    className="npc-speech-bubble npc-speech-bubble-indigo npc-speech-text"
+                    key={`vael-bubble-${newVowBloodPact}-${newVowCommitment}`}
+                    style={{ borderColor: newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.35)", color: newVowBloodPact ? "#c4b5fd" : "#a5b4fc" }}
+                  >
+                    {/* Arrow pointing right toward portrait */}
+                    <div style={{ position: "absolute", top: 12, right: -8, width: 0, height: 0, borderTop: "6px solid transparent", borderBottom: "6px solid transparent", borderLeft: `8px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.35)"}` }} />
+                    „{vaelSpeech}"
+                  </div>
+                )}
               </div>
             </div>
           </div>

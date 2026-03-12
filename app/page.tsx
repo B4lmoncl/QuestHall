@@ -49,12 +49,12 @@ const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, u
 
 // ─── Ritual / Vow Commitment Tiers ───────────────────────────────────────────
 const COMMITMENT_TIERS = [
-  { id: "none",     label: "None",     days: 0,   color: "rgba(255,255,255,0.25)", bonusGold: 0,  bonusXp: 0,  flavorShort: "Kein Versprechen" },
-  { id: "spark",    label: "Spark",    days: 7,   color: "#94a3b8",                bonusGold: 3,  bonusXp: 5,  flavorShort: "Erster Funken" },
-  { id: "flame",    label: "Flame",    days: 21,  color: "#cd7f32",                bonusGold: 7,  bonusXp: 10, flavorShort: "Gewohnheit formt sich" },
-  { id: "ember",    label: "Ember",    days: 60,  color: "#f59e0b",                bonusGold: 13, bonusXp: 20, flavorShort: "Tief verankert" },
-  { id: "crucible", label: "Crucible", days: 180, color: "#e2e8f0",                bonusGold: 20, bonusXp: 35, flavorShort: "Geläutert im Feuer" },
-  { id: "eternity", label: "Eternity", days: 365, color: "#a78bfa",                bonusGold: 30, bonusXp: 50, flavorShort: "Für die Ewigkeit" },
+  { id: "none",     label: "None",     days: 0,   color: "rgba(255,255,255,0.25)", bonusGold: 0,  bonusXp: 0,  flavorShort: "No commitment" },
+  { id: "spark",    label: "Spark",    days: 7,   color: "#94a3b8",                bonusGold: 3,  bonusXp: 5,  flavorShort: "First spark" },
+  { id: "flame",    label: "Flame",    days: 21,  color: "#cd7f32",                bonusGold: 7,  bonusXp: 10, flavorShort: "Habit forms" },
+  { id: "ember",    label: "Ember",    days: 60,  color: "#f59e0b",                bonusGold: 13, bonusXp: 20, flavorShort: "Deeply anchored" },
+  { id: "crucible", label: "Crucible", days: 180, color: "#e2e8f0",                bonusGold: 20, bonusXp: 35, flavorShort: "Refined in fire" },
+  { id: "eternity", label: "Eternity", days: 365, color: "#a78bfa",                bonusGold: 30, bonusXp: 50, flavorShort: "For eternity" },
 ];
 
 function getSeraineSpeech(commitment: string, bloodPact: boolean): string {
@@ -1547,10 +1547,10 @@ export default function Dashboard() {
 
                   {/* ── Rituale Tab ── */}
                   {questBoardTab === "rituale" && (
-                    <div data-feedback-id="ritual-chamber">
+                    <div data-feedback-id="ritual-chamber" className="section-ritual">
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                          <img src="/images/portraits/npc-seraine.png" alt="" width={28} height={42} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(245,158,11,0.3)", flexShrink: 0 }} />
+                          <img src="/images/portraits/npc-seraine.png" alt="" width={48} height={72} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(245,158,11,0.3)", flexShrink: 0 }} />
                           <div>
                             <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>Ritual Chamber</h3>
                             <p className="text-xs" style={{ color: "rgba(245,158,11,0.4)", fontSize: "0.6rem" }}>Seraine Ashwell</p>
@@ -1559,13 +1559,13 @@ export default function Dashboard() {
                         {playerName && reviewApiKey && (
                           <button onClick={() => setCreateRitualOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
                             style={{ background: "rgba(245,158,11,0.14)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.35)", boxShadow: "0 0 10px rgba(245,158,11,0.08)" }}>
-                            ＋ Ritual erstellen
+                            ＋ Create Ritual
                           </button>
                         )}
                       </div>
                       {rituals.filter(r => r.playerId === playerName?.toLowerCase()).length === 0 ? (
                         <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-                          <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Keine Rituale. Erstelle deinen ersten täglichen Ritual!</p>
+                          <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>No rituals. Create your first daily ritual!</p>
                         </div>
                       ) : (
                         <div className="space-y-2">
@@ -1672,16 +1672,26 @@ export default function Dashboard() {
                             <div className="relative flex items-end" style={{ maxWidth: 820, width: "100%" }} onClick={e => e.stopPropagation()}>
 
                               {/* ── Seraine Portrait (hidden on small screens) ── */}
-                              <div className="hidden md:block" style={{ position: "absolute", left: -160, top: "50%", transform: "translateY(-50%)", width: 180, pointerEvents: "none", zIndex: 10 }}>
+                              <div className="hidden md:block" style={{ position: "absolute", left: -200, top: "50%", transform: "translateY(-50%)", width: 210, pointerEvents: "none", zIndex: 10 }}>
                                 <img src="/images/portraits/npc-seraine.png" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newRitualBloodPact ? "drop-shadow(0 0 22px rgba(239,68,68,0.65))" : "drop-shadow(0 0 22px rgba(245,158,11,0.55))", transition: "filter 0.5s ease" }} />
+                                {/* Speech bubble — overlaps slightly with modal */}
+                                <div
+                                  className="npc-speech-bubble npc-speech-bubble-gold npc-speech-text"
+                                  key={`bubble-${newRitualBloodPact}-${newRitualCommitment}`}
+                                  style={{ borderColor: newRitualBloodPact ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.35)", color: newRitualBloodPact ? "#f87171" : "#c9a46a" }}
+                                >
+                                  {/* Arrow pointing left toward portrait */}
+                                  <div style={{ position: "absolute", top: 12, left: -8, width: 0, height: 0, borderTop: "6px solid transparent", borderBottom: "6px solid transparent", borderRight: `8px solid ${newRitualBloodPact ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.35)"}` }} />
+                                  „{getSeraineSpeech(newRitualCommitment, newRitualBloodPact)}"
+                                </div>
                               </div>
 
                               {/* ── Modal Panel (65% width) ── */}
-                              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", overflow: "hidden", maxHeight: "80vh", overflowY: "auto", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }}>
+                              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }}>
 
-                                {/* NPC Speech */}
-                                <div style={{ background: "rgba(245,158,11,0.05)", borderBottom: "1px solid rgba(245,158,11,0.1)", padding: "16px 20px" }}>
-                                  <p className="npc-speech-text text-xs italic" key={`seraine-${newRitualBloodPact}-${newRitualCommitment}`} style={{ color: "#c9a46a", lineHeight: 1.7, fontSize: "0.7rem" }}>
+                                {/* Mobile NPC speech fallback (hidden on md+) */}
+                                <div className="md:hidden" style={{ background: "rgba(245,158,11,0.05)", borderBottom: "1px solid rgba(245,158,11,0.1)", padding: "12px 20px" }}>
+                                  <p className="npc-speech-text text-xs italic" key={`seraine-m-${newRitualBloodPact}-${newRitualCommitment}`} style={{ color: "#c9a46a", lineHeight: 1.7, fontSize: "0.7rem" }}>
                                     „{getSeraineSpeech(newRitualCommitment, newRitualBloodPact)}"
                                   </p>
                                 </div>
@@ -1696,18 +1706,18 @@ export default function Dashboard() {
                                 </div>
 
                                 {/* Form */}
-                                <div className="p-5 space-y-4" style={{ maxHeight: "58vh", overflowY: "auto" }}>
+                                <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
 
                                   {/* Name */}
                                   <div>
                                     <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Ritual Name</label>
-                                    <input value={newRitualTitle} onChange={e => setNewRitualTitle(e.target.value)} placeholder="Nenne dein Ritual..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(245,158,11,0.25)", color: "#e8d5a3", outline: "none" }} onKeyDown={e => e.key === "Enter" && submitRitual()} autoFocus />
+                                    <input value={newRitualTitle} onChange={e => setNewRitualTitle(e.target.value)} placeholder="Name your ritual..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(245,158,11,0.25)", color: "#e8d5a3", outline: "none" }} onKeyDown={e => e.key === "Enter" && submitRitual()} autoFocus />
                                   </div>
 
                                   {/* Category + Frequency */}
                                   <div className="grid grid-cols-2 gap-3">
                                     <div>
-                                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Kategorie</label>
+                                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Category</label>
                                       <select value={newRitualCategory} onChange={e => setNewRitualCategory(e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(245,158,11,0.2)", color: "#e8d5a3", outline: "none" }}>
                                         <option value="fitness">Fitness</option>
                                         <option value="learning">Learning</option>
@@ -1718,9 +1728,9 @@ export default function Dashboard() {
                                       </select>
                                     </div>
                                     <div>
-                                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Frequenz</label>
+                                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Frequency</label>
                                       <div className="flex gap-1.5">
-                                        {[{ v: "daily", label: "Täglich" }, { v: "weekly", label: "Wöchentlich" }].map(({ v, label }) => (
+                                        {[{ v: "daily", label: "Daily" }, { v: "weekly", label: "Weekly" }].map(({ v, label }) => (
                                           <button key={v} onClick={() => setNewRitualSchedule(v)} className="ritual-freq-btn flex-1 text-xs py-2 rounded-lg font-medium" style={{ background: newRitualSchedule === v ? "rgba(245,158,11,0.2)" : "rgba(0,0,0,0.25)", color: newRitualSchedule === v ? "#f59e0b" : "rgba(200,170,100,0.4)", border: `1px solid ${newRitualSchedule === v ? "rgba(245,158,11,0.45)" : "rgba(245,158,11,0.1)"}` }}>{label}</button>
                                         ))}
                                       </div>
@@ -1743,23 +1753,23 @@ export default function Dashboard() {
 
                                   {/* Blood Pact Toggle */}
                                   <div>
-                                    <button onClick={() => setNewRitualBloodPact(p => !p)} className={`w-full py-2.5 px-4 rounded-xl font-semibold text-sm transition-all ${newRitualBloodPact ? "blood-pact-active" : ""}`} style={{ background: newRitualBloodPact ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.04)", color: newRitualBloodPact ? "#ef4444" : "rgba(255,255,255,0.28)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
-                                      {newRitualBloodPact ? "Blutpakt besiegelt" : "Blutpakt besiegeln"}
+                                    <button onClick={() => setNewRitualBloodPact(p => !p)} className={`action-btn w-full py-2.5 px-4 rounded-xl font-semibold text-sm ${newRitualBloodPact ? "blood-pact-active" : ""}`} style={{ background: newRitualBloodPact ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.04)", color: newRitualBloodPact ? "#ef4444" : "rgba(255,255,255,0.28)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
+                                      {newRitualBloodPact ? "Blood Pact Sealed" : "Seal Blood Pact"}
                                     </button>
-                                    {newRitualBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(239,68,68,0.7)" }}>! Blutpakt: Scheitern = alle Belohnungen verfallen.</p>}
+                                    {newRitualBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(239,68,68,0.7)" }}>! Blood Pact: Failure = all rewards forfeit.</p>}
                                   </div>
 
                                   {/* Reward Preview */}
                                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(245,158,11,0.1)" }}>
-                                    <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(200,170,100,0.45)" }}>Vorschau Belohnungen</p>
-                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)" }}>Täglich: <span style={{ color: "#f59e0b" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)" }}>Bindungsbonus: <span style={{ color: "#f59e0b" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
+                                    <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(200,170,100,0.45)" }}>Reward Preview</p>
+                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)" }}>Daily: <span style={{ color: "#f59e0b" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)" }}>Bond Bonus: <span style={{ color: "#f59e0b" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
                                   </div>
 
                                   {/* Buttons */}
                                   <div className="flex gap-2 pt-1">
-                                    <button onClick={closeRitualModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}>Abbrechen</button>
-                                    <button onClick={submitRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(245,158,11,0.22)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.55)", boxShadow: "0 0 16px rgba(245,158,11,0.12)" }}>Ritual schmieden</button>
+                                    <button onClick={closeRitualModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+                                    <button onClick={submitRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(245,158,11,0.22)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.55)", boxShadow: "0 0 16px rgba(245,158,11,0.12)" }}>Forge Ritual</button>
                                   </div>
                                 </div>
                               </div>
