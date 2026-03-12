@@ -397,214 +397,186 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   const getStreakBadge = (days: number) =>
     [...ANTI_RITUAL_MILESTONES].reverse().find(m => days >= m.days) ?? null;
 
-  return (
-    <div className="section-vow">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <img src="/images/portraits/npc-vael.png" alt="" width={48} height={72} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(99,102,241,0.35)", flexShrink: 0 }} />
-          <div>
-            <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#818cf8" }}>
-              Vow Shrine
-              <span className="text-xs font-normal normal-case ml-2" style={{ color: "rgba(165,180,252,0.35)" }}>— track what you don&apos;t do</span>
-            </h3>
-            <p className="text-xs" style={{ color: "rgba(99,102,241,0.45)", fontSize: "0.6rem" }}>Vael the Silent</p>
-          </div>
-        </div>
-        {playerName && reviewApiKey && (
-          <button onClick={() => setCreateOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
-            style={{ background: "rgba(99,102,241,0.14)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.35)", boxShadow: "0 0 10px rgba(99,102,241,0.08)" }}>
-            ＋ Swear Vow
-          </button>
-        )}
-      </div>
-
-      {antiRituals.length === 0 ? (
-        <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-2xl mb-2">×</p>
-          <p className="text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>No vows sworn yet</p>
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Track how long you avoid a bad habit. Days clean = streak power.</p>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {antiRituals.map(ar => {
-            const days = ar.cleanDays;
-            const mood = getAntiRitualMood(days);
-            const badge = getStreakBadge(days);
-            const nextMilestone = ANTI_RITUAL_MILESTONES.find(m => days < m.days);
-            const streakBorderColor = days >= 90 ? "#f59e0b" : days >= 30 ? "#a78bfa" : days >= 7 ? "#22c55e" : "rgba(255,255,255,0.1)";
-            const streakGlow = days >= 30 ? `0 0 12px ${streakBorderColor}30` : "none";
-            return (
-              <div key={ar.id} className="rounded-xl p-3" style={{
-                background: "#252525",
-                border: `1px solid ${streakBorderColor}`,
-                boxShadow: streakGlow,
-              }}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>{ar.title}</span>
-                      {badge && <span className="text-sm" title={badge.label}>{badge.badge}</span>}
-                    </div>
-                    <p className="text-xs mb-1.5" style={{ color: mood.color }}>{mood.msg}</p>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      <span className="font-bold" style={{ color: mood.color }}>{days} days clean</span>
-                      {nextMilestone && <span>→ {nextMilestone.badge} in {nextMilestone.days - days}d</span>}
-                    </div>
-                    {nextMilestone && (
-                      <div className="mt-2">
-                        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
-                          <div className="h-full rounded-full transition-all" style={{
-                            width: `${(days / nextMilestone.days) * 100}%`,
-                            background: `linear-gradient(90deg, ${mood.color}80, ${mood.color})`,
-                          }} />
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <button
-                      onClick={() => markViolated(ar.id)}
-                      disabled={!reviewApiKey}
-                      className="text-xs px-2 py-1 rounded transition-all"
-                      style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
-                      title="I slipped... Streak reset."
-                    >
-                      Slip
-                    </button>
-                    {reviewApiKey && (
-                      <button
-                        onClick={() => setDeleteConfirmId(ar.id)}
-                        className="text-xs px-2 py-1 rounded transition-all"
-                        style={{ background: "rgba(239,68,68,0.06)", color: "rgba(239,68,68,0.4)", border: "1px solid rgba(239,68,68,0.12)", cursor: 'pointer' }}
-                        title="Delete vow"
-                      >
-                        ×
-                      </button>
-                    )}
-                  </div>
+  const renderVowCard = (ar: AntiRitual) => {
+    const days = ar.cleanDays;
+    const mood = getAntiRitualMood(days);
+    const badge = getStreakBadge(days);
+    const nextMilestone = ANTI_RITUAL_MILESTONES.find(m => days < m.days);
+    const streakBorderColor = days >= 90 ? "#f59e0b" : days >= 30 ? "#a78bfa" : days >= 7 ? "#22c55e" : "rgba(255,255,255,0.1)";
+    const streakGlow = days >= 30 ? `0 0 12px ${streakBorderColor}30` : "none";
+    return (
+      <div key={ar.id} className="rounded-xl p-3" style={{
+        background: "#252525",
+        border: `1px solid ${streakBorderColor}`,
+        boxShadow: streakGlow,
+      }}>
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>{ar.title}</span>
+              {badge && <span className="text-sm" title={badge.label}>{badge.badge}</span>}
+            </div>
+            <p className="text-xs mb-1.5" style={{ color: mood.color }}>{mood.msg}</p>
+            <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <span className="font-bold" style={{ color: mood.color }}>{days} days clean</span>
+              {nextMilestone && <span>→ {nextMilestone.badge} in {nextMilestone.days - days}d</span>}
+            </div>
+            {nextMilestone && (
+              <div className="mt-2">
+                <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
+                  <div className="h-full rounded-full transition-all" style={{
+                    width: `${(days / nextMilestone.days) * 100}%`,
+                    background: `linear-gradient(90deg, ${mood.color}80, ${mood.color})`,
+                  }} />
                 </div>
               </div>
-            );
-          })}
+            )}
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={() => markViolated(ar.id)}
+              disabled={!reviewApiKey}
+              className="text-xs px-2 py-1 rounded transition-all"
+              style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
+              title="I slipped... Streak reset."
+            >
+              Slip
+            </button>
+            {reviewApiKey && (
+              <button
+                onClick={() => setDeleteConfirmId(ar.id)}
+                className="text-xs px-2 py-1 rounded transition-all"
+                style={{ background: "rgba(239,68,68,0.06)", color: "rgba(239,68,68,0.4)", border: "1px solid rgba(239,68,68,0.12)", cursor: 'pointer' }}
+                title="Delete vow"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="section-vow">
+      {/* ── Top flex row: Portrait left, content right ── */}
+      <div className="flex gap-4 mb-4" style={{ alignItems: "flex-start" }}>
+        {/* Portrait column with speech bubble */}
+        <div className="flex-none" style={{ width: 130 }}>
+          <img src="/images/portraits/npc-vael.png" alt="Vael the Silent" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(99,102,241,0.4))", borderRadius: 4 }} />
+          <div style={{ marginTop: 8, background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.22)", borderRadius: 6, padding: "8px 10px", position: "relative" }}>
+            <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid rgba(99,102,241,0.22)" }} />
+            <p style={{ fontSize: "0.62rem", fontStyle: "italic", color: "#a5b4fc", lineHeight: 1.5, margin: 0 }}>„Sprich. Oder schweig. Beides hat Gewicht."</p>
+          </div>
+        </div>
+        {/* Right: title + create button + first 2 cards */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#818cf8" }}>
+                Vow Shrine
+                <span className="text-xs font-normal normal-case ml-2" style={{ color: "rgba(165,180,252,0.35)" }}>— track what you don&apos;t do</span>
+              </h3>
+              <p className="text-xs" style={{ color: "rgba(99,102,241,0.45)", fontSize: "0.6rem" }}>Vael the Silent</p>
+            </div>
+            {playerName && reviewApiKey && (
+              <button onClick={() => setCreateOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
+                style={{ background: "rgba(99,102,241,0.14)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.35)", boxShadow: "0 0 10px rgba(99,102,241,0.08)" }}>
+                ＋ Swear Vow
+              </button>
+            )}
+          </div>
+          {antiRituals.length === 0 ? (
+            <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-2xl mb-2">×</p>
+              <p className="text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>No vows sworn yet</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Track how long you avoid a bad habit. Days clean = streak power.</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {antiRituals.slice(0, 2).map(renderVowCard)}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Remaining cards (3+) at full width */}
+      {antiRituals.length > 2 && (
+        <div className="space-y-2">
+          {antiRituals.slice(2).map(renderVowCard)}
         </div>
       )}
 
       {createOpen && (() => {
         const closeVowModal = () => { setCreateOpen(false); setNewTitle(""); setNewVowCommitment("none"); setNewVowBloodPact(false); };
-        const vaelSpeech = getVaelSpeech(newVowCommitment, newVowBloodPact);
         const tierData = COMMITMENT_TIERS_VOW.find(t => t.id === newVowCommitment)!;
         const bonusGold = tierData.bonusGold * (newVowBloodPact ? 3 : 1);
         const bonusXp = tierData.bonusXp * (newVowBloodPact ? 3 : 1);
         return (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={closeVowModal}>
-            {/* Outer wrapper: flex so portrait overlaps right edge */}
-            <div className="relative flex items-end" style={{ maxWidth: 820, width: "100%" }} onClick={e => e.stopPropagation()}>
-
-              {/* ── Modal Panel (65% width) ── */}
-              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", background: newVowBloodPact ? "linear-gradient(160deg, #1a1a2e 0%, #0f0f1e 100%)" : "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.3)"}`, boxShadow: newVowBloodPact ? "0 0 60px rgba(99,102,241,0.14)" : "0 0 40px rgba(99,102,241,0.07)", transition: "all 0.4s ease" }}>
-
-                {/* Mobile NPC speech fallback (hidden on md+) */}
-                {vaelSpeech && (
-                  <div className="md:hidden" style={{ background: "rgba(99,102,241,0.06)", borderBottom: "1px solid rgba(99,102,241,0.12)", padding: "12px 20px" }}>
-                    <p className="npc-speech-text text-xs italic" key={`vael-m-${newVowBloodPact}-${newVowCommitment}`} style={{ color: "#a5b4fc", lineHeight: 1.7, fontSize: "0.7rem" }}>
-                      „{vaelSpeech}"
-                    </p>
-                  </div>
-                )}
-
-                {/* Header */}
-                <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(99,102,241,0.12)" }}>
-                  <img src="/images/icons/ui-vow-sword.png" alt="" width={28} height={28} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
-                  <div>
-                    <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Swear a Vow</h3>
-                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.4)" }}>Vael the Silent — Vow Shrine</p>
-                  </div>
+            <div style={{ maxWidth: 520, width: "100%", borderRadius: "1rem", background: newVowBloodPact ? "linear-gradient(160deg, #1a1a2e 0%, #0f0f1e 100%)" : "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.3)"}`, boxShadow: newVowBloodPact ? "0 0 60px rgba(99,102,241,0.14)" : "0 0 40px rgba(99,102,241,0.07)", transition: "all 0.4s ease" }} onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(99,102,241,0.12)" }}>
+                <img src="/images/icons/ui-vow-sword.png" alt="" width={28} height={28} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
+                <div>
+                  <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Swear a Vow</h3>
+                  <p className="text-xs" style={{ color: "rgba(165,180,252,0.4)" }}>Vael the Silent — Vow Shrine</p>
                 </div>
-
-                {/* Form */}
-                <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
-
-                  {/* Name */}
+              </div>
+              {/* Form */}
+              <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
+                <div>
+                  <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>What are you vowing to avoid?</label>
+                  <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. No social media before noon..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>What are you vowing to avoid?</label>
-                    <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. No social media before noon..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Category</label>
+                    <select value={newVowCategory} onChange={e => setNewVowCategory(e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(99,102,241,0.2)", color: "#e2e8f0", outline: "none" }}>
+                      <option value="fitness">Fitness</option>
+                      <option value="learning">Learning</option>
+                      <option value="personal">Personal</option>
+                      <option value="social">Social</option>
+                      <option value="creative">Creative</option>
+                      <option value="wellness">Wellness</option>
+                    </select>
                   </div>
-
-                  {/* Category + Frequency */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Category</label>
-                      <select value={newVowCategory} onChange={e => setNewVowCategory(e.target.value)} className="w-full text-sm px-3 py-2 rounded-lg" style={{ background: "rgba(0,0,0,0.4)", border: "1px solid rgba(99,102,241,0.2)", color: "#e2e8f0", outline: "none" }}>
-                        <option value="fitness">Fitness</option>
-                        <option value="learning">Learning</option>
-                        <option value="personal">Personal</option>
-                        <option value="social">Social</option>
-                        <option value="creative">Creative</option>
-                        <option value="wellness">Wellness</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Frequency</label>
-                      <div className="flex gap-1.5">
-                        {[{ v: "daily", label: "Daily" }, { v: "triggered", label: "On Trigger" }].map(({ v, label }) => (
-                          <button key={v} onClick={() => {}} className="ritual-freq-btn flex-1 text-xs py-2 rounded-lg font-medium" style={{ background: v === "daily" ? "rgba(99,102,241,0.18)" : "rgba(0,0,0,0.25)", color: v === "daily" ? "#818cf8" : "rgba(165,180,252,0.35)", border: `1px solid ${v === "daily" ? "rgba(99,102,241,0.4)" : "rgba(99,102,241,0.1)"}` }}>{label}</button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Aetherbond Commitment */}
                   <div>
-                    <label className="text-xs font-semibold mb-2 block" style={{ color: "rgba(165,180,252,0.55)" }}>Aetherbond</label>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {COMMITMENT_TIERS_VOW.map(tier => (
-                        <button key={tier.id} onClick={() => setNewVowCommitment(tier.id)} className="ritual-tier-btn text-left p-2 rounded-lg" style={{ background: newVowCommitment === tier.id ? `${tier.color}1a` : "rgba(0,0,0,0.2)", border: `1px solid ${newVowCommitment === tier.id ? tier.color : "rgba(255,255,255,0.07)"}`, boxShadow: newVowCommitment === tier.id ? `0 0 12px ${tier.color}55` : "none" }}>
-                          <div className="text-xs font-bold" style={{ color: newVowCommitment === tier.id ? tier.color : "rgba(255,255,255,0.5)" }}>{tier.label}</div>
-                          <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.28)", marginTop: 2 }}>{tier.days > 0 ? `${tier.days}d` : "—"}</div>
-                          <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", lineHeight: 1.3 }}>{tier.flavorShort}</div>
-                        </button>
+                    <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>Frequency</label>
+                    <div className="flex gap-1.5">
+                      {[{ v: "daily", label: "Daily" }, { v: "triggered", label: "On Trigger" }].map(({ v, label }) => (
+                        <button key={v} onClick={() => {}} className="ritual-freq-btn flex-1 text-xs py-2 rounded-lg font-medium" style={{ background: v === "daily" ? "rgba(99,102,241,0.18)" : "rgba(0,0,0,0.25)", color: v === "daily" ? "#818cf8" : "rgba(165,180,252,0.35)", border: `1px solid ${v === "daily" ? "rgba(99,102,241,0.4)" : "rgba(99,102,241,0.1)"}` }}>{label}</button>
                       ))}
                     </div>
                   </div>
-
-                  {/* Blood Pact Toggle */}
-                  <div>
-                    <button onClick={() => setNewVowBloodPact(p => !p)} className={`action-btn w-full py-2.5 px-4 rounded-xl font-semibold text-sm ${newVowBloodPact ? "blood-pact-active-indigo" : ""}`} style={{ background: newVowBloodPact ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)", color: newVowBloodPact ? "#818cf8" : "rgba(255,255,255,0.25)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
-                      {newVowBloodPact ? "Blood Pact Sealed" : "Seal Blood Pact"}
-                    </button>
-                    {newVowBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(99,102,241,0.8)" }}>! Blood Pact: Failure = all rewards forfeit.</p>}
-                  </div>
-
-                  {/* Reward Preview */}
-                  <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(99,102,241,0.12)" }}>
-                    <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(165,180,252,0.4)" }}>Reward Preview</p>
-                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Daily: <span style={{ color: "#818cf8" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bond Bonus: <span style={{ color: "#818cf8" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
-                  </div>
-
-                  {/* Buttons */}
-                  <div className="flex gap-2 pt-1">
-                    <button onClick={closeVowModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(165,180,252,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
-                    <button onClick={createAntiRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(67,56,202,0.32)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.6)", boxShadow: "0 0 16px rgba(99,102,241,0.12)" }}>Seal Vow</button>
+                </div>
+                <div>
+                  <label className="text-xs font-semibold mb-2 block" style={{ color: "rgba(165,180,252,0.55)" }}>Aetherbond</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {COMMITMENT_TIERS_VOW.map(tier => (
+                      <button key={tier.id} onClick={() => setNewVowCommitment(tier.id)} className="ritual-tier-btn text-left p-2 rounded-lg" style={{ background: newVowCommitment === tier.id ? `${tier.color}1a` : "rgba(0,0,0,0.2)", border: `1px solid ${newVowCommitment === tier.id ? tier.color : "rgba(255,255,255,0.07)"}`, boxShadow: newVowCommitment === tier.id ? `0 0 12px ${tier.color}55` : "none" }}>
+                        <div className="text-xs font-bold" style={{ color: newVowCommitment === tier.id ? tier.color : "rgba(255,255,255,0.5)" }}>{tier.label}</div>
+                        <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.28)", marginTop: 2 }}>{tier.days > 0 ? `${tier.days}d` : "—"}</div>
+                        <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.2)", lineHeight: 1.3 }}>{tier.flavorShort}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              </div>
-
-              {/* ── Vael Portrait (hidden on small screens) ── */}
-              <div className="hidden md:block" style={{ position: "absolute", right: -200, top: "50%", transform: "translateY(-50%)", width: 210, pointerEvents: "none", zIndex: 10 }}>
-                <img src="/images/portraits/npc-vael.png" alt="Vael the Silent" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newVowBloodPact ? "drop-shadow(0 0 22px rgba(99,102,241,0.8))" : "drop-shadow(0 0 18px rgba(99,102,241,0.45))", transition: "filter 0.5s ease" }} />
-                {/* Speech bubble — overlaps slightly with modal */}
-                {vaelSpeech && (
-                  <div
-                    className="npc-speech-bubble npc-speech-bubble-indigo npc-speech-text"
-                    key={`vael-bubble-${newVowBloodPact}-${newVowCommitment}`}
-                    style={{ borderColor: newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.35)", color: newVowBloodPact ? "#c4b5fd" : "#a5b4fc" }}
-                  >
-                    {/* Arrow pointing right toward portrait */}
-                    <div style={{ position: "absolute", top: 12, right: -8, width: 0, height: 0, borderTop: "6px solid transparent", borderBottom: "6px solid transparent", borderLeft: `8px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(99,102,241,0.35)"}` }} />
-                    „{vaelSpeech}"
-                  </div>
-                )}
+                <div>
+                  <button onClick={() => setNewVowBloodPact(p => !p)} className={`action-btn w-full py-2.5 px-4 rounded-xl font-semibold text-sm ${newVowBloodPact ? "blood-pact-active-indigo" : ""}`} style={{ background: newVowBloodPact ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)", color: newVowBloodPact ? "#818cf8" : "rgba(255,255,255,0.25)", border: `1px solid ${newVowBloodPact ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
+                    {newVowBloodPact ? "Blood Pact Sealed" : "Seal Blood Pact"}
+                  </button>
+                  {newVowBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(99,102,241,0.8)" }}>! Blood Pact: Failure = all rewards forfeit.</p>}
+                </div>
+                <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(99,102,241,0.12)" }}>
+                  <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(165,180,252,0.4)" }}>Reward Preview</p>
+                  <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Daily: <span style={{ color: "#818cf8" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                  {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bond Bonus: <span style={{ color: "#818cf8" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <button onClick={closeVowModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(165,180,252,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+                  <button onClick={createAntiRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(67,56,202,0.32)", color: "#a5b4fc", border: "1px solid rgba(99,102,241,0.6)", boxShadow: "0 0 16px rgba(99,102,241,0.12)" }}>Seal Vow</button>
+                </div>
               </div>
             </div>
           </div>

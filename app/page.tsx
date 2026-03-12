@@ -1546,156 +1546,149 @@ export default function Dashboard() {
                   </div>}
 
                   {/* ── Rituale Tab ── */}
-                  {questBoardTab === "rituale" && (
-                    <div data-feedback-id="ritual-chamber" className="section-ritual">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <img src="/images/portraits/npc-seraine.png" alt="" width={48} height={72} style={{ imageRendering: "pixelated", borderRadius: 4, border: "1px solid rgba(245,158,11,0.3)", flexShrink: 0 }} />
-                          <div>
-                            <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>Ritual Chamber</h3>
-                            <p className="text-xs" style={{ color: "rgba(245,158,11,0.4)", fontSize: "0.6rem" }}>Seraine Ashwell</p>
+                  {questBoardTab === "rituale" && (() => {
+                    const playerRituals = rituals.filter(r => r.playerId === playerName?.toLowerCase());
+                    const renderRitualCard = (ritual: Ritual) => {
+                      const today = new Date().toISOString().slice(0, 10);
+                      const doneToday = ritual.lastCompleted === today;
+                      const milestone = STREAK_MILESTONES_CLIENT.reduce<{days:number;badge:string;label:string}|null>((acc, m) => ritual.streak >= m.days ? m : acc, null);
+                      const nextMilestone = STREAK_MILESTONES_CLIENT.find(m => ritual.streak < m.days);
+                      const progress = nextMilestone ? (ritual.streak / nextMilestone.days) * 100 : 100;
+                      return (
+                        <div key={ritual.id} className="rounded-xl p-3" style={{
+                          background: doneToday ? "rgba(34,197,94,0.06)" : "#252525",
+                          border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
+                          opacity: doneToday ? 0.8 : 1,
+                        }}>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
+                                {milestone && <span className="text-xs">{milestone.badge}</span>}
+                              </div>
+                              <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                                <span style={{ color: ritual.streak >= 21 ? "#818cf8" : ritual.streak >= 7 ? "#f97316" : "#ef4444", fontWeight: ritual.streak > 0 ? 600 : 400 }}>
+                                  × {ritual.streak} Tage
+                                </span>
+                                <span>{ritual.schedule.type === 'daily' ? 'täglich' : ritual.schedule.days?.join(', ')}</span>
+                                <span>{ritual.rewards.xp} XP · {ritual.rewards.gold} Gold</span>
+                              </div>
+                              {nextMilestone && (
+                                <div className="mt-2">
+                                  <div className="flex items-center justify-between text-xs mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                                    <span>Nächstes Ziel: {nextMilestone.badge} {nextMilestone.label}</span>
+                                    <span>{ritual.streak}/{nextMilestone.days}</span>
+                                  </div>
+                                  <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                                    <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "rgba(167,139,250,0.6)" }} />
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                disabled={doneToday || !reviewApiKey}
+                                onClick={async () => {
+                                  if (!reviewApiKey || !playerName) return;
+                                  try {
+                                    const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
+                                      body: JSON.stringify({ playerId: playerName }),
+                                    });
+                                    const data = await r.json();
+                                    if (data.ok) {
+                                      fetchRituals(playerName).then(setRituals);
+                                      if (data.lootDrop) setLootDrop(data.lootDrop);
+                                      if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
+                                      refresh();
+                                    }
+                                  } catch { /* ignore */ }
+                                }}
+                                className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all"
+                                style={{
+                                  background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
+                                  color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
+                                  border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
+                                  cursor: doneToday ? 'default' : 'pointer',
+                                }}
+                              >
+                                {doneToday ? "✓ Erledigt" : "Abhaken"}
+                              </button>
+                              {reviewApiKey && (
+                                <button
+                                  onClick={() => setDeleteRitualConfirmId(ritual.id)}
+                                  className="text-xs px-2 py-1.5 rounded-lg transition-all"
+                                  style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }}
+                                  title="Ritual löschen"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                        {playerName && reviewApiKey && (
-                          <button onClick={() => setCreateRitualOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
-                            style={{ background: "rgba(245,158,11,0.14)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.35)", boxShadow: "0 0 10px rgba(245,158,11,0.08)" }}>
-                            ＋ Create Ritual
-                          </button>
+                      );
+                    };
+                    return (
+                      <div data-feedback-id="ritual-chamber" className="section-ritual">
+                        {/* ── Top flex row: Portrait left, content right ── */}
+                        <div className="flex gap-4 mb-4" style={{ alignItems: "flex-start" }}>
+                          {/* Portrait column with speech bubble */}
+                          <div className="flex-none" style={{ width: 130 }}>
+                            <img src="/images/portraits/npc-seraine.png" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.35))", borderRadius: 4 }} />
+                            <div style={{ marginTop: 8, background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.2)", borderRadius: 6, padding: "8px 10px", position: "relative" }}>
+                              <div style={{ position: "absolute", top: -6, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "6px solid transparent", borderRight: "6px solid transparent", borderBottom: "6px solid rgba(245,158,11,0.2)" }} />
+                              <p style={{ fontSize: "0.62rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>„Jedes Feuer beginnt mit einem Funken. Deins auch."</p>
+                            </div>
+                          </div>
+                          {/* Right: title + create button + first 2 cards */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f59e0b" }}>Ritual Chamber</h3>
+                                <p className="text-xs" style={{ color: "rgba(245,158,11,0.4)", fontSize: "0.6rem" }}>Seraine Ashwell</p>
+                              </div>
+                              {playerName && reviewApiKey && (
+                                <button onClick={() => setCreateRitualOpen(true)} className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
+                                  style={{ background: "rgba(245,158,11,0.14)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.35)", boxShadow: "0 0 10px rgba(245,158,11,0.08)" }}>
+                                  ＋ Create Ritual
+                                </button>
+                              )}
+                            </div>
+                            {playerRituals.length === 0 ? (
+                              <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>No rituals. Create your first daily ritual!</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-2">
+                                {playerRituals.slice(0, 2).map(renderRitualCard)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Remaining cards (3+) at full width */}
+                        {playerRituals.length > 2 && (
+                          <div className="space-y-2">
+                            {playerRituals.slice(2).map(renderRitualCard)}
+                          </div>
                         )}
-                      </div>
-                      {rituals.filter(r => r.playerId === playerName?.toLowerCase()).length === 0 ? (
-                        <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-                          <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>No rituals. Create your first daily ritual!</p>
-                        </div>
-                      ) : (
-                        <div className="space-y-2">
-                          {rituals.filter(r => r.playerId === playerName?.toLowerCase()).map(ritual => {
-                            const today = new Date().toISOString().slice(0, 10);
-                            const doneToday = ritual.lastCompleted === today;
-                            const milestone = STREAK_MILESTONES_CLIENT.reduce<{days:number;badge:string;label:string}|null>((acc, m) => ritual.streak >= m.days ? m : acc, null);
-                            const nextMilestone = STREAK_MILESTONES_CLIENT.find(m => ritual.streak < m.days);
-                            const progress = nextMilestone ? (ritual.streak / nextMilestone.days) * 100 : 100;
-                            return (
-                              <div key={ritual.id} className="rounded-xl p-3" style={{
-                                background: doneToday ? "rgba(34,197,94,0.06)" : "#252525",
-                                border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
-                                opacity: doneToday ? 0.8 : 1,
-                              }}>
-                                <div className="flex items-start justify-between gap-2">
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
-                                      {milestone && <span className="text-xs">{milestone.badge}</span>}
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                                      <span style={{ color: ritual.streak >= 21 ? "#818cf8" : ritual.streak >= 7 ? "#f97316" : "#ef4444", fontWeight: ritual.streak > 0 ? 600 : 400 }}>
-                                        × {ritual.streak} Tage
-                                      </span>
-                                      <span>{ritual.schedule.type === 'daily' ? 'täglich' : ritual.schedule.days?.join(', ')}</span>
-                                      <span>{ritual.rewards.xp} XP · {ritual.rewards.gold} Gold</span>
-                                    </div>
-                                    {nextMilestone && (
-                                      <div className="mt-2">
-                                        <div className="flex items-center justify-between text-xs mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-                                          <span>Nächstes Ziel: {nextMilestone.badge} {nextMilestone.label}</span>
-                                          <span>{ritual.streak}/{nextMilestone.days}</span>
-                                        </div>
-                                        <div className="h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-                                          <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: "rgba(167,139,250,0.6)" }} />
-                                        </div>
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-1 shrink-0">
-                                    <button
-                                      disabled={doneToday || !reviewApiKey}
-                                      onClick={async () => {
-                                        if (!reviewApiKey || !playerName) return;
-                                        try {
-                                          const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
-                                            method: 'POST',
-                                            headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
-                                            body: JSON.stringify({ playerId: playerName }),
-                                          });
-                                          const data = await r.json();
-                                          if (data.ok) {
-                                            fetchRituals(playerName).then(setRituals);
-                                            if (data.lootDrop) setLootDrop(data.lootDrop);
-                                            if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
-                                            refresh();
-                                          }
-                                        } catch { /* ignore */ }
-                                      }}
-                                      className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all"
-                                      style={{
-                                        background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
-                                        color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
-                                        border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
-                                        cursor: doneToday ? 'default' : 'pointer',
-                                      }}
-                                    >
-                                      {doneToday ? "✓ Erledigt" : "Abhaken"}
-                                    </button>
-                                    {reviewApiKey && (
-                                      <button
-                                        onClick={() => setDeleteRitualConfirmId(ritual.id)}
-                                        className="text-xs px-2 py-1.5 rounded-lg transition-all"
-                                        style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }}
-                                        title="Ritual löschen"
-                                      >
-                                        ×
-                                      </button>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {/* Create Ritual Modal — Hades style (Seraine Ashwell) */}
-                      {createRitualOpen && (() => {
-                        const closeRitualModal = () => { setCreateRitualOpen(false); setNewRitualTitle(""); setNewRitualCommitment("none"); setNewRitualBloodPact(false); };
-                        const submitRitual = async () => {
-                          if (!newRitualTitle.trim() || !reviewApiKey || !playerName) return;
-                          const tier = COMMITMENT_TIERS.find(t => t.id === newRitualCommitment)!;
-                          await fetch('/api/rituals', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey }, body: JSON.stringify({ title: newRitualTitle.trim(), schedule: { type: newRitualSchedule }, playerId: playerName, createdBy: playerName, category: newRitualCategory, commitment: newRitualCommitment, commitmentDays: tier.days, bloodPact: newRitualBloodPact }) });
-                          closeRitualModal();
-                          fetchRituals(playerName).then(setRituals);
-                        };
-                        const tierData = COMMITMENT_TIERS.find(t => t.id === newRitualCommitment)!;
-                        const bonusGold = tierData.bonusGold * (newRitualBloodPact ? 3 : 1);
-                        const bonusXp = tierData.bonusXp * (newRitualBloodPact ? 3 : 1);
-                        return (
-                          <div data-feedback-id="ritual-chamber.create-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }} onClick={closeRitualModal}>
-                            {/* Outer wrapper: relative + flex so portrait can overlap */}
-                            <div className="relative flex items-end" style={{ maxWidth: 820, width: "100%" }} onClick={e => e.stopPropagation()}>
-
-                              {/* ── Seraine Portrait (hidden on small screens) ── */}
-                              <div className="hidden md:block" style={{ position: "absolute", left: -200, top: "50%", transform: "translateY(-50%)", width: 210, pointerEvents: "none", zIndex: 10 }}>
-                                <img src="/images/portraits/npc-seraine.png" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newRitualBloodPact ? "drop-shadow(0 0 22px rgba(239,68,68,0.65))" : "drop-shadow(0 0 22px rgba(245,158,11,0.55))", transition: "filter 0.5s ease" }} />
-                                {/* Speech bubble — overlaps slightly with modal */}
-                                <div
-                                  className="npc-speech-bubble npc-speech-bubble-gold npc-speech-text"
-                                  key={`bubble-${newRitualBloodPact}-${newRitualCommitment}`}
-                                  style={{ borderColor: newRitualBloodPact ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.35)", color: newRitualBloodPact ? "#f87171" : "#c9a46a" }}
-                                >
-                                  {/* Arrow pointing left toward portrait */}
-                                  <div style={{ position: "absolute", top: 12, left: -8, width: 0, height: 0, borderTop: "6px solid transparent", borderBottom: "6px solid transparent", borderRight: `8px solid ${newRitualBloodPact ? "rgba(239,68,68,0.4)" : "rgba(245,158,11,0.35)"}` }} />
-                                  „{getSeraineSpeech(newRitualCommitment, newRitualBloodPact)}"
-                                </div>
-                              </div>
-
-                              {/* ── Modal Panel (65% width) ── */}
-                              <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }}>
-
-                                {/* Mobile NPC speech fallback (hidden on md+) */}
-                                <div className="md:hidden" style={{ background: "rgba(245,158,11,0.05)", borderBottom: "1px solid rgba(245,158,11,0.1)", padding: "12px 20px" }}>
-                                  <p className="npc-speech-text text-xs italic" key={`seraine-m-${newRitualBloodPact}-${newRitualCommitment}`} style={{ color: "#c9a46a", lineHeight: 1.7, fontSize: "0.7rem" }}>
-                                    „{getSeraineSpeech(newRitualCommitment, newRitualBloodPact)}"
-                                  </p>
-                                </div>
-
+                        {/* Create Ritual Modal — simplified, no portrait */}
+                        {createRitualOpen && (() => {
+                          const closeRitualModal = () => { setCreateRitualOpen(false); setNewRitualTitle(""); setNewRitualCommitment("none"); setNewRitualBloodPact(false); };
+                          const submitRitual = async () => {
+                            if (!newRitualTitle.trim() || !reviewApiKey || !playerName) return;
+                            const tier = COMMITMENT_TIERS.find(t => t.id === newRitualCommitment)!;
+                            await fetch('/api/rituals', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey }, body: JSON.stringify({ title: newRitualTitle.trim(), schedule: { type: newRitualSchedule }, playerId: playerName, createdBy: playerName, category: newRitualCategory, commitment: newRitualCommitment, commitmentDays: tier.days, bloodPact: newRitualBloodPact }) });
+                            closeRitualModal();
+                            fetchRituals(playerName).then(setRituals);
+                          };
+                          const tierData = COMMITMENT_TIERS.find(t => t.id === newRitualCommitment)!;
+                          const bonusGold = tierData.bonusGold * (newRitualBloodPact ? 3 : 1);
+                          const bonusXp = tierData.bonusXp * (newRitualBloodPact ? 3 : 1);
+                          return (
+                            <div data-feedback-id="ritual-chamber.create-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }} onClick={closeRitualModal}>
+                              <div style={{ maxWidth: 520, width: "100%", borderRadius: "1rem", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }} onClick={e => e.stopPropagation()}>
                                 {/* Header */}
                                 <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(245,158,11,0.12)" }}>
                                   <img src="/images/icons/ui-ritual-rune.png" alt="" width={28} height={28} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
@@ -1704,17 +1697,12 @@ export default function Dashboard() {
                                     <p className="text-xs" style={{ color: "rgba(200,170,100,0.4)" }}>Seraine Ashwell — Ritual Chamber</p>
                                   </div>
                                 </div>
-
                                 {/* Form */}
                                 <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
-
-                                  {/* Name */}
                                   <div>
                                     <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Ritual Name</label>
                                     <input value={newRitualTitle} onChange={e => setNewRitualTitle(e.target.value)} placeholder="Name your ritual..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.3)", border: "1px solid rgba(245,158,11,0.25)", color: "#e8d5a3", outline: "none" }} onKeyDown={e => e.key === "Enter" && submitRitual()} autoFocus />
                                   </div>
-
-                                  {/* Category + Frequency */}
                                   <div className="grid grid-cols-2 gap-3">
                                     <div>
                                       <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(200,170,100,0.55)" }}>Category</label>
@@ -1736,8 +1724,6 @@ export default function Dashboard() {
                                       </div>
                                     </div>
                                   </div>
-
-                                  {/* Aetherbond Commitment */}
                                   <div>
                                     <label className="text-xs font-semibold mb-2 block" style={{ color: "rgba(200,170,100,0.55)" }}>Aetherbond</label>
                                     <div className="grid grid-cols-3 gap-1.5">
@@ -1750,23 +1736,17 @@ export default function Dashboard() {
                                       ))}
                                     </div>
                                   </div>
-
-                                  {/* Blood Pact Toggle */}
                                   <div>
                                     <button onClick={() => setNewRitualBloodPact(p => !p)} className={`action-btn w-full py-2.5 px-4 rounded-xl font-semibold text-sm ${newRitualBloodPact ? "blood-pact-active" : ""}`} style={{ background: newRitualBloodPact ? "rgba(239,68,68,0.18)" : "rgba(255,255,255,0.04)", color: newRitualBloodPact ? "#ef4444" : "rgba(255,255,255,0.28)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.5)" : "rgba(255,255,255,0.1)"}`, transition: "color 0.3s, background 0.3s, border 0.3s" }}>
                                       {newRitualBloodPact ? "Blood Pact Sealed" : "Seal Blood Pact"}
                                     </button>
                                     {newRitualBloodPact && <p className="text-xs mt-1.5 text-center" style={{ color: "rgba(239,68,68,0.7)" }}>! Blood Pact: Failure = all rewards forfeit.</p>}
                                   </div>
-
-                                  {/* Reward Preview */}
                                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(245,158,11,0.1)" }}>
                                     <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(200,170,100,0.45)" }}>Reward Preview</p>
                                     <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)" }}>Daily: <span style={{ color: "#f59e0b" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
                                     {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)" }}>Bond Bonus: <span style={{ color: "#f59e0b" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
                                   </div>
-
-                                  {/* Buttons */}
                                   <div className="flex gap-2 pt-1">
                                     <button onClick={closeRitualModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
                                     <button onClick={submitRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(245,158,11,0.22)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.55)", boxShadow: "0 0 16px rgba(245,158,11,0.12)" }}>Forge Ritual</button>
@@ -1774,11 +1754,11 @@ export default function Dashboard() {
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })()}
-                    </div>
-                  )}
+                          );
+                        })()}
+                      </div>
+                    );
+                  })()}
 
                   {/* ── Anti-Rituale Tab ── */}
                   {questBoardTab === "anti-rituale" && (
