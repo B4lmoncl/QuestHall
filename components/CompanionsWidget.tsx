@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { User, Quest } from "@/app/types";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { RARITY_COLORS } from "@/components/QuestBoard";
+import { getQuestRarity } from "@/app/utils";
 
 // ─── Companions Widget (always visible on Quest Board) ───────────────────────
 
@@ -249,7 +251,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
         </div>
       </div>
 
-      {/* Active Dobbie quests — quest card grid */}
+      {/* Active Dobbie quests — identical to Quest Board grid cards */}
       {dobbieQuests && dobbieQuests.length > 0 && (
         <div className="mb-1.5">
           {questToast && (
@@ -260,59 +262,64 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.45rem" }}>
             {dobbieQuests.filter(q => !completedIds.has(q.id)).map(q => {
               const done = completedIds.has(q.id);
+              const rarity = getQuestRarity(q);
+              const rarityColor = RARITY_COLORS[rarity] ?? "#9ca3af";
+              const isLegendary = rarity === "legendary";
+              const flavorText = q.flavorText || q.description || "";
               return (
                 <div
                   key={q.id}
-                  className="rounded-lg flex flex-col"
+                  className="rounded-xl flex flex-col relative overflow-hidden"
                   style={{
-                    background: "linear-gradient(160deg, rgba(30,12,20,0.85) 0%, rgba(22,10,16,0.75) 100%)",
-                    border: `1px solid ${done ? "rgba(34,197,94,0.4)" : "rgba(255,107,157,0.35)"}`,
-                    boxShadow: `0 0 8px rgba(255,107,157,0.07)`,
+                    background: "linear-gradient(160deg, #2c2318 0%, #1e1912 55%, #241e16 100%)",
+                    border: `2px solid ${done ? "rgba(34,197,94,0.6)" : `${rarityColor}88`}`,
+                    boxShadow: `0 0 ${isLegendary ? 16 : 6}px ${rarityColor}${isLegendary ? "44" : "1a"}`,
                     opacity: done ? 0.5 : 1,
                     transition: "opacity 0.3s",
+                    minHeight: 110,
                   }}
                 >
-                  {/* top accent strip */}
-                  <div style={{ height: 2, background: "linear-gradient(90deg, transparent, #ff6b9d88, transparent)", borderRadius: "8px 8px 0 0" }} />
-                  <div className="flex-1 px-2 pt-1.5 pb-1">
-                    <p className="font-bold leading-snug" style={{ color: done ? "rgba(255,255,255,0.3)" : "#e8d5a3", fontSize: "0.78rem", textDecoration: done ? "line-through" : "none" }}>
-                      {q.title}
-                    </p>
-                    {(q.description || (q as { flavorText?: string }).flavorText) && (
-                      <p className="mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontStyle: "italic" }}>
-                        {q.description || (q as { flavorText?: string }).flavorText}
-                      </p>
+                  {/* Rarity top strip */}
+                  <div style={{ height: 3, background: `linear-gradient(90deg, transparent, ${rarityColor}bb, transparent)`, borderRadius: "10px 10px 0 0" }} />
+                  {/* Rarity gem — top right corner */}
+                  <div style={{ position: "absolute", top: 10, right: 10, width: 8, height: 8, borderRadius: "50%", background: rarityColor, boxShadow: `0 0 7px ${rarityColor}`, opacity: 0.88 }} />
+                  {/* Card body */}
+                  <div className="p-3 flex-1">
+                    <p className="text-sm font-semibold leading-snug" style={{ color: "#c4b5fd", textDecoration: done ? "line-through" : "none" }}>{q.title}</p>
+                    {flavorText && (
+                      <p className="text-xs italic mt-1" style={{ color: "rgba(220,185,120,0.35)", fontSize: "0.65rem" }}>{flavorText}</p>
                     )}
                   </div>
-                  {/* footer: rewards + complete button */}
-                  <div
-                    className="px-2 pb-1.5 flex items-center justify-between gap-1"
-                    style={{ borderTop: "1px solid rgba(255,107,157,0.1)", paddingTop: "0.3rem" }}
-                  >
-                    <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)" }}>
-                      {q.rewards?.xp ?? 0} XP&nbsp;&nbsp;🪙 {q.rewards?.gold ?? 0}
-                    </span>
-                    {apiKey && (
-                      <button
-                        onClick={() => handleCompleteQuest(q.id, q.title)}
-                        disabled={!!completingId || done}
-                        title="Mark quest complete"
-                        style={{
-                          width: 22, height: 22, borderRadius: "50%",
-                          border: done ? "1.5px solid #4ade80" : "1.5px solid rgba(255,107,157,0.45)",
-                          background: done ? "rgba(34,197,94,0.15)" : "rgba(255,107,157,0.07)",
-                          color: done ? "#4ade80" : "#ff6b9d",
-                          cursor: completingId ? "wait" : "pointer",
-                          display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
-                          transition: "all 0.2s",
-                        }}
-                        onMouseEnter={e => { if (!done) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 6px rgba(255,107,157,0.45)"; }}
-                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
-                      >
-                        ✓
-                      </button>
-                    )}
+                  {/* Card footer — rewards + complete button */}
+                  <div className="px-3 pb-2.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(179,157,219,0.75)" }}>{q.rewards?.xp ?? 0} XP</span>
+                      <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.75)" }}>🪙 {q.rewards?.gold ?? 0}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, fontSize: 9, letterSpacing: "0.06em" }}>{rarity}</span>
+                      {apiKey && (
+                        <button
+                          onClick={() => handleCompleteQuest(q.id, q.title)}
+                          disabled={!!completingId || done}
+                          title="Mark quest complete"
+                          style={{
+                            width: 22, height: 22, borderRadius: "50%",
+                            border: done ? "1.5px solid #4ade80" : `1.5px solid ${rarityColor}88`,
+                            background: done ? "rgba(34,197,94,0.15)" : `${rarityColor}11`,
+                            color: done ? "#4ade80" : rarityColor,
+                            cursor: completingId ? "wait" : "pointer",
+                            display: "flex", alignItems: "center", justifyContent: "center",
+                            fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={e => { if (!done) (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 6px ${rarityColor}66`; }}
+                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+                        >
+                          ✓
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
