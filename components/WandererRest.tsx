@@ -201,32 +201,27 @@ export function WandererRest({
       {/* ── Dobbie's Demands — Dungeon Vault ── */}
       {playerName && (
         <div style={{
-          maxWidth: 1000, margin: "32px auto 0",
-          background: "#0c0e14",
-          border: "1px solid #1e2030",
-          outline: "2px solid #ff6b9d",
-          outlineOffset: 3,
-          boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
-          borderRadius: 2,
-          padding: 0,
-          overflow: "hidden",
+          maxWidth: 1000, margin: "32px auto 0", padding: 8,
         }}>
-          {/* Header */}
-          <div style={{ background: "rgba(255,107,157,0.10)", borderBottom: "2px solid #ff6b9d", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-            <span className="text-xs" style={{ color: "rgba(255,107,157,0.5)" }}>🐾</span>
-            <span style={{ color: "#ff6b9d", fontWeight: 600, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}>{petName ?? "Companion"}&apos;s Demands</span>
-          </div>
-          {/* Portrait + Content layout */}
-          <div style={{ display: "flex", gap: 16, padding: 16 }}>
-            <div style={{ flexShrink: 0, width: 128, height: 128 }}>
+          <div style={{
+            background: "#0c0e14",
+            border: "1px solid #1e2030",
+            outline: "2px solid #ff6b9d",
+            outlineOffset: 3,
+            boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
+            borderRadius: 2,
+            overflow: "visible",
+          }}>
+            {/* Portrait + Content layout */}
+            <div style={{ display: "flex", gap: 16, padding: 16 }}>
               <img
                 src="/images/portraits/companion-dobbie.png"
                 alt={petName ?? "Companion"}
-                style={{ width: 128, height: 128, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)" }}
+                style={{ width: 128, height: 160, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)", flexShrink: 0 }}
               />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
+              </div>
             </div>
           </div>
         </div>
@@ -631,31 +626,25 @@ export function WandererRest({
               </section>
             )}
             {reviewApiKey && (
-              <div style={{
-                background: "#0c0e14",
-                border: "1px solid #1e2030",
-                outline: "2px solid #ff6b9d",
-                outlineOffset: 3,
-                boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
-                borderRadius: 2,
-                padding: 0,
-                overflow: "hidden",
-              }}>
-                <div style={{ background: "rgba(255,107,157,0.10)", borderBottom: "2px solid #ff6b9d", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className="text-xs" style={{ color: "rgba(255,107,157,0.5)" }}>🐾</span>
-                  <span style={{ color: "#ff6b9d", fontWeight: 600, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}>{petName ?? "Companion"}&apos;s Demands</span>
-                  <span className="text-xs px-1.5 py-0.5 rounded-lg font-mono ml-1" style={{ background: "rgba(255,107,157,0.08)", color: "rgba(255,107,157,0.6)", border: "1px solid rgba(255,107,157,0.2)" }}>NPC</span>
-                </div>
-                <div style={{ display: "flex", gap: 16, padding: 16 }}>
-                  <div style={{ flexShrink: 0, width: 128, height: 128 }}>
+              <div style={{ padding: 8 }}>
+                <div style={{
+                  background: "#0c0e14",
+                  border: "1px solid #1e2030",
+                  outline: "2px solid #ff6b9d",
+                  outlineOffset: 3,
+                  boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
+                  borderRadius: 2,
+                  overflow: "visible",
+                }}>
+                  <div style={{ display: "flex", gap: 16, padding: 16 }}>
                     <img
                       src="/images/portraits/companion-dobbie.png"
                       alt={petName ?? "Companion"}
-                      style={{ width: 128, height: 128, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)" }}
+                      style={{ width: 128, height: 160, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)", flexShrink: 0 }}
                     />
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
+                    </div>
                   </div>
                 </div>
               </div>
