@@ -32,6 +32,7 @@ const NPC_GIVERS_FILE      = path.join(DATA_DIR, 'npcQuestGivers.json');
 const NPC_STATE_FILE       = path.join(DATA_DIR, 'npcState.json');
 const APP_STATE_FILE       = path.join(DATA_DIR, 'appState.json');
 const FEEDBACK_FILE        = path.join(DATA_DIR, 'feedback.json');
+const ROTATION_STATE_FILE  = path.join(DATA_DIR, 'rotationState.json');
 // ─── Config / template data files ────────────────────────────────────────────
 const GAME_CONFIG_FILE   = path.join(DATA_DIR, 'gameConfig.json');
 const LEVELS_FILE        = path.join(DATA_DIR, 'levels.json');
@@ -45,6 +46,27 @@ function tryLoadJsonSync(file, fallback) {
     if (fs.existsSync(file)) return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (e) { console.warn(`[config] Failed to load ${path.basename(file)}: ${e.message}`); }
   return fallback;
+}
+
+// ─── Daily Quest Rotation — Europe/Berlin midnight ───────────────────────────
+const TIMEZONE = 'Europe/Berlin';
+
+function getTodayBerlin() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: TIMEZONE }); // YYYY-MM-DD
+}
+
+function getMsUntilNextMidnightBerlin() {
+  const now = new Date();
+  // Get current Berlin date/time parts
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: TIMEZONE, year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+  }).formatToParts(now);
+  const get = (type) => parseInt(parts.find(p => p.type === type).value, 10);
+  const h = get('hour'), m = get('minute'), s = get('second');
+  const secsSinceMidnight = h * 3600 + m * 60 + s;
+  const secsUntilMidnight = 86400 - secsSinceMidnight;
+  return secsUntilMidnight * 1000 + 1000; // +1s buffer
 }
 
 // ─── Game config (economy, loot) — loaded once at startup ────────────────────
@@ -200,6 +222,7 @@ let npcGivers = { givers: [] };
 let npcState  = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {} };
 let appState  = { version: '1.0.0' };
 let feedbackEntries = [];
+let rotationState = { lastDailyRotation: null, questSeed: 0, previousQuestTemplateIds: [] };
 
 function initStore() {
   for (const name of AGENT_NAMES) {
@@ -465,6 +488,200 @@ function loadFeedback() {
 
 function saveFeedback() {
   try { fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedbackEntries, null, 2)); } catch (e) {}
+}
+
+function loadRotationState() {
+  try {
+    if (fs.existsSync(ROTATION_STATE_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(ROTATION_STATE_FILE, 'utf8'));
+      if (raw) rotationState = { lastDailyRotation: null, questSeed: 0, previousQuestTemplateIds: [], ...raw };
+    }
+  } catch (e) { console.warn('[rotation] Failed to load rotationState:', e.message); }
+}
+
+function saveRotationState() {
+  try { fs.writeFileSync(ROTATION_STATE_FILE, JSON.stringify(rotationState, null, 2)); } catch (e) { console.warn('[rotation] Failed to save rotationState:', e.message); }
+}
+
+// ─── Daily Quest Rotation Logic ──────────────────────────────────────────────
+
+function seededRandom(seed) {
+  // Simple mulberry32 PRNG for deterministic selection
+  let t = (seed = (seed + 0x6D2B79F5) | 0);
+  t = Math.imul(t ^ (t >>> 15), t | 1);
+  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+}
+
+function makeDaySeed(dateStr) {
+  // Deterministic seed from date string "YYYY-MM-DD"
+  let hash = 0;
+  for (let i = 0; i < dateStr.length; i++) {
+    hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash);
+}
+
+function assignRarity(template) {
+  if (template.rarity) return template.rarity;
+  const roll = Math.random();
+  if (roll < 0.01) return 'legendary';
+  if (roll < 0.05) return 'epic';
+  if (roll < 0.15) return 'rare';
+  if (roll < 0.40) return 'uncommon';
+  return 'common';
+}
+
+function selectDailyQuests(templates, opts) {
+  const { count, typeDistribution, previousIds, daySeed } = opts;
+  let seed = daySeed;
+  const rng = () => { seed++; return seededRandom(seed); };
+
+  // Group templates by type
+  const byType = {};
+  for (const t of templates) {
+    const type = t.type || 'personal';
+    if (!byType[type]) byType[type] = [];
+    byType[type].push(t);
+  }
+
+  const selected = [];
+  const usedIds = new Set();
+
+  // Fill each type quota
+  for (const [type, quota] of Object.entries(typeDistribution)) {
+    const pool = (byType[type] || []).filter(t => !usedIds.has(t.id));
+    // Deprioritize templates that were in yesterday's set
+    const prevSet = new Set(previousIds || []);
+    const fresh = pool.filter(t => !prevSet.has(t.id));
+    const stale = pool.filter(t => prevSet.has(t.id));
+
+    // Shuffle fresh first, then stale as fallback
+    const shuffled = [...fresh.sort(() => rng() - 0.5), ...stale.sort(() => rng() - 0.5)];
+    for (const t of shuffled.slice(0, quota)) {
+      selected.push(t);
+      usedIds.add(t.id);
+    }
+  }
+
+  // Fill remaining slots if under count
+  const remaining = templates.filter(t => !usedIds.has(t.id));
+  remaining.sort(() => rng() - 0.5);
+  for (const t of remaining) {
+    if (selected.length >= count) break;
+    selected.push(t);
+    usedIds.add(t.id);
+  }
+
+  return selected;
+}
+
+function dailyQuestRotation() {
+  const todayStr = getTodayBerlin();
+  console.log(`[Daily Rotation] Starting rotation for ${todayStr}...`);
+
+  // 1. Remove old "open" system quests (not NPC, not companion, not player-created)
+  const kept = quests.filter(q =>
+    q.status !== 'open' ||
+    q.createdBy !== 'system' ||
+    q.npcGiverId ||
+    q.category === 'companion' ||
+    (q.categories && q.categories.includes('companion'))
+  );
+  const removed = quests.length - kept.length;
+
+  // 2. Load catalog templates (exclude companion)
+  const catalog = questCatalog.templates || [];
+  const templates = catalog.filter(t =>
+    t.category !== 'companion' && t.createdBy !== 'companion'
+  );
+
+  if (templates.length === 0) {
+    console.warn('[Daily Rotation] No non-companion templates in catalog, skipping');
+    return;
+  }
+
+  // 3. Deterministic day seed
+  const daySeed = makeDaySeed(todayStr);
+
+  // 4. Select quests with type distribution
+  const dailyTemplates = selectDailyQuests(templates, {
+    count: 18,
+    typeDistribution: { personal: 5, fitness: 4, learning: 4, social: 3, boss: 2 },
+    previousIds: rotationState.previousQuestTemplateIds,
+    daySeed,
+  });
+
+  // 5. Create quest instances
+  const priorityMap = { starter: 'low', intermediate: 'medium', advanced: 'high', expert: 'high' };
+  const newQuests = dailyTemplates.map((t, i) => ({
+    id: `quest-daily-${todayStr}-${String(i + 1).padStart(3, '0')}`,
+    title: t.title,
+    description: t.description,
+    priority: priorityMap[t.difficulty] || t.priority || 'medium',
+    type: t.type || 'personal',
+    categories: t.category ? [t.category] : [],
+    product: null,
+    humanInputRequired: false,
+    createdBy: 'system',
+    status: 'open',
+    createdAt: new Date().toISOString(),
+    claimedBy: null,
+    completedBy: null,
+    completedAt: null,
+    parentQuestId: null,
+    recurrence: t.recurrence || null,
+    streak: 0,
+    lastCompletedAt: null,
+    proof: null,
+    checklist: null,
+    nextQuestTemplate: null,
+    coopPartners: null,
+    coopClaimed: [],
+    coopCompletions: [],
+    skills: t.tags || [],
+    lore: t.lore || null,
+    chapter: t.chainId || null,
+    minLevel: t.minLevel || 1,
+    classRequired: t.classId || null,
+    requiresRelationship: t.requiresRelationship || false,
+    rarity: assignRarity(t),
+    templateId: t.id,
+  }));
+
+  // 6. Merge
+  quests = [...kept, ...newQuests];
+  saveQuests();
+
+  // 7. Update rotation state
+  rotationState.lastDailyRotation = todayStr;
+  rotationState.questSeed = daySeed;
+  rotationState.previousQuestTemplateIds = dailyTemplates.map(t => t.id);
+  saveRotationState();
+
+  console.log(`[Daily Rotation] ${newQuests.length} new quests generated, ${kept.length} kept (${removed} old open system quests removed)`);
+}
+
+function scheduleDailyRotation() {
+  const ms = getMsUntilNextMidnightBerlin();
+  const hours = (ms / 3600000).toFixed(1);
+  console.log(`[Daily Rotation] Next rotation in ${hours}h (midnight ${TIMEZONE})`);
+  setTimeout(() => {
+    dailyQuestRotation();
+    scheduleDailyRotation(); // reschedule for next midnight
+  }, ms);
+}
+
+function checkAndRunDailyRotation() {
+  loadRotationState();
+  const todayStr = getTodayBerlin();
+  if (rotationState.lastDailyRotation !== todayStr) {
+    console.log(`[Daily Rotation] No rotation yet today (last: ${rotationState.lastDailyRotation || 'never'}), running now...`);
+    dailyQuestRotation();
+  } else {
+    console.log(`[Daily Rotation] Already rotated today (${todayStr})`);
+  }
+  scheduleDailyRotation();
 }
 
 function rotateNpcs() {
@@ -5402,6 +5619,7 @@ loadNpcState();
 loadAppState();
 loadFeedback();
 rotateNpcs();
+checkAndRunDailyRotation();
 
 // Version tracking
 try {
