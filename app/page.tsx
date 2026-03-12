@@ -27,6 +27,7 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 import { WandererRest } from "@/components/WandererRest";
 import GuildHallBackground from "@/components/GuildHallBackground";
 import FeedbackOverlay from "@/components/FeedbackOverlay";
+import { ModalPortal } from "@/components/ModalPortal";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
@@ -622,9 +623,9 @@ export default function Dashboard() {
     if (sortMode === "newest") return qs;
     return [...qs].sort((a, b) => (RARITY_ORDER[getQuestRarity(a)] ?? 4) - (RARITY_ORDER[getQuestRarity(b)] ?? 4));
   }, [sortMode]);
-  const visibleOpen = useMemo(() => applySort(applyFilter(quests.open.filter(q => (q.createdBy ?? "").toLowerCase() !== "dobbie"))), [quests.open, applyFilter, applySort]);
-  const dobbieActiveQuests = useMemo(() => quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() === "dobbie"), [quests.inProgress]);
-  const visibleInProgress = useMemo(() => applySort(applyFilter(quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() !== "dobbie"))), [quests.inProgress, applyFilter, applySort]);
+  const visibleOpen = useMemo(() => applySort(applyFilter(quests.open.filter(q => q.rarity !== "companion"))), [quests.open, applyFilter, applySort]);
+  const dobbieActiveQuests = useMemo(() => quests.inProgress.filter(q => q.rarity === "companion"), [quests.inProgress]);
+  const visibleInProgress = useMemo(() => applySort(applyFilter(quests.inProgress.filter(q => q.rarity !== "companion"))), [quests.inProgress, applyFilter, applySort]);
 
   // NPC board — dev-only filtered quests
   const devOpen = useMemo(() => applySort(quests.open.filter(q => (q.type ?? "development") === "development").filter(q => {
@@ -1703,6 +1704,7 @@ export default function Dashboard() {
                           const bonusGold = tierData.bonusGold * (newRitualBloodPact ? 3 : 1);
                           const bonusXp = tierData.bonusXp * (newRitualBloodPact ? 3 : 1);
                           return (
+                            <ModalPortal>
                             <div data-feedback-id="ritual-chamber.create-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }} onClick={closeRitualModal}>
                               <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
                                 {/* NPC Portrait — absolute left of modal, hidden on mobile */}
@@ -1783,6 +1785,7 @@ export default function Dashboard() {
                               </div>
                               </div>
                             </div>
+                            </ModalPortal>
                           );
                         })()}
                       </div>
@@ -2076,6 +2079,7 @@ export default function Dashboard() {
         const hasCoopClaimed = playerName ? coopClaimed.includes(playerName.toLowerCase()) : false;
         const hasCoopCompleted = playerName ? coopCompletions.includes(playerName.toLowerCase()) : false;
         return (
+          <ModalPortal>
           <div
             data-feedback-id="quest-board.quest-modal"
             className="fixed inset-0 z-[90] flex items-center justify-center p-4"
@@ -2209,6 +2213,7 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+          </ModalPortal>
         );
       })()}
 

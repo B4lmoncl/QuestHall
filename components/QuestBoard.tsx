@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { ModalPortal } from "./ModalPortal";
 import type {
   Quest, QuestsData, Agent, User, ForgeChallengeTemplate, AntiRitual,
   Ritual, Habit, PersonalTemplate, EarnedAchievement, ClassDef, ShopItem, Suggestion,
@@ -509,6 +510,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         const bonusGold = tierData.bonusGold * (newVowBloodPact ? 3 : 1);
         const bonusXp = tierData.bonusXp * (newVowBloodPact ? 3 : 1);
         return (
+          <ModalPortal>
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={closeVowModal}>
             <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
               {/* NPC Portrait — absolute right of modal, hidden on mobile */}
@@ -589,6 +591,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
             </div>
             </div>
           </div>
+          </ModalPortal>
         );
       })()}
 
