@@ -249,45 +249,75 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
         </div>
       </div>
 
-      {/* Active Dobbie quests */}
+      {/* Active Dobbie quests — quest card grid */}
       {dobbieQuests && dobbieQuests.length > 0 && (
-        <div className="mb-1.5 space-y-1 pl-1" style={{ maxWidth: 500 }}>
+        <div className="mb-1.5">
           {questToast && (
-            <div className="rounded px-2 py-1 text-xs font-semibold mb-1" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#4ade80" }}>
+            <div className="rounded px-2 py-1 text-xs font-semibold mb-1.5" style={{ background: "rgba(34,197,94,0.15)", border: "1px solid rgba(34,197,94,0.3)", color: "#4ade80" }}>
               {questToast}
             </div>
           )}
-          {dobbieQuests.filter(q => !completedIds.has(q.id)).map(q => {
-            const done = completedIds.has(q.id);
-            return (
-              <div key={q.id} className="flex items-center gap-1.5 rounded px-1.5 py-0.5" style={{ background: "rgba(255,107,157,0.06)", border: "1px solid rgba(255,107,157,0.15)", opacity: done ? 0.5 : 1 }}>
-                {/* Complete button */}
-                {apiKey && (
-                  <button
-                    onClick={() => handleCompleteQuest(q.id, q.title)}
-                    disabled={!!completingId || done}
-                    title="Mark quest complete"
-                    style={{
-                      width: 18, height: 18, borderRadius: "50%",
-                      border: done ? "1.5px solid #4ade80" : "1.5px solid rgba(255,255,255,0.2)",
-                      background: done ? "rgba(34,197,94,0.15)" : "transparent",
-                      color: done ? "#4ade80" : "rgba(255,255,255,0.35)",
-                      cursor: completingId ? "wait" : "pointer",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "0.65rem", fontWeight: 700, flexShrink: 0,
-                      transition: "all 0.2s",
-                    }}
-                    onMouseEnter={e => { if (!done) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 6px rgba(34,197,94,0.5)"; }}
-                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "0.45rem" }}>
+            {dobbieQuests.filter(q => !completedIds.has(q.id)).map(q => {
+              const done = completedIds.has(q.id);
+              return (
+                <div
+                  key={q.id}
+                  className="rounded-lg flex flex-col"
+                  style={{
+                    background: "linear-gradient(160deg, rgba(30,12,20,0.85) 0%, rgba(22,10,16,0.75) 100%)",
+                    border: `1px solid ${done ? "rgba(34,197,94,0.4)" : "rgba(255,107,157,0.35)"}`,
+                    boxShadow: `0 0 8px rgba(255,107,157,0.07)`,
+                    opacity: done ? 0.5 : 1,
+                    transition: "opacity 0.3s",
+                  }}
+                >
+                  {/* top accent strip */}
+                  <div style={{ height: 2, background: "linear-gradient(90deg, transparent, #ff6b9d88, transparent)", borderRadius: "8px 8px 0 0" }} />
+                  <div className="flex-1 px-2 pt-1.5 pb-1">
+                    <p className="font-bold leading-snug" style={{ color: done ? "rgba(255,255,255,0.3)" : "#e8d5a3", fontSize: "0.78rem", textDecoration: done ? "line-through" : "none" }}>
+                      {q.title}
+                    </p>
+                    {(q.description || (q as { flavorText?: string }).flavorText) && (
+                      <p className="mt-0.5 leading-snug" style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.65rem", fontStyle: "italic" }}>
+                        {q.description || (q as { flavorText?: string }).flavorText}
+                      </p>
+                    )}
+                  </div>
+                  {/* footer: rewards + complete button */}
+                  <div
+                    className="px-2 pb-1.5 flex items-center justify-between gap-1"
+                    style={{ borderTop: "1px solid rgba(255,107,157,0.1)", paddingTop: "0.3rem" }}
                   >
-                    ✓
-                  </button>
-                )}
-                <span className="truncate flex-1" style={{ fontSize: "0.8rem", color: done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.55)", textDecoration: done ? "line-through" : "none" }}>{q.title}</span>
-                <span className="flex-shrink-0 font-semibold" style={{ fontSize: "0.8rem", color: "#ff6b9d" }}>+{q.rewards?.xp ?? 0} XP</span>
-              </div>
-            );
-          })}
+                    <span style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.3)" }}>
+                      {q.rewards?.xp ?? 0} XP&nbsp;&nbsp;🪙 {q.rewards?.gold ?? 0}
+                    </span>
+                    {apiKey && (
+                      <button
+                        onClick={() => handleCompleteQuest(q.id, q.title)}
+                        disabled={!!completingId || done}
+                        title="Mark quest complete"
+                        style={{
+                          width: 22, height: 22, borderRadius: "50%",
+                          border: done ? "1.5px solid #4ade80" : "1.5px solid rgba(255,107,157,0.45)",
+                          background: done ? "rgba(34,197,94,0.15)" : "rgba(255,107,157,0.07)",
+                          color: done ? "#4ade80" : "#ff6b9d",
+                          cursor: completingId ? "wait" : "pointer",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
+                          transition: "all 0.2s",
+                        }}
+                        onMouseEnter={e => { if (!done) (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 6px rgba(255,107,157,0.45)"; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+                      >
+                        ✓
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 

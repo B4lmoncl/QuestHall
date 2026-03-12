@@ -1742,12 +1742,8 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
         <div className="px-3 pb-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
-            {(quest.rewards?.xp ?? 0) > 0 && (
-              <span className="text-xs font-mono" style={{ color: "#b39ddb" }}>{quest.rewards!.xp} XP</span>
-            )}
-            {(quest.rewards?.gold ?? 0) > 0 && (
-              <span className="text-xs font-mono" style={{ color: "#fbbf24" }}>🪙 {quest.rewards!.gold}</span>
-            )}
+            <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(179,157,219,0.75)" }}>{quest.rewards?.xp ?? 0} XP</span>
+            <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.75)" }}>🪙 {quest.rewards?.gold ?? 0}</span>
           </div>
           <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, fontSize: 9, letterSpacing: "0.06em" }}>{rarity}</span>
         </div>
@@ -1890,6 +1886,8 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
           <div className="flex items-center justify-between mt-1">
             <div className="flex items-center gap-2">
               {(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
+              <span style={{ fontSize: "0.7rem", color: "rgba(179,157,219,0.6)" }}>{quest.rewards?.xp ?? 0} XP</span>
+              <span style={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.6)" }}>🪙 {quest.rewards?.gold ?? 0}</span>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
             </div>
             <div className="flex items-center gap-1.5">
