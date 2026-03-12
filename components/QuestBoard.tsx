@@ -1498,6 +1498,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
     const typeCfg = typeConfig[quest.type ?? "personal"] ?? typeConfig.personal;
     return (
       <div
+        data-feedback-id={`quest-board.quest-card.${quest.id}`}
         className="rounded-xl flex flex-col cursor-pointer relative overflow-hidden"
         style={{
           background: "linear-gradient(160deg, #2c2318 0%, #1e1912 55%, #241e16 100%)",
@@ -1561,6 +1562,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
 
   return (
     <div
+      data-feedback-id={`quest-board.quest-card.${quest.id}`}
       className="rounded-lg p-3 cursor-pointer relative overflow-hidden"
       style={{
         background: selected ? "linear-gradient(160deg, #2e2010 0%, #1e1a10 100%)" : "linear-gradient(160deg, #2a2016 0%, #1c1810 60%, #221d14 100%)",

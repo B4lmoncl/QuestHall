@@ -31,6 +31,7 @@ const GEAR_TEMPLATES_FILE  = path.join(DATA_DIR, 'gearTemplates.json');
 const NPC_GIVERS_FILE      = path.join(DATA_DIR, 'npcQuestGivers.json');
 const NPC_STATE_FILE       = path.join(DATA_DIR, 'npcState.json');
 const APP_STATE_FILE       = path.join(DATA_DIR, 'appState.json');
+const FEEDBACK_FILE        = path.join(DATA_DIR, 'feedback.json');
 // ─── Config / template data files ────────────────────────────────────────────
 const GAME_CONFIG_FILE   = path.join(DATA_DIR, 'gameConfig.json');
 const LEVELS_FILE        = path.join(DATA_DIR, 'levels.json');
@@ -198,6 +199,7 @@ let gearTemplates = { tiers: [], items: [], setBonus: {} };
 let npcGivers = { givers: [] };
 let npcState  = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {} };
 let appState  = { version: '1.0.0' };
+let feedbackEntries = [];
 
 function initStore() {
   for (const name of AGENT_NAMES) {
@@ -451,6 +453,18 @@ function loadAppState() {
 
 function saveAppState() {
   try { fs.writeFileSync(APP_STATE_FILE, JSON.stringify(appState, null, 2)); } catch (e) {}
+}
+
+function loadFeedback() {
+  try {
+    if (fs.existsSync(FEEDBACK_FILE)) {
+      feedbackEntries = JSON.parse(fs.readFileSync(FEEDBACK_FILE, 'utf8')) || [];
+    }
+  } catch (e) { /* ignore */ }
+}
+
+function saveFeedback() {
+  try { fs.writeFileSync(FEEDBACK_FILE, JSON.stringify(feedbackEntries, null, 2)); } catch (e) {}
 }
 
 function rotateNpcs() {
@@ -5263,6 +5277,33 @@ app.get('/api/app-state', (req, res) => {
   res.json({ version: appState.version });
 });
 
+// ─── Feedback endpoints ────────────────────────────────────────────────────────
+// POST /api/feedback — store a feedback entry
+app.post('/api/feedback', (req, res) => {
+  const { elementPath, type, text, userId, timestamp } = req.body || {};
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'text is required' });
+  }
+  const entry = {
+    id: `fb-${Date.now()}`,
+    elementPath: elementPath || 'unknown',
+    type: type === 'bug' ? 'bug' : 'feedback',
+    text: text.trim(),
+    userId: userId || 'anonymous',
+    timestamp: timestamp || new Date().toISOString(),
+    resolved: false,
+  };
+  feedbackEntries.push(entry);
+  saveFeedback();
+  console.log(`[feedback] New ${entry.type} from ${entry.userId}: ${entry.elementPath}`);
+  res.json({ ok: true, id: entry.id });
+});
+
+// GET /api/feedback — list all feedback (admin)
+app.get('/api/feedback', (req, res) => {
+  res.json(feedbackEntries);
+});
+
 // Serve index.html for non-API routes (SPA fallback)
 app.get('*', (req, res) => {
   const indexPath = path.join(__dirname, 'out', 'index.html');
@@ -5294,6 +5335,7 @@ loadGearTemplates();
 loadNpcGivers();
 loadNpcState();
 loadAppState();
+loadFeedback();
 rotateNpcs();
 
 // Version tracking

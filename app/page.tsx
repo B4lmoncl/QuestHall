@@ -26,6 +26,7 @@ import { RoadmapView } from "@/components/RoadmapView";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { WandererRest } from "@/components/WandererRest";
 import GuildHallBackground from "@/components/GuildHallBackground";
+import FeedbackOverlay from "@/components/FeedbackOverlay";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
@@ -126,6 +127,7 @@ export default function Dashboard() {
   const settingsPopupRef = useRef<HTMLDivElement>(null);
   const [questDetailModal, setQuestDetailModal] = useState<Quest | null>(null);
   const [currenciesOpen, setCurrenciesOpen] = useState(false);
+  const [feedbackMode, setFeedbackMode] = useState(false);
 
   // Settings popup — click-outside to close
   useEffect(() => {
@@ -626,6 +628,7 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between" style={{ overflow: "visible" }}>
           <div className="flex items-center gap-3">
             <button
+              data-feedback-id="header.guild-gate"
               className="flex items-center gap-2"
               style={{ background: "none", border: "none", padding: 0, cursor: "pointer", transition: "opacity 0.15s", alignSelf: "flex-start" }}
               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.opacity = "0.75"}
@@ -639,6 +642,7 @@ export default function Dashboard() {
               </span>
             </button>
             <button
+              data-feedback-id="header.season-badge"
               className="text-xs px-2 py-0.5 rounded font-medium btn-interactive"
               style={{ color: CURRENT_SEASON.color, background: CURRENT_SEASON.bg, border: `1px solid ${CURRENT_SEASON.color}40`, cursor: "pointer" }}
               title={`Current Season: ${CURRENT_SEASON.name} — click to view Season tab`}
@@ -650,6 +654,7 @@ export default function Dashboard() {
 
           <div className="flex items-center gap-4">
             <button
+              data-feedback-id="header.info-button"
               onClick={() => { setInfoOverlayTab("guide"); setInfoOverlayOpen(true); }}
               className="btn-interactive text-xs px-2 py-0.5 rounded"
               style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -658,7 +663,7 @@ export default function Dashboard() {
               📜 Info
             </button>
             {/* Login / User area */}
-            <div className="relative" data-tutorial="login-btn">
+            <div className="relative" data-tutorial="login-btn" data-feedback-id="header.login-badge">
               {reviewApiKey && playerName ? (
                 <div ref={settingsPopupRef} className="flex items-center gap-2">
                   <button
@@ -929,6 +934,7 @@ export default function Dashboard() {
             </div>
           )}
           {/* TODO: replace 🔥⚔️✅🪙 with pixel art icons once ui-forge/ui-sword/ui-check/reward-gold assets exist */}
+          <div data-feedback-id="stats.forge-temp">
           <StatBar
             label="🔥 Forge Streak"
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
@@ -936,6 +942,8 @@ export default function Dashboard() {
             accent="#f97316"
             tooltip={<InfoTooltip text="Your consecutive days of quest completion. Keep the streak alive to earn bonus XP and keep companions happy!" />}
           />
+          </div>
+          <div data-feedback-id="stats.active-quests">
           <StatBar
             label="⚔️ Active Quests"
             value={loading ? "—" : playerName ? animActive : "—"}
@@ -943,6 +951,8 @@ export default function Dashboard() {
             accent="#ef4444"
             tooltip={<InfoTooltip text="Quests you've claimed and are currently working on." />}
           />
+          </div>
+          <div data-feedback-id="stats.completed">
           <StatBar
             label="✅ Quests Completed"
             value={loading ? "—" : playerName ? animCompleted : "—"}
@@ -950,14 +960,15 @@ export default function Dashboard() {
             accent="#22c55e"
             tooltip={<InfoTooltip text="Total quests you've finished. Each one earns XP toward your next level." />}
           />
+          </div>
         </div>
 
         {/* Player Card — shown when logged in */}
         {playerName && loggedInUser && (
-          <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
+          <div data-feedback-id="player-card" className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
             <div className="flex items-center gap-4">
               {/* Portrait */}
-              <div className="relative flex-shrink-0 cursor-pointer" onClick={() => setDashView("character")} title="Character">
+              <div data-feedback-id="player-card.portrait" className="relative flex-shrink-0 cursor-pointer" onClick={() => setDashView("character")} title="Character">
                 <img
                   src="/images/portraits/hero-male.png"
                   alt={playerName}
@@ -1008,6 +1019,7 @@ export default function Dashboard() {
                   <span className="text-sm">💰</span>
                   <span className="text-sm font-mono font-bold" style={{ color: "#f59e0b" }}>{animGold}</span>
                   <button
+                    data-feedback-id="player-card.currencies"
                     onClick={() => setCurrenciesOpen(true)}
                     className="btn-interactive text-xs px-2 py-0.5 rounded ml-1"
                     style={{ color: "rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
@@ -1018,7 +1030,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Forge Temperature */}
-                <div className="relative group">
+                <div data-feedback-id="player-card.forge-tooltip" className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
                       {forgeTempIcon} {forgeTemp}%
@@ -1119,6 +1131,7 @@ export default function Dashboard() {
           ].map(v => (
             <button
               key={v.key}
+              data-feedback-id={`nav.tab.${v.key}`}
               onClick={() => setDashView(v.key as typeof dashView)}
               className="btn-interactive text-sm font-semibold px-3 py-1.5 rounded transition-all"
               style={{
@@ -1352,6 +1365,7 @@ export default function Dashboard() {
                     ].map(tab => (
                       <button
                         key={tab.key}
+                        data-feedback-id={`sub-tab.${tab.key}`}
                         onClick={() => setQuestBoardTab(tab.key as "auftraege" | "rituale" | "anti-rituale")}
                         className="btn-interactive text-sm px-3 py-1.5 rounded-lg font-medium transition-all inline-flex items-center gap-1.5"
                         style={{
@@ -1369,9 +1383,9 @@ export default function Dashboard() {
                     ))}
                   </div>
 
-                  {questBoardTab === "auftraege" && <div className="space-y-2">
+                  {questBoardTab === "auftraege" && <div data-feedback-id="quest-board" className="space-y-2">
                     {/* Category filters — Quest Board only */}
-                    <div className="flex gap-1 flex-wrap mb-2" data-tutorial="quest-filters">
+                    <div data-feedback-id="quest-board.filters" className="flex gap-1 flex-wrap mb-2" data-tutorial="quest-filters">
                       {(["all", "personal", "learning", "fitness", "social", "relationship-coop"] as const).map(t => {
                         const cfg = t === "all" ? null : typeConfig[t];
                         const isActive = typeFilter === t;
@@ -1394,8 +1408,9 @@ export default function Dashboard() {
                     </div>
                     {/* Search + Sort row */}
                     <div className="flex gap-1 mb-2">
-                      <input type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search quests…" className="flex-1 text-xs px-2 py-1.5 rounded" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
+                      <input data-feedback-id="quest-board.search" type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search quests…" className="flex-1 text-xs px-2 py-1.5 rounded" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
                       <button
+                        data-feedback-id="quest-board.sort"
                         onClick={() => setSortMode(s => s === "rarity" ? "newest" : "rarity")}
                         className="text-xs px-2 py-1.5 rounded shrink-0"
                         style={{ background: sortMode === "rarity" ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.05)", color: sortMode === "rarity" ? "#a78bfa" : "rgba(255,255,255,0.3)", border: `1px solid ${sortMode === "rarity" ? "rgba(167,139,250,0.3)" : "rgba(255,255,255,0.08)"}` }}
@@ -1437,7 +1452,7 @@ export default function Dashboard() {
                       <>
                         {boardOpen.length > 0 && (
                           <>
-                            <button onClick={() => { const next = !openSectionCollapsed; setOpenSectionCollapsed(next); try { localStorage.setItem("qb_open_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
+                            <button data-feedback-id="quest-board.open" onClick={() => { const next = !openSectionCollapsed; setOpenSectionCollapsed(next); try { localStorage.setItem("qb_open_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
                               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>Open</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{openSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
@@ -1461,7 +1476,7 @@ export default function Dashboard() {
                         )}
                         {playerVisibleInProgress.length > 0 && (
                           <>
-                            <button onClick={() => { const next = !inProgressSectionCollapsed; setInProgressSectionCollapsed(next); try { localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-2 pb-0.5">
+                            <button data-feedback-id="quest-board.in-progress" onClick={() => { const next = !inProgressSectionCollapsed; setInProgressSectionCollapsed(next); try { localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-2 pb-0.5">
                               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>In Progress</span>
                               <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(139,92,246,0.08)", color: "rgba(139,92,246,0.5)" }}>{playerVisibleInProgress.length}</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{inProgressSectionCollapsed ? "▼" : "▲"}</span>
@@ -1490,7 +1505,7 @@ export default function Dashboard() {
                     {/* Locked quests teaser — shown when logged in and level-gated quests exist */}
                     {playerName && (quests.locked ?? []).length > 0 && (
                       <>
-                        <div className="flex items-center gap-2 pt-2 pb-0.5">
+                        <div data-feedback-id="quest-board.locked" className="flex items-center gap-2 pt-2 pb-0.5">
                           <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>🔒 Locked</span>
                           <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.15)" }}>{(quests.locked ?? []).length}</span>
                         </div>
@@ -1512,7 +1527,7 @@ export default function Dashboard() {
 
                   {/* ── Rituale Tab ── */}
                   {questBoardTab === "rituale" && (
-                    <div>
+                    <div data-feedback-id="ritual-chamber">
                       <div className="flex items-center justify-between mb-3">
                         <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>🔁 Rituals</h3>
                         {playerName && reviewApiKey && (
@@ -1614,7 +1629,7 @@ export default function Dashboard() {
                       )}
                       {/* Create Ritual Modal — Fantasy style */}
                       {createRitualOpen && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setCreateRitualOpen(false)}>
+                        <div data-feedback-id="ritual-chamber.create-modal" className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setCreateRitualOpen(false)}>
                           <div className="w-full max-w-sm rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: "1px solid rgba(245,158,11,0.3)", boxShadow: "0 0 40px rgba(167,139,250,0.08)" }} onClick={e => e.stopPropagation()}>
                             <div className="flex items-center gap-3 px-5 pt-5 pb-3 border-b" style={{ borderColor: "rgba(245,158,11,0.15)" }}>
                               <img src="/images/icons/ui-ritual-rune.png" alt="" width={32} height={32} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
@@ -1668,7 +1683,9 @@ export default function Dashboard() {
 
                   {/* ── Anti-Rituale Tab ── */}
                   {questBoardTab === "anti-rituale" && (
+                    <div data-feedback-id="vow-shrine">
                     <AntiRitualePanel playerName={playerName} reviewApiKey={reviewApiKey} />
+                    </div>
                   )}
 
                 </aside>
@@ -1954,6 +1971,7 @@ export default function Dashboard() {
         const hasCoopCompleted = playerName ? coopCompletions.includes(playerName.toLowerCase()) : false;
         return (
           <div
+            data-feedback-id="quest-board.quest-modal"
             className="fixed inset-0 z-[90] flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.75)" }}
             onClick={() => setQuestDetailModal(null)}
@@ -2097,9 +2115,29 @@ export default function Dashboard() {
         </div>
       )}
 
-      <footer className="mt-12 py-4" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 2 }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center text-xs font-mono" style={{ color: "rgba(255,255,255,0.15)" }}>
+      <footer data-feedback-id="footer" className="mt-12 py-4" style={{ borderTop: "1px solid rgba(255,68,68,0.07)", position: "relative", zIndex: 2 }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-3 text-xs font-mono" style={{ color: "rgba(255,255,255,0.15)" }}>
           <span>⚔️🏰 Quest Hall v1.5.0</span>
+          <span style={{ color: "rgba(255,255,255,0.08)" }}>·</span>
+          <button
+            data-feedback-id="footer.alpha-button"
+            onClick={() => setFeedbackMode(v => !v)}
+            title={feedbackMode ? "Exit Feedback Mode (Esc)" : "Enter Alpha Feedback Mode"}
+            style={{
+              background: "none",
+              cursor: "pointer",
+              fontFamily: "monospace",
+              fontSize: 12,
+              padding: "2px 6px",
+              borderRadius: 4,
+              color: feedbackMode ? "#818cf8" : "rgba(255,255,255,0.25)",
+              border: `1px solid ${feedbackMode ? "rgba(129,140,248,0.5)" : "rgba(255,255,255,0.1)"}`,
+              animation: feedbackMode ? "pulse-online 1.5s ease-in-out infinite" : "none",
+              transition: "color 0.2s, border-color 0.2s",
+            }}
+          >
+            (α) Alpha v1.5
+          </button>
         </div>
       </footer>
 
@@ -2280,6 +2318,13 @@ export default function Dashboard() {
       )}
 
       {/* Onboarding Wizard */}
+      {/* Alpha Feedback Overlay */}
+      <FeedbackOverlay
+        active={feedbackMode}
+        onExit={() => setFeedbackMode(false)}
+        playerName={playerName || undefined}
+      />
+
       {onboardingOpen && (
         <OnboardingWizard
           onClose={() => setOnboardingOpen(false)}
@@ -2335,6 +2380,7 @@ export default function Dashboard() {
 
       {/* Create Quest Modal */}
       {createQuestOpen && (
+        <div data-feedback-id="quest-board.create-modal">
         <CreateQuestModal
           quests={quests}
           users={users}
@@ -2342,6 +2388,7 @@ export default function Dashboard() {
           onRefresh={refresh}
           onClose={() => setCreateQuestOpen(false)}
         />
+        </div>
       )}
     </div>
   );

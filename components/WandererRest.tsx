@@ -88,7 +88,7 @@ export function WandererRest({
       )}
 
       {/* ── SECTION 1: Wandering Visitors (TOP) ── */}
-      <section className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <section data-feedback-id="wanderers-rest" className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
         <div className="mb-4">
           <h2 className="text-sm font-bold uppercase tracking-widest" style={{ color: "#f59e0b" }}>🏰 The Wanderer&apos;s Rest</h2>
           <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>They come. They go. They always return.</p>
@@ -107,6 +107,7 @@ export function WandererRest({
                 return (
                   <button
                     key={npc.id}
+                    data-feedback-id={`wanderers-rest.npc.${npc.id}`}
                     onClick={() => setSelectedNpc(npc)}
                     className="flex flex-col items-center gap-2 group"
                     style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
@@ -169,7 +170,7 @@ export function WandererRest({
       </section>
 
       {/* ── SECTION 2: The Companion Hearth (MIDDLE) ── */}
-      <section className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <section data-feedback-id="companion-hearth" className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
         <div className="mb-3">
           <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
           <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
@@ -226,7 +227,7 @@ export function WandererRest({
       </section>
 
       {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
-      <section style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <section data-feedback-id="starweaver-portal" style={{ maxWidth: 1000, margin: "0 auto" }}>
         <button
           onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "The Starweaver", title: "Guardian of Quests", rarity: "legendary", emoji: "✨", greeting: "Guardian of Quests. Forged in starlight.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
           className="w-full relative overflow-hidden rounded-2xl"
