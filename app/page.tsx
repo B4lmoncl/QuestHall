@@ -541,8 +541,9 @@ export default function Dashboard() {
     q.completedAt && new Date(q.completedAt).getTime() > now24h
   ).length;
   const forgeTemp = Math.min(loggedInUser?.forgeTemp ?? 0, 100);
-  const forgeTempColor = forgeTemp === 0 ? "#ef4444" : forgeTemp <= 33 ? "#f97316" : forgeTemp <= 66 ? "#eab308" : forgeTemp <= 89 ? "#22c55e" : "#60a5fa";
-  const forgeTempLabel = forgeTemp === 0 ? "Cold" : forgeTemp <= 20 ? "Lukewarm" : forgeTemp <= 40 ? "Warming" : forgeTemp <= 60 ? "Hot" : forgeTemp <= 80 ? "Blazing" : "White-hot";
+  const forgeTempColor = forgeTemp === 0 ? "#4a4a4a" : forgeTemp <= 20 ? "#8b0000" : forgeTemp <= 40 ? "#ff4500" : forgeTemp <= 60 ? "#ff8c00" : forgeTemp <= 80 ? "#ffa500" : "#00bfff";
+  const forgeTempLabel = forgeTemp === 0 ? "Cold" : forgeTemp <= 20 ? "Smoldering" : forgeTemp <= 40 ? "Warming" : forgeTemp <= 60 ? "Burning" : forgeTemp <= 80 ? "Blazing" : "White-hot";
+  const forgeTempIcon = forgeTemp === 0 ? "🪨" : forgeTemp <= 20 ? "🔥" : forgeTemp <= 40 ? "🔥" : forgeTemp <= 60 ? "💛" : forgeTemp <= 80 ? "⚡" : "💎";
 
   const playerActiveCount = playerActiveQuests.length;
   const playerCompletedCount = playerCompletedQuests.length;
@@ -615,19 +616,20 @@ export default function Dashboard() {
           zIndex: 40,
           background: "rgba(26,26,26,0.97)",
           borderBottom: "1px solid rgba(255,68,68,0.15)",
+          overflow: "visible",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between" style={{ overflow: "visible" }}>
           <div className="flex items-center gap-3">
             <button
               className="flex items-center gap-2"
-              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", transition: "opacity 0.15s" }}
+              style={{ background: "none", border: "none", padding: 0, cursor: "pointer", transition: "opacity 0.15s", alignSelf: "flex-start" }}
               onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.opacity = "0.75"}
               onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.opacity = "1"}
               onClick={() => { setDashView("questBoard"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               title="Home — Quest Hall"
             >
-              <img src="/guild-gate.png" alt="Quest Hall" className="h-20 w-20" style={{ imageRendering: "pixelated", display: "block" }} />
+              <img src="/guild-gate.png" alt="Quest Hall" className="h-20 w-20" style={{ imageRendering: "pixelated", display: "block", marginBottom: "-8px" }} />
               <span className="font-semibold text-sm tracking-tight" style={{ color: "#e8e8e8" }}>
                 Quest Hall
               </span>
@@ -1014,7 +1016,7 @@ export default function Dashboard() {
                 <div className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
-                      🔥 {forgeTemp}%
+                      {forgeTempIcon} {forgeTemp}%
                     </span>
                     <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{forgeTempLabel}</span>
                     <span className="text-xs px-1 py-0.5 rounded font-mono" style={{ color: "rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -1031,8 +1033,8 @@ export default function Dashboard() {
                   </div>
                   {/* Tooltip */}
                   <div
-                    className="absolute right-0 bottom-8 z-50 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}
+                    className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
                   >
                     <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0" }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
