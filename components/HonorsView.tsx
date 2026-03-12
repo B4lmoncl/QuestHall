@@ -1,11 +1,8 @@
 "use client";
 
 import type { AchievementDef, User, QuestsData } from "@/app/types";
-import CVBuilderPanel from "@/components/CVBuilderPanel";
 
-export default function HonorsView({ catalogue, users, playerName = "", quests, reviewApiKey = "" }: { catalogue: AchievementDef[]; users: User[]; playerName?: string; quests?: QuestsData; reviewApiKey?: string }) {
-  const emptyQuests: QuestsData = { open: [], inProgress: [], completed: [], suggested: [], rejected: [] };
-  const q = quests ?? emptyQuests;
+export default function HonorsView({ catalogue, users, playerName = "" }: { catalogue: AchievementDef[]; users: User[]; playerName?: string; quests?: QuestsData; reviewApiKey?: string }) {
   const categories = Array.from(new Set(catalogue.map(a => a.category)));
   const loggedInUser = playerName ? users.find(u => u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase()) : null;
   const playerEarnedIds = new Set((loggedInUser?.earnedAchievements ?? []).map(a => a.id));
@@ -89,17 +86,16 @@ export default function HonorsView({ catalogue, users, playerName = "", quests, 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
                             <p className="text-xs font-semibold" style={{ color: highlight ? "#f0f0f0" : "rgba(255,255,255,0.4)" }}>{ach.name}</p>
-                            {myEarned && <span className="text-xs" style={{ color: isHidden ? "#a855f7" : "#f59e0b" }}>✓ Yours</span>}
                             {isHidden && myEarned && <span className="text-xs px-1 rounded" style={{ background: "rgba(138,43,226,0.2)", color: "#a855f7" }}>secret</span>}
                           </div>
                           <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{ach.desc}</p>
                           {earners.length > 0 && (
                             <div className="flex flex-wrap gap-1 mt-1.5">
-                              {earners.map(u => (
+                              {earners.filter(u => u.id.toLowerCase() !== playerName.toLowerCase() && u.name.toLowerCase() !== playerName.toLowerCase()).map(u => (
                                 <span
                                   key={u.id}
                                   className="text-xs px-1.5 py-0.5 rounded"
-                                  style={{ background: `${u.color}20`, color: u.color, border: `1px solid ${u.color}40`, fontWeight: u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase() ? 700 : 400 }}
+                                  style={{ background: `${u.color}20`, color: u.color, border: `1px solid ${u.color}40` }}
                                 >
                                   {u.name}
                                 </span>
@@ -117,14 +113,6 @@ export default function HonorsView({ catalogue, users, playerName = "", quests, 
         })
       )}
 
-      {/* Klassenquests — accessible from Honors */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(96,165,250,0.7)" }}>🎓 Klassenquests</h3>
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Klassen-Fortschritt und Skill Tree</span>
-        </div>
-        <CVBuilderPanel quests={q} users={users} playerName={playerName} />
-      </div>
     </div>
   );
 }
