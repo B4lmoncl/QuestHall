@@ -72,10 +72,15 @@ export function WandererRest({
 }: WandererRestProps) {
   // Sync selectedNpc with fresh data when activeNpcs updates (e.g. after claim/complete)
   useEffect(() => {
-    if (!selectedNpc || selectedNpc.id === "lyra-permanent") return;
+    if (!selectedNpc) return;
+    // For permanent NPCs like Starweaver, skip — their quest data comes from props, not activeNpcs
+    if (selectedNpc.id === "lyra-permanent") return;
     const fresh = activeNpcs.find(n => n.id === selectedNpc.id);
-    if (fresh) setSelectedNpc(fresh);
-  }, [activeNpcs]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (!fresh) return;
+    // Only update if quest chain data actually changed to avoid unnecessary re-renders
+    const chainChanged = JSON.stringify(fresh.questChain) !== JSON.stringify(selectedNpc.questChain);
+    if (chainChanged) setSelectedNpc(fresh);
+  }, [activeNpcs, selectedNpc, setSelectedNpc]);
 
   // ESC key closes NPC popup
   useEffect(() => {

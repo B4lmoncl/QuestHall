@@ -300,6 +300,22 @@ export default function Dashboard() {
     }
   }, [reviewApiKey, selectedIds, refresh]);
 
+  const updateNpcQuestStatus = useCallback((questId: string, status: string, claimedBy: string | null) => {
+    const updateChain = (npc: ActiveNpc): ActiveNpc => ({
+      ...npc,
+      questChain: npc.questChain.map(q =>
+        q.questId === questId ? { ...q, status: status as "open" | "in_progress" | "completed" | "claimed", claimedBy } : q
+      ),
+    });
+    setActiveNpcs(prev => prev.map(npc =>
+      npc.questChain.some(q => q.questId === questId) ? updateChain(npc) : npc
+    ));
+    setSelectedNpc(prev => {
+      if (!prev || !prev.questChain.some(q => q.questId === questId)) return prev;
+      return updateChain(prev);
+    });
+  }, []);
+
   const handleClaim = useCallback(async (questId: string) => {
     const key = reviewApiKey;
     const pName = playerName;
@@ -310,9 +326,12 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json", "X-API-Key": key },
         body: JSON.stringify({ agentId: pName }),
       });
-      if (r.ok) await refresh();
+      if (r.ok) {
+        updateNpcQuestStatus(questId, "in_progress", pName.toLowerCase());
+        await refresh();
+      }
     } catch { /* ignore */ }
-  }, [reviewApiKey, playerName, refresh]);
+  }, [reviewApiKey, playerName, refresh, updateNpcQuestStatus]);
 
   const handleUnclaim = useCallback(async (questId: string) => {
     const key = reviewApiKey;
@@ -324,9 +343,12 @@ export default function Dashboard() {
         headers: { "Content-Type": "application/json", "X-API-Key": key },
         body: JSON.stringify({ agentId: pName }),
       });
-      if (r.ok) await refresh();
+      if (r.ok) {
+        updateNpcQuestStatus(questId, "open", null);
+        await refresh();
+      }
     } catch { /* ignore */ }
-  }, [reviewApiKey, playerName, refresh]);
+  }, [reviewApiKey, playerName, refresh, updateNpcQuestStatus]);
 
   const handleCoopClaim = useCallback(async (questId: string) => {
     const key = reviewApiKey;
@@ -389,6 +411,27 @@ export default function Dashboard() {
         if (streak >= 30) flavor = { message: "Legendary streak!", icon: "×" };
         else if (streak >= 7) flavor = { message: "Streak master!", icon: "×" };
         setFlavorToast({ ...flavor, sub: questTitle.length > 40 ? questTitle.slice(0, 40) + "…" : questTitle });
+        // Optimistically update NPC quest chain: mark completed + unlock next locked quest
+        setActiveNpcs(prev => prev.map(npc => {
+          if (!npc.questChain.some(q => q.questId === questId)) return npc;
+          let unlockNext = false;
+          const updated = npc.questChain.map(q => {
+            if (q.questId === questId) { unlockNext = true; return { ...q, status: "completed" as const, completedBy: pName.toLowerCase() }; }
+            if (unlockNext && q.status === "locked") { unlockNext = false; return { ...q, status: "open" as const }; }
+            return q;
+          });
+          return { ...npc, questChain: updated };
+        }));
+        setSelectedNpc(prev => {
+          if (!prev || !prev.questChain.some(q => q.questId === questId)) return prev;
+          let unlockNext = false;
+          const updated = prev.questChain.map(q => {
+            if (q.questId === questId) { unlockNext = true; return { ...q, status: "completed" as const, completedBy: pName.toLowerCase() }; }
+            if (unlockNext && q.status === "locked") { unlockNext = false; return { ...q, status: "open" as const }; }
+            return q;
+          });
+          return { ...prev, questChain: updated };
+        });
         await refresh();
       }
     } catch { /* ignore */ }
