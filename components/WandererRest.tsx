@@ -382,6 +382,9 @@ export function WandererRest({
                       </div>
                       <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
                         <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
+                        {currentQuest.flavorText && (
+                          <p className="mt-1 truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{currentQuest.flavorText}</p>
+                        )}
                         <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
                         <div className="flex items-center gap-3 mt-3">
                           <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>

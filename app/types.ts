@@ -71,6 +71,7 @@ export interface NpcQuestChainEntry {
   completedBy: string | null;
   rewards: { xp: number; gold: number };
   position: number;
+  flavorText?: string | null;
 }
 
 export interface ActiveNpc {

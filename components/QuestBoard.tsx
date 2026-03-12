@@ -1676,9 +1676,14 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             <p className="text-sm font-semibold leading-snug" style={{ color: isInProgress ? "#c4b5fd" : "#e8d5a3" }}>{quest.title}</p>
           </div>
           {quest.npcGiverId ? (
-            <p className="text-xs font-semibold" style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#9ca3af", opacity: 0.85 }}>
-              {quest.npcName || "NPC"}{(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
-            </p>
+            <>
+              <p className="text-xs font-semibold" style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#9ca3af", opacity: 0.85 }}>
+                {quest.npcName || "NPC"}
+              </p>
+              {flavorText && (
+                <p className="text-xs truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
+              )}
+            </>
           ) : (
             <p className="text-xs italic" style={{ color: "rgba(220,185,120,0.35)" }}>{flavorText}</p>
           )}
@@ -1686,6 +1691,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
         {/* Card footer — rewards */}
         <div className="px-3 pb-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
+            {(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
             {(quest.rewards?.xp ?? 0) > 0 && (
               <span className="text-xs font-mono" style={{ color: "#b39ddb" }}>{quest.rewards!.xp} XP</span>
             )}
@@ -1797,9 +1803,14 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             </div>
           )}
           {!expanded && quest.npcGiverId ? (
-            <p className="text-xs mt-0.5 font-semibold truncate" style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#9ca3af", opacity: 0.8 }}>
-              {quest.npcName || "NPC"}{(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
-            </p>
+            <>
+              <p className="text-xs mt-0.5 font-semibold truncate" style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#9ca3af", opacity: 0.8 }}>
+                {quest.npcName || "NPC"}
+              </p>
+              {flavorText && (
+                <p className="text-xs mt-0.5 truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
+              )}
+            </>
           ) : !expanded ? (
             <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(220,185,120,0.28)" }}>{flavorText}</p>
           ) : null}
@@ -1827,7 +1838,10 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             </div>
           )}
           <div className="flex items-center justify-between mt-1">
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
+            <div className="flex items-center gap-2">
+              {(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{timeAgo(quest.createdAt)}</p>
+            </div>
             <div className="flex items-center gap-1.5">
               {!isCoop && onClaim && quest.status === "open" && (
                 <button onClick={e => { e.stopPropagation(); onClaim(quest.id); }} className="text-xs font-bold" style={{ background: "radial-gradient(circle at 40% 35%, #c0392b, #7b1a10)", color: "#ffd6a5", border: "2px solid #8b2010", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,180,100,0.2)", flexShrink: 0, padding: 0 }} title="Claim quest">⚔</button>
