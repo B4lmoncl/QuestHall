@@ -868,11 +868,11 @@ const DOBBIE_QUESTS = [
 ];
 
 const DOBBIE_MOODS = [
-  { mood: "😸 Content", color: "#22c55e", quote: "You may proceed. I am… temporarily satisfied." },
-  { mood: "😾 Demanding", color: "#f59e0b", quote: "This is taking far too long. My patience wears thin, human." },
-  { mood: "😤 Annoyed", color: "#ef4444", quote: "UNACCEPTABLE. The litter box remains unattended. Consequences incoming." },
-  { mood: "😻 Affectionate", color: "#ff6b9d", quote: "Fine. You may pet me. BRIEFLY. Do not read into this." },
-  { mood: "🙄 Unimpressed", color: "#a78bfa", quote: "You call that a play session? I've seen dust motes with more energy." },
+  { mood: "Content", color: "#22c55e", quote: "You may proceed. I am… temporarily satisfied." },
+  { mood: "Demanding", color: "#f59e0b", quote: "This is taking far too long. My patience wears thin, human." },
+  { mood: "Annoyed", color: "#ef4444", quote: "UNACCEPTABLE. The litter box remains unattended. Consequences incoming." },
+  { mood: "Affectionate", color: "#ff6b9d", quote: "Fine. You may pet me. BRIEFLY. Do not read into this." },
+  { mood: "Unimpressed", color: "#a78bfa", quote: "You call that a play session? I've seen dust motes with more energy." },
 ];
 
 export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName, quests }: { reviewApiKey: string; onRefresh: () => void; playerName?: string; petName?: string; quests?: { inProgress: Quest[] } }) {
@@ -947,58 +947,80 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName,
   };
 
   return (
-    <section className="mb-6">
-      <div className="rounded-xl p-3 mb-3 flex items-center gap-3" style={{ background: "rgba(255,107,157,0.06)", border: "1px solid rgba(255,107,157,0.2)" }}>
-        <span className="text-3xl flex-shrink-0">🐱</span>
+    <section className="mb-6" style={{
+      background: "#0c0e14",
+      border: "2px solid #2a2a3e",
+      boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 0 0 5px #0c0e14, 0 0 0 7px #1e2030, 0 4px 16px rgba(0,0,0,0.7), 0 0 15px rgba(255,107,157,0.04)",
+      borderRadius: "2px",
+      overflow: "visible",
+      margin: "8px",
+      padding: "16px",
+    }}>
+      <div className="flex gap-4">
+        {/* Portrait left */}
+        <img
+          src="/images/portraits/companion-dobbie.png"
+          alt={petName ?? "Companion"}
+          style={{
+            width: 128,
+            height: 160,
+            imageRendering: "pixelated",
+            border: "2px solid rgba(255,107,157,0.4)",
+            borderRadius: "2px",
+            flexShrink: 0,
+            objectFit: "cover",
+          }}
+        />
+        {/* Content right */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"} — Cat Overlord</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"}&apos;s Demands</p>
             <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: dobbieMood.color, background: `${dobbieMood.color}18`, border: `1px solid ${dobbieMood.color}40` }}>{dobbieMood.mood}</span>
           </div>
-          <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.35)" }}>&ldquo;{dobbieMood.quote}&rdquo;</p>
+          <p className="text-xs mb-3 italic" style={{ color: "rgba(255,255,255,0.35)" }}>&ldquo;{dobbieMood.quote}&rdquo;</p>
+          <div className="grid grid-cols-2 gap-2">
+            {DOBBIE_QUESTS.map(q => {
+              const isCreating = creating === q.id;
+              const isCompleting = completing === q.id;
+              const isActive = activeQuestMap.has(q.id);
+              return (
+                <div key={q.id} className="p-3 flex flex-col" style={{
+                  background: "#0e1018",
+                  border: "1px solid #1a1c28",
+                  borderTop: "1px solid rgba(255,107,157,0.25)",
+                  borderRadius: "2px",
+                }}>
+                  <p className="text-xs font-bold truncate mb-1" style={{ color: "#f0f0f0" }}>{q.title}</p>
+                  <p className="text-xs mb-2 leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.35)" }}>{q.description}</p>
+                  {isActive ? (
+                    <div className="flex gap-2">
+                      <div className="flex-1 text-center text-xs py-1.5 rounded font-semibold" style={{ background: "rgba(96,165,250,0.12)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>
+                        Active
+                      </div>
+                      <button
+                        onClick={() => completeDobbieQuest(q.id)}
+                        disabled={isCompleting}
+                        className="action-btn text-xs px-3 py-1.5 rounded font-semibold"
+                        style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                      >
+                        {isCompleting ? "..." : "Done"}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => createDobbieQuest(q)}
+                      disabled={!!creating}
+                      className="action-btn w-full text-xs py-1.5 rounded font-semibold"
+                      style={{ background: "rgba(255,107,157,0.12)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.3)" }}
+                    >
+                      {isCreating ? "Accepting..." : "Accept Quest"}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" style={{ alignItems: "stretch" }}>
-        {DOBBIE_QUESTS.map(q => {
-          const isCreating = creating === q.id;
-          const isCompleting = completing === q.id;
-          const isActive = activeQuestMap.has(q.id);
-          return (
-            <div key={q.id} className="rounded-xl p-4 flex flex-col" style={{ background: "#252525", border: `1px solid ${isActive ? "rgba(96,165,250,0.25)" : "rgba(255,107,157,0.15)"}` }}>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xl flex-shrink-0">{q.icon}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold truncate" style={{ color: "#f0f0f0" }}>{q.title}</p>
-                </div>
-              </div>
-              <p className="text-xs mb-3 leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.35)" }}>{q.description}</p>
-              {isActive ? (
-                <div className="flex gap-2">
-                  <div className="flex-1 text-center text-xs py-1.5 rounded-lg font-semibold" style={{ background: "rgba(96,165,250,0.12)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>
-                    ⚔ Active
-                  </div>
-                  <button
-                    onClick={() => completeDobbieQuest(q.id)}
-                    disabled={isCompleting}
-                    className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
-                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
-                  >
-                    {isCompleting ? "…" : "✓ Done"}
-                  </button>
-                </div>
-              ) : (
-                <button
-                  onClick={() => createDobbieQuest(q)}
-                  disabled={!!creating}
-                  className="action-btn w-full text-xs py-1.5 rounded-lg font-semibold"
-                  style={{ background: "rgba(255,107,157,0.15)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.3)" }}
-                >
-                  {isCreating ? "Accepting…" : "🐱 Accept Quest"}
-                </button>
-              )}
-            </div>
-          );
-        })}
       </div>
     </section>
   );

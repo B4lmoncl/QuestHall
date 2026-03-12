@@ -154,7 +154,6 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
       <div
         style={{
           background: "#0c0e14",
-          border: "1px solid #1e2030",
           border: "2px solid #2a2a3e",
           boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 0 0 5px #0c0e14, 0 0 0 7px #1e2030, 0 4px 16px rgba(0,0,0,0.7), 0 0 15px rgba(255,107,157,0.04)",
           borderRadius: 2,
