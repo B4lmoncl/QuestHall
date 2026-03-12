@@ -287,7 +287,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
                   <div className="p-3 flex-1">
                     <p className="text-sm font-semibold leading-snug" style={{ color: "#c4b5fd", textDecoration: done ? "line-through" : "none" }}>{q.title}</p>
                     {flavorText && (
-                      <p className="text-xs italic mt-1" style={{ color: "rgba(220,185,120,0.35)", fontSize: "0.65rem" }}>{flavorText}</p>
+                      <p className="text-xs italic mt-1" style={{ color: "rgba(220,185,120,0.35)", fontSize: "0.75rem" }}>{flavorText}</p>
                     )}
                   </div>
                   {/* Card footer — rewards + complete button */}
@@ -313,8 +313,25 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
                             fontSize: "0.7rem", fontWeight: 700, flexShrink: 0,
                             transition: "all 0.2s",
                           }}
-                          onMouseEnter={e => { if (!done) (e.currentTarget as HTMLButtonElement).style.boxShadow = `0 0 6px ${rarityColor}66`; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}
+                          onMouseEnter={e => {
+                            if (!done) {
+                              const btn = e.currentTarget as HTMLButtonElement;
+                              btn.style.background = "rgba(34,197,94,0.8)";
+                              btn.style.color = "white";
+                              btn.style.border = "1.5px solid rgba(34,197,94,0.8)";
+                              btn.style.boxShadow = "0 0 8px rgba(34,197,94,0.5)";
+                            }
+                          }}
+                          onMouseLeave={e => {
+                            const btn = e.currentTarget as HTMLButtonElement;
+                            btn.style.background = done ? "rgba(34,197,94,0.15)" : `${rarityColor}11`;
+                            btn.style.color = done ? "#4ade80" : rarityColor;
+                            btn.style.border = done ? "1.5px solid #4ade80" : `1.5px solid ${rarityColor}88`;
+                            btn.style.boxShadow = "none";
+                            btn.style.transform = "scale(1)";
+                          }}
+                          onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)"; }}
+                          onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
                         >
                           ✓
                         </button>

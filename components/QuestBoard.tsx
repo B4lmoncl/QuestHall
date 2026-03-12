@@ -1742,7 +1742,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
                 {quest.npcName || "NPC"}
               </p>
               {flavorText && (
-                <p className="text-xs truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
+                <p className="text-xs truncate" style={{ fontSize: "0.75rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
               )}
             </>
           ) : (
@@ -1865,7 +1865,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
                 {quest.npcName || "NPC"}
               </p>
               {flavorText && (
-                <p className="text-xs mt-0.5 truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
+                <p className="text-xs mt-0.5 truncate" style={{ fontSize: "0.75rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{flavorText}</p>
               )}
             </>
           ) : !expanded ? (

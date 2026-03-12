@@ -1330,7 +1330,7 @@ export default function Dashboard() {
         {dashView === "questBoard" && (() => {
           const playerQuestTypes = ["personal", "learning", "fitness", "social", "relationship-coop"];
           const playerVisibleOpen = applySort(applyFilter(quests.open.filter(q => playerQuestTypes.includes(q.type ?? ""))));
-          const playerVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => playerQuestTypes.includes(q.type ?? ""))));
+          const playerVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => playerQuestTypes.includes(q.type ?? "") && !isCompanionQuest(q))));
           // Cap open quests: filter by player level, exclude already claimed, then pick up to 6 (stable by date seed)
           const inProgressIds = new Set(playerVisibleInProgress.map(q => q.id));
           const levelFiltered = playerVisibleOpen.filter(q => (!q.minLevel || q.minLevel <= playerLevelInfo.level) && !inProgressIds.has(q.id));
