@@ -684,100 +684,179 @@ function checkAndRunDailyRotation() {
   scheduleDailyRotation();
 }
 
-function rotateNpcs() {
-  const now = new Date();
+// ─── NPC Auto-Rotation Constants ────────────────────────────────────────────
+const NPC_MAX_ACTIVE       = 7;    // max simultaneous active NPCs (lore number)
+const NPC_SPAWN_CHANCE     = 0.30; // 30% chance per empty slot per check
+const NPC_ROTATION_MS      = 30 * 60 * 1000; // check every 30 minutes
+const NPC_PERMANENT_IDS    = new Set(['lyra-permanent']); // exempt from rotation
+const NPC_DEFAULT_WEIGHTS  = { common: 50, uncommon: 25, rare: 15, epic: 8, legendary: 2 };
 
-  // Remove expired NPCs and their uncompleted quests
+/** Weighted random selection from candidates using spawnWeight / rarity fallback */
+function weightedRandomNpc(candidates) {
+  if (!candidates.length) return null;
+  const totalWeight = candidates.reduce((sum, c) => sum + (c.spawnWeight || NPC_DEFAULT_WEIGHTS[c.rarity] || 10), 0);
+  let roll = Math.random() * totalWeight;
+  for (const c of candidates) {
+    roll -= (c.spawnWeight || NPC_DEFAULT_WEIGHTS[c.rarity] || 10);
+    if (roll <= 0) return c;
+  }
+  return candidates[candidates.length - 1];
+}
+
+/** Handle NPC departures: clean up quests, set cooldowns, record notifications */
+function processNpcDepartures(now) {
   const stillActive = [];
+  let questsChanged = false;
+
   for (const active of npcState.activeNpcs) {
-    if (new Date(active.expiresAt) > now) {
-      stillActive.push(active);
-    } else {
+    const departureTime = active.departureTime || active.expiresAt; // backward compat
+    if (Date.now() > new Date(departureTime).getTime()) {
       const questIds = npcState.npcQuestIds[active.giverId] || [];
-      const before = quests.length;
+      const giver = npcGivers.givers.find(g => g.id === active.giverId);
+
       for (let i = quests.length - 1; i >= 0; i--) {
-        if (questIds.includes(quests[i].id) && quests[i].status !== 'completed') {
+        const q = quests[i];
+        if (!questIds.includes(q.id)) continue;
+        if (q.status === 'completed') continue;
+
+        if (q.status === 'in_progress' || q.status === 'claimed') {
+          q.status = 'failed';
+          q.failReason = 'npc_departed';
+          q.failedAt = now.toISOString();
+          questsChanged = true;
+        } else {
+          // open / locked quests → delete
           quests.splice(i, 1);
+          questsChanged = true;
         }
       }
-      if (quests.length !== before) saveQuests();
+
+      // Cooldown based on NPC config (cooldownHours)
+      const cooldownMs = ((giver && giver.cooldownHours) || 48) * 3600000;
+      npcState.cooldowns[active.giverId] = new Date(Date.now() + cooldownMs).toISOString();
       delete npcState.npcQuestIds[active.giverId];
-      console.log(`[npc] ${active.giverId} has left town`);
+
+      // Record departure notification for frontend toast
+      if (!npcState.departureNotifications) npcState.departureNotifications = [];
+      npcState.departureNotifications.push({
+        npcId: active.giverId,
+        npcName: (giver && giver.name) || active.giverId,
+        departedAt: now.toISOString(),
+      });
+
+      console.log(`[npc] ${(giver && giver.name) || active.giverId} has departed`);
+    } else {
+      stillActive.push(active);
     }
   }
+
   npcState.activeNpcs = stillActive;
+  if (questsChanged) saveQuests();
+}
 
-  // Pick new NPCs if slots are open (aim for 1-2 active)
-  const MAX_ACTIVE = 2;
-  if (stillActive.length < MAX_ACTIVE) {
-    const available = npcGivers.givers.filter(g => {
-      if (stillActive.find(a => a.giverId === g.id)) return false;
+/** Try to spawn new NPCs into empty slots (30% chance per slot, weighted rarity) */
+function trySpawnNpcs(now) {
+  const currentActive = npcState.activeNpcs.length;
+  if (currentActive >= NPC_MAX_ACTIVE) return;
+
+  const activeIds = new Set(npcState.activeNpcs.map(a => a.giverId));
+
+  for (let i = currentActive; i < NPC_MAX_ACTIVE; i++) {
+    if (Math.random() > NPC_SPAWN_CHANCE) continue;
+
+    const candidates = npcGivers.givers.filter(g => {
+      if (NPC_PERMANENT_IDS.has(g.id)) return false;
+      if (activeIds.has(g.id)) return false;
       const cooldownUntil = npcState.cooldowns[g.id];
-      if (cooldownUntil && new Date(cooldownUntil) > now) return false;
+      if (cooldownUntil && Date.now() < new Date(cooldownUntil).getTime()) return false;
       return true;
-    }).sort(() => Math.random() - 0.5);
+    });
 
-    for (const giver of available.slice(0, MAX_ACTIVE - stillActive.length)) {
-      const arrivedAt = now.toISOString();
-      const expiresAt = new Date(now.getTime() + giver.stayDays * 86400000).toISOString();
-      npcState.activeNpcs.push({ giverId: giver.id, arrivedAt, expiresAt });
+    const giver = weightedRandomNpc(candidates);
+    if (!giver) break;
 
-      const questIds = [];
-      const chains = giver.questChains || (giver.questChain ? [giver.questChain] : [[]]);
-      const chain = chains[Math.floor(Math.random() * chains.length)];
-      for (const qt of chain) {
-        const quest = {
-          id: `quest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-          title: qt.title,
-          description: qt.description || '',
-          priority: qt.priority || 'medium',
-          type: qt.type || 'personal',
-          categories: [],
-          product: null,
-          humanInputRequired: false,
-          createdBy: giver.id,
-          status: questIds.length === 0 ? 'open' : 'locked',
-          createdAt: arrivedAt,
-          claimedBy: null,
-          completedBy: null,
-          completedAt: null,
-          parentQuestId: null,
-          recurrence: null,
-          streak: 0,
-          lastCompletedAt: null,
-          proof: null,
-          checklist: null,
-          nextQuestTemplate: null,
-          coopPartners: null,
-          coopClaimed: [],
-          coopCompletions: [],
-          skills: [],
-          lore: qt.lore || null,
-          chapter: null,
-          minLevel: 1,
-          npcGiverId: giver.id,
-          npcName: giver.name,
-          npcRarity: giver.rarity,
-          flavorText: qt.flavorText || null,
-          chainIndex: chain.indexOf(qt),
-          chainTotal: chain.length,
-          rarity: giver.rarity,
-          npcRewards: qt.rewards || { xp: 20, gold: 10 },
-        };
-        quests.push(quest);
-        questIds.push(quest.id);
-      }
-      npcState.npcQuestIds[giver.id] = questIds;
-      // Cooldown starts when they leave
-      npcState.cooldowns[giver.id] = new Date(now.getTime() + (giver.stayDays + giver.cooldownDays) * 86400000).toISOString();
-      saveQuests();
-      console.log(`[npc] ${giver.name} has arrived (${giver.stayDays} days, ${chain.length} quests, chain ${chains.indexOf(chain) + 1}/${chains.length})`);
+    // Departure time with ±20% jitter
+    const baseDepartureMs = (giver.departureDurationHours || (giver.stayDays || 3) * 24) * 3600000;
+    const jitteredMs = baseDepartureMs * (0.8 + Math.random() * 0.4);
+    const arrivedAt = now.toISOString();
+    const departureTime = new Date(Date.now() + jitteredMs).toISOString();
+
+    // Pick a random quest chain
+    const chains = giver.questChains || (giver.questChain ? [giver.questChain] : [[]]);
+    const chain = chains[Math.floor(Math.random() * chains.length)];
+
+    const questIds = [];
+    for (const qt of chain) {
+      const quest = {
+        id: `quest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: qt.title,
+        description: qt.description || '',
+        priority: qt.priority || 'medium',
+        type: qt.type || 'personal',
+        categories: [],
+        product: null,
+        humanInputRequired: false,
+        createdBy: giver.id,
+        status: questIds.length === 0 ? 'open' : 'locked',
+        createdAt: arrivedAt,
+        claimedBy: null,
+        completedBy: null,
+        completedAt: null,
+        parentQuestId: null,
+        recurrence: null,
+        streak: 0,
+        lastCompletedAt: null,
+        proof: null,
+        checklist: null,
+        nextQuestTemplate: null,
+        coopPartners: null,
+        coopClaimed: [],
+        coopCompletions: [],
+        skills: [],
+        lore: qt.lore || null,
+        chapter: null,
+        minLevel: 1,
+        npcGiverId: giver.id,
+        npcName: giver.name,
+        npcRarity: giver.rarity,
+        flavorText: qt.flavorText || null,
+        chainIndex: chain.indexOf(qt),
+        chainTotal: chain.length,
+        rarity: giver.rarity,
+        npcRewards: qt.rewards || { xp: 20, gold: 10 },
+      };
+      quests.push(quest);
+      questIds.push(quest.id);
     }
-  }
+    npcState.npcQuestIds[giver.id] = questIds;
+    saveQuests();
 
+    npcState.activeNpcs.push({
+      giverId: giver.id,
+      arrivedAt,
+      departureTime,
+      expiresAt: departureTime, // backward compat
+      questChainIndex: chains.indexOf(chain),
+    });
+    activeIds.add(giver.id);
+
+    console.log(`[npc] ${giver.name} has arrived (departs ~${Math.round(jitteredMs / 3600000)}h, ${chain.length} quests, chain ${chains.indexOf(chain) + 1}/${chains.length})`);
+  }
+}
+
+/** Main NPC rotation check — called on startup and every 30 minutes */
+function checkNpcRotation() {
+  const now = new Date();
+  console.log(`[npc] Rotation check at ${now.toISOString()} — ${npcState.activeNpcs.length} active`);
+  processNpcDepartures(now);
+  trySpawnNpcs(now);
+  npcState.lastRotationCheck = now.toISOString();
   npcState.lastRotation = now.toISOString();
   saveNpcState();
 }
+
+// Alias so POST /api/npcs/rotate still works
+function rotateNpcs() { checkNpcRotation(); }
 
 // ─── Quest Catalog store ─────────────────────────────────────────────────────
 let questCatalog = { meta: { totalTemplates: 0, byCategory: { generic: 0, classQuest: 0, chainQuest: 0, companionQuest: 0 }, byClass: {}, lastUpdated: new Date().toISOString() }, templates: [] };
@@ -5483,13 +5562,17 @@ app.post('/api/player/:name/unequip/:slot', requireApiKey, (req, res) => {
 app.get('/api/npcs/active', (req, res) => {
   const now = new Date();
   const result = npcState.activeNpcs
-    .filter(a => new Date(a.expiresAt) > now)
+    .filter(a => {
+      const dep = a.departureTime || a.expiresAt;
+      return new Date(dep) > now;
+    })
     .map(active => {
       const giver = npcGivers.givers.find(g => g.id === active.giverId);
       if (!giver) return null;
       const questIds = npcState.npcQuestIds[active.giverId] || [];
       const npcQuests = quests.filter(q => questIds.includes(q.id));
-      const msLeft = new Date(active.expiresAt) - now;
+      const depTime = active.departureTime || active.expiresAt;
+      const msLeft = new Date(depTime) - now;
       return {
         id: giver.id,
         name: giver.name,
@@ -5500,6 +5583,7 @@ app.get('/api/npcs/active', (req, res) => {
         greeting: giver.greeting || null,
         rarity: giver.rarity || 'common',
         arrivedAt: active.arrivedAt,
+        departureTime: depTime,
         expiresAt: active.expiresAt,
         daysLeft: Math.max(0, Math.ceil(msLeft / 86400000)),
         hoursLeft: Math.max(0, Math.ceil(msLeft / 3600000)),
@@ -5525,22 +5609,12 @@ app.get('/api/npcs/active', (req, res) => {
   res.json({ npcs: result });
 });
 
-// GET /api/npcs/:id
-app.get('/api/npcs/:id', (req, res) => {
-  const id = req.params.id;
-  const giver = npcGivers.givers.find(g => g.id === id);
-  if (!giver) return res.status(404).json({ error: 'NPC not found' });
-  const active = npcState.activeNpcs.find(a => a.giverId === id);
-  const questIds = npcState.npcQuestIds[id] || [];
-  const npcQuests = quests.filter(q => questIds.includes(q.id));
-  res.json({
-    ...giver,
-    active: !!active,
-    arrivedAt: active?.arrivedAt || null,
-    expiresAt: active?.expiresAt || null,
-    cooldownUntil: npcState.cooldowns[id] || null,
-    quests: npcQuests,
-  });
+// GET /api/npcs/departures — fetch and clear departure notifications (for frontend toasts)
+app.get('/api/npcs/departures', (req, res) => {
+  const notifications = (npcState.departureNotifications || []).slice();
+  npcState.departureNotifications = [];
+  saveNpcState();
+  res.json({ departures: notifications });
 });
 
 // POST /api/npcs/rotate [admin]
@@ -5552,6 +5626,25 @@ app.post('/api/npcs/rotate', requireApiKey, (req, res) => {
   }
   rotateNpcs();
   res.json({ ok: true, activeNpcs: npcState.activeNpcs });
+});
+
+// GET /api/npcs/:id (must be after /departures and /rotate to avoid param capture)
+app.get('/api/npcs/:id', (req, res) => {
+  const id = req.params.id;
+  const giver = npcGivers.givers.find(g => g.id === id);
+  if (!giver) return res.status(404).json({ error: 'NPC not found' });
+  const active = npcState.activeNpcs.find(a => a.giverId === id);
+  const questIds = npcState.npcQuestIds[id] || [];
+  const npcQuests = quests.filter(q => questIds.includes(q.id));
+  res.json({
+    ...giver,
+    active: !!active,
+    arrivedAt: active?.arrivedAt || null,
+    departureTime: active?.departureTime || active?.expiresAt || null,
+    expiresAt: active?.expiresAt || null,
+    cooldownUntil: npcState.cooldowns[id] || null,
+    quests: npcQuests,
+  });
 });
 
 // GET /api/app-state
@@ -5619,6 +5712,7 @@ loadNpcState();
 loadAppState();
 loadFeedback();
 rotateNpcs();
+setInterval(checkNpcRotation, NPC_ROTATION_MS);
 checkAndRunDailyRotation();
 
 // Version tracking
