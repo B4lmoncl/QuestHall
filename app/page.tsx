@@ -1671,6 +1671,11 @@ export default function Dashboard() {
                             {/* Outer wrapper: relative + flex so portrait can overlap */}
                             <div className="relative flex items-end" style={{ maxWidth: 820, width: "100%" }} onClick={e => e.stopPropagation()}>
 
+                              {/* ── Seraine Portrait (hidden on small screens) ── */}
+                              <div className="hidden md:flex items-end" style={{ marginRight: -44, width: 220, flexShrink: 0, pointerEvents: "none", zIndex: 10, background: "none", border: "none", padding: 0 }}>
+                                <img src="/images/portraits/npc-seraine.png" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newRitualBloodPact ? "drop-shadow(0 0 22px rgba(239,68,68,0.65))" : "drop-shadow(0 0 22px rgba(245,158,11,0.55))", transition: "filter 0.5s ease" }} />
+                              </div>
+
                               {/* ── Modal Panel (65% width) ── */}
                               <div style={{ flex: "0 0 65%", minWidth: 0, borderRadius: "1rem", overflow: "hidden", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }}>
 
@@ -1757,11 +1762,6 @@ export default function Dashboard() {
                                     <button onClick={submitRitual} className="action-btn flex-1 text-sm py-2.5 rounded-xl font-bold" style={{ background: "rgba(245,158,11,0.22)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.55)", boxShadow: "0 0 16px rgba(245,158,11,0.12)" }}>Ritual schmieden</button>
                                   </div>
                                 </div>
-                              </div>
-
-                              {/* ── Seraine Portrait (hidden on small screens) ── */}
-                              <div className="hidden md:flex items-end" style={{ marginLeft: -44, width: 220, flexShrink: 0, pointerEvents: "none", zIndex: 10 }}>
-                                <img src="/images/portraits/npc-seraine.png" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newRitualBloodPact ? "drop-shadow(0 0 22px rgba(239,68,68,0.65))" : "drop-shadow(0 0 22px rgba(245,158,11,0.55))", transition: "filter 0.5s ease" }} />
                               </div>
                             </div>
                           </div>

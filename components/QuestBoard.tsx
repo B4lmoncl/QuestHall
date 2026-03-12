@@ -24,7 +24,7 @@ export function CreateQuestModal({ quests, users, reviewApiKey, onRefresh, onClo
       <div className="rounded-2xl w-full max-w-2xl overflow-hidden" style={{ background: "linear-gradient(160deg, #221c12 0%, #1a1509 60%, #1e190e 100%)", border: "1px solid rgba(180,140,70,0.35)", boxShadow: "0 0 60px rgba(139,92,246,0.12), 0 0 30px rgba(180,140,70,0.08)", maxHeight: "90vh", overflowY: "auto" }} onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(180,140,70,0.15)" }}>
           <div>
-            <h2 className="text-sm font-bold" style={{ color: "#e8d5a3" }}>📜 Quest Board</h2>
+            <h2 className="text-sm font-bold" style={{ color: "#e8d5a3" }}>Quest Board</h2>
             <p className="text-xs" style={{ color: "rgba(200,170,100,0.4)" }}>Choose a template or start from scratch</p>
           </div>
           <button onClick={onClose} style={{ color: "rgba(200,170,100,0.4)", fontSize: 16 }}>✕</button>
@@ -580,8 +580,8 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                   {/* Reward Preview */}
                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(99,102,241,0.12)" }}>
                     <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(165,180,252,0.4)" }}>Vorschau Belohnungen</p>
-                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Täglich: <span style={{ color: "#818cf8" }}>5 🪙</span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bindungsbonus: <span style={{ color: "#818cf8" }}>+{bonusGold} 🪙</span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
+                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.65)" }}>Täglich: <span style={{ color: "#818cf8" }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(165,180,252,0.65)" }}>Bindungsbonus: <span style={{ color: "#818cf8" }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated", verticalAlign: "middle" }} /></span> · <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newVowBloodPact && <span style={{ color: "#6366f1", fontWeight: "bold" }}> ×3</span>}</p>}
                   </div>
 
                   {/* Buttons */}
@@ -593,7 +593,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
               </div>
 
               {/* ── Vael Portrait (hidden on small screens) ── */}
-              <div className="hidden md:flex items-end" style={{ marginLeft: -44, width: 220, flexShrink: 0, pointerEvents: "none", zIndex: 10 }}>
+              <div className="hidden md:flex items-end" style={{ marginLeft: -44, width: 220, flexShrink: 0, pointerEvents: "none", zIndex: 10, background: "none", border: "none", padding: 0 }}>
                 <img src="/images/portraits/npc-vael.png" alt="Vael the Silent" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: newVowBloodPact ? "drop-shadow(0 0 22px rgba(99,102,241,0.8))" : "drop-shadow(0 0 18px rgba(99,102,241,0.45))", transition: "filter 0.5s ease" }} />
               </div>
             </div>
@@ -606,7 +606,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setDeleteConfirmId(null)}>
           <div className="w-full max-w-xs rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: "1px solid rgba(239,68,68,0.35)", boxShadow: "0 0 40px rgba(239,68,68,0.1)" }} onClick={e => e.stopPropagation()}>
             <div className="p-5 text-center">
-              <p className="text-2xl mb-3">⚔️</p>
+              <p className="text-2xl mb-3">×</p>
               <p className="text-sm font-bold mb-1" style={{ color: "#e8d5a3" }}>Abandon this Vow?</p>
               <p className="text-xs mb-5" style={{ color: "rgba(200,170,100,0.45)" }}>Are you sure you want to forsake this sworn vow?</p>
               <div className="flex gap-2">
@@ -623,7 +623,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                   className="flex-1 text-sm py-2 rounded-lg font-semibold"
                   style={{ background: "rgba(239,68,68,0.18)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.4)" }}
                 >
-                  🗑 Abandon Vow
+                  Abandon Vow
                 </button>
               </div>
             </div>
@@ -791,7 +791,7 @@ export function RelationshipCoopPanel({ users, reviewApiKey, onRefresh }: {
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f43f5e" }}>
-          💞 Relationship Raid Boss
+          Relationship Raid Boss
         </h2>
         <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(244,63,94,0.12)", color: "#f43f5e", border: "1px solid rgba(244,63,94,0.3)" }}>
           Co-op Quests
@@ -837,7 +837,7 @@ export function RelationshipCoopPanel({ users, reviewApiKey, onRefresh }: {
                   className="action-btn w-full text-xs py-1.5 rounded-lg font-semibold"
                   style={{ background: isDone ? "rgba(34,197,94,0.15)" : canCreate ? "rgba(244,63,94,0.15)" : "rgba(255,255,255,0.04)", color: isDone ? "#22c55e" : canCreate ? "#f43f5e" : "rgba(255,255,255,0.2)", border: `1px solid ${isDone ? "rgba(34,197,94,0.3)" : "rgba(244,63,94,0.3)"}`, cursor: canCreate ? "pointer" : "not-allowed" }}
                 >
-                  {isDone ? "✓ Co-op Quest Created!" : isCreating ? "Creating…" : canCreate ? "💞 Create Co-op Quest" : "Select both partners first"}
+                  {isDone ? "✓ Co-op Quest Created!" : isCreating ? "Creating…" : canCreate ? "Create Co-op Quest" : "Select both partners first"}
                 </button>
               ) : (
                 <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.2)" }}>Login to create</p>
@@ -965,7 +965,7 @@ export function SmartSuggestionsPanel({ quests, agents }: { quests: QuestsData; 
         className="flex items-center gap-2 mb-3 w-full text-left"
       >
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#a855f7" }}>
-          ✦ Smart Suggestions
+          Smart Suggestions
         </h2>
         <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.3)" }}>
           {visible.length}
@@ -1086,7 +1086,7 @@ export function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#3b82f6" }}>
-          📚 Learning Workshop
+          Learning Workshop
         </h2>
         <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(59,130,246,0.12)", color: "#3b82f6", border: "1px solid rgba(59,130,246,0.3)" }}>
           {learningActive.length} active · {learningDone} done
@@ -1097,7 +1097,7 @@ export function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
         <div className="flex gap-2 flex-wrap mb-3">
           {learningActive.slice(0, 4).map(q => (
             <div key={q.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(59,130,246,0.08)", border: "1px solid rgba(59,130,246,0.2)" }}>
-              <span className="text-xs" style={{ color: "rgba(59,130,246,0.7)" }}>📚</span>
+              <span className="text-xs" style={{ color: "rgba(59,130,246,0.7)" }}>·</span>
               <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.7)" }}>{q.title}</span>
               {q.progress && (
                 <span className="text-xs font-mono" style={{ color: "#3b82f6" }}>{q.progress.completed}/{q.progress.total}</span>
@@ -1136,7 +1136,7 @@ export function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
                     border: `1px solid ${isDone ? "rgba(34,197,94,0.3)" : "rgba(59,130,246,0.3)"}`,
                   }}
                 >
-                  {isDone ? "✓ Quest Chain Created!" : isCreating ? "Creating…" : "📚 Start Quest Chain"}
+                  {isDone ? "✓ Quest Chain Created!" : isCreating ? "Creating…" : "Start Quest Chain"}
                 </button>
               ) : (
                 <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.2)" }}>Login to create</p>
@@ -1213,7 +1213,7 @@ export function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: 
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#22c55e" }}>
-          🏠 Household Board
+          Household Board
         </h2>
         <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
           {householdQuests.length} chores
@@ -1234,7 +1234,7 @@ export function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-3">
           {householdQuests.map(q => (
             <div key={q.id} className="flex items-center gap-2 p-2.5 rounded-lg" style={{ background: "#252525", border: "1px solid rgba(34,197,94,0.15)" }}>
-              <span className="text-base flex-shrink-0">🏠</span>
+              <span className="text-base flex-shrink-0" style={{ color: "#22c55e" }}>·</span>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-medium truncate" style={{ color: "#e8e8e8" }}>{q.title}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -1321,7 +1321,7 @@ export function ThoughtfulHeroPanel({ quests, reviewApiKey, onRefresh }: {
     <section className="mb-6">
       <div className="flex items-center gap-2 mb-3">
         <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ec4899" }}>
-          ❤ Thoughtful Hero
+          Thoughtful Hero
         </h2>
         {socialActive.length > 0 && (
           <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(236,72,153,0.12)", color: "#ec4899", border: "1px solid rgba(236,72,153,0.3)" }}>
@@ -1399,7 +1399,7 @@ export function HumanInputBadge() {
       className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 font-medium"
       style={{ color: "#f59e0b", background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.3)" }}
     >
-      👤 Needs Leon
+      Needs Leon
     </span>
   );
 }
@@ -1663,7 +1663,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
         <div className="px-3 pb-2.5 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             {(quest.rewards?.xp ?? 0) > 0 && (
-              <span className="text-xs font-mono" style={{ color: "#b39ddb" }}>⭐ {quest.rewards!.xp}</span>
+              <span className="text-xs font-mono" style={{ color: "#b39ddb" }}>{quest.rewards!.xp} XP</span>
             )}
             {(quest.rewards?.gold ?? 0) > 0 && (
               <span className="text-xs font-mono" style={{ color: "#fbbf24" }}>🪙 {quest.rewards!.gold}</span>
