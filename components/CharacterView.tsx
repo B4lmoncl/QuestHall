@@ -407,6 +407,8 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
               width: p.size,
               height: p.size,
               animation: `petalFall ${p.duration}s ${p.delay}s infinite linear`,
+              animationFillMode: "backwards",
+              opacity: 0,
               "--drift": `${p.drift}px`,
               pointerEvents: "none",
               imageRendering: "pixelated",

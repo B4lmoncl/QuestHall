@@ -47,7 +47,8 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
     try {
       const r = await fetch(`/api/quest/${questId}/complete`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+        body: JSON.stringify({ agentId: playerName }),
       });
       if (r.ok) {
         setCompletedIds(prev => new Set([...prev, questId]));
