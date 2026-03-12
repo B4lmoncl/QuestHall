@@ -316,11 +316,23 @@ body {
     transform: translateY(-20px) translateX(0px) rotate(0deg);
     opacity: 0;
   }
-  10% {
+  8% {
     opacity: 0.8;
   }
-  90% {
-    opacity: 0.7;
+  25% {
+    transform: translateY(25vh) translateX(calc(var(--drift) * 0.4)) rotate(180deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translateY(50vh) translateX(calc(var(--drift) * -0.3)) rotate(360deg);
+    opacity: 0.75;
+  }
+  75% {
+    transform: translateY(75vh) translateX(calc(var(--drift) * 0.8)) rotate(540deg);
+    opacity: 0.6;
+  }
+  92% {
+    opacity: 0.4;
   }
   100% {
     transform: translateY(calc(100vh + 20px)) translateX(var(--drift)) rotate(720deg);
