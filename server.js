@@ -220,6 +220,7 @@ let lootTables = { common: [], uncommon: [], rare: [], epic: [], legendary: [] }
 let gearTemplates = { tiers: [], items: [], setBonus: {} };
 let npcGivers = { givers: [] };
 let npcState  = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {} };
+let npcStateFileExisted = false; // tracks whether npcState.json existed at boot
 let appState  = { version: '1.0.0' };
 let feedbackEntries = [];
 let rotationState = { lastDailyRotation: null, questSeed: 0, previousQuestTemplateIds: [] };
@@ -455,6 +456,7 @@ function loadNpcGivers() {
 function loadNpcState() {
   try {
     if (fs.existsSync(NPC_STATE_FILE)) {
+      npcStateFileExisted = true;
       const raw = JSON.parse(fs.readFileSync(NPC_STATE_FILE, 'utf8'));
       if (raw) npcState = { activeNpcs: [], cooldowns: {}, lastRotation: null, npcQuestIds: {}, ...raw };
     }
@@ -812,13 +814,17 @@ function processNpcDepartures(now) {
 }
 
 /** Try to spawn new NPCs into empty slots (30% chance per slot, weighted rarity) */
-function trySpawnNpcs(now) {
+function trySpawnNpcs(now, isStartup = false) {
   const currentActive = npcState.activeNpcs.length;
   if (currentActive >= NPC_MAX_ACTIVE) return;
 
+  // Cap spawns per cycle: fresh start (no state file) → max 2, otherwise max 1
+  const maxSpawnThisCycle = (isStartup && !npcStateFileExisted) ? 2 : 1;
+  let spawned = 0;
+
   const activeIds = new Set(npcState.activeNpcs.map(a => a.giverId));
 
-  for (let i = currentActive; i < NPC_MAX_ACTIVE; i++) {
+  for (let i = currentActive; i < NPC_MAX_ACTIVE && spawned < maxSpawnThisCycle; i++) {
     if (Math.random() > NPC_SPAWN_CHANCE) continue;
 
     const candidates = npcGivers.givers.filter(g => {
@@ -896,6 +902,7 @@ function trySpawnNpcs(now) {
       questChainIndex: chains.indexOf(chain),
     });
     activeIds.add(giver.id);
+    spawned++;
 
     console.log(`[npc] ${giver.name} has arrived (departs ~${Math.round(jitteredMs / 3600000)}h, ${chain.length} quests, chain ${chains.indexOf(chain) + 1}/${chains.length})`);
   }
@@ -945,11 +952,14 @@ function checkCompanionQuestTimeLimits() {
 }
 
 /** Main NPC rotation check — called on startup and every 30 minutes */
+let npcRotationFirstRun = true;
 function checkNpcRotation() {
   const now = new Date();
-  console.log(`[npc] Rotation check at ${now.toISOString()} — ${npcState.activeNpcs.length} active`);
+  const isStartup = npcRotationFirstRun;
+  npcRotationFirstRun = false;
+  console.log(`[npc] Rotation check at ${now.toISOString()} — ${npcState.activeNpcs.length} active${isStartup ? ' (startup)' : ''}`);
   processNpcDepartures(now);
-  trySpawnNpcs(now);
+  trySpawnNpcs(now, isStartup);
   checkCompanionQuestTimeLimits();
   npcState.lastRotationCheck = now.toISOString();
   npcState.lastRotation = now.toISOString();
