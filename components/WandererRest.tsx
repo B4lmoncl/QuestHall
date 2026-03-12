@@ -198,190 +198,39 @@ export function WandererRest({
         )}
       </section>
 
-      {/* ── Dobbie's Demands ── */}
+      {/* ── Dobbie's Demands — Dungeon Vault ── */}
       {playerName && (
-        <div className="rounded-xl overflow-hidden mt-8" style={{
+        <div style={{
           maxWidth: 1000, margin: "32px auto 0",
-          background: "linear-gradient(180deg, rgba(255,107,157,0.04) 0%, rgba(20,10,30,0.8) 100%)",
-          border: "2px solid rgba(255,107,157,0.15)",
-          boxShadow: "inset 0 0 30px rgba(255,107,157,0.03), 0 4px 20px rgba(0,0,0,0.3)",
+          background: "#0c0e14",
+          border: "1px solid #1e2030",
+          outline: "2px solid #ff6b9d",
+          outlineOffset: 3,
+          boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
+          borderRadius: 2,
+          padding: 0,
+          overflow: "hidden",
         }}>
-          {/* Ornate top strip */}
-          <div style={{ height: 3, background: "linear-gradient(90deg, transparent, #ff6b9d88, rgba(255,215,0,0.3), #ff6b9d88, transparent)" }} />
-          <button
-            onClick={() => setDobbieOpen(v => !v)}
-            className="flex items-center gap-2.5 w-full px-4 py-3 text-left"
-            style={{ borderLeft: "3px solid #ff6b9d" }}
-          >
-            <span className="text-lg" style={{ filter: "drop-shadow(0 0 5px rgba(255,107,157,0.35))" }}>🐱</span>
+          {/* Header */}
+          <div style={{ background: "rgba(255,107,157,0.10)", borderBottom: "2px solid #ff6b9d", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
             <span className="text-xs" style={{ color: "rgba(255,107,157,0.5)" }}>🐾</span>
-            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d", textShadow: "0 0 8px rgba(255,107,157,0.2)" }}>{petName ?? "Companion"}&apos;s Demands</span>
-            <span className="ml-auto text-xs" style={{ color: "rgba(255,107,157,0.35)" }}>{dobbieOpen ? "▲" : "▼"}</span>
-          </button>
-          {dobbieOpen && (
-            <div style={{ borderTop: "1px solid rgba(255,107,157,0.12)" }}>
+            <span style={{ color: "#ff6b9d", fontWeight: 600, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}>{petName ?? "Companion"}&apos;s Demands</span>
+          </div>
+          {/* Portrait + Content layout */}
+          <div style={{ display: "flex", gap: 16, padding: 16 }}>
+            <div style={{ flexShrink: 0, width: 128, height: 128 }}>
+              <img
+                src="/images/portraits/companion-dobbie.png"
+                alt={petName ?? "Companion"}
+                style={{ width: 128, height: 128, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)" }}
+              />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
             </div>
-          )}
-          <div style={{ height: 2, background: "linear-gradient(90deg, transparent, rgba(255,107,157,0.2), transparent)" }} />
+          </div>
         </div>
       )}
-
-      {/* ── CSS Frame Previews ── */}
-      <div style={{ maxWidth: 1000, margin: "32px auto 0", padding: "0 8px" }}>
-        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, textAlign: "center", marginBottom: 16 }}>── Frame Previews ──</p>
-
-        {/* Frame Preview 1: Tavern Notice Board */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginBottom: 8 }}>1 — Tavern Notice Board</p>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(180deg, #1e1810 0%, #140f0a 100%)",
-            border: "4px solid #3a2a18",
-            borderRadius: 2,
-            boxShadow: "inset 0 0 0 2px #2a1c10, inset 0 0 0 4px #1a1008, 0 4px 20px rgba(0,0,0,0.8)",
-            padding: 16,
-          }}>
-            <div style={{ fontVariant: "small-caps", color: "#d4c4a0", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-              {petName ?? "Companion"}&apos;s Demands
-            </div>
-            {[
-              { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
-              { title: "Clean the Litter Box", xp: 5, gold: 3 },
-            ].map((q, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 3, padding: "10px 12px", marginBottom: 6 }}>
-                <p style={{ color: "#e0d8cc", fontSize: 13, fontWeight: 500 }}>{q.title}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>{q.xp} XP · {q.gold} Gold</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Frame Preview 2: Dungeon Vault */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginBottom: 8 }}>2 — Dungeon Vault</p>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(180deg, #121418 0%, #0a0c10 100%)",
-            border: "3px solid #2a2c38",
-            outline: "2px solid #1a1c28",
-            outlineOffset: 3,
-            boxShadow: "inset 0 0 0 1px #1e2028, inset 0 2px 8px rgba(0,0,0,0.8), 0 0 12px rgba(255,107,157,0.06)",
-            padding: 16,
-          }}>
-            <div style={{ fontVariant: "small-caps", color: "#b0b8c4", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-              {petName ?? "Companion"}&apos;s Demands
-            </div>
-            {[
-              { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
-              { title: "Clean the Litter Box", xp: 5, gold: 3 },
-            ].map((q, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 3, padding: "10px 12px", marginBottom: 6 }}>
-                <p style={{ color: "#c8ccd4", fontSize: 13, fontWeight: 500 }}>{q.title}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>{q.xp} XP · {q.gold} Gold</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Frame Preview 3: Enchanted Scroll */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginBottom: 8 }}>3 — Enchanted Scroll</p>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(180deg, #1a1610 0%, #12100c 100%)",
-            borderTop: "4px solid #8b7355",
-            borderBottom: "4px solid #8b7355",
-            borderLeft: "12px solid transparent",
-            borderRight: "12px solid transparent",
-            borderImage: "none",
-            boxShadow: "inset 0 4px 0 #6b5540, inset 0 -4px 0 #6b5540, inset 4px 0 0 #3a2a18, inset -4px 0 0 #3a2a18, 0 4px 20px rgba(0,0,0,0.7)",
-            padding: "20px 16px",
-          }}>
-            <div style={{ fontVariant: "small-caps", color: "#c8b88c", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-              {petName ?? "Companion"}&apos;s Demands
-            </div>
-            {[
-              { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
-              { title: "Clean the Litter Box", xp: 5, gold: 3 },
-            ].map((q, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 3, padding: "10px 12px", marginBottom: 6 }}>
-                <p style={{ color: "#d8ccb0", fontSize: 13, fontWeight: 500 }}>{q.title}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>{q.xp} XP · {q.gold} Gold</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Frame Preview 4: Royal Decree */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginBottom: 8 }}>4 — Royal Decree</p>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(180deg, #1a1508 0%, #0d0a05 100%)",
-            border: "2px solid #c8a84e",
-            boxShadow: "inset 0 0 0 1px rgba(200,168,78,0.2), inset 0 0 20px rgba(200,168,78,0.05), 0 0 15px rgba(200,168,78,0.08), 0 4px 20px rgba(0,0,0,0.8)",
-            borderRadius: 1,
-            padding: 16,
-          }}>
-            <span style={{ position: "absolute", top: -1, left: -1, width: 12, height: 12, borderTop: "3px solid #ffd700", borderLeft: "3px solid #ffd700" }} />
-            <span style={{ position: "absolute", top: -1, right: -1, width: 12, height: 12, borderTop: "3px solid #ffd700", borderRight: "3px solid #ffd700" }} />
-            <span style={{ position: "absolute", bottom: -1, left: -1, width: 12, height: 12, borderBottom: "3px solid #ffd700", borderLeft: "3px solid #ffd700" }} />
-            <span style={{ position: "absolute", bottom: -1, right: -1, width: 12, height: 12, borderBottom: "3px solid #ffd700", borderRight: "3px solid #ffd700" }} />
-            <div style={{ fontVariant: "small-caps", color: "#e0c870", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-              {petName ?? "Companion"}&apos;s Demands
-            </div>
-            {[
-              { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
-              { title: "Clean the Litter Box", xp: 5, gold: 3 },
-            ].map((q, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 3, padding: "10px 12px", marginBottom: 6 }}>
-                <p style={{ color: "#e8dcc0", fontSize: 13, fontWeight: 500 }}>{q.title}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>{q.xp} XP · {q.gold} Gold</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Frame Preview 5: Ironforge Plate */}
-        <div style={{ marginBottom: 32 }}>
-          <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginBottom: 8 }}>5 — Ironforge Plate</p>
-          <div style={{
-            position: "relative",
-            background: "linear-gradient(180deg, #16161c 0%, #0c0c12 100%)",
-            border: "3px solid #3a3a48",
-            boxShadow: "inset 0 0 0 1px #28283a, inset 1px 1px 0 rgba(255,255,255,0.05), inset -1px -1px 0 rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.8)",
-            borderRadius: 2,
-            padding: 16,
-          }}>
-            {[[6,6],[6,"auto"],["auto",6],["auto","auto"]].map(([t,l], i) => (
-              <span key={i} style={{
-                position: "absolute",
-                top: typeof t === "number" ? t : undefined,
-                bottom: t === "auto" ? 6 : undefined,
-                left: typeof l === "number" ? l : undefined,
-                right: l === "auto" ? 6 : undefined,
-                width: 8, height: 8, borderRadius: "50%",
-                background: "radial-gradient(circle at 35% 35%, #5a5a6a, #2a2a3a)",
-                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.15), 0 1px 2px rgba(0,0,0,0.5)",
-              }} />
-            ))}
-            <div style={{ fontVariant: "small-caps", color: "#a0a8b4", fontSize: 13, fontWeight: 600, marginBottom: 12 }}>
-              {petName ?? "Companion"}&apos;s Demands
-            </div>
-            {[
-              { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
-              { title: "Clean the Litter Box", xp: 5, gold: 3 },
-            ].map((q, i) => (
-              <div key={i} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 3, padding: "10px 12px", marginBottom: 6 }}>
-                <p style={{ color: "#c4c8d0", fontSize: 13, fontWeight: 500 }}>{q.title}</p>
-                <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 11, marginTop: 2 }}>{q.xp} XP · {q.gold} Gold</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-      {/* ── END Frame Previews ── */}
 
       {/* ── Divider: Dobbie's Demands ↔ Starweaver ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
@@ -782,29 +631,33 @@ export function WandererRest({
               </section>
             )}
             {reviewApiKey && (
-              <div className="rounded-xl overflow-hidden" style={{
-                background: "linear-gradient(180deg, rgba(255,107,157,0.04) 0%, rgba(20,10,30,0.8) 100%)",
-                border: "2px solid rgba(255,107,157,0.15)",
-                boxShadow: "inset 0 0 30px rgba(255,107,157,0.03), 0 4px 20px rgba(0,0,0,0.3)",
+              <div style={{
+                background: "#0c0e14",
+                border: "1px solid #1e2030",
+                outline: "2px solid #ff6b9d",
+                outlineOffset: 3,
+                boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(255,107,157,0.06)",
+                borderRadius: 2,
+                padding: 0,
+                overflow: "hidden",
               }}>
-                <div style={{ height: 3, background: "linear-gradient(90deg, transparent, #ff6b9d88, rgba(255,215,0,0.3), #ff6b9d88, transparent)" }} />
-                <button
-                  onClick={() => setDobbieOpen(v => !v)}
-                  className="flex items-center gap-2.5 w-full px-4 py-3 text-left"
-                  style={{ borderLeft: "3px solid #ff6b9d" }}
-                >
-                  <span className="text-lg" style={{ filter: "drop-shadow(0 0 5px rgba(255,107,157,0.35))" }}>🐱</span>
+                <div style={{ background: "rgba(255,107,157,0.10)", borderBottom: "2px solid #ff6b9d", padding: "12px 16px", display: "flex", alignItems: "center", gap: 8 }}>
                   <span className="text-xs" style={{ color: "rgba(255,107,157,0.5)" }}>🐾</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d", textShadow: "0 0 8px rgba(255,107,157,0.2)" }}>{petName ?? "Companion"}&apos;s Demands</span>
+                  <span style={{ color: "#ff6b9d", fontWeight: 600, fontSize: 13, textTransform: "uppercase", letterSpacing: "0.08em" }}>{petName ?? "Companion"}&apos;s Demands</span>
                   <span className="text-xs px-1.5 py-0.5 rounded-lg font-mono ml-1" style={{ background: "rgba(255,107,157,0.08)", color: "rgba(255,107,157,0.6)", border: "1px solid rgba(255,107,157,0.2)" }}>NPC</span>
-                  <span className="ml-auto text-xs" style={{ color: "rgba(255,107,157,0.35)" }}>{dobbieOpen ? "▲" : "▼"}</span>
-                </button>
-                {dobbieOpen && (
-                  <div style={{ borderTop: "1px solid rgba(255,107,157,0.12)" }}>
+                </div>
+                <div style={{ display: "flex", gap: 16, padding: 16 }}>
+                  <div style={{ flexShrink: 0, width: 128, height: 128 }}>
+                    <img
+                      src="/images/portraits/companion-dobbie.png"
+                      alt={petName ?? "Companion"}
+                      style={{ width: 128, height: 128, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)" }}
+                    />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
                   </div>
-                )}
-                <div style={{ height: 2, background: "linear-gradient(90deg, transparent, rgba(255,107,157,0.2), transparent)" }} />
+                </div>
               </div>
             )}
           </div>
