@@ -227,6 +227,131 @@ export function WandererRest({
         </div>
       )}
 
+      {/* ── Style Previews (TEMP — remove after selection) ── */}
+      <div style={{ maxWidth: 1000, margin: "32px auto 0", padding: "0 8px" }}>
+        <p style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, textAlign: "center", marginBottom: 16 }}>── Style Previews ──</p>
+
+        {/* Preview 1: Ember Shrine */}
+        <div style={{
+          background: "linear-gradient(180deg, #1c1017 0%, #0a0a0f 100%)",
+          border: "1px solid #2a1a1a",
+          boxShadow: "inset 0 -40px 40px -20px rgba(255,107,157,0.08), 0 2px 12px rgba(0,0,0,0.9)",
+          outline: "1px solid rgba(255,255,255,0.04)",
+          borderRadius: 6,
+          padding: 16,
+          marginBottom: 24,
+        }}>
+          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, marginBottom: 8 }}>2 — Ember Shrine</p>
+          <div style={{
+            background: "linear-gradient(90deg, rgba(255,107,157,0.15), transparent)",
+            padding: "10px 14px",
+            fontVariant: "small-caps",
+            color: "#d4c4a0",
+            marginBottom: 12,
+            borderRadius: 3,
+          }}>
+            🐱 {petName ?? "Companion"} — 😺 Happy
+          </div>
+          {[
+            { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
+            { title: "Clean the Litter Box", xp: 5, gold: 3 },
+          ].map((q, i) => (
+            <div key={i} style={{
+              background: "linear-gradient(90deg, rgba(255,107,157,0.06), transparent)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 3,
+              padding: "10px 12px",
+              marginBottom: 6,
+            }}>
+              <span style={{ color: "#e0d0c0", fontSize: 13 }}>{q.title}</span>
+              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginLeft: 8 }}>{q.xp} XP · {q.gold} Gold</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Preview 2: Runic Vault */}
+        <div style={{
+          background: "#0c0e14",
+          border: "1px solid #1e2030",
+          boxShadow: "inset 2px 2px 0 #0a0b10, inset -2px -2px 0 #141620, 0 4px 16px rgba(0,0,0,0.7)",
+          outline: "1px solid #ff6b9d",
+          outlineOffset: 3,
+          borderRadius: 2,
+          padding: 16,
+          marginBottom: 24,
+        }}>
+          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, marginBottom: 8 }}>3 — Runic Vault</p>
+          <div style={{
+            background: "rgba(255,107,157,0.10)",
+            borderBottom: "2px solid #ff6b9d",
+            letterSpacing: 3,
+            textTransform: "uppercase" as const,
+            fontSize: "0.75em",
+            color: "#8a8a9a",
+            padding: "8px 14px",
+            marginBottom: 12,
+            borderRadius: 2,
+          }}>
+            🐱 {petName ?? "Companion"} — 😺 Happy
+          </div>
+          {[
+            { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
+            { title: "Clean the Litter Box", xp: 5, gold: 3 },
+          ].map((q, i) => (
+            <div key={i} style={{
+              background: "#0e1018",
+              border: "1px solid #1a1c28",
+              boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.02)",
+              borderTop: "1px solid rgba(255,107,157,0.25)",
+              padding: "10px 12px",
+              marginBottom: 6,
+              borderRadius: 2,
+            }}>
+              <span style={{ color: "#e0d0c0", fontSize: 13 }}>{q.title}</span>
+              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginLeft: 8 }}>{q.xp} XP · {q.gold} Gold</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Preview 3: Crystal Dark */}
+        <div style={{
+          background: "linear-gradient(180deg, rgba(255,107,157,0.04) 0%, #08080c 100%)",
+          border: "1px solid rgba(255,107,157,0.20)",
+          boxShadow: "0 0 20px rgba(255,107,157,0.10), inset 0 0 40px rgba(0,0,0,0.5)",
+          borderRadius: 4,
+          padding: 16,
+          marginBottom: 24,
+        }}>
+          <p style={{ color: "rgba(255,255,255,0.25)", fontSize: 10, marginBottom: 8 }}>5 — Crystal Dark</p>
+          <div style={{
+            color: "rgba(255,107,157,0.80)",
+            textShadow: "0 0 12px rgba(255,107,157,0.50)",
+            fontWeight: 600,
+            letterSpacing: 1,
+            padding: "8px 0",
+            marginBottom: 12,
+          }}>
+            🐱 {petName ?? "Companion"} — 😺 Happy
+          </div>
+          {[
+            { title: `Feed ${petName ?? "Companion"} Before 18:00`, xp: 5, gold: 2 },
+            { title: "Clean the Litter Box", xp: 5, gold: 3 },
+          ].map((q, i) => (
+            <div key={i} style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,107,157,0.10)",
+              borderRadius: 3,
+              padding: "10px 12px",
+              marginBottom: 6,
+            }}>
+              <span style={{ color: "#e0d0c0", fontSize: 13 }}>{q.title}</span>
+              <span style={{ color: "rgba(255,255,255,0.3)", fontSize: 11, marginLeft: 8 }}>{q.xp} XP · {q.gold} Gold</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {/* ── END Style Previews ── */}
+
       {/* ── Divider: Dobbie's Demands ↔ Starweaver ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
