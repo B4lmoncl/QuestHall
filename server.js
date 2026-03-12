@@ -2472,6 +2472,19 @@ app.get('/api/quests', (req, res) => {
       // Skip class-gated quests that don't match this player's class (completely invisible)
       if (q.classRequired && q.classRequired !== playerClassId) continue;
 
+      // NPC quests use global state directly (not tracked in per-player progress)
+      if (q.npcGiverId) {
+        const qClaimedBy = (q.claimedBy || '').toLowerCase();
+        const qCompletedBy = (q.completedBy || '').toLowerCase();
+        if (q.status === 'in_progress' && qClaimedBy === playerParam) {
+          inProgressPlayer.push({ ...q });
+        } else if (q.status === 'completed' && qCompletedBy === playerParam) {
+          completedPlayer.push({ ...q, completedBy: playerParam });
+        }
+        // open/locked NPC quests are shown via the NPC board, not the player Quest Board
+        continue;
+      }
+
       const minLvl = q.minLevel || 1;
       if (playerLevel < minLvl) {
         lockedPlayer.push({ ...q, playerStatus: 'locked' });

@@ -196,9 +196,9 @@ export function WandererRest({
 
       {/* ── Divider: Wanderers ↔ Companion Hearth ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.2), transparent)" }} />
-        <span style={{ fontSize: 10, color: "rgba(251,146,60,0.3)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Hearth ✦</span>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.2), transparent)" }} />
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.25), transparent)" }} />
+        <span style={{ fontSize: "0.85rem", color: "rgba(251,146,60,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Hearth ✦</span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.25), transparent)" }} />
       </div>
 
       {/* ── SECTION 2: The Companion Hearth (MIDDLE) ── */}
@@ -260,9 +260,9 @@ export function WandererRest({
 
       {/* ── Divider: Companion Hearth ↔ Starweaver ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.15), transparent)" }} />
-        <span style={{ fontSize: 10, color: "rgba(255,215,0,0.25)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Chamber ✦</span>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.15), transparent)" }} />
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
+        <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Chamber ✦</span>
+        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
       </div>
 
       {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
@@ -438,14 +438,13 @@ export function WandererRest({
                         <div className="flex items-center gap-3 mt-3">
                           <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>🎁 +{currentQuest.rewards?.xp ?? 0} XP</span>
                           <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} 🪙</span>
-                          {currentQuest.status === "claimed" && (
+                          {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && (
                             <span className="text-xs px-2 py-0.5 rounded font-semibold ml-auto" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Active</span>
                           )}
                           {currentQuest.status === "open" && handleClaim && playerName && (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-                                // TODO: companion-accepted quests should appear in the Great Hall quest board under "In Progress"
                                 handleClaim(currentQuest.questId);
                               }}
                               className="text-xs px-3 py-1 rounded-lg font-semibold ml-auto"
@@ -454,7 +453,7 @@ export function WandererRest({
                               onMouseLeave={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.2)"; }}
                             >⚔ Accept Quest</button>
                           )}
-                          {currentQuest.status === "claimed" && currentQuest.claimedBy?.toLowerCase() === playerName?.toLowerCase() && handleComplete && (
+                          {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && currentQuest.claimedBy?.toLowerCase() === playerName?.toLowerCase() && handleComplete && (
                             <button
                               onClick={(e) => { e.stopPropagation(); handleComplete(currentQuest.questId, currentQuest.title); }}
                               className="text-xs px-3 py-1 rounded-lg font-semibold ml-auto"
