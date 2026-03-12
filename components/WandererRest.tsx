@@ -1,14 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import type { Quest, ActiveNpc, QuestsData, User } from "@/app/types";
+import type { Quest, ActiveNpc, QuestsData } from "@/app/types";
 import {
   EpicQuestCard, QuestCard, DobbieQuestPanel,
   ClickablePriorityBadge, CategoryBadge, ProductBadge, PriorityBadge,
 } from "@/components/QuestBoard";
 import { InfoTooltip } from "@/components/InfoTooltip";
-import { CompanionsWidget } from "@/components/CompanionsWidget";
-
 interface WandererRestProps {
   npcBoardFilter: string | null;
   setNpcBoardFilter: (v: string | null) => void;
@@ -43,10 +41,6 @@ interface WandererRestProps {
   lyraQuestsOpen: Quest[];
   lyraQuestsInProgress: Quest[];
   lyraAllQuests: Quest[];
-  // Companion Hearth
-  hearthUser?: User | null;
-  hearthStreak?: number;
-  hearthApiKey?: string;
   // Quest actions
   handleClaim?: (questId: string) => void;
   handleUnclaim?: (questId: string) => void;
@@ -71,7 +65,6 @@ export function WandererRest({
   loading, quests, playerName, refresh,
   devVisibleOpen, devVisibleInProgress,
   lyraQuestsOpen, lyraQuestsInProgress, lyraAllQuests,
-  hearthUser, hearthStreak, hearthApiKey,
   handleClaim, handleUnclaim, handleComplete,
 }: WandererRestProps) {
   // Sync selectedNpc with fresh data when activeNpcs updates (e.g. after claim/complete)
@@ -194,71 +187,26 @@ export function WandererRest({
         )}
       </section>
 
-      {/* ── Divider: Wanderers ↔ Companion Hearth ── */}
-      <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.25), transparent)" }} />
-        <span style={{ fontSize: "0.85rem", color: "rgba(251,146,60,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Hearth ✦</span>
-        <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(251,146,60,0.25), transparent)" }} />
-      </div>
-
-      {/* ── SECTION 2: The Companion Hearth (MIDDLE) ── */}
-      <section data-feedback-id="companion-hearth" className="mb-8" style={{ maxWidth: 1000, margin: "0 auto", marginTop: 24 }}>
-        <div className="mb-3">
-          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#f472b6" }}>🔥 The Companion Hearth</h2>
-          <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.3)" }}>Even heroes need someone to come home to</p>
+      {/* ── Dobbie's Demands ── */}
+      {playerName && (
+        <div className="rounded-xl overflow-hidden mt-8" style={{ maxWidth: 1000, margin: "32px auto 0", background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.2)" }}>
+          <button
+            onClick={() => setDobbieOpen(v => !v)}
+            className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
+          >
+            <span className="text-sm">🐱</span>
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
+            <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
+          </button>
+          {dobbieOpen && (
+            <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
+              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} />
+            </div>
+          )}
         </div>
-        {playerName ? (
-          <div
-            className="rounded-xl p-4"
-            style={{
-              background: "linear-gradient(135deg, rgba(120,53,15,0.18) 0%, rgba(180,83,9,0.12) 50%, rgba(120,53,15,0.18) 100%)",
-              border: "1px solid rgba(251,146,60,0.25)",
-              boxShadow: "0 0 30px rgba(251,146,60,0.06), inset 0 0 40px rgba(120,53,15,0.08)",
-            }}
-          >
-            {/* Hearth glow header */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-base">🔥</span>
-              <span className="text-xs italic" style={{ color: "rgba(251,191,36,0.5)" }}>The fire crackles warmly...</span>
-            </div>
-            <CompanionsWidget
-              user={hearthUser}
-              streak={hearthStreak ?? 0}
-              playerName={playerName}
-              apiKey={hearthApiKey}
-              onUserRefresh={refresh}
-            />
-            {/* Dobbie's Demands — collapsible */}
-            <div className="mt-4 rounded-xl overflow-hidden" style={{ background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.2)" }}>
-              <button
-                onClick={() => setDobbieOpen(v => !v)}
-                className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
-              >
-                <span className="text-sm">🐱</span>
-                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
-                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
-              </button>
-              {dobbieOpen && (
-                <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                  <DobbieQuestPanel reviewApiKey={hearthApiKey ?? ""} onRefresh={refresh} playerName={playerName} />
-                </div>
-              )}
-            </div>
-          </div>
-        ) : (
-          <div
-            className="rounded-xl px-4 py-8 text-center"
-            style={{
-              background: "linear-gradient(135deg, rgba(120,53,15,0.10) 0%, rgba(180,83,9,0.07) 100%)",
-              border: "1px solid rgba(251,146,60,0.12)",
-            }}
-          >
-            <p className="text-sm italic" style={{ color: "rgba(255,255,255,0.2)" }}>Your companion rests by the fire...</p>
-          </div>
-        )}
-      </section>
+      )}
 
-      {/* ── Divider: Companion Hearth ↔ Starweaver ── */}
+      {/* ── Divider: Dobbie's Demands ↔ Starweaver ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
         <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>✦ Chamber ✦</span>

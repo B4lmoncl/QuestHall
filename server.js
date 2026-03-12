@@ -2093,6 +2093,14 @@ app.post('/api/quest', requireApiKey, (req, res) => {
     if (!parent) return res.status(400).json({ error: `Parent quest not found: ${parentQuestId}` });
   }
   const resolvedCreatedBy = typeof createdBy === 'string' && createdBy.trim() ? createdBy.trim() : 'unknown';
+  // Dobbie quest dedup: if same title was already created by dobbie today, return existing
+  if (resolvedCreatedBy === 'dobbie') {
+    const today = new Date().toISOString().slice(0, 10);
+    const existing = quests.find(q => q.createdBy === 'dobbie' && q.title === title && (q.createdAt || '').slice(0, 10) === today);
+    if (existing) {
+      return res.json({ ok: true, quest: existing, duplicate: true });
+    }
+  }
   // Agent-created quests go to 'suggested' for human review; human-created stay 'open'
   // Player quest types (personal/learning/fitness/social) always bypass review → 'open'
   const HUMAN_CREATORS = ['leon', 'unknown', ...NPC_NAMES];

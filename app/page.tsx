@@ -1320,10 +1320,10 @@ export default function Dashboard() {
           return (
             <div>
 
-              {/* Companions Widget — compact Dobbie peek, full experience at the Hearth */}
+              {/* Companions Widget — full experience in the Great Hall */}
               {playerName && (
-                <div className="mb-5">
-                  <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => { setDashView("npcBoard"); setNpcBoardFilter(null); }} onUserRefresh={refresh} compact />
+                <div className="mb-5" style={{ minHeight: 100 }}>
+                  <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => { setDashView("npcBoard"); setNpcBoardFilter(null); }} onUserRefresh={refresh} />
                 </div>
               )}
 
@@ -1876,9 +1876,6 @@ export default function Dashboard() {
               lyraQuestsOpen={lyraQuestsOpen}
               lyraQuestsInProgress={lyraQuestsInProgress}
               lyraAllQuests={lyraAllQuests}
-              hearthUser={loggedInUser}
-              hearthStreak={playerStreak}
-              hearthApiKey={reviewApiKey}
               handleClaim={handleClaim}
               handleUnclaim={handleUnclaim}
               handleComplete={handleComplete}
