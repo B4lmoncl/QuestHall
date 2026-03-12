@@ -484,6 +484,7 @@ function rotateNpcs() {
         }
       }
       if (quests.length !== before) saveQuests();
+      delete npcState.npcQuestIds[active.giverId];
       console.log(`[npc] ${active.giverId} has left town`);
     }
   }
@@ -505,7 +506,9 @@ function rotateNpcs() {
       npcState.activeNpcs.push({ giverId: giver.id, arrivedAt, expiresAt });
 
       const questIds = [];
-      for (const qt of giver.questChain) {
+      const chains = giver.questChains || (giver.questChain ? [giver.questChain] : [[]]);
+      const chain = chains[Math.floor(Math.random() * chains.length)];
+      for (const qt of chain) {
         const quest = {
           id: `quest-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           title: qt.title,
@@ -545,7 +548,7 @@ function rotateNpcs() {
       // Cooldown starts when they leave
       npcState.cooldowns[giver.id] = new Date(now.getTime() + (giver.stayDays + giver.cooldownDays) * 86400000).toISOString();
       saveQuests();
-      console.log(`[npc] ${giver.name} has arrived (${giver.stayDays} days, ${giver.questChain.length} quests)`);
+      console.log(`[npc] ${giver.name} has arrived (${giver.stayDays} days, ${chain.length} quests, chain ${chains.indexOf(chain) + 1}/${chains.length})`);
     }
   }
 
