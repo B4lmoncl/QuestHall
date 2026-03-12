@@ -619,7 +619,7 @@ export default function Dashboard() {
           overflow: "visible",
         }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between" style={{ overflow: "visible" }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between" style={{ overflow: "visible" }}>
           <div className="flex items-center gap-3">
             <button
               className="flex items-center gap-2"
@@ -662,7 +662,7 @@ export default function Dashboard() {
                     onClick={() => setSettingsPopupOpen(v => !v)}
                     className="btn-interactive flex items-center justify-center font-bold flex-shrink-0"
                     style={{
-                      width: 32, height: 32, borderRadius: "50%",
+                      width: 48, height: 48, borderRadius: "50%",
                       overflow: "hidden",
                       border: `2px solid ${loggedInUser?.color ?? "#a78bfa"}60`,
                       boxShadow: `0 2px 8px ${loggedInUser?.color ?? "#a78bfa"}40`,
