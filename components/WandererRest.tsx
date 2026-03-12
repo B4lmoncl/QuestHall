@@ -104,6 +104,7 @@ export function WandererRest({
                 const urgent = npc.hoursLeft <= 24;
                 const rc = rarityColors[npc.rarity] ?? "#9ca3af";
                 const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
+                const hasOpenQuests = !allDone && npc.questChain.some(q => q.status === "open");
                 return (
                   <button
                     key={npc.id}
@@ -116,9 +117,10 @@ export function WandererRest({
                       className="relative rounded-lg overflow-hidden flex-shrink-0"
                       style={{
                         width: 148, height: 148,
-                        border: `2px solid ${urgent ? "rgba(239,68,68,0.5)" : `${rc}40`}`,
-                        boxShadow: `0 0 0 0 ${rc}`,
+                        border: `2px solid ${urgent ? "rgba(245,158,11,0.65)" : `${rc}40`}`,
+                        boxShadow: urgent ? "0 0 14px 3px rgba(245,158,11,0.22)" : `0 0 0 0 ${rc}`,
                         transition: "box-shadow 0.2s ease",
+                        animation: urgent && hasOpenQuests ? "pulse-amber-border 1.8s ease-in-out infinite" : undefined,
                       }}
                       onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 18px 4px ${rc}55`; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 0 ${rc}`; }}
@@ -142,18 +144,33 @@ export function WandererRest({
                         </div>
                       )}
                       {urgent && !allDone && (
-                        <div className="absolute bottom-0 left-0 right-0 py-0.5 text-center" style={{ background: "rgba(239,68,68,0.85)", fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
+                        <div className="absolute bottom-0 left-0 right-0 py-0.5 text-center" style={{ background: "rgba(245,158,11,0.85)", fontSize: 9, fontWeight: 700, color: "#fff", letterSpacing: 1 }}>
                           ⏰ {npc.hoursLeft}H LEFT
                         </div>
+                      )}
+                      {/* Gold pulsing dot for NPCs with unclaimed open quests */}
+                      {hasOpenQuests && (
+                        <div
+                          className="absolute top-1.5 right-1.5 rounded-full"
+                          style={{
+                            width: 8, height: 8,
+                            background: "#f59e0b",
+                            animation: "pulse-gold-dot 1.5s ease-in-out infinite",
+                            border: "1.5px solid rgba(0,0,0,0.4)",
+                          }}
+                        />
                       )}
                     </div>
                     <div className="text-center" style={{ maxWidth: 148 }}>
                       <p className="text-xs font-semibold leading-tight" style={{ color: "#e8e8e8" }}>{npc.name}</p>
                       <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "★"}</p>
                       {!allDone && (
-                        <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: urgent ? "#ef4444" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
+                        <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: urgent ? "#f59e0b" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
                           Departs in {urgent ? `${npc.hoursLeft}h` : `${npc.daysLeft}d`}
-                          <span title="Wandering NPCs visit the Guild Hall for a limited time. Check back regularly!" style={{ cursor: "help", color: "rgba(255,255,255,0.3)", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", width: 12, height: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, flexShrink: 0 }}>?</span>
+                          <span
+                            onClick={e => { e.stopPropagation(); setSelectedNpc(npc); }}
+                            style={{ cursor: "pointer", color: "rgba(255,255,255,0.4)", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.25)", width: 12, height: 12, display: "inline-flex", alignItems: "center", justifyContent: "center", fontSize: 8, fontWeight: 700, flexShrink: 0 }}
+                          >?</span>
                         </p>
                       )}
                       {allDone && (
@@ -335,7 +352,7 @@ export function WandererRest({
                   <p className="text-xs mt-0.5" style={{ color: isStarweaver ? "rgba(255,215,0,0.5)" : "rgba(255,255,255,0.35)" }}>{npc.title}</p>
                   <p className="text-xs mt-1 font-semibold" style={{ color: rc }}>{rarityStarsModal[npc.rarity] ?? npc.rarity}</p>
                   {!isStarweaver && !(npc as ActiveNpc & { permanent?: boolean }).permanent && (
-                    <p className="text-xs mt-1" style={{ color: npc.hoursLeft <= 24 ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
+                    <p className="text-xs mt-1" style={{ color: npc.hoursLeft <= 24 ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>
                       {npc.hoursLeft <= 24 ? `⏰ Departs in ${npc.hoursLeft}h!` : `Departs in ${npc.daysLeft} day${npc.daysLeft !== 1 ? "s" : ""}`}
                     </p>
                   )}
@@ -431,16 +448,24 @@ export function WandererRest({
                   {totalCount > 1 && (
                     <div className="flex items-center justify-center gap-2 mt-3">
                       {npc.questChain.map(q => (
-                        <div
-                          key={q.questId}
-                          className="rounded-full"
-                          style={{
-                            width: 8, height: 8,
-                            background: q.status === "completed" ? "#22c55e" : (q === currentQuest ? "#f59e0b" : "rgba(255,255,255,0.12)"),
-                            border: q === currentQuest ? "2px solid #f59e0b" : "none",
-                          }}
-                          title={`Quest ${q.position}: ${q.title}`}
-                        />
+                        q.status === "locked" ? (
+                          <span
+                            key={q.questId}
+                            style={{ fontSize: 9, opacity: 0.3, lineHeight: 1, display: "inline-block" }}
+                            title={`Quest ${q.position}: ${q.title} (locked)`}
+                          >🔒</span>
+                        ) : (
+                          <div
+                            key={q.questId}
+                            className="rounded-full"
+                            style={{
+                              width: 8, height: 8,
+                              background: q.status === "completed" ? "#22c55e" : (q === currentQuest ? "#f59e0b" : "rgba(255,255,255,0.12)"),
+                              border: q === currentQuest ? "2px solid #f59e0b" : "none",
+                            }}
+                            title={`Quest ${q.position}: ${q.title}`}
+                          />
+                        )
                       ))}
                     </div>
                   )}
