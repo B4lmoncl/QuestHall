@@ -102,12 +102,12 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
         className="rounded-lg px-2 py-1.5 flex items-center gap-2"
         style={{ background: "rgba(255,107,157,0.04)", border: "1px solid rgba(255,107,157,0.12)", cursor: onDobbieClick ? "pointer" : "default" }}
         onClick={onDobbieClick}
-        title={onDobbieClick ? "Click to visit Dobbie at the Hearth" : undefined}
+        title={onDobbieClick ? `Click to visit ${user?.companion?.name ?? "Dobbie"} at the Hearth` : undefined}
       >
         <span className={`text-base flex-shrink-0 ${mood.anim}`} title={mood.tip}>🐱</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie</span>
+            <span className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{user?.companion?.name ?? "Dobbie"}</span>
             <span className="text-xs" style={{ color: mood.color }}>{mood.emoji} {mood.label}</span>
           </div>
           <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>{DOBBIE_QUOTES[quoteIdx]}</p>
@@ -212,12 +212,12 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
           marginBottom: dobbieQuests && dobbieQuests.length > 0 ? "0.5rem" : "0.375rem",
         }}
         onClick={onDobbieClick}
-        title={onDobbieClick ? "Click to open Dobbie's Quest Board" : undefined}
+        title={onDobbieClick ? `Click to open ${user?.companion?.name ?? "Dobbie"}'s Quest Board` : undefined}
       >
-        <span className={`text-lg ${mood.label === "Happy" || mood.label === "Ecstatic" ? "animate-bounce" : mood.label === "Sad" || mood.label === "Neglected" ? "animate-pulse" : ""}`} title={`Dobbie — ${mood.tip}`}>🐱</span>
+        <span className={`text-lg ${mood.label === "Happy" || mood.label === "Ecstatic" ? "animate-bounce" : mood.label === "Sad" || mood.label === "Neglected" ? "animate-pulse" : ""}`} title={`${user?.companion?.name ?? "Dobbie"} — ${mood.tip}`}>🐱</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie</span>
+            <span className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{user?.companion?.name ?? "Dobbie"}</span>
             <span className="text-xs" title={mood.tip} style={{ color: mood.color }}>{mood.emoji} {mood.label}</span>
             <span className="text-xs" style={{ color: "rgba(99,102,241,0.5)" }}>+2% XP</span>
           </div>

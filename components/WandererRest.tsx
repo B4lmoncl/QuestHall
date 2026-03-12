@@ -35,6 +35,7 @@ interface WandererRestProps {
   loading: boolean;
   quests: QuestsData;
   playerName: string;
+  petName?: string;
   refresh: () => void;
   devVisibleOpen: Quest[];
   devVisibleInProgress: Quest[];
@@ -62,7 +63,7 @@ export function WandererRest({
   handleApprove, handleReject, handleChangePriority,
   reviewComments, setReviewComments,
   dobbieOpen, setDobbieOpen,
-  loading, quests, playerName, refresh,
+  loading, quests, playerName, petName, refresh,
   devVisibleOpen, devVisibleInProgress,
   lyraQuestsOpen, lyraQuestsInProgress, lyraAllQuests,
   handleClaim, handleUnclaim, handleComplete,
@@ -89,8 +90,8 @@ export function WandererRest({
         <div className="rounded-xl px-4 py-3 flex items-center gap-3" style={{ background: "rgba(255,107,157,0.07)", border: "1px solid rgba(255,107,157,0.2)" }}>
           <span className="text-lg">🐱</span>
           <div className="flex-1">
-            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Dobbie sent you here. Check Dobbie&apos;s Demands below!</p>
+            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"}&apos;s Demands</p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{petName ?? "Your companion"} sent you here. Check {petName ?? "Companion"}&apos;s Demands below!</p>
           </div>
           <button onClick={() => setNpcBoardFilter(null)} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 16 }}>×</button>
         </div>
@@ -148,7 +149,7 @@ export function WandererRest({
                         </div>
                       )}
                       {allDone && (
-                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.7)" }}>
+                        <div className="absolute inset-0 flex items-center justify-center" style={{ background: "rgba(34,197,94,0.15)" }}>
                           <span style={{ fontSize: 36 }}>✓</span>
                         </div>
                       )}
@@ -203,12 +204,12 @@ export function WandererRest({
             className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
           >
             <span className="text-sm">🐱</span>
-            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
+            <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"}&apos;s Demands</span>
             <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
           </button>
           {dobbieOpen && (
             <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} quests={quests} />
+              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
             </div>
           )}
         </div>
@@ -619,13 +620,13 @@ export function WandererRest({
                   className="flex items-center gap-2 w-full px-4 py-2.5 text-left"
                 >
                   <span className="text-sm">🐱</span>
-                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>Dobbie&apos;s Demands</span>
+                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"}&apos;s Demands</span>
                   <span className="text-xs px-1.5 py-0.5 rounded font-mono ml-1" style={{ background: "rgba(255,107,157,0.12)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.25)" }}>NPC</span>
                   <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{dobbieOpen ? "▲" : "▼"}</span>
                 </button>
                 {dobbieOpen && (
                   <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} quests={quests} />
+                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} />
                   </div>
                 )}
               </div>

@@ -861,27 +861,29 @@ const DOBBIE_MOODS = [
   { mood: "🙄 Unimpressed", color: "#a78bfa", quote: "You call that a play session? I've seen dust motes with more energy." },
 ];
 
-export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }: { reviewApiKey: string; onRefresh: () => void; playerName?: string; quests?: { inProgress: Quest[] } }) {
+export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName, quests }: { reviewApiKey: string; onRefresh: () => void; playerName?: string; petName?: string; quests?: { inProgress: Quest[] } }) {
   const [creating, setCreating] = useState<string | null>(null);
-  const [justAccepted, setJustAccepted] = useState<Set<string>>(() => new Set());
+  const [completing, setCompleting] = useState<string | null>(null);
+  // Map<templateId, questId> for newly accepted quests this session
+  const [justAccepted, setJustAccepted] = useState<Map<string, string>>(() => new Map());
   const dobbieMood = DOBBIE_MOODS[Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % DOBBIE_MOODS.length];
 
-  // Derive which Dobbie template IDs are already active (claimed + in_progress)
-  const activeTemplateIds = useMemo(() => {
-    const ids = new Set(justAccepted);
+  // Derive Map<templateId, questId> for all active Dobbie quests
+  const activeQuestMap = useMemo(() => {
+    const map = new Map(justAccepted);
     if (quests && playerName) {
       (quests.inProgress ?? []).forEach(aq => {
         if ((aq.createdBy ?? "").toLowerCase() !== "dobbie") return;
         if (aq.claimedBy?.toLowerCase() !== playerName.toLowerCase()) return;
         const t = DOBBIE_QUESTS.find(dt => dt.title === aq.title);
-        if (t) ids.add(t.id);
+        if (t && !map.has(t.id)) map.set(t.id, aq.id);
       });
     }
-    return ids;
+    return map;
   }, [quests, playerName, justAccepted]);
 
   const createDobbieQuest = async (q: (typeof DOBBIE_QUESTS)[0]) => {
-    if (!reviewApiKey) return;
+    if (!reviewApiKey || activeQuestMap.has(q.id)) return;
     setCreating(q.id);
     try {
       const res = await fetch("/api/quest", {
@@ -894,7 +896,7 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }
           type: "personal",
           createdBy: "dobbie",
           recurrence: "daily",
-          rarity: "companion",
+          rarity: "uncommon",
         }),
       });
       if (res.ok) {
@@ -907,10 +909,27 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }
             body: JSON.stringify({ agentId: playerName }),
           });
         }
-        setJustAccepted(prev => new Set([...prev, q.id]));
+        if (questId) setJustAccepted(prev => new Map(prev).set(q.id, questId));
         onRefresh();
       }
     } catch { /* ignore */ } finally { setCreating(null); }
+  };
+
+  const completeDobbieQuest = async (templateId: string) => {
+    const questId = activeQuestMap.get(templateId);
+    if (!questId || completing) return;
+    setCompleting(templateId);
+    try {
+      const r = await fetch(`/api/quest/${questId}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        body: JSON.stringify({ agentId: playerName }),
+      });
+      if (r.ok) {
+        setJustAccepted(prev => { const m = new Map(prev); m.delete(templateId); return m; });
+        onRefresh();
+      }
+    } catch { /* ignore */ } finally { setCompleting(null); }
   };
 
   return (
@@ -919,7 +938,7 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }
         <span className="text-3xl flex-shrink-0">🐱</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>Dobbie — Cat Overlord</p>
+            <p className="text-xs font-semibold" style={{ color: "#ff6b9d" }}>{petName ?? "Companion"} — Cat Overlord</p>
             <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: dobbieMood.color, background: `${dobbieMood.color}18`, border: `1px solid ${dobbieMood.color}40` }}>{dobbieMood.mood}</span>
           </div>
           <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.35)" }}>&ldquo;{dobbieMood.quote}&rdquo;</p>
@@ -928,9 +947,10 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" style={{ alignItems: "stretch" }}>
         {DOBBIE_QUESTS.map(q => {
           const isCreating = creating === q.id;
-          const isActive = activeTemplateIds.has(q.id);
+          const isCompleting = completing === q.id;
+          const isActive = activeQuestMap.has(q.id);
           return (
-            <div key={q.id} className="rounded-xl p-4 flex flex-col" style={{ background: "#252525", border: `1px solid ${isActive ? "rgba(255,107,157,0.35)" : "rgba(255,107,157,0.15)"}` }}>
+            <div key={q.id} className="rounded-xl p-4 flex flex-col" style={{ background: "#252525", border: `1px solid ${isActive ? "rgba(96,165,250,0.25)" : "rgba(255,107,157,0.15)"}` }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl flex-shrink-0">{q.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -938,14 +958,30 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }
                 </div>
               </div>
               <p className="text-xs mb-3 leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.35)" }}>{q.description}</p>
-              <button
-                onClick={() => !isActive && createDobbieQuest(q)}
-                disabled={!!creating || isActive}
-                className="action-btn w-full text-xs py-1.5 rounded-lg font-semibold"
-                style={{ background: isActive ? "rgba(96,165,250,0.15)" : "rgba(255,107,157,0.15)", color: isActive ? "#60a5fa" : "#ff6b9d", border: `1px solid ${isActive ? "rgba(96,165,250,0.3)" : "rgba(255,107,157,0.3)"}`, cursor: isActive ? "default" : "pointer" }}
-              >
-                {isActive ? "⚔ Active" : isCreating ? "Accepting…" : "🐱 Accept Quest"}
-              </button>
+              {isActive ? (
+                <div className="flex gap-2">
+                  <div className="flex-1 text-center text-xs py-1.5 rounded-lg font-semibold" style={{ background: "rgba(96,165,250,0.12)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>
+                    ⚔ Active
+                  </div>
+                  <button
+                    onClick={() => completeDobbieQuest(q.id)}
+                    disabled={isCompleting}
+                    className="action-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
+                    style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}
+                  >
+                    {isCompleting ? "…" : "✓ Done"}
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => createDobbieQuest(q)}
+                  disabled={!!creating}
+                  className="action-btn w-full text-xs py-1.5 rounded-lg font-semibold"
+                  style={{ background: "rgba(255,107,157,0.15)", color: "#ff6b9d", border: "1px solid rgba(255,107,157,0.3)" }}
+                >
+                  {isCreating ? "Accepting…" : "🐱 Accept Quest"}
+                </button>
+              )}
             </div>
           );
         })}
