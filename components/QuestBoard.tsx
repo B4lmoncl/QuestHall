@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   Quest, QuestsData, Agent, User, ForgeChallengeTemplate, AntiRitual,
   Ritual, Habit, PersonalTemplate, EarnedAchievement, ClassDef, ShopItem, Suggestion,
@@ -861,10 +861,24 @@ const DOBBIE_MOODS = [
   { mood: "🙄 Unimpressed", color: "#a78bfa", quote: "You call that a play session? I've seen dust motes with more energy." },
 ];
 
-export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName }: { reviewApiKey: string; onRefresh: () => void; playerName?: string }) {
+export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, quests }: { reviewApiKey: string; onRefresh: () => void; playerName?: string; quests?: { inProgress: Quest[] } }) {
   const [creating, setCreating] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [justAccepted, setJustAccepted] = useState<Set<string>>(() => new Set());
   const dobbieMood = DOBBIE_MOODS[Math.floor(Date.now() / (1000 * 60 * 60 * 4)) % DOBBIE_MOODS.length];
+
+  // Derive which Dobbie template IDs are already active (claimed + in_progress)
+  const activeTemplateIds = useMemo(() => {
+    const ids = new Set(justAccepted);
+    if (quests && playerName) {
+      (quests.inProgress ?? []).forEach(aq => {
+        if ((aq.createdBy ?? "").toLowerCase() !== "dobbie") return;
+        if (aq.claimedBy?.toLowerCase() !== playerName.toLowerCase()) return;
+        const t = DOBBIE_QUESTS.find(dt => dt.title === aq.title);
+        if (t) ids.add(t.id);
+      });
+    }
+    return ids;
+  }, [quests, playerName, justAccepted]);
 
   const createDobbieQuest = async (q: (typeof DOBBIE_QUESTS)[0]) => {
     if (!reviewApiKey) return;
@@ -880,24 +894,20 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName }: { revi
           type: "personal",
           createdBy: "dobbie",
           recurrence: "daily",
+          rarity: "companion",
         }),
       });
-      if (res.ok && playerName) {
+      if (res.ok) {
         const data = await res.json();
         const questId = data.quest?.id || data.id;
-        if (questId) {
+        if (questId && playerName) {
           await fetch(`/api/quest/${questId}/claim`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
             body: JSON.stringify({ agentId: playerName }),
           });
         }
-        setSuccess(q.id);
-        setTimeout(() => setSuccess(null), 3000);
-        onRefresh();
-      } else if (res.ok) {
-        setSuccess(q.id);
-        setTimeout(() => setSuccess(null), 3000);
+        setJustAccepted(prev => new Set([...prev, q.id]));
         onRefresh();
       }
     } catch { /* ignore */ } finally { setCreating(null); }
@@ -918,9 +928,9 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName }: { revi
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3" style={{ alignItems: "stretch" }}>
         {DOBBIE_QUESTS.map(q => {
           const isCreating = creating === q.id;
-          const isDone = success === q.id;
+          const isActive = activeTemplateIds.has(q.id);
           return (
-            <div key={q.id} className="rounded-xl p-4 flex flex-col" style={{ background: "#252525", border: "1px solid rgba(255,107,157,0.15)" }}>
+            <div key={q.id} className="rounded-xl p-4 flex flex-col" style={{ background: "#252525", border: `1px solid ${isActive ? "rgba(255,107,157,0.35)" : "rgba(255,107,157,0.15)"}` }}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl flex-shrink-0">{q.icon}</span>
                 <div className="flex-1 min-w-0">
@@ -929,12 +939,12 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName }: { revi
               </div>
               <p className="text-xs mb-3 leading-relaxed flex-1" style={{ color: "rgba(255,255,255,0.35)" }}>{q.description}</p>
               <button
-                onClick={() => createDobbieQuest(q)}
-                disabled={!!creating}
+                onClick={() => !isActive && createDobbieQuest(q)}
+                disabled={!!creating || isActive}
                 className="action-btn w-full text-xs py-1.5 rounded-lg font-semibold"
-                style={{ background: isDone ? "rgba(34,197,94,0.15)" : "rgba(255,107,157,0.15)", color: isDone ? "#22c55e" : "#ff6b9d", border: `1px solid ${isDone ? "rgba(34,197,94,0.3)" : "rgba(255,107,157,0.3)"}` }}
+                style={{ background: isActive ? "rgba(96,165,250,0.15)" : "rgba(255,107,157,0.15)", color: isActive ? "#60a5fa" : "#ff6b9d", border: `1px solid ${isActive ? "rgba(96,165,250,0.3)" : "rgba(255,107,157,0.3)"}`, cursor: isActive ? "default" : "pointer" }}
               >
-                {isDone ? "✓ Accepted!" : isCreating ? "Accepting…" : "🐱 Accept Quest"}
+                {isActive ? "⚔ Active" : isCreating ? "Accepting…" : "🐱 Accept Quest"}
               </button>
             </div>
           );
@@ -1579,6 +1589,7 @@ export const RARITY_COLORS: Record<string, string> = {
   rare: "#3b82f6",
   epic: "#a855f7",
   legendary: "#FFD700",
+  companion: "#ff6b9d",
 };
 
 function ChainDots({ chainIndex, chainTotal, color }: { chainIndex: number; chainTotal: number; color: string }) {

@@ -2055,7 +2055,7 @@ app.get('/api/health', (req, res) => {
 
 // POST /api/quest — create a new quest
 app.post('/api/quest', requireApiKey, (req, res) => {
-  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter, suggest, minLevel, classRequired, requiresRelationship } = req.body;
+  const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter, suggest, minLevel, classRequired, requiresRelationship, rarity } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
@@ -2101,6 +2101,8 @@ app.post('/api/quest', requireApiKey, (req, res) => {
       return res.json({ ok: true, quest: existing, duplicate: true });
     }
   }
+  const validRarities = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'companion'];
+  const resolvedRarity = resolvedCreatedBy === 'dobbie' ? 'companion' : (validRarities.includes(rarity) ? rarity : null);
   // Agent-created quests go to 'suggested' for human review; human-created stay 'open'
   // Player quest types (personal/learning/fitness/social) always bypass review → 'open'
   const HUMAN_CREATORS = ['leon', 'unknown', ...NPC_NAMES];
@@ -2156,6 +2158,7 @@ app.post('/api/quest', requireApiKey, (req, res) => {
     classRequired: classRequired || null,
     requiresRelationship: requiresRelationship === true || requiresRelationship === 'true',
     rewards: { xp: XP_BY_PRIORITY[priority || 'medium'] || 10, gold: randGold(priority || 'medium') },
+    rarity: resolvedRarity,
   };
   quests.push(quest);
   saveQuests();

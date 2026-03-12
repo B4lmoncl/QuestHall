@@ -74,6 +74,14 @@ export function WandererRest({
     if (fresh) setSelectedNpc(fresh);
   }, [activeNpcs]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ESC key closes NPC popup
+  useEffect(() => {
+    if (!selectedNpc) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setSelectedNpc(null); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedNpc, setSelectedNpc]);
+
   return (
     <div className="space-y-6">
       {/* Dobbie filter banner */}
@@ -200,7 +208,7 @@ export function WandererRest({
           </button>
           {dobbieOpen && (
             <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} />
+              <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} quests={quests} />
             </div>
           )}
         </div>
@@ -617,7 +625,7 @@ export function WandererRest({
                 </button>
                 {dobbieOpen && (
                   <div style={{ borderTop: "1px solid rgba(255,107,157,0.15)" }}>
-                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} />
+                    <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} quests={quests} />
                   </div>
                 )}
               </div>

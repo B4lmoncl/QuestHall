@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { User } from "@/app/types";
+import type { User, Quest } from "@/app/types";
 import { InfoTooltip } from "@/components/InfoTooltip";
 
 // ─── Companions Widget (always visible on Quest Board) ───────────────────────
@@ -21,7 +21,7 @@ const DOBBIE_QUOTES = [
   "Purring softly while judging your quest log.",
 ];
 
-export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieClick, onUserRefresh, compact }: {
+export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieClick, onUserRefresh, compact, dobbieQuests }: {
   user: User | null | undefined;
   streak: number;
   playerName?: string;
@@ -29,6 +29,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
   onDobbieClick?: () => void;
   onUserRefresh?: () => void;
   compact?: boolean;
+  dobbieQuests?: Quest[];
 }) {
   const [quoteIdx] = useState(() => Math.floor(Math.random() * DOBBIE_QUOTES.length));
   const [petting, setPetting] = useState(false);
@@ -202,12 +203,13 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
 
       {/* Dobbie — clickable, switches to NPC Quest Board */}
       <div
-        className="flex items-center gap-2 mb-1.5 rounded-lg px-2 py-2 transition-all"
+        className="flex items-center gap-2 rounded-lg px-2 py-2 transition-all"
         style={{
           cursor: onDobbieClick ? "pointer" : "default",
           background: "linear-gradient(135deg, rgba(30,15,5,0.55) 0%, rgba(50,20,10,0.45) 100%)",
           border: "1px solid rgba(255,107,157,0.2)",
           minHeight: 52,
+          marginBottom: dobbieQuests && dobbieQuests.length > 0 ? "0.5rem" : "0.375rem",
         }}
         onClick={onDobbieClick}
         title={onDobbieClick ? "Click to open Dobbie's Quest Board" : undefined}
@@ -222,6 +224,19 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
           <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.3)" }}>{DOBBIE_QUOTES[quoteIdx]}</p>
         </div>
       </div>
+
+      {/* Active Dobbie quests */}
+      {dobbieQuests && dobbieQuests.length > 0 && (
+        <div className="mb-1.5 space-y-1 pl-1">
+          {dobbieQuests.map(q => (
+            <div key={q.id} className="flex items-center gap-1.5 rounded-lg px-2 py-1" style={{ background: "rgba(255,107,157,0.06)", border: "1px solid rgba(255,107,157,0.15)" }}>
+              <span className="text-xs flex-shrink-0" style={{ color: "#60a5fa" }}>⚔</span>
+              <span className="text-xs truncate flex-1" style={{ color: "rgba(255,255,255,0.55)" }}>{q.title}</span>
+              <span className="text-xs flex-shrink-0 font-semibold" style={{ color: "#ff6b9d" }}>+{q.rewards?.xp ?? 0} XP</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Earned forge companions */}
       {earnedCompanions.map(c => {

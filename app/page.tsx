@@ -45,7 +45,7 @@ import {
   priorityConfig, categoryConfig, productConfig, typeConfig, STREAK_MILESTONES_CLIENT,
 } from "@/app/config";
 
-const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4, companion: 1 };
 
 // ─── Ritual / Vow Commitment Tiers ───────────────────────────────────────────
 const COMMITMENT_TIERS = [
@@ -606,7 +606,8 @@ export default function Dashboard() {
     return [...qs].sort((a, b) => (RARITY_ORDER[getQuestRarity(a)] ?? 4) - (RARITY_ORDER[getQuestRarity(b)] ?? 4));
   }, [sortMode]);
   const visibleOpen = useMemo(() => applySort(applyFilter(quests.open)), [quests.open, applyFilter, applySort]);
-  const visibleInProgress = useMemo(() => applySort(applyFilter(quests.inProgress)), [quests.inProgress, applyFilter, applySort]);
+  const dobbieActiveQuests = useMemo(() => quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() === "dobbie"), [quests.inProgress]);
+  const visibleInProgress = useMemo(() => applySort(applyFilter(quests.inProgress.filter(q => (q.createdBy ?? "").toLowerCase() !== "dobbie"))), [quests.inProgress, applyFilter, applySort]);
 
   // NPC board — dev-only filtered quests
   const devOpen = useMemo(() => applySort(quests.open.filter(q => (q.type ?? "development") === "development").filter(q => {
@@ -1323,7 +1324,7 @@ export default function Dashboard() {
               {/* Companions Widget — full experience in the Great Hall */}
               {playerName && (
                 <div className="mb-5" style={{ minHeight: 100 }}>
-                  <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => { setDashView("npcBoard"); setNpcBoardFilter(null); }} onUserRefresh={refresh} />
+                  <CompanionsWidget user={loggedInUser} streak={playerStreak} playerName={playerName} apiKey={reviewApiKey} onDobbieClick={() => { setDashView("npcBoard"); setNpcBoardFilter(null); }} onUserRefresh={refresh} dobbieQuests={dobbieActiveQuests} />
                 </div>
               )}
 

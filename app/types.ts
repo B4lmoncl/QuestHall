@@ -51,7 +51,7 @@ export interface Quest {
   requiresRelationship?: boolean;
   playerStatus?: "open" | "in_progress" | "completed" | "locked";
   rewards?: { xp: number; gold: number };
-  rarity?: "common" | "uncommon" | "rare" | "epic" | "legendary";
+  rarity?: "common" | "uncommon" | "rare" | "epic" | "legendary" | "companion";
   npcGiverId?: string | null;
   npcName?: string | null;
   npcRarity?: string | null;
