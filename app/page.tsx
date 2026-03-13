@@ -2243,10 +2243,20 @@ export default function Dashboard() {
                   <span className="text-2xl flex-shrink-0">{typeCfg.icon}</span>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold leading-snug" style={{ color: "#f0f0f0" }}>{q.title}</h3>
-                    <div className="flex items-center gap-2 mt-1">
+                    <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ color: rarityColor, background: `${rarityColor}18`, border: `1px solid ${rarityColor}40` }}>{rarity}</span>
                       <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.35)" }}>{q.type ?? "personal"}</span>
                       {q.priority && <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.3)" }}>· {q.priority}</span>}
+                      {q.minLevel != null && q.minLevel > 0 && (() => {
+                        const meets = playerLevelInfo.level >= q.minLevel;
+                        return (
+                          <span className="text-xs font-mono font-bold px-1.5 py-0.5 rounded" style={{
+                            color: meets ? "#22c55e" : "#ef4444",
+                            background: meets ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                            border: `1px solid ${meets ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
+                          }}>Min. Level {q.minLevel}</span>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>

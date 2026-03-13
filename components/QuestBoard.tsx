@@ -1811,14 +1811,6 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.75)" }}>x {(quest.rewards?.gold != null && quest.rewards.gold > 0) ? quest.rewards.gold : ({ high: 25, medium: 15, low: 9 }[quest.priority] ?? 9)}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            {hasMinLevel && (
-              <span className="font-mono px-1 py-0.5 rounded" style={{
-                fontSize: 9, fontWeight: 700, letterSpacing: "0.03em",
-                color: meetsLevel ? "#22c55e" : "#ef4444",
-                background: meetsLevel ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
-                border: `1px solid ${meetsLevel ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
-              }}>Lv.{quest.minLevel}</span>
-            )}
             <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, fontSize: 9, letterSpacing: "0.06em" }}>{rarity}</span>
           </div>
         </div>
@@ -1882,14 +1874,6 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <TypeBadge type={quest.type} />
-            {hasMinLevel && (
-              <span className="text-xs px-1 py-0.5 rounded font-mono" style={{
-                fontSize: 10, fontWeight: 700,
-                color: meetsLevel ? "#22c55e" : "#ef4444",
-                background: meetsLevel ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
-                border: `1px solid ${meetsLevel ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
-              }}>Lv.{quest.minLevel}</span>
-            )}
             {quest.npcGiverId && quest.npcName && (
               <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
                 style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9", background: `${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}15`, border: `1px solid ${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}40` }}>
