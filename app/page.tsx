@@ -621,6 +621,7 @@ export default function Dashboard() {
 
   // Player-specific stats (logged-in player)
   const loggedInUser = playerName ? users.find(u => u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase()) : null;
+  const currentPlayerLevel = loggedInUser ? getUserLevel(loggedInUser.xp ?? 0).level : undefined;
   const playerTypes = ["personal", "learning", "fitness", "social", "relationship-coop"];
   const playerActiveQuests = quests.inProgress.filter(q => playerTypes.includes(q.type ?? "") && q.claimedBy?.toLowerCase() === (playerName || "").toLowerCase());
   const playerCompletedQuests = quests.completed.filter(q => playerTypes.includes(q.type ?? "") && q.completedBy?.toLowerCase() === (playerName || "").toLowerCase());
@@ -1611,7 +1612,7 @@ export default function Dashboard() {
                                         onComplete={reviewApiKey && playerName ? handleComplete : undefined}
                                         onCoopClaim={reviewApiKey && playerName ? handleCoopClaim : undefined}
                                         onCoopComplete={reviewApiKey && playerName ? handleCoopComplete : undefined}
-                                        playerName={playerName} gridMode
+                                        playerName={playerName} playerLevel={currentPlayerLevel} gridMode
                                         onDetails={q => setQuestDetailModal(q)} />
                                 )}
                               </div>
@@ -1635,7 +1636,7 @@ export default function Dashboard() {
                                         onComplete={reviewApiKey && playerName ? handleComplete : undefined}
                                         onCoopClaim={reviewApiKey && playerName ? handleCoopClaim : undefined}
                                         onCoopComplete={reviewApiKey && playerName ? handleCoopComplete : undefined}
-                                        playerName={playerName} gridMode
+                                        playerName={playerName} playerLevel={currentPlayerLevel} gridMode
                                         onDetails={q => setQuestDetailModal(q)} />
                                 )}
                               </div>

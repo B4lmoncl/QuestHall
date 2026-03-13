@@ -1703,7 +1703,7 @@ function ChainDots({ chainIndex, chainTotal, color }: { chainIndex: number; chai
   );
 }
 
-export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, gridMode, onDetails }: {
+export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, playerLevel, gridMode, onDetails }: {
   quest: Quest;
   selected?: boolean;
   onToggle?: (id: string) => void;
@@ -1713,6 +1713,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
   onCoopClaim?: (id: string) => void;
   onCoopComplete?: (id: string) => void;
   playerName?: string;
+  playerLevel?: number;
   gridMode?: boolean;
   onDetails?: (quest: Quest) => void;
 }) {
@@ -1735,6 +1736,8 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
   const rarity = getQuestRarity(quest);
   const rarityColor = RARITY_COLORS[rarity] ?? "#9ca3af";
   const isLegendary = rarity === "legendary";
+  const hasMinLevel = quest.minLevel != null && quest.minLevel > 0;
+  const meetsLevel = !hasMinLevel || (playerLevel != null && playerLevel >= quest.minLevel!);
 
   if (gridMode) {
     const typeCfg = typeConfig[quest.type ?? "personal"] ?? typeConfig.personal;
@@ -1804,7 +1807,17 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(179,157,219,0.75)" }}>{(quest.rewards?.xp != null && quest.rewards.xp > 0) ? quest.rewards.xp : ({ high: 30, medium: 20, low: 10 }[quest.priority] ?? 10)} XP</span>
             <span className="font-mono" style={{ fontSize: "0.7rem", color: "rgba(251,191,36,0.75)" }}>x {(quest.rewards?.gold != null && quest.rewards.gold > 0) ? quest.rewards.gold : ({ high: 25, medium: 15, low: 9 }[quest.priority] ?? 9)}</span>
           </div>
-          <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, fontSize: 9, letterSpacing: "0.06em" }}>{rarity}</span>
+          <div className="flex items-center gap-1.5">
+            {hasMinLevel && (
+              <span className="font-mono px-1 py-0.5 rounded" style={{
+                fontSize: 9, fontWeight: 700, letterSpacing: "0.03em",
+                color: meetsLevel ? "#22c55e" : "#ef4444",
+                background: meetsLevel ? "rgba(34,197,94,0.1)" : "rgba(239,68,68,0.1)",
+                border: `1px solid ${meetsLevel ? "rgba(34,197,94,0.3)" : "rgba(239,68,68,0.3)"}`,
+              }}>Lv.{quest.minLevel}</span>
+            )}
+            <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, fontSize: 9, letterSpacing: "0.06em" }}>{rarity}</span>
+          </div>
         </div>
       </div>
     );
@@ -1866,6 +1879,14 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <TypeBadge type={quest.type} />
+            {hasMinLevel && (
+              <span className="text-xs px-1 py-0.5 rounded font-mono" style={{
+                fontSize: 10, fontWeight: 700,
+                color: meetsLevel ? "#22c55e" : "#ef4444",
+                background: meetsLevel ? "rgba(34,197,94,0.08)" : "rgba(239,68,68,0.08)",
+                border: `1px solid ${meetsLevel ? "rgba(34,197,94,0.25)" : "rgba(239,68,68,0.25)"}`,
+              }}>Lv.{quest.minLevel}</span>
+            )}
             {quest.npcGiverId && quest.npcName && (
               <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
                 style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9", background: `${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}15`, border: `1px solid ${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}40` }}>
