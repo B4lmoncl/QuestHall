@@ -5,10 +5,15 @@ const path = require('path');
 const { state, ADMIN_KEY, saveNpcState, saveFeedback } = require('../lib/state');
 const { getMasterKey, requireApiKey } = require('../lib/middleware');
 const { rotateNpcs } = require('../lib/npc-engine');
+const { getPlayerProgress } = require('../lib/helpers');
 
-// GET /api/npcs/active
+// GET /api/npcs/active?player=X — overlay per-player NPC quest status
 router.get('/api/npcs/active', (req, res) => {
   const now = new Date();
+  const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
+  // Get per-player NPC quest progress if player is specified
+  const playerNpcQuests = playerParam ? (getPlayerProgress(playerParam).npcQuests || {}) : null;
+
   const result = state.npcState.activeNpcs
     .filter(a => {
       const dep = a.departureTime || a.expiresAt;
@@ -39,17 +44,42 @@ router.get('/api/npcs/active', (req, res) => {
         questChain: questIds.map((qid, idx) => {
           const q = npcQuests.find(x => x.id === qid);
           if (!q) return null;
+          // Per-player status overlay: if player specified, use their progress
+          let status = q.status;
+          let claimedBy = q.claimedBy;
+          let completedBy = q.completedBy;
+          if (playerNpcQuests) {
+            const playerStatus = playerNpcQuests[qid];
+            if (playerStatus) {
+              status = playerStatus.status;
+              claimedBy = playerStatus.status === 'in_progress' ? playerParam : (playerStatus.completedBy || null);
+              completedBy = playerStatus.completedBy || null;
+            } else {
+              // Player hasn't interacted with this quest — show as open if chain allows
+              // Check if previous quest in chain is completed by this player
+              if (idx > 0) {
+                const prevQid = questIds[idx - 1];
+                const prevStatus = playerNpcQuests[prevQid];
+                status = (prevStatus && prevStatus.status === 'completed') ? 'open' : 'locked';
+              } else {
+                status = 'open';
+              }
+              claimedBy = null;
+              completedBy = null;
+            }
+          }
           return {
             questId: q.id,
             title: q.title,
             description: q.description,
             type: q.type,
             priority: q.priority,
-            status: q.status,
-            claimedBy: q.claimedBy,
-            completedBy: q.completedBy,
+            status,
+            claimedBy,
+            completedBy,
             rewards: q.npcRewards,
             position: idx + 1,
+            flavorText: q.flavorText || null,
           };
         }).filter(Boolean),
       };

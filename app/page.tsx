@@ -236,7 +236,8 @@ export default function Dashboard() {
       if (r.ok) setVersions(await r.json());
     } catch { /* ignore */ }
     try {
-      const r = await fetch(`/api/npcs/active`, { signal: AbortSignal.timeout(2000) });
+      const npcUrl = playerName ? `/api/npcs/active?player=${encodeURIComponent(playerName.toLowerCase())}` : `/api/npcs/active`;
+      const r = await fetch(npcUrl, { signal: AbortSignal.timeout(2000) });
       if (r.ok) { const d = await r.json(); setActiveNpcs(d.npcs || []); }
     } catch { /* ignore */ }
     setLoading(false);

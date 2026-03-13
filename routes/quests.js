@@ -218,14 +218,31 @@ router.post('/api/quest/:id/claim', requireApiKey, (req, res) => {
   if (!agentId) return res.status(400).json({ error: 'agentId is required' });
   const agentKey = agentId.toLowerCase();
 
-  // NPC quests always use global state (one player claims it)
-  if (quest.npcGiverId) {
-    if (quest.status !== 'open') return res.status(409).json({ error: `Quest is already ${quest.status}` });
-    quest.status = 'in_progress';
-    quest.claimedBy = agentKey;
-    saveQuests();
-    console.log(`[quest] ${quest.id} claimed (npc) by ${agentKey}`);
-    return res.json({ ok: true, quest });
+  // NPC quests: per-player tracking (quest stays globally open for others)
+  if (quest.npcGiverId && state.users[agentKey]) {
+    const pp = getPlayerProgress(agentKey);
+    if (!pp.npcQuests) pp.npcQuests = {};
+    const npcStatus = pp.npcQuests[quest.id];
+    if (npcStatus && npcStatus.status === 'completed') {
+      return res.status(409).json({ error: 'Quest already completed by this player' });
+    }
+    if (npcStatus && npcStatus.status === 'in_progress') {
+      return res.status(409).json({ error: 'Quest already claimed by this player' });
+    }
+    // Check chain order: previous quest in chain must be completed by this player
+    const npcQuestIds = state.npcState.npcQuestIds[quest.npcGiverId] || [];
+    const chainIdx = npcQuestIds.indexOf(quest.id);
+    if (chainIdx > 0) {
+      const prevQuestId = npcQuestIds[chainIdx - 1];
+      const prevStatus = pp.npcQuests[prevQuestId];
+      if (!prevStatus || prevStatus.status !== 'completed') {
+        return res.status(409).json({ error: 'Previous quest in chain not completed' });
+      }
+    }
+    pp.npcQuests[quest.id] = { status: 'in_progress', claimedAt: now() };
+    savePlayerProgress();
+    console.log(`[quest] ${quest.id} claimed (npc per-player) by ${agentKey}`);
+    return res.json({ ok: true, quest: { ...quest, status: 'in_progress', claimedBy: agentKey } });
   }
 
   // Player quest types use per-player tracking
@@ -263,26 +280,28 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   if (!agentId) return res.status(400).json({ error: 'agentId is required' });
   const agentKey = agentId.toLowerCase();
 
-  // NPC quests always use global state + unlock next in chain
-  if (quest.npcGiverId) {
-    if (quest.status === 'completed') return res.status(409).json({ error: 'Quest already completed' });
-    quest.status = 'completed';
-    quest.completedBy = agentId;
-    quest.completedAt = now();
-    // Unlock next locked quest in this NPC's chain
-    const npcQuestIds = state.npcState.npcQuestIds[quest.npcGiverId] || [];
-    const idx = npcQuestIds.indexOf(quest.id);
-    if (idx >= 0 && idx + 1 < npcQuestIds.length) {
-      const nextQuest = state.quests.find(q => q.id === npcQuestIds[idx + 1]);
-      if (nextQuest && nextQuest.status === 'locked') nextQuest.status = 'open';
+  // NPC quests: per-player completion (quest stays globally available for others)
+  if (quest.npcGiverId && state.users[agentKey]) {
+    const pp = getPlayerProgress(agentKey);
+    if (!pp.npcQuests) pp.npcQuests = {};
+    const npcStatus = pp.npcQuests[quest.id];
+    if (npcStatus && npcStatus.status === 'completed') {
+      return res.status(409).json({ error: 'Quest already completed by this player' });
     }
-    saveQuests();
-    unlockNextChainQuest(quest);
-    const newAchievements = state.users[agentKey] ? onQuestCompletedByUser(agentKey, quest) : [];
+    pp.npcQuests[quest.id] = { status: 'completed', completedAt: now(), completedBy: agentKey };
+    savePlayerProgress();
+    // Award XP/achievements to the player
+    const newAchievements = onQuestCompletedByUser(agentKey, quest);
     const lootDrop = state.users[agentKey]?._lastLoot || null;
     if (state.users[agentKey]) delete state.users[agentKey]._lastLoot;
-    console.log(`[quest] ${quest.id} completed (npc) by ${agentId}`);
-    return res.json({ ok: true, quest, newAchievements, lootDrop, chainQuestTemplate: null });
+    console.log(`[quest] ${quest.id} completed (npc per-player) by ${agentKey}`);
+    return res.json({
+      ok: true,
+      quest: { ...quest, status: 'completed', completedBy: agentKey, completedAt: now() },
+      newAchievements,
+      lootDrop,
+      chainQuestTemplate: null,
+    });
   }
 
   // Player quest types: per-player completion (quest stays globally open for others)
@@ -495,14 +514,14 @@ router.get('/api/quests', (req, res) => {
       // Skip class-gated quests that don't match this player's class (completely invisible)
       if (q.classRequired && q.classRequired !== playerClassId) continue;
 
-      // NPC quests use global state directly (not tracked in per-player progress)
+      // NPC quests: use per-player tracking from playerProgress.npcQuests
       if (q.npcGiverId) {
-        const qClaimedBy = (q.claimedBy || '').toLowerCase();
-        const qCompletedBy = (q.completedBy || '').toLowerCase();
-        if (q.status === 'in_progress' && qClaimedBy === playerParam) {
-          inProgressPlayer.push({ ...q });
-        } else if (q.status === 'completed' && qCompletedBy === playerParam) {
-          completedPlayer.push({ ...q, completedBy: playerParam });
+        const playerNpcQuests = pp.npcQuests || {};
+        const npcStatus = playerNpcQuests[q.id];
+        if (npcStatus && npcStatus.status === 'in_progress') {
+          inProgressPlayer.push({ ...q, status: 'in_progress', claimedBy: playerParam });
+        } else if (npcStatus && npcStatus.status === 'completed') {
+          completedPlayer.push({ ...q, status: 'completed', completedBy: playerParam, completedAt: npcStatus.completedAt });
         }
         // open/locked NPC quests are shown via the NPC board, not the player Quest Board
         continue;
