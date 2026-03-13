@@ -182,20 +182,20 @@ function BannerPreviewCard({
 
       {/* Character portrait with arch frame — bottom right */}
       {portraitSrc && (
-        <div className="absolute -bottom-1 -right-2 pointer-events-none" style={{ width: 170, height: 225, zIndex: 2 }}>
+        <div className="absolute -bottom-1 -right-4 pointer-events-none" style={{ width: 170, height: 225, zIndex: 2 }}>
           {/* Glow behind frame */}
           <div style={{
             position: "absolute", inset: -6,
             borderRadius: "45% 45% 4px 4px",
-            background: `radial-gradient(ellipse at 50% 40%, ${accentColor}18, transparent 70%)`,
+            background: `radial-gradient(ellipse at 50% 40%, ${accentColor}45, transparent 70%)`,
             animation: "banner-glow-pulse 3s ease-in-out infinite",
           }} />
           {/* Arch frame border */}
           <div style={{
             position: "absolute", inset: -2,
             borderRadius: "45% 45% 4px 4px",
-            border: `2px solid ${accentColor}50`,
-            boxShadow: `0 0 8px ${accentColor}25`,
+            border: `2px solid ${accentColor}80`,
+            boxShadow: `0 0 8px ${accentColor}50`,
           }} />
           {/* Full image clipped to arch shape */}
           <div style={{
@@ -224,7 +224,7 @@ function BannerPreviewCard({
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
             color: accentColor,
-            background: `${accentColor}15`,
+            background: `${accentColor}35`,
             border: `1px solid ${accentColor}30`,
             letterSpacing: "0.15em",
           }}>
@@ -321,15 +321,15 @@ function BannerPullModal({
               <div style={{
                 position: "absolute", inset: -8,
                 borderRadius: "45% 45% 4px 4px",
-                background: `radial-gradient(ellipse at 50% 40%, ${accentColor}18, transparent 70%)`,
+                background: `radial-gradient(ellipse at 50% 40%, ${accentColor}45, transparent 70%)`,
                 animation: "banner-glow-pulse 3s ease-in-out infinite",
               }} />
               {/* Frame */}
               <div style={{
                 position: "absolute", inset: -2,
                 borderRadius: "45% 45% 4px 4px",
-                border: `2px solid ${accentColor}50`,
-                boxShadow: `0 0 12px ${accentColor}25`,
+                border: `2px solid ${accentColor}80`,
+                boxShadow: `0 0 12px ${accentColor}50`,
               }} />
               {/* Full image clipped to arch */}
               <div style={{
@@ -357,7 +357,7 @@ function BannerPullModal({
             <div className="flex items-start justify-between mb-1">
               <div style={{ maxWidth: portraitSrc ? "60%" : undefined }}>
                 <span className="text-[9px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
-                  color: accentColor, background: `${accentColor}15`, border: `1px solid ${accentColor}30`,
+                  color: accentColor, background: `${accentColor}35`, border: `1px solid ${accentColor}30`,
                 }}>
                   {isFeatured ? "Featured Banner" : "Standard Banner"}
                 </span>
