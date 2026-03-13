@@ -4648,6 +4648,7 @@ app.get('/api/cv-export', (req, res) => {
   const learningQuests = quests.filter(q =>
     q.type === 'learning' &&
     q.status === 'completed' &&
+    !q.npcGiverId &&
     (!userId || q.completedBy === userId || (q.claimedBy && q.claimedBy.toLowerCase() === userId.toLowerCase()))
   );
   const skillMap = {};
