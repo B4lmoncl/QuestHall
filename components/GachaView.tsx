@@ -162,19 +162,23 @@ function BannerPreviewCard({
               </filter>
             </defs>
           </svg>
-          {/* Layer 1: Slow drift */}
+          {/* Layer 1: Fast drift, bottom-heavy */}
           <div style={{
-            position: "absolute", inset: "-20%", width: "140%", height: "140%",
-            opacity: 0.35,
+            position: "absolute", left: "-20%", right: "-20%", bottom: "-10%", height: "80%",
+            opacity: 0.3,
             filter: `url(#${fogId}-a)`,
-            animation: "fogDrift1 25s ease-in-out infinite alternate",
+            maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
+            animation: "fogDrift1 12s ease-in-out infinite alternate",
           }} />
-          {/* Layer 2: Counter drift */}
+          {/* Layer 2: Counter drift, edges */}
           <div style={{
-            position: "absolute", inset: "-20%", width: "140%", height: "140%",
-            opacity: 0.25,
+            position: "absolute", left: "-20%", right: "-20%", bottom: "-5%", height: "70%",
+            opacity: 0.2,
             filter: `url(#${fogId}-b)`,
-            animation: "fogDrift2 30s ease-in-out infinite alternate-reverse",
+            maskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, transparent 85%)",
+            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, transparent 85%)",
+            animation: "fogDrift2 15s ease-in-out infinite alternate-reverse",
           }} />
         </div>
       )}
