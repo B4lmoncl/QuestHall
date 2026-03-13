@@ -153,12 +153,12 @@ function BannerPreviewCard({
               <filter id={`${fogId}-a`} x="0%" y="0%" width="100%" height="100%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves={2} seed={42} stitchTiles="stitch" result="noise" />
                 <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.55 0" />
-                <feGaussianBlur stdDeviation="8" />
+                <feGaussianBlur stdDeviation="12" />
               </filter>
               <filter id={`${fogId}-b`} x="0%" y="0%" width="100%" height="100%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.012 0.006" numOctaves={2} seed={137} stitchTiles="stitch" result="noise" />
                 <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.45 0" />
-                <feGaussianBlur stdDeviation="6" />
+                <feGaussianBlur stdDeviation="10" />
               </filter>
             </defs>
           </svg>
@@ -345,29 +345,29 @@ function BannerPullModal({
         <svg width="0" height="0" style={{ position: "absolute" }}>
           <defs>
             <filter id={`${btnFogId}-a`} x="-25%" y="-25%" width="150%" height="150%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.012 0.016" numOctaves={2} seed={seed1} stitchTiles="stitch" result="noise" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.006 0.01" numOctaves={1} seed={seed1} stitchTiles="stitch" result="noise" />
               <feColorMatrix in="noise" type="matrix" values={`0 0 0 0 ${isFeatured ? "0.35" : "0.28"}  0 0 0 0 ${isFeatured ? "0.18" : "0.22"}  0 0 0 0 ${isFeatured ? "0.55" : "0.6"}  0 0 0 0.35 0`} />
-              <feGaussianBlur stdDeviation="6" />
+              <feGaussianBlur stdDeviation="10" />
             </filter>
             <filter id={`${btnFogId}-b`} x="-25%" y="-25%" width="150%" height="150%">
-              <feTurbulence type="fractalNoise" baseFrequency="0.016 0.008" numOctaves={2} seed={seed2} stitchTiles="stitch" result="noise" />
+              <feTurbulence type="fractalNoise" baseFrequency="0.008 0.005" numOctaves={1} seed={seed2} stitchTiles="stitch" result="noise" />
               <feColorMatrix in="noise" type="matrix" values={`0 0 0 0 ${isFeatured ? "0.3" : "0.22"}  0 0 0 0 ${isFeatured ? "0.15" : "0.2"}  0 0 0 0 ${isFeatured ? "0.6" : "0.65"}  0 0 0 0.25 0`} />
-              <feGaussianBlur stdDeviation="8" />
+              <feGaussianBlur stdDeviation="12" />
             </filter>
           </defs>
         </svg>
         <svg style={{
-          position: "absolute", left: "-60%", top: "-30%", width: "220%", height: "160%",
-          opacity: 0.3, zIndex: 0, pointerEvents: "none",
-          animation: "fogDrift1 16s ease-in-out infinite",
+          position: "absolute", left: "-80%", top: "-40%", width: "260%", height: "180%",
+          opacity: 0.35, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift1 10s ease-in-out infinite",
           willChange: "transform",
         }}>
           <rect width="100%" height="100%" filter={`url(#${btnFogId}-a)`} />
         </svg>
         <svg style={{
-          position: "absolute", left: "-50%", top: "-20%", width: "200%", height: "140%",
-          opacity: 0.2, zIndex: 0, pointerEvents: "none",
-          animation: "fogDrift2 20s ease-in-out infinite",
+          position: "absolute", left: "-70%", top: "-30%", width: "240%", height: "160%",
+          opacity: 0.28, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift2 13s ease-in-out infinite",
           willChange: "transform",
         }}>
           <rect width="100%" height="100%" filter={`url(#${btnFogId}-b)`} />
@@ -448,7 +448,7 @@ function BannerPullModal({
                 <h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3>
               </div>
               {/* Close button - absolute top right */}
-                <button onClick={onClose} className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-sm" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", zIndex: 10 }}>✕</button>
+                <button onClick={onClose} className="absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[10px]" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(0,0,0,0.5)", border: "1px solid rgba(255,255,255,0.15)", cursor: "pointer", zIndex: 10 }}>✕</button>
             </div>
             <p className="text-xs italic leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.25)", maxWidth: portraitSrc ? "55%" : undefined }}>
               {banner.lore}
@@ -464,8 +464,8 @@ function BannerPullModal({
               <p className="text-sm font-mono font-bold" style={{ color: ci.color }}>{banner.costSingle} {ci.label}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Your Balance</p>
-              <div className="flex items-center gap-2">
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)", textAlign: "right" }}>Your Balance</p>
+              <div className="flex items-center justify-end gap-2">
                 <p className="text-sm font-mono font-bold" style={{ color: balance > 0 ? ci.color : "rgba(255,255,255,0.2)" }}>{balance}</p>
                 <button
                   onClick={() => setShowInfo(v => !v)}
