@@ -96,8 +96,8 @@ function BannerPreviewCard({
   onClick: () => void;
 }) {
   const isFeatured = banner.type === "featured";
-  const accentColor = isFeatured ? "#818cf8" : "#a78bfa";
-  const glowColor = isFeatured ? "rgba(129,140,248,0.15)" : "rgba(167,139,250,0.12)";
+  const accentColor = isFeatured ? "#a78bfa" : "#818cf8";
+  const glowColor = isFeatured ? "rgba(167,139,250,0.15)" : "rgba(129,140,248,0.12)";
   const portraitSrc = BANNER_PORTRAITS[banner.type];
 
   // Rune symbols for Thalos (standard banner) — lots of floating runes
@@ -124,15 +124,15 @@ function BannerPreviewCard({
       onClick={onClick}
       className="flex-1 min-w-[280px] rounded-2xl p-6 text-left transition-all duration-300 group relative overflow-hidden"
       style={{
-        background: `linear-gradient(160deg, ${isFeatured ? "#16123a" : "#1c1328"} 0%, #0c0c18 70%, ${isFeatured ? "#0e0e2a" : "#120e1e"} 100%)`,
-        border: `1px solid ${isFeatured ? "rgba(129,140,248,0.35)" : "rgba(167,139,250,0.3)"}`,
-        boxShadow: `0 0 50px ${glowColor}, 0 0 20px ${isFeatured ? "rgba(129,140,248,0.08)" : "rgba(167,139,250,0.06)"}, inset 0 1px 0 rgba(255,255,255,0.03)`,
+        background: `linear-gradient(160deg, ${isFeatured ? "#1c1328" : "#16123a"} 0%, #0c0c18 70%, ${isFeatured ? "#120e1e" : "#0e0e2a"} 100%)`,
+        border: `1px solid ${isFeatured ? "rgba(167,139,250,0.3)" : "rgba(129,140,248,0.35)"}`,
+        boxShadow: `0 0 50px ${glowColor}, 0 0 20px ${isFeatured ? "rgba(167,139,250,0.06)" : "rgba(129,140,248,0.08)"}, inset 0 1px 0 rgba(255,255,255,0.03)`,
         cursor: "pointer",
       }}
     >
       {/* Animated border glow */}
       <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
-        boxShadow: `inset 0 0 30px ${isFeatured ? "rgba(129,140,248,0.06)" : "rgba(167,139,250,0.05)"}, 0 0 40px ${isFeatured ? "rgba(129,140,248,0.1)" : "rgba(167,139,250,0.08)"}`,
+        boxShadow: `inset 0 0 30px ${isFeatured ? "rgba(167,139,250,0.05)" : "rgba(129,140,248,0.06)"}, 0 0 40px ${isFeatured ? "rgba(167,139,250,0.08)" : "rgba(129,140,248,0.1)"}`,
         animation: "banner-glow-pulse 4s ease-in-out infinite",
       }} />
 
@@ -177,44 +177,42 @@ function BannerPreviewCard({
 
       {/* Gold accent line at top */}
       <div className="absolute top-0 left-[10%] right-[10%] h-px" style={{
-        background: `linear-gradient(90deg, transparent, ${isFeatured ? "rgba(129,140,248,0.4)" : "rgba(212,196,251,0.3)"}, transparent)`,
+        background: `linear-gradient(90deg, transparent, ${isFeatured ? "rgba(212,196,251,0.3)" : "rgba(129,140,248,0.4)"}, transparent)`,
       }} />
 
       {/* Character portrait with arch frame — bottom right */}
       {portraitSrc && (
-        <div className="absolute bottom-0 right-2 pointer-events-none" style={{ width: 130, height: 170, zIndex: 1 }}>
+        <div className="absolute bottom-2 right-3 pointer-events-none" style={{ width: 120, height: 160, zIndex: 1 }}>
           {/* Glow behind frame */}
           <div style={{
-            position: "absolute", inset: -8,
-            borderRadius: "50% 50% 4px 4px",
-            background: `radial-gradient(ellipse at 50% 40%, ${accentColor}20, transparent 70%)`,
+            position: "absolute", inset: -6,
+            borderRadius: "45% 45% 4px 4px",
+            background: `radial-gradient(ellipse at 50% 40%, ${accentColor}18, transparent 70%)`,
             animation: "banner-glow-pulse 3s ease-in-out infinite",
           }} />
           {/* Arch frame border */}
           <div style={{
-            position: "absolute", inset: -3,
-            borderRadius: "50% 50% 6px 6px",
-            border: `2px solid ${accentColor}60`,
-            boxShadow: `0 0 8px ${accentColor}30, inset 0 0 8px ${accentColor}15`,
+            position: "absolute", inset: -2,
+            borderRadius: "45% 45% 4px 4px",
+            border: `2px solid ${accentColor}50`,
+            boxShadow: `0 0 8px ${accentColor}25`,
           }} />
-          {/* Portrait clipped to arch */}
+          {/* Full image clipped to arch shape */}
           <div style={{
             width: "100%", height: "100%",
-            borderRadius: "50% 50% 4px 4px",
+            borderRadius: "45% 45% 4px 4px",
             overflow: "hidden",
-            background: `linear-gradient(180deg, ${isFeatured ? "#0e0e2a" : "#12101e"} 0%, ${isFeatured ? "#16123a" : "#1c1328"} 100%)`,
           }}>
             <img
               src={portraitSrc}
               alt=""
               style={{
                 imageRendering: "pixelated",
-                width: "115%",
-                height: "auto",
+                width: "100%",
+                height: "100%",
+                objectFit: "cover",
+                objectPosition: "top center",
                 display: "block",
-                marginLeft: "-7%",
-                marginTop: isFeatured ? "-2%" : "0%",
-                filter: `drop-shadow(0 0 6px ${accentColor}30)`,
               }}
             />
           </div>
@@ -292,7 +290,7 @@ function BannerPullModal({
   const isFeatured = banner.type === "featured";
   const pullsTilLegendary = pity ? (50 - pity.pityCounter) : 50;
   const inSoftPity = pity ? pity.pityCounter >= 35 : false;
-  const accentColor = isFeatured ? "#818cf8" : "#a78bfa";
+  const accentColor = isFeatured ? "#a78bfa" : "#818cf8";
 
   // Resolve featured item names from pool
   const featuredItemNames = (banner.featuredItems || []).map(itemId => {
@@ -309,48 +307,46 @@ function BannerPullModal({
   return (
     <ModalOverlay isOpen onClose={onClose} zIndex={55}>
       <div className="w-full max-w-lg max-h-[85vh] rounded-2xl overflow-y-auto" style={{
-        background: `linear-gradient(160deg, ${isFeatured ? "#16123a" : "#1c1328"} 0%, #0f0f1a 100%)`,
-        border: `1px solid ${isFeatured ? "rgba(129,140,248,0.25)" : "rgba(167,139,250,0.2)"}`,
-        boxShadow: `0 0 80px ${isFeatured ? "rgba(129,140,248,0.1)" : "rgba(167,139,250,0.08)"}`,
+        background: `linear-gradient(160deg, ${isFeatured ? "#1c1328" : "#16123a"} 0%, #0f0f1a 100%)`,
+        border: `1px solid ${isFeatured ? "rgba(167,139,250,0.2)" : "rgba(129,140,248,0.25)"}`,
+        boxShadow: `0 0 80px ${isFeatured ? "rgba(167,139,250,0.08)" : "rgba(129,140,248,0.1)"}`,
         overscrollBehavior: "contain",
       }}>
         {/* Header with character portrait */}
         <div className="relative overflow-hidden" style={{ minHeight: portraitSrc ? 200 : undefined }}>
           {/* Portrait in arch frame — right side */}
           {portraitSrc && (
-            <div className="absolute right-4 top-3 pointer-events-none" style={{ width: 150, height: 195, zIndex: 0 }}>
+            <div className="absolute right-4 top-3 pointer-events-none" style={{ width: 140, height: 185, zIndex: 0 }}>
               {/* Glow */}
               <div style={{
-                position: "absolute", inset: -10,
-                borderRadius: "50% 50% 6px 6px",
+                position: "absolute", inset: -8,
+                borderRadius: "45% 45% 4px 4px",
                 background: `radial-gradient(ellipse at 50% 40%, ${accentColor}18, transparent 70%)`,
                 animation: "banner-glow-pulse 3s ease-in-out infinite",
               }} />
               {/* Frame */}
               <div style={{
-                position: "absolute", inset: -3,
-                borderRadius: "50% 50% 6px 6px",
+                position: "absolute", inset: -2,
+                borderRadius: "45% 45% 4px 4px",
                 border: `2px solid ${accentColor}50`,
-                boxShadow: `0 0 12px ${accentColor}25, inset 0 0 8px ${accentColor}10`,
+                boxShadow: `0 0 12px ${accentColor}25`,
               }} />
-              {/* Clipped portrait */}
+              {/* Full image clipped to arch */}
               <div style={{
                 width: "100%", height: "100%",
-                borderRadius: "50% 50% 4px 4px",
+                borderRadius: "45% 45% 4px 4px",
                 overflow: "hidden",
-                background: `linear-gradient(180deg, ${isFeatured ? "#0e0e2a" : "#12101e"} 0%, ${isFeatured ? "#16123a" : "#1c1328"} 100%)`,
               }}>
                 <img
                   src={portraitSrc}
                   alt=""
                   style={{
                     imageRendering: "pixelated",
-                    width: "115%",
-                    height: "auto",
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    objectPosition: "top center",
                     display: "block",
-                    marginLeft: "-7%",
-                    marginTop: isFeatured ? "-2%" : "0%",
-                    filter: `drop-shadow(0 0 8px ${accentColor}40)`,
                   }}
                 />
               </div>
