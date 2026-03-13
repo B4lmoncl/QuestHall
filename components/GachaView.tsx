@@ -433,7 +433,7 @@ function BannerPullModal({
             <svg style={{
               position: "absolute", left: "-60%", top: "-80%", width: "220%", height: "240%",
               opacity: 0.4,
-              animation: "fogDrift1 28s linear infinite",
+              animation: "fogDrift1 40s linear infinite",
               willChange: "transform",
             }}>
               <rect width="100%" height="100%" filter={`url(#${fogId}-modal-a)`} />
@@ -441,7 +441,7 @@ function BannerPullModal({
             <svg style={{
               position: "absolute", left: "-50%", top: "-70%", width: "200%", height: "220%",
               opacity: 0.35,
-              animation: "fogDrift2 36s linear infinite", animationDelay: "-8s",
+              animation: "fogDrift2 50s linear infinite", animationDelay: "-8s",
               willChange: "transform",
             }}>
               <rect width="100%" height="100%" filter={`url(#${fogId}-modal-b)`} />
