@@ -1145,7 +1145,7 @@ export default function Dashboard() {
                 {/* Currency bar — prominent like HSR/Genshin */}
                 <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   {[
-                    { emoji: "x", key: "gold" as const, value: Number(loggedInUser?.currencies?.gold ?? animGold), color: "#f59e0b" },
+                    { emoji: "x", key: "gold" as const, value: Number(loggedInUser?.currencies?.gold ?? animGold), color: "#f59e0b", iconSrc: "/images/icons/currency-gold.png" },
                     { emoji: "x", key: "stardust" as const, value: Number(loggedInUser?.currencies?.stardust ?? 0), color: "#818cf8" },
                     { emoji: "x", key: "runensplitter" as const, value: Number(loggedInUser?.currencies?.runensplitter ?? 0), color: "#a78bfa" },
                     { emoji: "x", key: "essenz" as const, value: Number(loggedInUser?.currencies?.essenz ?? 0), color: "#ef4444" },
@@ -1153,7 +1153,7 @@ export default function Dashboard() {
                     { emoji: "x", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
-                      <span style={{ fontSize: 18 }}>{c.emoji}</span>
+                      {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={20} height={20} style={{ imageRendering: "pixelated" }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
                       <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
                         {c.value}
                       </span>
@@ -1227,7 +1227,7 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 {[
-                  { icon: "x", name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Primary currency. Earned through quests." },
+                  { icon: "x", name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Primary currency. Earned through quests.", iconSrc: "/images/icons/currency-gold.png" },
                   { icon: "x", name: "Stardust", key: "stardust" as const, value: loggedInUser?.currencies?.stardust ?? 0, color: "#818cf8", desc: "Premium currency. Level-ups & achievements." },
                   { icon: "x", name: "Essence", key: "essenz" as const, value: loggedInUser?.currencies?.essenz ?? 0, color: "#ef4444", desc: "Streak currency. Daily consistency." },
                   { icon: "x", name: "Rune Shards", key: "runensplitter" as const, value: loggedInUser?.currencies?.runensplitter ?? 0, color: "#a78bfa", desc: "Draw from the Wheel of Stars." },
@@ -1235,7 +1235,7 @@ export default function Dashboard() {
                   { icon: "x", name: "Moondust", key: "mondstaub" as const, value: loggedInUser?.currencies?.mondstaub ?? 0, color: "#c084fc", desc: "Event-limited. Extremely rare." },
                 ].map(c => (
                   <div key={c.name} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    <span style={{ fontSize: 20 }}>{c.icon}</span>
+                    {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={22} height={22} style={{ imageRendering: "pixelated" }} /> : <span style={{ fontSize: 20 }}>{c.icon}</span>}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold" style={{ color: c.color }}>{c.name}</p>
                       <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{c.desc}</p>
