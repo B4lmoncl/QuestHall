@@ -15,11 +15,17 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
 
 const rankMedal = ["x", "x", "x"];
 
-export default function LeaderboardView({ entries, agents, mode = "agents", users = [] }: { entries: LeaderboardEntry[]; agents: Agent[]; mode?: "agents" | "players"; users?: User[] }) {
+// Extended entry with optional classId for player mode
+type LbEntry = LeaderboardEntry & { classId?: string | null };
+
+export default function LeaderboardView({ entries, agents, mode = "agents", users = [], classes = [] }: { entries: LeaderboardEntry[]; agents: Agent[]; mode?: "agents" | "players"; users?: User[]; classes?: { id: string; fantasy: string; icon: string }[] }) {
+  // Build class lookup
+  const classMap = new Map(classes.map(c => [c.id, c]));
+
   // For players mode: build leaderboard from users (registered players only, exclude agent IDs)
   // For agents mode: use entries/agents as before
   const agentIdSet = new Set(agents.map(a => a.id));
-  let merged: LeaderboardEntry[];
+  let merged: LbEntry[];
   if (mode === "players") {
     merged = users
       .filter(u => !agentIdSet.has(u.id))
@@ -31,6 +37,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
         color: u.color,
         xp: u.xp ?? 0,
         questsCompleted: u.questsCompleted ?? 0,
+        classId: u.classId ?? null,
       })).sort((a, b) => b.xp - a.xp || b.questsCompleted - a.questsCompleted).map((e, i) => ({ ...e, rank: i + 1 }));
   } else {
     // agents mode: filter entries to only agent IDs
@@ -126,7 +133,17 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
                   {entry.avatar ?? meta.avatar}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold truncate" style={{ color: "#f0f0f0" }}>{entry.name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-xs font-semibold truncate" style={{ color: "#f0f0f0" }}>{entry.name}</p>
+                    {mode === "players" && (() => {
+                      const cls = (entry as LbEntry).classId ? classMap.get((entry as LbEntry).classId!) : null;
+                      return cls ? (
+                        <span className="text-xs flex-shrink-0" style={{ color: "rgba(167,139,250,0.6)", fontSize: 10 }}>{cls.icon} {cls.fantasy}</span>
+                      ) : mode === "players" ? (
+                        <span className="text-xs flex-shrink-0 italic" style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>No Class</span>
+                      ) : null;
+                    })()}
+                  </div>
                   <div className="mt-0.5 rounded-full overflow-hidden" style={{ height: 2, background: "rgba(255,255,255,0.06)" }}>
                     <div className="h-full rounded-full" style={{ width: `${barPct}%`, background: `linear-gradient(90deg, ${color}80, ${color})` }} />
                   </div>

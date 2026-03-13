@@ -1303,7 +1303,7 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <LeaderboardView entries={leaderboard} agents={agents} mode="players" users={users} />
+            <LeaderboardView entries={leaderboard} agents={agents} mode="players" users={users} classes={classesList} />
           </div>
         )}
 
