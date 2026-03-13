@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef, useId } from "react";
+import { useState, useEffect, useCallback, useRef, useId, useMemo } from "react";
 import type { User, GachaPullResult, GachaBanner, GachaPityInfo } from "@/app/types";
 import GachaPull, { RARITY_CONFIG } from "./GachaPull";
 import { ModalOverlay } from "./ModalPortal";
@@ -306,9 +306,24 @@ function BannerPullModal({
   const canPull1 = balance >= banner.costSingle;
   const canPull10 = balance >= banner.cost10;
   const isFeatured = banner.type === "featured";
-  const pullsTilLegendary = pity ? (50 - pity.pityCounter) : 50;
-  const inSoftPity = pity ? pity.pityCounter >= 35 : false;
   const accentColor = isFeatured ? "#a78bfa" : "#818cf8";
+  const [showInfo, setShowInfo] = useState(false);
+
+  // Unique fog filter IDs
+  const reactId = useId();
+  const fogId = `pull-fog-${reactId.replace(/:/g, "")}`;
+
+  // Rune data for standard banner floating runes
+  const runeSymbols = ["ᚱ", "ᛏ", "ᚨ", "ᛉ", "ᚹ", "ᛗ", "ᚲ", "ᛊ", "ᛃ", "ᛈ", "ᛚ", "ᛞ", "ᚦ", "ᚷ", "ᛒ"];
+  const runePositions = useMemo(() => [
+    { left: "3%", top: "5%" }, { left: "82%", top: "3%" }, { left: "8%", top: "30%" },
+    { left: "90%", top: "35%" }, { left: "-2%", top: "60%" }, { left: "75%", top: "70%" },
+    { left: "40%", top: "2%" }, { left: "55%", top: "92%" }, { left: "20%", top: "15%" },
+    { left: "65%", top: "20%" }, { left: "30%", top: "50%" }, { left: "95%", top: "12%" },
+    { left: "15%", top: "85%" }, { left: "50%", top: "40%" }, { left: "70%", top: "55%" },
+  ], []);
+
+  const runeAnimations = ["gacha-rune-up", "gacha-rune-up-left", "gacha-rune-up-right", "gacha-rune-drift"];
 
   // Resolve featured item names from pool
   const featuredItemNames = (banner.featuredItems || []).map(itemId => {
@@ -322,34 +337,89 @@ function BannerPullModal({
 
   const portraitSrc = BANNER_PORTRAITS[banner.type];
 
+  // Fog SVG for buttons
+  const ButtonFog = ({ seed1, seed2 }: { seed1: number; seed2: number }) => {
+    const btnFogId = `btn-fog-${fogId}-${seed1}`;
+    return (
+      <>
+        <svg width="0" height="0" style={{ position: "absolute" }}>
+          <defs>
+            <filter id={`${btnFogId}-a`} x="0%" y="0%" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.015 0.02" numOctaves={2} seed={seed1} stitchTiles="stitch" result="noise" />
+              <feColorMatrix in="noise" type="matrix" values={`0 0 0 0 ${isFeatured ? "0.35" : "0.28"}  0 0 0 0 ${isFeatured ? "0.18" : "0.22"}  0 0 0 0 ${isFeatured ? "0.55" : "0.6"}  0 0 0 0.45 0`} />
+              <feGaussianBlur stdDeviation="3" />
+            </filter>
+            <filter id={`${btnFogId}-b`} x="0%" y="0%" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02 0.01" numOctaves={2} seed={seed2} stitchTiles="stitch" result="noise" />
+              <feColorMatrix in="noise" type="matrix" values={`0 0 0 0 ${isFeatured ? "0.3" : "0.22"}  0 0 0 0 ${isFeatured ? "0.15" : "0.2"}  0 0 0 0 ${isFeatured ? "0.6" : "0.65"}  0 0 0 0.3 0`} />
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+          </defs>
+        </svg>
+        <svg style={{
+          position: "absolute", left: "-50%", top: "-20%", width: "200%", height: "140%",
+          opacity: 0.45, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift1 12s ease-in-out infinite alternate",
+          willChange: "transform",
+        }}>
+          <rect width="100%" height="100%" filter={`url(#${btnFogId}-a)`} />
+        </svg>
+        <svg style={{
+          position: "absolute", left: "-30%", top: "-10%", width: "180%", height: "120%",
+          opacity: 0.3, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift2 16s ease-in-out infinite alternate-reverse",
+          willChange: "transform",
+        }}>
+          <rect width="100%" height="100%" filter={`url(#${btnFogId}-b)`} />
+        </svg>
+      </>
+    );
+  };
+
+  // Pity info panel (click-toggle)
+  const inSoftPity = pity ? pity.pityCounter >= 35 : false;
+  const pullsTilLegendary = pity ? (50 - pity.pityCounter) : 50;
+
   return (
     <ModalOverlay isOpen onClose={onClose} zIndex={55}>
-      <div className="w-full max-w-lg max-h-[85vh] rounded-2xl overflow-y-auto" style={{
+      <div className="w-full max-w-lg rounded-2xl relative" style={{
+        overflow: "visible",
         background: `linear-gradient(160deg, ${isFeatured ? "#1c1328" : "#16123a"} 0%, #0f0f1a 100%)`,
         border: `1px solid ${isFeatured ? "rgba(167,139,250,0.2)" : "rgba(129,140,248,0.25)"}`,
         boxShadow: `0 0 80px ${isFeatured ? "rgba(167,139,250,0.08)" : "rgba(129,140,248,0.1)"}`,
-        overscrollBehavior: "contain",
       }}>
+        {/* Floating runes (standard banner) — overflow beyond modal edges */}
+        {!isFeatured && runePositions.map((pos, i) => (
+          <span key={`modal-rune-${i}`} style={{
+            position: "absolute",
+            left: pos.left,
+            top: pos.top,
+            fontSize: i % 2 === 0 ? 16 : 12,
+            color: "#818cf8",
+            textShadow: "0 0 8px rgba(129,140,248,0.5)",
+            pointerEvents: "none",
+            zIndex: 0,
+            animation: `${runeAnimations[i % runeAnimations.length]} ${4 + i * 0.6}s ease-in-out infinite`,
+            animationDelay: `${i * 0.35}s`,
+          }}>{runeSymbols[i]}</span>
+        ))}
+
         {/* Header with character portrait */}
         <div className="relative overflow-hidden" style={{ minHeight: portraitSrc ? 200 : undefined }}>
-          {/* Portrait in arch frame — right side */}
           {portraitSrc && (
             <div className="absolute right-4 top-3 pointer-events-none" style={{ width: 140, height: 185, zIndex: 0 }}>
-              {/* Glow */}
               <div style={{
                 position: "absolute", inset: -8,
                 borderRadius: "45% 45% 4px 4px",
                 background: `radial-gradient(ellipse at 50% 40%, ${accentColor}45, transparent 70%)`,
                 animation: "banner-glow-pulse 3s ease-in-out infinite",
               }} />
-              {/* Frame */}
               <div style={{
                 position: "absolute", inset: -2,
                 borderRadius: "45% 45% 4px 4px",
                 border: `2px solid ${accentColor}80`,
                 boxShadow: `0 0 12px ${accentColor}50`,
               }} />
-              {/* Full image clipped to arch */}
               <div style={{
                 width: "100%", height: "100%",
                 borderRadius: "45% 45% 4px 4px",
@@ -359,12 +429,8 @@ function BannerPullModal({
                   src={portraitSrc}
                   alt=""
                   style={{
-                    // imageRendering: "pixelated", // disabled for HQ portraits
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                    objectPosition: "top center",
-                    display: "block",
+                    width: "100%", height: "100%",
+                    objectFit: "cover", objectPosition: "top center", display: "block",
                   }}
                 />
               </div>
@@ -381,7 +447,20 @@ function BannerPullModal({
                 </span>
                 <h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3>
               </div>
-              <button onClick={onClose} className="text-lg mt-1" style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>x</button>
+              <div className="flex items-center gap-1.5">
+                {/* Info toggle button */}
+                <button
+                  onClick={() => setShowInfo(v => !v)}
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+                  style={{
+                    color: showInfo ? "#fff" : "rgba(255,255,255,0.45)",
+                    background: showInfo ? `${accentColor}40` : "rgba(255,255,255,0.06)",
+                    border: `1px solid ${showInfo ? `${accentColor}60` : "rgba(255,255,255,0.12)"}`,
+                    cursor: "pointer",
+                  }}
+                >?</button>
+                <button onClick={onClose} className="text-lg" style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>✕</button>
+              </div>
             </div>
             <p className="text-xs italic leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.25)", maxWidth: portraitSrc ? "55%" : undefined }}>
               {banner.lore}
@@ -412,77 +491,115 @@ function BannerPullModal({
             </div>
           )}
 
-          {/* Pity info */}
-          {pity && (
-            <div className="flex gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)" }}>
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Pity</span>
-                <span className="text-xs font-mono font-bold" style={{ color: inSoftPity ? "#f97316" : "rgba(255,255,255,0.5)" }}>
-                  {pity.pityCounter}/50
-                </span>
-                {inSoftPity && <span className="text-[9px] px-1 rounded" style={{ background: "rgba(249,115,22,0.2)", color: "#f97316" }}>SOFT PITY</span>}
-              </div>
-              <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
-                <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Epic</span>
-                <span className="text-xs font-mono font-bold" style={{ color: "#a855f7" }}>
-                  {pity.epicPityCounter}/10
-                </span>
-              </div>
-              {pity.guaranteed5050 && (
-                <div className="flex items-center gap-1 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
-                  <span className="text-[10px] font-semibold" style={{ color: "#22c55e" }}>Next Legendary = Featured!</span>
+          {/* Click-toggle info panel (pity + drop rates) */}
+          {showInfo && (
+            <div className="rounded-xl px-3 py-3 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${accentColor}30` }}>
+              {/* Pity info */}
+              {pity && (
+                <div className="flex gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(249,115,22,0.08)", border: "1px solid rgba(249,115,22,0.2)" }}>
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Pity</span>
+                    <span className="text-xs font-mono font-bold" style={{ color: inSoftPity ? "#f97316" : "rgba(255,255,255,0.5)" }}>
+                      {pity.pityCounter}/50
+                    </span>
+                    {inSoftPity && <span className="text-[9px] px-1 rounded" style={{ background: "rgba(249,115,22,0.2)", color: "#f97316" }}>SOFT PITY</span>}
+                  </div>
+                  <div className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(168,85,247,0.08)", border: "1px solid rgba(168,85,247,0.2)" }}>
+                    <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>Epic</span>
+                    <span className="text-xs font-mono font-bold" style={{ color: "#a855f7" }}>
+                      {pity.epicPityCounter}/10
+                    </span>
+                  </div>
+                  {pity.guaranteed5050 && (
+                    <div className="flex items-center gap-1 rounded-lg px-2.5 py-1.5" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.2)" }}>
+                      <span className="text-[10px] font-semibold" style={{ color: "#22c55e" }}>Next Legendary = Featured!</span>
+                    </div>
+                  )}
                 </div>
               )}
+              <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.3)" }}>
+                {pullsTilLegendary} pulls until guaranteed Legendary
+              </p>
+              {/* Drop rate badges */}
+              <div className="flex gap-1.5 flex-wrap">
+                {[
+                  { label: "Legendary", rate: "1.6%", color: "#f97316" },
+                  { label: "Epic", rate: "13%", color: "#a855f7" },
+                  { label: "Rare", rate: "35%", color: "#3b82f6" },
+                  { label: "Uncommon", rate: "40%", color: "#22c55e" },
+                  { label: "Common", rate: "10.4%", color: "#9ca3af" },
+                ].map(r => (
+                  <span key={r.label} className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ color: r.color, background: `${r.color}15`, border: `1px solid ${r.color}30` }}>
+                    {r.label} {r.rate}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 
-          {/* Drop rate badges */}
-          <div className="flex gap-1.5 flex-wrap">
-            {[
-              { label: "Legendary", rate: "1.6%", color: "#f97316" },
-              { label: "Epic", rate: "13%", color: "#a855f7" },
-              { label: "Rare", rate: "35%", color: "#3b82f6" },
-              { label: "Uncommon", rate: "40%", color: "#22c55e" },
-              { label: "Common", rate: "10.4%", color: "#9ca3af" },
-            ].map(r => (
-              <span key={r.label} className="text-[9px] font-mono px-1.5 py-0.5 rounded" style={{ color: r.color, background: `${r.color}15`, border: `1px solid ${r.color}30` }}>
-                {r.label} {r.rate}
-              </span>
-            ))}
-          </div>
-
-          {/* Pull buttons */}
-          <div className="flex gap-3 items-center flex-wrap">
+          {/* Pull buttons with fog */}
+          <div className="flex gap-3 items-stretch flex-wrap">
+            {/* 1× Pull */}
             <button
               onClick={() => onPull(banner.id, 1)}
               disabled={!canPull1 || pulling}
-              className="text-sm px-5 py-2.5 rounded-xl font-bold transition-all flex-1 min-w-[120px]"
+              className="rounded-xl flex-1 min-w-[140px] transition-all group/btn"
               style={{
-                background: canPull1 ? "linear-gradient(135deg, rgba(167,139,250,0.3) 0%, rgba(139,92,246,0.2) 100%)" : "rgba(255,255,255,0.04)",
-                color: canPull1 ? "#d4c4fb" : "rgba(255,255,255,0.2)",
-                border: `1px solid ${canPull1 ? "rgba(167,139,250,0.5)" : "rgba(255,255,255,0.08)"}`,
-                boxShadow: canPull1 ? "0 0 15px rgba(167,139,250,0.15)" : "none",
+                position: "relative",
+                overflow: "hidden",
+                padding: "12px 20px",
+                background: canPull1
+                  ? `linear-gradient(135deg, ${isFeatured ? "rgba(167,139,250,0.25)" : "rgba(129,140,248,0.25)"} 0%, ${isFeatured ? "rgba(139,92,246,0.15)" : "rgba(99,102,241,0.15)"} 100%)`
+                  : "rgba(255,255,255,0.04)",
+                color: canPull1 ? (isFeatured ? "#d4c4fb" : "#c7d2fe") : "rgba(255,255,255,0.2)",
+                border: `1px solid ${canPull1 ? (isFeatured ? "rgba(167,139,250,0.5)" : "rgba(129,140,248,0.5)") : "rgba(255,255,255,0.08)"}`,
+                boxShadow: canPull1 ? `0 0 20px ${isFeatured ? "rgba(167,139,250,0.2)" : "rgba(129,140,248,0.2)"}` : "none",
+                cursor: canPull1 && !pulling ? "pointer" : "default",
+                transform: "scale(1)",
+                transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
+              onMouseEnter={e => { if (canPull1) e.currentTarget.style.transform = "scale(1.05)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              onMouseDown={e => { if (canPull1) e.currentTarget.style.transform = "scale(0.95)"; }}
+              onMouseUp={e => { if (canPull1) e.currentTarget.style.transform = "scale(1.05)"; }}
             >
-              {pulling ? "..." : `1x Pull — ${banner.costSingle} ${ci.label}`}
+              {canPull1 && <ButtonFog seed1={42} seed2={91} />}
+              <div style={{ position: "relative", zIndex: 10 }}>
+                <div className="text-sm font-bold">{pulling ? "..." : "1× Arcane Pull"}</div>
+                <div className="text-[11px] mt-0.5" style={{ opacity: 0.65, fontWeight: 400 }}>{banner.costSingle} {ci.label}</div>
+              </div>
             </button>
+            {/* 10× Pull */}
             <button
               onClick={() => onPull(banner.id, 10)}
               disabled={!canPull10 || pulling}
-              className="text-sm px-5 py-2.5 rounded-xl font-bold transition-all flex-1 min-w-[120px]"
+              className="rounded-xl flex-1 min-w-[140px] transition-all group/btn"
               style={{
-                background: canPull10 ? "linear-gradient(135deg, rgba(249,115,22,0.3) 0%, rgba(245,158,11,0.2) 100%)" : "rgba(255,255,255,0.04)",
-                color: canPull10 ? "#fbd38d" : "rgba(255,255,255,0.2)",
-                border: `1px solid ${canPull10 ? "rgba(249,115,22,0.5)" : "rgba(255,255,255,0.08)"}`,
-                boxShadow: canPull10 ? "0 0 15px rgba(249,115,22,0.15)" : "none",
+                position: "relative",
+                overflow: "hidden",
+                padding: "12px 20px",
+                background: canPull10
+                  ? `linear-gradient(135deg, ${isFeatured ? "rgba(139,92,246,0.3)" : "rgba(99,102,241,0.3)"} 0%, ${isFeatured ? "rgba(124,58,237,0.2)" : "rgba(79,70,229,0.2)"} 100%)`
+                  : "rgba(255,255,255,0.04)",
+                color: canPull10 ? (isFeatured ? "#d4c4fb" : "#c7d2fe") : "rgba(255,255,255,0.2)",
+                border: `1px solid ${canPull10 ? (isFeatured ? "rgba(139,92,246,0.5)" : "rgba(99,102,241,0.5)") : "rgba(255,255,255,0.08)"}`,
+                boxShadow: canPull10 ? `0 0 25px ${isFeatured ? "rgba(139,92,246,0.25)" : "rgba(99,102,241,0.25)"}` : "none",
+                cursor: canPull10 && !pulling ? "pointer" : "default",
+                transform: "scale(1)",
+                transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
+              onMouseEnter={e => { if (canPull10) e.currentTarget.style.transform = "scale(1.05)"; }}
+              onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; }}
+              onMouseDown={e => { if (canPull10) e.currentTarget.style.transform = "scale(0.95)"; }}
+              onMouseUp={e => { if (canPull10) e.currentTarget.style.transform = "scale(1.05)"; }}
             >
-              {pulling ? "..." : `10x Pull — ${banner.cost10} ${ci.label}`}
+              {canPull10 && <ButtonFog seed1={137} seed2={200} />}
+              <div style={{ position: "relative", zIndex: 10 }}>
+                <div className="text-sm font-bold">{pulling ? "..." : "10× Arcane Pull"}</div>
+                <div className="text-[11px] mt-0.5" style={{ opacity: 0.65, fontWeight: 400 }}>{banner.cost10} {ci.label}</div>
+              </div>
             </button>
           </div>
-          <p className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
-            {pullsTilLegendary} pulls until guaranteed Legendary
-          </p>
         </div>
       </div>
     </ModalOverlay>
@@ -578,7 +695,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh }
     return (
       <div className="space-y-4">
         <div className="text-center py-16 space-y-3">
-          <span className="text-5xl block">x</span>
+          <img src="/images/icons/vault-of-fate.png" alt="" style={{ width: 48, height: 48, imageRendering: "auto", margin: "0 auto", display: "block" }} />
           <p className="text-base font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Vault of Fate</p>
           <p className="text-sm italic max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.25)" }}>
             A circular chamber with a single, floating astrolabe at its center. Sign in to step before the Wheel of Stars.
@@ -611,7 +728,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh }
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-lg font-bold flex items-center gap-2" style={{ color: "#e8e8e8" }}>
-              <span style={{ fontSize: 24 }}>x</span> The Vault of Fate
+              <img src="/images/icons/vault-of-fate.png" alt="" style={{ width: 28, height: 28, imageRendering: "auto", display: "inline-block", verticalAlign: "middle" }} /> The Vault of Fate
             </h2>
             <p className="text-xs italic mt-2 max-w-2xl leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
               A circular chamber with a single, floating astrolabe structure at its center: the Wheel of Stars.
@@ -677,23 +794,23 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh }
 
       {/* History modal */}
       <ModalOverlay isOpen={historyOpen} onClose={closeHistory}>
-        <div className="w-full max-w-md max-h-[70vh] rounded-2xl p-4 overflow-y-auto" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
-          <div className="flex items-center justify-between mb-3">
+        <div className="w-full max-w-2xl max-h-[70vh] rounded-2xl p-5 overflow-y-auto" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>Pull History (last 50)</h3>
-            <button onClick={closeHistory} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>x</button>
+            <button onClick={closeHistory} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           {history.length === 0 ? (
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>No pulls yet.</p>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-2">
               {history.slice(0, 50).map((h, i) => {
                 const cfg = RARITY_CONFIG[h.rarity] || RARITY_CONFIG.common;
                 return (
-                  <div key={i} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                    <span className="text-sm">x</span>
-                    <span className="text-[11px] font-semibold flex-1" style={{ color: cfg.color }}>{h.name}</span>
-                    <span className="text-[9px] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>{cfg.label}</span>
-                    {h.isDuplicate && <span className="text-[8px]" style={{ color: "#a78bfa" }}>DUP</span>}
+                  <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                    <span className="text-base">{h.emoji || "?"}</span>
+                    <span className="text-xs font-semibold flex-1" style={{ color: cfg.color }}>{h.name}</span>
+                    <span className="text-[9px] uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
+                    {h.isDuplicate && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
                   </div>
                 );
               })}
@@ -704,26 +821,26 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh }
 
       {/* Pool info modal */}
       <ModalOverlay isOpen={poolOpen && !!poolInfo} onClose={closePool}>
-        <div className="w-full max-w-lg max-h-[70vh] rounded-2xl p-4 overflow-y-auto" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
-          <div className="flex items-center justify-between mb-3">
+        <div className="w-full max-w-2xl max-h-[70vh] rounded-2xl p-5 overflow-y-auto" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>Item Pool</h3>
-            <button onClick={closePool} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>x</button>
+            <button onClick={closePool} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           {poolInfo && (
-            <div className="space-y-3">
+            <div className="space-y-5">
               {["legendary", "epic", "rare", "uncommon", "common"].map(rarity => {
                 const items = poolInfo[rarity] || [];
                 if (items.length === 0) return null;
                 const cfg = RARITY_CONFIG[rarity] || RARITY_CONFIG.common;
                 return (
                   <div key={rarity}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: cfg.color }}>{cfg.label} ({items.length})</p>
-                    <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: cfg.color }}>{cfg.label} ({items.length})</p>
+                    <div className="space-y-1.5">
                       {items.map(item => (
-                        <div key={item.id} className="flex items-center gap-2 rounded-lg px-2 py-1" style={{ background: cfg.bg }}>
-                          <span className="text-sm">x</span>
-                          <span className="text-[11px] font-semibold" style={{ color: cfg.color }}>{item.name}</span>
-                          <span className="text-[9px] ml-auto" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        <div key={item.id} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                          <span className="text-base">{item.emoji || "?"}</span>
+                          <span className="text-xs font-semibold" style={{ color: cfg.color }}>{item.name}</span>
+                          <span className="text-[9px] ml-auto font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}
                           </span>
                         </div>
