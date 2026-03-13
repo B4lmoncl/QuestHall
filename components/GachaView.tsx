@@ -570,8 +570,8 @@ function BannerPullModal({
                   ? `linear-gradient(135deg, ${isFeatured ? "rgba(139,92,246,0.3)" : "rgba(99,102,241,0.3)"} 0%, ${isFeatured ? "rgba(124,58,237,0.2)" : "rgba(79,70,229,0.2)"} 100%)`
                   : "rgba(255,255,255,0.04)",
                 color: canPull10 ? (isFeatured ? "#d4c4fb" : "#c7d2fe") : "rgba(255,255,255,0.2)",
-                border: `1px solid ${canPull10 ? (isFeatured ? "rgba(139,92,246,0.5)" : "rgba(99,102,241,0.5)") : "rgba(255,255,255,0.08)"}`,
-                boxShadow: canPull10 ? `0 0 25px ${isFeatured ? "rgba(139,92,246,0.25)" : "rgba(99,102,241,0.25)"}` : "none",
+                border: `2px solid ${canPull10 ? (isFeatured ? "rgba(167,139,250,0.8)" : "rgba(129,140,248,0.8)") : "rgba(255,255,255,0.08)"}`,
+                boxShadow: canPull10 ? `0 0 15px ${isFeatured ? "rgba(167,139,250,0.4)" : "rgba(129,140,248,0.4)"}, 0 0 35px ${isFeatured ? "rgba(167,139,250,0.25)" : "rgba(129,140,248,0.25)"}, inset 0 0 15px ${isFeatured ? "rgba(167,139,250,0.1)" : "rgba(129,140,248,0.1)"}` : "none",
                 cursor: canPull10 && !pulling ? "pointer" : "default",
                 transform: "scale(1)",
                 transition: "transform 0.15s ease, box-shadow 0.2s ease",
@@ -742,10 +742,10 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
         </div>
         {/* Icon + Title vertically centered, Flavor below */}
         <div className="flex items-center gap-5 mb-3">
-          <div className="flex-shrink-0" style={{ animation: "vault-fate-glow 3s ease-in-out infinite alternate" }}>
+          <div className="flex-shrink-0" style={{ animation: "vault-fate-glow 5s ease-in-out infinite alternate" }}>
             <img src="/images/icons/vault-of-fate.png" alt="" style={{
               width: 128, height: 128, imageRendering: "auto", display: "block",
-              filter: "drop-shadow(0 0 20px rgba(167,139,250,0.7)) drop-shadow(0 0 50px rgba(167,139,250,0.4)) drop-shadow(0 0 80px rgba(167,139,250,0.2))",
+              filter: "drop-shadow(0 0 12px rgba(167,139,250,0.5)) drop-shadow(0 0 30px rgba(167,139,250,0.25))",
             }} />
           </div>
           <h2 className="text-xl font-bold" style={{ color: "#e8e8e8" }}>The Vault of Fate</h2>
