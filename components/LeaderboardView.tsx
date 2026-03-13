@@ -13,7 +13,11 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
   forge: { avatar: "x",  color: "#f59e0b" },
 };
 
-const rankMedal = ["x", "x", "x"];
+const RANK_ICONS = ["/images/icons/ui-rank-gold.png", "/images/icons/ui-rank-silver.png", "/images/icons/ui-rank-bronze.png"];
+const RankMedal = ({ rank }: { rank: number }) => rank <= 3 
+  ? <img src={RANK_ICONS[rank - 1]} alt={`#${rank}`} width={24} height={24} style={{ imageRendering: "pixelated" as const }} />
+  : <span>#{rank}</span>;
+const rankMedal = ["x", "x", "x"]; // legacy fallback
 
 // Extended entry with optional classId for player mode
 type LbEntry = LeaderboardEntry & { classId?: string | null };
@@ -78,7 +82,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
           const lvl = getLbLevel(entry.xp);
           return (
             <div key={entry.id} className="flex flex-col items-center gap-2" style={{ minWidth: 90 }}>
-              <div className="text-lg">{rankMedal[rank - 1] ?? rank}</div>
+              <div className="text-lg"><RankMedal rank={rank} /></div>
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-white text-xl flex-shrink-0"
                 style={{ background: `linear-gradient(135deg, ${color}, ${color}99)`, boxShadow: `0 6px 20px ${color}60` }}
@@ -123,7 +127,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
               }}
             >
               <span className="text-sm font-bold" style={{ color: entry.rank <= 3 ? ["#f59e0b","#9ca3af","#cd7f32"][entry.rank-1] : "rgba(255,255,255,0.25)" }}>
-                {entry.rank <= 3 ? rankMedal[entry.rank - 1] : `#${entry.rank}`}
+                <RankMedal rank={entry.rank} />
               </span>
               <div className="flex items-center gap-2 min-w-0">
                 <div

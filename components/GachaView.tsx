@@ -7,16 +7,16 @@ import { ModalOverlay } from "./ModalPortal";
 
 // ─── Currency helpers ────────────────────────────────────────────────────────
 const CURRENCY_META: Record<string, { emoji: string; label: string; color: string; iconSrc?: string }> = {
-  runensplitter: { emoji: "x", label: "Rune Shards", color: "#818cf8" },
-  stardust:      { emoji: "x", label: "Stardust",    color: "#a78bfa" },
+  runensplitter: { emoji: "x", label: "Rune Shards", color: "#818cf8", iconSrc: "/images/icons/currency-runensplitter.png" },
+  stardust:      { emoji: "x", label: "Stardust",    color: "#a78bfa", iconSrc: "/images/icons/currency-stardust.png" },
   gold:          { emoji: "x", label: "Gold",        color: "#f59e0b", iconSrc: "/images/icons/currency-gold.png" },
-  essenz:        { emoji: "x", label: "Essence",     color: "#ef4444" },
-  gildentaler:   { emoji: "x", label: "Guild Coins", color: "#10b981" },
-  mondstaub:     { emoji: "x", label: "Moondust",    color: "#c084fc" },
+  essenz:        { emoji: "x", label: "Essence",     color: "#ef4444", iconSrc: "/images/icons/currency-essenz.png" },
+  gildentaler:   { emoji: "x", label: "Guild Coins", color: "#10b981", iconSrc: "/images/icons/currency-gildentaler.png" },
+  mondstaub:     { emoji: "x", label: "Moondust",    color: "#c084fc", iconSrc: "/images/icons/currency-mondstaub.png" },
 };
 
 function getCurrencyInfo(key: string) {
-  return CURRENCY_META[key] || { emoji: "x", label: key, color: "#ccc" };
+  return CURRENCY_META[key] || { emoji: "x", label: key, color: "#ccc", iconSrc: undefined };
 }
 
 // ─── Info Modal ──────────────────────────────────────────────────────────────
