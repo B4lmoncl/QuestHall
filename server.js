@@ -2961,6 +2961,18 @@ app.post('/api/quest/:id/coop-complete', requireApiKey, (req, res) => {
 // GET /api/quests — list all quests grouped by status
 // ?player=X  → overlays per-player state for player quest types + applies minLevel filtering
 app.get('/api/quests', (req, res) => {
+  const RARITY_REWARDS = {
+    legendary: { xp: 50, gold: 35 },
+    epic:      { xp: 35, gold: 25 },
+    rare:      { xp: 25, gold: 18 },
+    uncommon:  { xp: 20, gold: 12 },
+    common:    { xp: 10, gold: 8 },
+  };
+  function ensureRewards(q) {
+    if (q.rewards && q.rewards.xp > 0) return q;
+    const fallback = RARITY_REWARDS[q.rarity] || RARITY_REWARDS[q.priority] || RARITY_REWARDS.common;
+    return { ...q, rewards: fallback };
+  }
   const typeFilter  = req.query.type;
   const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
   const allCampaignQuestIds = new Set(campaigns.flatMap(c => c.questIds));
@@ -3058,22 +3070,22 @@ app.get('/api/quests', (req, res) => {
 
     // Dev quest types use global status as-is
     return res.json({
-      open:       [...enrichEpics(poolFilteredOpen),  ...filterAndEnrich('open',        devTypeQuests)],
-      inProgress: [...enrichEpics(inProgressPlayer), ...filterAndEnrich('in_progress', devTypeQuests)],
-      completed:  [...enrichEpics(completedPlayer),  ...filterAndEnrich('completed',   devTypeQuests)],
-      suggested:  filterAndEnrich('suggested', devTypeQuests),
-      rejected:   filterAndEnrich('rejected',  devTypeQuests),
+      open:       [...enrichEpics(poolFilteredOpen),  ...filterAndEnrich('open',        devTypeQuests)].map(ensureRewards),
+      inProgress: [...enrichEpics(inProgressPlayer), ...filterAndEnrich('in_progress', devTypeQuests)].map(ensureRewards),
+      completed:  [...enrichEpics(completedPlayer),  ...filterAndEnrich('completed',   devTypeQuests)].map(ensureRewards),
+      suggested:  filterAndEnrich('suggested', devTypeQuests).map(ensureRewards),
+      rejected:   filterAndEnrich('rejected',  devTypeQuests).map(ensureRewards),
       // Show up to 3 locked quests as teaser, sorted by minLevel ascending
-      locked: lockedPlayer.sort((a, b) => (a.minLevel || 1) - (b.minLevel || 1)).slice(0, 3),
+      locked: lockedPlayer.sort((a, b) => (a.minLevel || 1) - (b.minLevel || 1)).slice(0, 3).map(ensureRewards),
     });
   }
 
   res.json({
-    open:       filterAndEnrich('open'),
-    inProgress: filterAndEnrich('in_progress'),
-    completed:  filterAndEnrich('completed'),
-    suggested:  filterAndEnrich('suggested'),
-    rejected:   filterAndEnrich('rejected'),
+    open:       filterAndEnrich('open').map(ensureRewards),
+    inProgress: filterAndEnrich('in_progress').map(ensureRewards),
+    completed:  filterAndEnrich('completed').map(ensureRewards),
+    suggested:  filterAndEnrich('suggested').map(ensureRewards),
+    rejected:   filterAndEnrich('rejected').map(ensureRewards),
   });
 });
 
