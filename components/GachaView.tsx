@@ -180,29 +180,44 @@ function BannerPreviewCard({
         background: `linear-gradient(90deg, transparent, ${isFeatured ? "rgba(129,140,248,0.4)" : "rgba(212,196,251,0.3)"}, transparent)`,
       }} />
 
-      {/* Character portrait — bottom right, cropped to upper body */}
+      {/* Character portrait with arch frame — bottom right */}
       {portraitSrc && (
-        <div className="absolute bottom-0 right-0 overflow-hidden pointer-events-none" style={{
-          width: 140,
-          height: 180,
-          maskImage: "linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0.3) 95%, transparent 100%)",
-          WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.95) 20%, rgba(0,0,0,0.8) 75%, rgba(0,0,0,0.3) 95%, transparent 100%)",
-        }}>
-          <img
-            src={portraitSrc}
-            alt=""
-            style={{
-              imageRendering: "pixelated",
-              width: "100%",
-              height: "auto",
-              display: "block",
-              position: "absolute",
-              bottom: -20,
-              right: -10,
-              opacity: 0.85,
-              filter: `drop-shadow(0 0 12px ${accentColor}40)`,
-            }}
-          />
+        <div className="absolute bottom-0 right-2 pointer-events-none" style={{ width: 130, height: 170, zIndex: 1 }}>
+          {/* Glow behind frame */}
+          <div style={{
+            position: "absolute", inset: -8,
+            borderRadius: "50% 50% 4px 4px",
+            background: `radial-gradient(ellipse at 50% 40%, ${accentColor}20, transparent 70%)`,
+            animation: "banner-glow-pulse 3s ease-in-out infinite",
+          }} />
+          {/* Arch frame border */}
+          <div style={{
+            position: "absolute", inset: -3,
+            borderRadius: "50% 50% 6px 6px",
+            border: `2px solid ${accentColor}60`,
+            boxShadow: `0 0 8px ${accentColor}30, inset 0 0 8px ${accentColor}15`,
+          }} />
+          {/* Portrait clipped to arch */}
+          <div style={{
+            width: "100%", height: "100%",
+            borderRadius: "50% 50% 4px 4px",
+            overflow: "hidden",
+            background: `linear-gradient(180deg, ${isFeatured ? "#0e0e2a" : "#12101e"} 0%, ${isFeatured ? "#16123a" : "#1c1328"} 100%)`,
+          }}>
+            <img
+              src={portraitSrc}
+              alt=""
+              style={{
+                imageRendering: "pixelated",
+                width: "115%",
+                height: "auto",
+                display: "block",
+                marginLeft: "-7%",
+                marginTop: isFeatured ? "-2%" : "0%",
+                filter: `drop-shadow(0 0 6px ${accentColor}30)`,
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -301,26 +316,44 @@ function BannerPullModal({
       }}>
         {/* Header with character portrait */}
         <div className="relative overflow-hidden" style={{ minHeight: portraitSrc ? 200 : undefined }}>
-          {/* Portrait — large, right side */}
+          {/* Portrait in arch frame — right side */}
           {portraitSrc && (
-            <div className="absolute right-0 top-0 bottom-0 pointer-events-none" style={{ width: 180 }}>
-              <img
-                src={portraitSrc}
-                alt=""
-                style={{
-                  imageRendering: "pixelated",
-                  width: "100%",
-                  height: "auto",
-                  display: "block",
-                  position: "absolute",
-                  bottom: -30,
-                  right: -5,
-                  opacity: 0.9,
-                  filter: `drop-shadow(0 0 20px ${accentColor}50)`,
-                  maskImage: "linear-gradient(to left, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 75%, transparent 100%)",
-                  WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 75%, transparent 100%)",
-                }}
-              />
+            <div className="absolute right-4 top-3 pointer-events-none" style={{ width: 150, height: 195, zIndex: 0 }}>
+              {/* Glow */}
+              <div style={{
+                position: "absolute", inset: -10,
+                borderRadius: "50% 50% 6px 6px",
+                background: `radial-gradient(ellipse at 50% 40%, ${accentColor}18, transparent 70%)`,
+                animation: "banner-glow-pulse 3s ease-in-out infinite",
+              }} />
+              {/* Frame */}
+              <div style={{
+                position: "absolute", inset: -3,
+                borderRadius: "50% 50% 6px 6px",
+                border: `2px solid ${accentColor}50`,
+                boxShadow: `0 0 12px ${accentColor}25, inset 0 0 8px ${accentColor}10`,
+              }} />
+              {/* Clipped portrait */}
+              <div style={{
+                width: "100%", height: "100%",
+                borderRadius: "50% 50% 4px 4px",
+                overflow: "hidden",
+                background: `linear-gradient(180deg, ${isFeatured ? "#0e0e2a" : "#12101e"} 0%, ${isFeatured ? "#16123a" : "#1c1328"} 100%)`,
+              }}>
+                <img
+                  src={portraitSrc}
+                  alt=""
+                  style={{
+                    imageRendering: "pixelated",
+                    width: "115%",
+                    height: "auto",
+                    display: "block",
+                    marginLeft: "-7%",
+                    marginTop: isFeatured ? "-2%" : "0%",
+                    filter: `drop-shadow(0 0 8px ${accentColor}40)`,
+                  }}
+                />
+              </div>
             </div>
           )}
 
