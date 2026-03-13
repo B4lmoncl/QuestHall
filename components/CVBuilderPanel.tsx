@@ -53,10 +53,10 @@ export default function CVBuilderPanel({ quests, users, playerName }: { quests: 
               <div className="space-y-2 mb-4">
                 {cvData.skills.map(skill => {
                   const tiers = [
-                    { label: "Novice",     icon: "x", min: 1,  max: 2,  color: "#22c55e" },
-                    { label: "Apprentice", icon: "x", min: 3,  max: 5,  color: "#60a5fa" },
-                    { label: "Skilled",    icon: "x",  min: 6,  max: 9,  color: "#a78bfa" },
-                    { label: "Expert",     icon: "x", min: 10, max: 999, color: "#fbbf24" },
+                    { label: "Novice",     icon: "", min: 1,  max: 2,  color: "#22c55e" },
+                    { label: "Apprentice", icon: "", min: 3,  max: 5,  color: "#60a5fa" },
+                    { label: "Skilled",    icon: "",  min: 6,  max: 9,  color: "#a78bfa" },
+                    { label: "Expert",     icon: "", min: 10, max: 999, color: "#fbbf24" },
                   ];
                   const tier = tiers.findLast(t => skill.count >= t.min) ?? tiers[0];
                   const nextTier = tiers[tiers.indexOf(tier) + 1];

@@ -16,7 +16,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
 }) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", icon: "x", lore: "", bossQuestId: "", rewardXp: "", rewardGold: "", rewardTitle: "" });
+  const [form, setForm] = useState({ title: "", description: "", icon: "", lore: "", bossQuestId: "", rewardXp: "", rewardGold: "", rewardTitle: "" });
   const [selectedQuestIds, setSelectedQuestIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
       });
       if (r.ok) {
         setCreateOpen(false);
-        setForm({ title: "", description: "", icon: "x", lore: "", bossQuestId: "", rewardXp: "", rewardGold: "", rewardTitle: "" });
+        setForm({ title: "", description: "", icon: "", lore: "", bossQuestId: "", rewardXp: "", rewardGold: "", rewardTitle: "" });
         setSelectedQuestIds([]);
         onRefresh();
       }

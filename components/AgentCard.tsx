@@ -110,8 +110,8 @@ const agentMeta: Record<string, { avatar: string; color: string; role: string; d
   echo:  { avatar: "EC", color: "#ef4444", role: "Sales",           description: "Bold sales closer. Charm offensive." },
   pixel: { avatar: "PX", color: "#f59e0b", role: "Marketer",        description: "Creative marketer. Eye for aesthetics." },
   atlas: { avatar: "AT", color: "#6366f1", role: "Researcher",      description: "Deep researcher. Pattern finder." },
-  lyra:  { avatar: "x", color: "#e879f9", role: "Die Sternenwächterin", description: "Die leuchtende Strategin. Geschmiedet im Sternenlicht, gehärtet im Chaos. x" },
-  forge: { avatar: "x", color: "#f59e0b", role: "Idea Smith", description: "Feature ideation. Hammers out quest suggestions." },
+  lyra:  { avatar: "LY", color: "#e879f9", role: "Die Sternenwächterin", description: "Die leuchtende Strategin. Geschmiedet im Sternenlicht, gehärtet im Chaos." },
+  forge: { avatar: "FG", color: "#f59e0b", role: "Idea Smith", description: "Feature ideation. Hammers out quest suggestions." },
 };
 
 export default function AgentCard({ agent, activeQuests = [], isWide = false }: { agent: Agent; activeQuests?: Quest[]; isWide?: boolean }) {

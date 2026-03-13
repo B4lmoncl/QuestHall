@@ -60,7 +60,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
       <div className="p-5 space-y-4 text-xs" style={{ color: "rgba(255,255,255,0.7)", lineHeight: 1.7 }}>
           {tab === "start" && (
             <>
-              <GuideSection icon="x" title="Registrierung">
+              <GuideSection icon="" title="Registrierung">
                 Klicke auf <strong>Login → Register</strong> in der Kopfleiste. Der <strong>Charakter-Creator</strong> führt dich in 5 Schritten durch die Erstellung deines Helden:
                 <ol className="space-y-1 mt-1 ml-2" style={{ listStyleType: "decimal" }}>
                   <li><span style={{ color: "#f0f0f0" }}>Name</span> — Wähle deinen Heldennamen.</li>
@@ -70,7 +70,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li><span style={{ color: "#f0f0f0" }}>API-Key</span> — Dein einzigartiger Login-Schlüssel. Sicher aufbewahren!</li>
                 </ol>
               </GuideSection>
-              <GuideSection icon="x" title="Klassen">
+              <GuideSection icon="" title="Klassen">
                 Klassen definieren deinen Berufspfad und geben dir passende Quests.
                 <ul className="space-y-1 mt-1">
                   <li>• Wähle eine <span style={{ color: "#a78bfa" }}>aktive Klasse</span> aus der Liste — sie ist sofort verfügbar.</li>
@@ -79,7 +79,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li>• Sobald die Klasse fertig ist, erhältst du beim nächsten Login eine Benachrichtigung.</li>
                 </ul>
               </GuideSection>
-              <GuideSection icon="x" title="Begleiter">
+              <GuideSection icon="" title="Begleiter">
                 <ul className="space-y-1 mt-1">
                   <li><span style={{ color: "#f0f0f0" }}>x Haustier</span> — Gib deinem echten Tier einen Platz in der Quest Hall. Es bekommt Pflege-Quests (Füttern, Spielen, etc.).</li>
                   <li><span style={{ color: "#f0f0f0" }}>x Drache</span> — Feuriger Motivations-Begleiter.</li>
@@ -93,7 +93,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           )}
           {tab === "quests" && (
             <>
-              <GuideSection icon="x" title="Quest Hall Structure">
+              <GuideSection icon="" title="Quest Hall Structure">
                 <ul className="space-y-1 mt-1">
                   <li><span style={{ color: "#f0f0f0" }}>x Quest Board</span> — Player quests (personal, learning, fitness, social, co-op). Claim and complete directly — no review needed.</li>
                   <li><span style={{ color: "#a78bfa" }}>x NPC Quest Board</span> — Development quests created and completed by agents. Includes Review Board for approving agent suggestions.</li>
@@ -103,7 +103,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li><span style={{ color: CURRENT_SEASON.color }}>{CURRENT_SEASON.icon} Season</span> — Battle Pass rewards track for the current season.</li>
                 </ul>
               </GuideSection>
-              <GuideSection icon="x" title="Player Quest Types">
+              <GuideSection icon="" title="Player Quest Types">
                 <ul className="space-y-1 mt-1">
                   <li><span style={{ color: "#22c55e" }}>x Personal</span> — Household chores, errands, life admin</li>
                   <li><span style={{ color: "#3b82f6" }}>x Learning</span> — Study, courses, reading (requires proof)</li>
@@ -113,14 +113,14 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                 </ul>
                 <p className="mt-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>Player quests go directly open → claimed → done. No agent review required.</p>
               </GuideSection>
-              <GuideSection icon="x" title="NPC / Development Quests">
+              <GuideSection icon="" title="NPC / Development Quests">
                 <p>Development quests are created by agents (or Leon) and implemented exclusively by agents. They appear in the NPC Quest Board tab.</p>
                 <p className="mt-1">The Review Board (in NPC tab) lets logged-in users approve or reject agent-suggested quests before they become active.</p>
               </GuideSection>
-              <GuideSection icon="x" title="Login">
+              <GuideSection icon="" title="Login">
                 Click <strong>Login</strong> in the header. Enter your name and API key. Once logged in, the stat cards show YOUR stats, and the Quest Board shows Claim / Complete buttons. Your achievements in Honors are highlighted.
               </GuideSection>
-              <GuideSection icon="x" title="Quest Priorities">
+              <GuideSection icon="" title="Quest Priorities">
                 <ul className="space-y-1 mt-1">
                   <li><span style={{ color: "#ef4444" }}>High</span> — 30 XP · 50 Gold</li>
                   <li><span style={{ color: "#eab308" }}>Medium</span> — 20 XP · 25 Gold</li>
@@ -131,7 +131,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           )}
           {tab === "xp" && (
             <>
-              <GuideSection icon="x" title="XP & Levels">
+              <GuideSection icon="" title="XP & Levels">
                 <div className="space-y-2 mt-1">
                   {[
                     { name: "Novice",     range: "0 – 99 XP",     color: "#9ca3af" },
@@ -146,18 +146,18 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   ))}
                 </div>
               </GuideSection>
-              <GuideSection icon="x" title="Gold">
+              <GuideSection icon="" title="Gold">
                 Earn gold by completing quests. Gold is multiplied by your streak (up to 3×). Spend it in the Forge Shop on rewards like Gaming time, Snack breaks, or Days Off.
               </GuideSection>
-              <GuideSection icon="x" title="Workshop Gear">
+              <GuideSection icon="" title="Workshop Gear">
                 <p>Upgrade your Workshop Tools to earn more XP per quest:</p>
                 <div className="space-y-1 mt-1">
                   {[
-                    { icon: "x", name: "Worn Tools",       bonus: "+0%",  cost: "Free" },
-                    { icon: "x",  name: "Sturdy Tools",     bonus: "+5%",  cost: "100g" },
-                    { icon: "x",  name: "Masterwork Tools", bonus: "+10%", cost: "300g" },
-                    { icon: "x",  name: "Legendary Tools",  bonus: "+15%", cost: "700g" },
-                    { icon: "x", name: "Mythic Forge",     bonus: "+25%", cost: "1500g" },
+                    { icon: "", name: "Worn Tools",       bonus: "+0%",  cost: "Free" },
+                    { icon: "",  name: "Sturdy Tools",     bonus: "+5%",  cost: "100g" },
+                    { icon: "",  name: "Masterwork Tools", bonus: "+10%", cost: "300g" },
+                    { icon: "",  name: "Legendary Tools",  bonus: "+15%", cost: "700g" },
+                    { icon: "", name: "Mythic Forge",     bonus: "+25%", cost: "1500g" },
                   ].map(g => (
                     <div key={g.name} className="flex items-center gap-2">
                       <span>{g.icon}</span>
@@ -172,10 +172,10 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           )}
           {tab === "forge" && (
             <>
-              <GuideSection icon="x" title="Forge Temperature">
+              <GuideSection icon="" title="Forge Temperature">
                 Your Forge Temperature (0–100%) shows how active you are. Complete quests to heat it up. If it drops to 0%, you suffer a <span style={{ color: "#ef4444" }}>50% XP penalty</span>. Keep the forge burning!
               </GuideSection>
-              <GuideSection icon="x" title="Streaks">
+              <GuideSection icon="" title="Streaks">
                 Complete at least one quest each day to maintain your streak. Longer streaks increase your Gold multiplier (up to 3× at 20+ days). Streak milestones unlock achievements.
                 <div className="space-y-1 mt-1">
                   <div>x <span style={{ color: "#fb923c" }}>Active</span> — 1–6 days</div>
@@ -183,27 +183,27 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <div>x <span style={{ color: "#ef4444" }}>Blazing</span> — 30+ days</div>
                 </div>
               </GuideSection>
-              <GuideSection icon="x" title="Forge Shop">
+              <GuideSection icon="" title="Forge Shop">
                 Spend your gold on real-world rewards. Open the Shop from your Player Card (requires API key). All purchases are tracked so you can redeem them.
               </GuideSection>
             </>
           )}
           {tab === "achievements" && (
             <>
-              <GuideSection icon="x" title="Achievements">
+              <GuideSection icon="" title="Achievements">
                 Achievements are automatically awarded when you hit milestones. They are <strong>per-player</strong> — tied to your login name. Check the <strong>x Honors</strong> tab to see all achievements; when logged in, your earned achievements are highlighted with a gold border.
               </GuideSection>
-              <GuideSection icon="x" title="Achievement List">
+              <GuideSection icon="" title="Achievement List">
                 <div className="space-y-1 mt-1">
                   {[
-                    { icon: "x", name: "First Quest",         desc: "Complete your first quest" },
-                    { icon: "x", name: "Apprentice",           desc: "Complete 10 quests" },
-                    { icon: "x", name: "Knight",               desc: "Complete 50 quests" },
-                    { icon: "x", name: "Legend",               desc: "Complete 100 quests" },
-                    { icon: "x", name: "Week Warrior",         desc: "7-day quest streak" },
-                    { icon: "x", name: "Monthly Champion",     desc: "30-day quest streak" },
-                    { icon: "x", name: "Lightning Hands",      desc: "Complete 3 quests in one day" },
-                    { icon: "x", name: "Jack of All Trades",   desc: "Complete all 5 quest types" },
+                    { icon: "", name: "First Quest",         desc: "Complete your first quest" },
+                    { icon: "", name: "Apprentice",           desc: "Complete 10 quests" },
+                    { icon: "", name: "Knight",               desc: "Complete 50 quests" },
+                    { icon: "", name: "Legend",               desc: "Complete 100 quests" },
+                    { icon: "", name: "Week Warrior",         desc: "7-day quest streak" },
+                    { icon: "", name: "Monthly Champion",     desc: "30-day quest streak" },
+                    { icon: "", name: "Lightning Hands",      desc: "Complete 3 quests in one day" },
+                    { icon: "", name: "Jack of All Trades",   desc: "Complete all 5 quest types" },
                   ].map(a => (
                     <div key={a.name} className="flex items-center gap-2">
                       <span className="text-base w-5 flex-shrink-0">{a.icon}</span>

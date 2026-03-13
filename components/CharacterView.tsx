@@ -309,12 +309,12 @@ const RARITY_BORDER: Record<number, string> = {
 };
 
 const EQUIP_SLOT_LABELS: { slot: string; emoji: string; label: string; iconSrc?: string }[] = [
-  { slot: "helm", emoji: "x", iconSrc: "/images/icons/equip-helm.png", label: "Helm" },
-  { slot: "weapon", emoji: "x", iconSrc: "/images/icons/equip-weapon.png", label: "Waffe" },
-  { slot: "shield", emoji: "x", iconSrc: "/images/icons/equip-shield.png", label: "Schild" },
-  { slot: "armor", emoji: "x", iconSrc: "/images/icons/equip-armor.png", label: "Rüstung" },
-  { slot: "amulet", emoji: "x", iconSrc: "/images/icons/equip-amulet.png", label: "Amulett" },
-  { slot: "boots", emoji: "x", iconSrc: "/images/icons/equip-boots.png", label: "Stiefel" },
+  { slot: "helm", emoji: "", iconSrc: "/images/icons/equip-helm.png", label: "Helm" },
+  { slot: "weapon", emoji: "", iconSrc: "/images/icons/equip-weapon.png", label: "Waffe" },
+  { slot: "shield", emoji: "", iconSrc: "/images/icons/equip-shield.png", label: "Schild" },
+  { slot: "armor", emoji: "", iconSrc: "/images/icons/equip-armor.png", label: "Rüstung" },
+  { slot: "amulet", emoji: "", iconSrc: "/images/icons/equip-amulet.png", label: "Amulett" },
+  { slot: "boots", emoji: "", iconSrc: "/images/icons/equip-boots.png", label: "Stiefel" },
 ];
 
 export default function CharacterView({ playerName, apiKey, users, classesList }: { playerName: string; apiKey: string; users: User[]; classesList: ClassDef[] }) {
@@ -603,10 +603,10 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
             const { kraft, ausdauer, weisheit, glueck } = charData.stats;
             const base = charData.baseStats;
             const statRows = [
-              { icon: "x", label: "Kraft", iconSrc: "/images/icons/stat-kraft.png",    val: kraft,    base: base.kraft,    tooltip: "KRA · Bonus-XP aus Quests" },
-              { icon: "x", label: "Ausdauer", iconSrc: "/images/icons/stat-ausdauer.png", val: ausdauer, base: base.ausdauer, tooltip: "AUS · Reduziert Streak-Strafe" },
-              { icon: "x", label: "Weisheit", iconSrc: "/images/icons/stat-weisheit.png", val: weisheit, base: base.weisheit, tooltip: "WEI · Bonus-Fokuspunkte" },
-              { icon: "x", label: "Glück", iconSrc: "/images/icons/stat-glueck.png",    val: glueck,   base: base.glueck,   tooltip: "GLÜ · Bessere Loot-Chancen" },
+              { icon: "/images/icons/stat-kraft.png", label: "Kraft", iconSrc: "/images/icons/stat-kraft.png",    val: kraft,    base: base.kraft,    tooltip: "KRA · Bonus-XP aus Quests" },
+              { icon: "/images/icons/stat-ausdauer.png", label: "Ausdauer", iconSrc: "/images/icons/stat-ausdauer.png", val: ausdauer, base: base.ausdauer, tooltip: "AUS · Reduziert Streak-Strafe" },
+              { icon: "/images/icons/stat-weisheit.png", label: "Weisheit", iconSrc: "/images/icons/stat-weisheit.png", val: weisheit, base: base.weisheit, tooltip: "WEI · Bonus-Fokuspunkte" },
+              { icon: "/images/icons/stat-glueck.png", label: "Glück", iconSrc: "/images/icons/stat-glueck.png",    val: glueck,   base: base.glueck,   tooltip: "GLÜ · Bessere Loot-Chancen" },
             ];
             return (
               <>

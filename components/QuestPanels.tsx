@@ -601,7 +601,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
     if (staleDays >= 7) {
       suggestions.push({
         id: `stale-${epic.id}`,
-        icon: "x",
+        icon: "",
         title: `Epic "${epic.title}" is stale`,
         body: `No sub-quest activity for ${staleDays} days. Consider breaking it down or reassigning.`,
         accent: "#f59e0b",
@@ -618,7 +618,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
     if (age >= windowDays) {
       suggestions.push({
         id: `recurring-${q.id}`,
-        icon: "x",
+        icon: "",
         title: `Recurring quest overdue: "${q.title}"`,
         body: `Scheduled ${q.recurrence} — created ${Math.floor(age)}d ago with no completion recorded.`,
         accent: "#6366f1",
@@ -632,7 +632,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
   if (highOpen.length >= 3) {
     suggestions.push({
       id: "high-pile",
-      icon: "x",
+      icon: "",
       title: `${highOpen.length} high-priority quests unclaimed`,
       body: `High-value work is piling up: ${highOpen.slice(0, 2).map(q => `"${q.title}"`).join(", ")}${highOpen.length > 2 ? ` +${highOpen.length - 2} more` : ""}. Consider assigning them.`,
       accent: "#ef4444",
@@ -652,7 +652,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
       const cfg = typeConfig[dominant[0]];
       suggestions.push({
         id: "type-imbalance",
-        icon: "x",
+        icon: "",
         title: `Quest type imbalance: ${Math.round((dominant[1] / quests.open.length) * 100)}% ${cfg?.label ?? dominant[0]}`,
         body: `${dominant[1]} of ${quests.open.length} open quests are ${dominant[0]}. Consider diversifying with personal, learning, or social quests.`,
         accent: cfg?.color ?? "#9ca3af",
@@ -666,7 +666,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
   if (idleAgents.length > 0 && quests.open.length > 0) {
     suggestions.push({
       id: "idle-agents",
-      icon: "x",
+      icon: "",
       title: `${idleAgents.length} agent${idleAgents.length > 1 ? "s" : ""} idle with ${quests.open.length} open quest${quests.open.length > 1 ? "s" : ""}`,
       body: `${idleAgents.map(a => a.name).join(", ")} ${idleAgents.length > 1 ? "are" : "is"} idle. There are open quests waiting to be claimed.`,
       accent: "#22c55e",
@@ -679,7 +679,7 @@ export function buildSuggestions(quests: QuestsData, agents: Agent[]): Suggestio
   if (!hasLearning && quests.open.length >= 3) {
     suggestions.push({
       id: "no-learning",
-      icon: "x",
+      icon: "",
       title: "No learning quests active",
       body: "Knowledge capture is missing from the queue. Consider adding a learning quest to build team knowledge.",
       accent: "#3b82f6",

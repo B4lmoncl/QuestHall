@@ -161,10 +161,10 @@ export function useCountUp(target: number, decimals = 0, duration = 1000): strin
 
 export function getSeason() {
   const m = new Date().getMonth(); // 0=Jan
-  if (m >= 2 && m <= 4) return { name: "Spring", icon: "x", color: "#ec4899", bg: "rgba(236,72,153,0.1)", particle: "rgba(255,182,193," };
-  if (m >= 5 && m <= 7) return { name: "Summer", icon: "x", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", particle: "rgba(255,220,100," };
-  if (m >= 8 && m <= 10) return { name: "Autumn", icon: "x", color: "#f97316", bg: "rgba(249,115,22,0.1)", particle: "rgba(255,140,50," };
-  return { name: "Winter", icon: "x", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", particle: "rgba(180,220,255," };
+  if (m >= 2 && m <= 4) return { name: "Spring", icon: "", color: "#ec4899", bg: "rgba(236,72,153,0.1)", particle: "rgba(255,182,193," };
+  if (m >= 5 && m <= 7) return { name: "Summer", icon: "", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", particle: "rgba(255,220,100," };
+  if (m >= 8 && m <= 10) return { name: "Autumn", icon: "", color: "#f97316", bg: "rgba(249,115,22,0.1)", particle: "rgba(255,140,50," };
+  return { name: "Winter", icon: "", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", particle: "rgba(180,220,255," };
 }
 export const CURRENT_SEASON = getSeason();
 

@@ -9,8 +9,8 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
   echo:  { avatar: "EC", color: "#ef4444" },
   pixel: { avatar: "PX", color: "#f59e0b" },
   atlas: { avatar: "AT", color: "#6366f1" },
-  lyra:  { avatar: "x",  color: "#e879f9" },
-  forge: { avatar: "x",  color: "#f59e0b" },
+  lyra:  { avatar: "LY",  color: "#e879f9" },
+  forge: { avatar: "FG",  color: "#f59e0b" },
 };
 
 const RANK_ICONS = ["/images/icons/ui-rank-gold.png", "/images/icons/ui-rank-silver.png", "/images/icons/ui-rank-bronze.png"];

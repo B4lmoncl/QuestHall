@@ -28,12 +28,12 @@ export function CreateQuestModal({ quests, users, reviewApiKey, onRefresh, onClo
         </div>
         <div className="flex border-b overflow-x-auto" style={{ borderColor: "rgba(180,140,70,0.15)" }}>
           {([
-            { key: "personal",   label: "Personal",   iconSrc: "/images/icons/cat-personal.png",  fallback: "x" },
-            { key: "learning",   label: "Learning",   iconSrc: "/images/icons/cat-learning.png",  fallback: "x" },
-            { key: "household",  label: "Household",  iconSrc: "/images/icons/cat-personal.png",  fallback: "x" },
-            { key: "social",     label: "Social",     iconSrc: "/images/icons/cat-social.png",    fallback: "x" },
-            { key: "coop",       label: "Co-op",      iconSrc: "/images/icons/cat-coop.png",      fallback: "x" },
-            { key: "challenges", label: "Challenges", iconSrc: "",                                fallback: "x" /* TODO: no pixel art icon yet */ },
+            { key: "personal",   label: "Personal",   iconSrc: "/images/icons/cat-personal.png",  fallback: "" },
+            { key: "learning",   label: "Learning",   iconSrc: "/images/icons/cat-learning.png",  fallback: "" },
+            { key: "household",  label: "Household",  iconSrc: "/images/icons/cat-personal.png",  fallback: "" },
+            { key: "social",     label: "Social",     iconSrc: "/images/icons/cat-social.png",    fallback: "" },
+            { key: "coop",       label: "Co-op",      iconSrc: "/images/icons/cat-coop.png",      fallback: "" },
+            { key: "challenges", label: "Challenges", iconSrc: "",                                fallback: "" /* TODO: no pixel art icon yet */ },
           ] as { key: typeof tab; label: string; iconSrc: string; fallback: string }[]).map(t => (
             <button key={t.key} onClick={() => setTab(t.key)} className="flex-1 py-2.5 text-sm font-semibold transition-all whitespace-nowrap px-2 inline-flex items-center justify-center gap-1"
               style={{
@@ -297,11 +297,11 @@ export function ForgeChallengesPanel({ users, reviewApiKey, onRefresh }: {
 // ─── Relationship Co-op Panel ─────────────────────────────────────────────────
 
 const COOP_TEMPLATES = [
-  { id: "weekend_trip", title: "Plan Weekend Trip Together", description: "Research destinations, agree on dates, book accommodation.", icon: "x" },
-  { id: "cook_dinner", title: "Cook Dinner as a Team", description: "Choose a recipe together, shop ingredients, cook and enjoy.", icon: "x" },
-  { id: "watch_movie", title: "Movie Night Both Wanted", description: "Pick a movie you've both been wanting to watch, make popcorn.", icon: "x" },
-  { id: "workout_together", title: "Workout Session Together", description: "Go for a run, gym session, or home workout — both complete it.", icon: "x" },
-  { id: "digital_detox", title: "1-Hour Digital Detox Together", description: "Both put phones away, spend quality time without screens.", icon: "x" },
+  { id: "weekend_trip", title: "Plan Weekend Trip Together", description: "Research destinations, agree on dates, book accommodation.", icon: "/images/icons/cat-coop.png" },
+  { id: "cook_dinner", title: "Cook Dinner as a Team", description: "Choose a recipe together, shop ingredients, cook and enjoy.", icon: "/images/icons/cat-coop.png" },
+  { id: "watch_movie", title: "Movie Night Both Wanted", description: "Pick a movie you've both been wanting to watch, make popcorn.", icon: "/images/icons/cat-coop.png" },
+  { id: "workout_together", title: "Workout Session Together", description: "Go for a run, gym session, or home workout — both complete it.", icon: "/images/icons/cat-coop.png" },
+  { id: "digital_detox", title: "1-Hour Digital Detox Together", description: "Both put phones away, spend quality time without screens.", icon: "/images/icons/cat-coop.png" },
 ];
 
 export function RelationshipCoopPanel({ users, reviewApiKey, onRefresh }: {
@@ -409,25 +409,25 @@ const LEARNING_TEMPLATES = [
   {
     id: "js_mastery",
     name: "JavaScript Mastery",
-    icon: "x",
+    icon: "/images/icons/cat-learning.png",
     steps: ["Read MDN fundamentals", "Complete 5 coding exercises", "Build a mini project", "Write what you learned (proof)"],
   },
   {
     id: "design_system",
     name: "Design System Study",
-    icon: "x",
+    icon: "/images/icons/cat-learning.png",
     steps: ["Study color theory & typography", "Analyze 3 design systems", "Create a component sketch", "Document findings (proof)"],
   },
   {
     id: "habit_reading",
     name: "Daily 10-Page Reading",
-    icon: "x",
+    icon: "/images/icons/cat-learning.png",
     steps: ["Choose your book", "Read 10 pages", "Take margin notes", "Share 1 key insight (proof)"],
   },
   {
     id: "language",
     name: "Language Practice",
-    icon: "x",
+    icon: "/images/icons/cat-learning.png",
     steps: ["30 min Duolingo/Anki", "Learn 5 new vocab words", "Practice 1 conversation", "Journal in target language (proof)"],
   },
 ];
@@ -678,12 +678,12 @@ export function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: 
 // ─── Thoughtful Hero Panel ─────────────────────────────────────────────────────
 
 const THOUGHTFUL_PROMPTS = [
-  { icon: "x", title: "Gift Idea Reminder",  desc: "Note a gift idea for someone special",                 priority: "low"    as Quest["priority"] },
-  { icon: "x", title: "Call Reminder",        desc: "Schedule a call with someone you care about",          priority: "medium" as Quest["priority"] },
-  { icon: "x", title: "Plan Date Night",      desc: "Plan a special date or quality time together",         priority: "high"   as Quest["priority"] },
-  { icon: "x", title: "Send a Kind Message",  desc: "Reach out and say something thoughtful",               priority: "low"    as Quest["priority"] },
-  { icon: "x", title: "Celebrate Someone",    desc: "Celebrate an achievement or milestone in their life",  priority: "medium" as Quest["priority"] },
-  { icon: "x", title: "Check In",             desc: "Check in on a friend or family member",                priority: "low"    as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Gift Idea Reminder",  desc: "Note a gift idea for someone special",                 priority: "low"    as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Call Reminder",        desc: "Schedule a call with someone you care about",          priority: "medium" as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Plan Date Night",      desc: "Plan a special date or quality time together",         priority: "high"   as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Send a Kind Message",  desc: "Reach out and say something thoughtful",               priority: "low"    as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Celebrate Someone",    desc: "Celebrate an achievement or milestone in their life",  priority: "medium" as Quest["priority"] },
+  { icon: "/images/icons/cat-social.png", title: "Check In",             desc: "Check in on a friend or family member",                priority: "low"    as Quest["priority"] },
 ];
 
 export function ThoughtfulHeroPanel({ quests, reviewApiKey, onRefresh }: {

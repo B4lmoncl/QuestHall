@@ -307,7 +307,7 @@ export function WandererRest({
       {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
       <section data-feedback-id="starweaver-portal" style={{ maxWidth: 1000, margin: "0 auto", marginTop: 24 }}>
         <button
-          onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "The Starweaver", title: "Guardian of Quests", rarity: "legendary", emoji: "x", greeting: "Guardian of Quests. Forged in starlight.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
+          onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "The Starweaver", title: "Guardian of Quests", rarity: "legendary", emoji: "", greeting: "Guardian of Quests. Forged in starlight.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
           className="w-full relative overflow-hidden rounded-2xl"
           style={{
             background: "linear-gradient(135deg, #0a0a1e 0%, #1a0a3e 50%, #0d1a3a 100%)",
@@ -570,9 +570,9 @@ export function WandererRest({
                   <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,215,0,0.25)", letterSpacing: "0.12em" }}>x Coming Soon</p>
                   <div className="space-y-2">
                     {[
-                      { icon: "x", label: "Special Requests", sub: "Coming soon" },
-                      { icon: "x", label: "Prophecies",        sub: "Coming soon" },
-                      { icon: "x", label: "Legendary Quests",  sub: "Coming soon" },
+                      { icon: "", label: "Special Requests", sub: "Coming soon" },
+                      { icon: "", label: "Prophecies",        sub: "Coming soon" },
+                      { icon: "", label: "Legendary Quests",  sub: "Coming soon" },
                     ].map(({ icon, label, sub }) => (
                       <div
                         key={label}

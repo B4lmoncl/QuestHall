@@ -61,10 +61,10 @@ export function TypeBadge({ type }: { type?: string }) {
 }
 
 const NPC_CONFIG: Record<string, { avatar: string; color: string; label?: string }> = {
-  dobbie:       { avatar: "x", color: "#ff6b9d" },
-  "npc-dobbie": { avatar: "x", color: "#ff6b9d" },
-  system:       { avatar: "x", color: "#94a3b8", label: "Gefunden am schwarzen Brett" },
-  lyra:         { avatar: "x", color: "#e879f9", label: "Von der Sternenwächterin" },
+  dobbie:       { avatar: "DB", color: "#ff6b9d" },
+  "npc-dobbie": { avatar: "DB", color: "#ff6b9d" },
+  system:       { avatar: "SY", color: "#94a3b8", label: "Gefunden am schwarzen Brett" },
+  lyra:         { avatar: "LY", color: "#e879f9", label: "Von der Sternenwächterin" },
 };
 
 export function CreatorBadge({ name }: { name: string }) {
