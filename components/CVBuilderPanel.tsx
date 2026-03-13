@@ -22,8 +22,9 @@ export default function CVBuilderPanel({ quests, users, playerName }: { quests: 
     } catch { /* ignore */ } finally { setLoading(false); }
   };
 
-  const completedLearning = quests.completed.filter(q => q.type === "learning").length;
-  const allLearning = [...quests.open, ...quests.inProgress, ...quests.completed].filter(q => q.type === "learning").length;
+  const isPlayerQuest = (q: QuestsData["open"][number]) => !q.npcGiverId && !q.npcName;
+  const completedLearning = quests.completed.filter(q => q.type === "learning" && isPlayerQuest(q)).length;
+  const allLearning = [...quests.open, ...quests.inProgress, ...quests.completed].filter(q => q.type === "learning" && isPlayerQuest(q)).length;
 
   return (
     <section className="mb-6">
