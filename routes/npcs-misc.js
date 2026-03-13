@@ -1,0 +1,140 @@
+// ─── NPC Quest Giver API, App State, Feedback & SPA Fallback ─────────────────
+const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
+const { state, ADMIN_KEY, saveNpcState, saveFeedback } = require('../lib/state');
+const { getMasterKey, requireApiKey } = require('../lib/middleware');
+const { rotateNpcs } = require('../lib/npc-engine');
+
+// GET /api/npcs/active
+router.get('/api/npcs/active', (req, res) => {
+  const now = new Date();
+  const result = state.npcState.activeNpcs
+    .filter(a => {
+      const dep = a.departureTime || a.expiresAt;
+      return new Date(dep) > now;
+    })
+    .map(active => {
+      const giver = state.npcGivers.givers.find(g => g.id === active.giverId);
+      if (!giver) return null;
+      const questIds = state.npcState.npcQuestIds[active.giverId] || [];
+      const npcQuests = state.quests.filter(q => questIds.includes(q.id));
+      const depTime = active.departureTime || active.expiresAt;
+      const msLeft = new Date(depTime) - now;
+      return {
+        id: giver.id,
+        name: giver.name,
+        emoji: giver.emoji,
+        title: giver.title,
+        description: giver.description,
+        portrait: giver.portrait || null,
+        greeting: giver.greeting || null,
+        rarity: giver.rarity || 'common',
+        arrivedAt: active.arrivedAt,
+        departureTime: depTime,
+        expiresAt: active.expiresAt,
+        daysLeft: Math.max(0, Math.ceil(msLeft / 86400000)),
+        hoursLeft: Math.max(0, Math.ceil(msLeft / 3600000)),
+        finalReward: giver.finalReward,
+        questChain: questIds.map((qid, idx) => {
+          const q = npcQuests.find(x => x.id === qid);
+          if (!q) return null;
+          return {
+            questId: q.id,
+            title: q.title,
+            description: q.description,
+            type: q.type,
+            priority: q.priority,
+            status: q.status,
+            claimedBy: q.claimedBy,
+            completedBy: q.completedBy,
+            rewards: q.npcRewards,
+            position: idx + 1,
+          };
+        }).filter(Boolean),
+      };
+    }).filter(Boolean);
+  res.json({ npcs: result });
+});
+
+// GET /api/npcs/departures — fetch and clear departure notifications (for frontend toasts)
+router.get('/api/npcs/departures', (req, res) => {
+  const notifications = (state.npcState.departureNotifications || []).slice();
+  state.npcState.departureNotifications = [];
+  saveNpcState();
+  res.json({ departures: notifications });
+});
+
+// POST /api/npcs/rotate [admin]
+router.post('/api/npcs/rotate', requireApiKey, (req, res) => {
+  const incomingKey = req.headers['x-api-key'];
+  const masterKey = getMasterKey();
+  if (incomingKey !== masterKey && incomingKey !== ADMIN_KEY) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+  rotateNpcs();
+  res.json({ ok: true, activeNpcs: state.npcState.activeNpcs });
+});
+
+// GET /api/npcs/:id (must be after /departures and /rotate to avoid param capture)
+router.get('/api/npcs/:id', (req, res) => {
+  const id = req.params.id;
+  const giver = state.npcGivers.givers.find(g => g.id === id);
+  if (!giver) return res.status(404).json({ error: 'NPC not found' });
+  const active = state.npcState.activeNpcs.find(a => a.giverId === id);
+  const questIds = state.npcState.npcQuestIds[id] || [];
+  const npcQuests = state.quests.filter(q => questIds.includes(q.id));
+  res.json({
+    ...giver,
+    active: !!active,
+    arrivedAt: active?.arrivedAt || null,
+    departureTime: active?.departureTime || active?.expiresAt || null,
+    expiresAt: active?.expiresAt || null,
+    cooldownUntil: state.npcState.cooldowns[id] || null,
+    quests: npcQuests,
+  });
+});
+
+// GET /api/app-state
+router.get('/api/app-state', (req, res) => {
+  res.json({ version: state.appState.version });
+});
+
+// ─── Feedback endpoints ────────────────────────────────────────────────────────
+// POST /api/feedback — store a feedback entry
+router.post('/api/feedback', (req, res) => {
+  const { elementPath, type, text, userId, timestamp } = req.body || {};
+  if (!text || typeof text !== 'string') {
+    return res.status(400).json({ error: 'text is required' });
+  }
+  const entry = {
+    id: `fb-${Date.now()}`,
+    elementPath: elementPath || 'unknown',
+    type: type === 'bug' ? 'bug' : 'feedback',
+    text: text.trim(),
+    userId: userId || 'anonymous',
+    timestamp: timestamp || new Date().toISOString(),
+    resolved: false,
+  };
+  state.feedbackEntries.push(entry);
+  saveFeedback();
+  console.log(`[feedback] New ${entry.type} from ${entry.userId}: ${entry.elementPath}`);
+  res.json({ ok: true, id: entry.id });
+});
+
+// GET /api/feedback — list all feedback (admin)
+router.get('/api/feedback', (req, res) => {
+  res.json(state.feedbackEntries);
+});
+
+// Serve index.html for non-API routes (SPA fallback)
+router.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, '..', 'out', 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).json({ error: 'Frontend not built. Run: npm run build' });
+  }
+});
+
+module.exports = router;
