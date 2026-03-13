@@ -147,6 +147,7 @@ export default function Dashboard() {
   const [deleteRitualConfirmId, setDeleteRitualConfirmId] = useState<string | null>(null);
   const [extendRitualId, setExtendRitualId] = useState<string | null>(null);
   const [extendRitualCommitment, setExtendRitualCommitment] = useState("none");
+  const [recommitRitualId, setRecommitRitualId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!createRitualOpen) return;
@@ -1678,6 +1679,7 @@ export default function Dashboard() {
                     const renderRitualCard = (ritual: Ritual) => {
                       const today = new Date().toISOString().slice(0, 10);
                       const doneToday = ritual.lastCompleted === today;
+                      const isBroken = ritual.status === "broken";
                       const milestone = STREAK_MILESTONES_CLIENT.reduce<{days:number;badge:string;label:string}|null>((acc, m) => ritual.streak >= m.days ? m : acc, null);
                       const nextMilestone = STREAK_MILESTONES_CLIENT.find(m => ritual.streak < m.days);
                       const progress = nextMilestone ? (ritual.streak / nextMilestone.days) * 100 : 100;
@@ -1686,12 +1688,12 @@ export default function Dashboard() {
                         ? new Date(ritual.lastCompleted + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "short" })
                         : null;
                       // Flame intensity based on streak
-                      const flameColor = ritual.streak >= 30 ? "#f59e0b" : ritual.streak >= 14 ? "#f97316" : ritual.streak >= 7 ? "#ef4444" : "rgba(255,255,255,0.25)";
-                      const flameGlow = ritual.streak >= 7 ? `0 0 8px ${flameColor}44` : "none";
+                      const flameColor = isBroken ? "#ef4444" : ritual.streak >= 30 ? "#f59e0b" : ritual.streak >= 14 ? "#f97316" : ritual.streak >= 7 ? "#ef4444" : "rgba(255,255,255,0.25)";
+                      const flameGlow = isBroken ? "0 0 8px rgba(239,68,68,0.3)" : ritual.streak >= 7 ? `0 0 8px ${flameColor}44` : "none";
                       return (
                         <div key={ritual.id} className="rounded-xl p-3" style={{
-                          background: doneToday ? "rgba(34,197,94,0.06)" : "#252525",
-                          border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
+                          background: isBroken ? "rgba(239,68,68,0.04)" : doneToday ? "rgba(34,197,94,0.06)" : "#252525",
+                          border: `1px solid ${isBroken ? "rgba(239,68,68,0.3)" : doneToday ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.07)"}`,
                           opacity: doneToday ? 0.8 : 1,
                         }}>
                           <div className="flex items-start justify-between gap-2">
@@ -1735,56 +1737,67 @@ export default function Dashboard() {
                               )}
                             </div>
                             <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                disabled={doneToday || !reviewApiKey}
-                                onClick={async () => {
-                                  if (!reviewApiKey || !playerName) return;
-                                  try {
-                                    const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
-                                      body: JSON.stringify({ playerId: playerName }),
-                                    });
-                                    const data = await r.json();
-                                    if (data.ok) {
-                                      fetchRituals(playerName).then(setRituals);
-                                      if (data.lootDrop) setLootDrop(data.lootDrop);
-                                      if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
-                                      refresh();
-                                    }
-                                  } catch { /* ignore */ }
-                                }}
-                                className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all"
-                                style={{
-                                  background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
-                                  color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
-                                  border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
-                                  cursor: doneToday ? 'default' : 'pointer',
-                                }}
-                                onMouseEnter={e => { if (!doneToday) { (e.currentTarget as HTMLButtonElement).style.background = "rgba(167,139,250,0.28)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(167,139,250,0.55)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 10px rgba(167,139,250,0.2)"; } }}
-                                onMouseLeave={e => { if (!doneToday) { (e.currentTarget as HTMLButtonElement).style.background = "rgba(167,139,250,0.15)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(167,139,250,0.3)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; } }}
-                              >
-                                {doneToday ? "✓ Erledigt" : "Abhaken"}
-                              </button>
-                              {reviewApiKey && !ritual.bloodPact && (
-                                <button
-                                  onClick={() => { setExtendRitualId(ritual.id); setExtendRitualCommitment(ritual.commitment ?? "none"); }}
-                                  className="text-xs px-2 py-1.5 rounded-lg transition-all"
-                                  style={{ background: "rgba(245,158,11,0.06)", color: "rgba(245,158,11,0.5)", border: "1px solid rgba(245,158,11,0.15)", cursor: 'pointer' }}
-                                  title="Extend ritual duration"
-                                >
-                                  Extend
-                                </button>
-                              )}
-                              {reviewApiKey && (
-                                <button
-                                  onClick={() => setDeleteRitualConfirmId(ritual.id)}
-                                  className="text-xs px-2 py-1.5 rounded-lg transition-all"
-                                  style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }}
-                                  title="Ritual löschen"
-                                >
-                                  ×
-                                </button>
+                              {isBroken ? (
+                                <>
+                                  <button
+                                    onClick={() => setRecommitRitualId(ritual.id)}
+                                    disabled={!reviewApiKey}
+                                    className="text-xs px-3 py-1.5 rounded-lg font-bold transition-all"
+                                    style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)", cursor: "pointer", boxShadow: "0 0 10px rgba(167,139,250,0.1)" }}
+                                  >
+                                    Rise Again
+                                  </button>
+                                  {reviewApiKey && (
+                                    <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Ritual löschen">×</button>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <button
+                                    disabled={doneToday || !reviewApiKey}
+                                    onClick={async () => {
+                                      if (!reviewApiKey || !playerName) return;
+                                      try {
+                                        const r = await fetch(`/api/rituals/${ritual.id}/complete`, {
+                                          method: 'POST',
+                                          headers: { 'Content-Type': 'application/json', 'x-api-key': reviewApiKey },
+                                          body: JSON.stringify({ playerId: playerName }),
+                                        });
+                                        const data = await r.json();
+                                        if (data.ok) {
+                                          fetchRituals(playerName).then(setRituals);
+                                          if (data.lootDrop) setLootDrop(data.lootDrop);
+                                          if (data.milestoneDrop) setLootDrop(data.milestoneDrop);
+                                          refresh();
+                                        }
+                                      } catch { /* ignore */ }
+                                    }}
+                                    className="text-xs px-2.5 py-1.5 rounded-lg font-medium transition-all"
+                                    style={{
+                                      background: doneToday ? "rgba(34,197,94,0.08)" : "rgba(167,139,250,0.15)",
+                                      color: doneToday ? "rgba(34,197,94,0.5)" : "#a78bfa",
+                                      border: `1px solid ${doneToday ? "rgba(34,197,94,0.2)" : "rgba(167,139,250,0.3)"}`,
+                                      cursor: doneToday ? 'default' : 'pointer',
+                                    }}
+                                    onMouseEnter={e => { if (!doneToday) { (e.currentTarget as HTMLButtonElement).style.background = "rgba(167,139,250,0.28)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(167,139,250,0.55)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 10px rgba(167,139,250,0.2)"; } }}
+                                    onMouseLeave={e => { if (!doneToday) { (e.currentTarget as HTMLButtonElement).style.background = "rgba(167,139,250,0.15)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(167,139,250,0.3)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; } }}
+                                  >
+                                    {doneToday ? "✓ Erledigt" : "Abhaken"}
+                                  </button>
+                                  {reviewApiKey && !ritual.bloodPact && (
+                                    <button
+                                      onClick={() => { setExtendRitualId(ritual.id); setExtendRitualCommitment(ritual.commitment ?? "none"); }}
+                                      className="text-xs px-2 py-1.5 rounded-lg transition-all"
+                                      style={{ background: "rgba(245,158,11,0.06)", color: "rgba(245,158,11,0.5)", border: "1px solid rgba(245,158,11,0.15)", cursor: 'pointer' }}
+                                      title="Extend ritual duration"
+                                    >
+                                      Extend
+                                    </button>
+                                  )}
+                                  {reviewApiKey && (
+                                    <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Ritual löschen">×</button>
+                                  )}
+                                </>
                               )}
                             </div>
                           </div>
@@ -1981,7 +1994,7 @@ export default function Dashboard() {
 
                 {/* Extend Ritual Modal */}
                 {extendRitualId && (() => {
-                  const ritualToExtend = playerRituals.find(r => r.id === extendRitualId);
+                  const ritualToExtend = rituals.find(r => r.id === extendRitualId);
                   if (!ritualToExtend) return null;
                   const currentDays = ritualToExtend.commitmentDays ?? 0;
                   const selectedTier = COMMITMENT_TIERS.find(t => t.id === extendRitualCommitment);
@@ -2038,6 +2051,64 @@ export default function Dashboard() {
                                 style={{ background: canExtend ? "rgba(180,130,50,0.32)" : "rgba(255,255,255,0.04)", color: canExtend ? "#e8d5a3" : "rgba(255,255,255,0.2)", border: `1px solid ${canExtend ? "rgba(245,158,11,0.6)" : "rgba(255,255,255,0.08)"}`, cursor: canExtend ? "pointer" : "not-allowed" }}
                               >
                                 Extend Ritual
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    </ModalPortal>
+                  );
+                })()}
+
+                {/* Rise Again / Recommit Ritual Modal */}
+                {recommitRitualId && (() => {
+                  const ritualToRecommit = rituals.find(r => r.id === recommitRitualId);
+                  if (!ritualToRecommit) return null;
+                  return (
+                    <ModalPortal>
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={() => setRecommitRitualId(null)}>
+                      <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
+                        <div className="hidden md:flex flex-col" style={{ position: "absolute", right: "calc(100% + 16px)", top: "50%", transform: "translateY(-50%)", width: 200, overflow: "visible" }}>
+                          <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
+                          <div style={{ background: "rgba(25,17,5,0.92)", border: "1px solid rgba(245,158,11,0.4)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "10px 12px" }}>
+                            <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>&ldquo;The flame went out. But the ember remembers. Do you?&rdquo;</p>
+                          </div>
+                        </div>
+                        <div style={{ maxWidth: 420, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: "1px solid rgba(167,139,250,0.35)", boxShadow: "0 0 40px rgba(167,139,250,0.08)" }}>
+                          <div className="px-5 pt-5 pb-3 text-center" style={{ borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
+                            <p className="text-3xl mb-2">⚔</p>
+                            <h3 className="text-base font-bold" style={{ color: "#e8d5a3" }}>Rise Again</h3>
+                            <p className="text-xs mt-1" style={{ color: "rgba(200,170,100,0.5)" }}>{ritualToRecommit.title}</p>
+                          </div>
+                          <div className="md:hidden px-5 py-2.5" style={{ borderBottom: "1px solid rgba(245,158,11,0.1)", background: "rgba(25,17,5,0.4)" }}>
+                            <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>&ldquo;The flame went out. But the ember remembers. Do you?&rdquo;</p>
+                          </div>
+                          <div className="p-5 space-y-4">
+                            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+                              Your streak was broken, but the rite endures. Recommit and begin anew — your longest streak of <span style={{ color: "#f59e0b", fontWeight: 600 }}>{ritualToRecommit.longestStreak ?? 0} days</span> is etched in the records.
+                            </p>
+                            <p className="text-xs italic" style={{ color: "rgba(200,170,100,0.35)" }}>
+                              &ldquo;Every forge has cooled. Every flame has flickered. What matters is the next spark.&rdquo;
+                            </p>
+                            <div className="flex gap-2 pt-1">
+                              <button onClick={() => setRecommitRitualId(null)} className="text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Not Yet</button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await fetch(`/api/rituals/${recommitRitualId}/recommit`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                                      body: JSON.stringify({ playerId: playerName }),
+                                    });
+                                    setRecommitRitualId(null);
+                                    if (playerName) fetchRituals(playerName).then(setRituals);
+                                  } catch { /* ignore */ }
+                                }}
+                                className="flex-1 text-sm py-2.5 rounded-xl font-bold"
+                                style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.5)", boxShadow: "0 0 16px rgba(167,139,250,0.12)", cursor: "pointer" }}
+                              >
+                                ⚔ Rise Again
                               </button>
                             </div>
                           </div>

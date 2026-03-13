@@ -5316,9 +5316,29 @@ app.post('/api/rituals', requireApiKey, (req, res) => {
     createdBy: createdBy || playerId,
     playerId: playerId.toLowerCase(),
     createdAt: now(),
+    status: 'active',
     ...(isAntiRitual ? { isAntiRitual: true, category, commitment, commitmentDays, bloodPact, cleanDays: 0, lastViolated: null } : {}),
   };
   rituals.push(ritual);
+  saveRituals();
+  res.json({ ok: true, ritual });
+});
+
+// POST /api/rituals/:id/recommit — rise again after broken streak [auth]
+app.post('/api/rituals/:id/recommit', requireApiKey, (req, res) => {
+  const { playerId } = req.body;
+  const ritual = rituals.find(r => r.id === req.params.id);
+  if (!ritual) return res.status(404).json({ error: 'Ritual not found' });
+  if (!playerId) return res.status(400).json({ error: 'playerId is required' });
+  if (ritual.status !== 'broken') return res.status(400).json({ error: 'Ritual is not broken' });
+
+  // Reset to active with streak 0
+  ritual.status = 'active';
+  ritual.streak = 0;
+  if (ritual.isAntiRitual) ritual.cleanDays = 0;
+  ritual.lastCompleted = null;
+  ritual.missedDays = 0;
+
   saveRituals();
   res.json({ ok: true, ritual });
 });
@@ -5329,6 +5349,9 @@ app.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
   const ritual = rituals.find(r => r.id === req.params.id);
   if (!ritual) return res.status(404).json({ error: 'Ritual not found' });
   if (!playerId) return res.status(400).json({ error: 'playerId is required' });
+
+  // Block completions on broken rituals — must recommit first
+  if (ritual.status === 'broken') return res.status(400).json({ error: 'Ritual is broken. Recommit first.' });
 
   const today = todayStr();
   if (ritual.lastCompleted === today) {
@@ -5351,6 +5374,9 @@ app.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
       ritual.streak = Math.max(0, (ritual.streak || 0) - 7);
     } else {
       ritual.streak = 0;
+      ritual.status = 'broken';
+      saveRituals();
+      return res.json({ ok: false, broken: true, ritual, message: 'Streak lost — ritual is now broken. Recommit to continue.' });
     }
   }
   ritual.lastCompleted = today;
@@ -5449,11 +5475,12 @@ app.post('/api/rituals/:id/violate', requireApiKey, (req, res) => {
     ritual.longestStreak = ritual.streak;
   }
 
-  // Reset streak to 0
+  // Reset streak to 0 and mark as broken
   ritual.streak = 0;
   if (ritual.isAntiRitual) {
     ritual.cleanDays = 0;
   }
+  ritual.status = 'broken';
   ritual.lastViolated = todayStr();
   ritual.missedDays = (ritual.missedDays || 0) + 1;
 

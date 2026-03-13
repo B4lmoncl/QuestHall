@@ -212,6 +212,7 @@ export interface Ritual {
   completedDates?: string[];
   lastCompleted: string | null;
   playerId: string;
+  status?: "active" | "broken";
   isAntiRitual?: boolean;
   commitment?: string;
   commitmentDays?: number;
@@ -288,6 +289,7 @@ export interface AntiRitual {
   commitment?: string;
   commitmentDays?: number;
   bloodPact?: boolean;
+  status?: "active" | "broken";
 }
 
 export interface Suggestion {
