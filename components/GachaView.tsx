@@ -207,12 +207,12 @@ function BannerPreviewCard({
               src={portraitSrc}
               alt=""
               style={{
-                imageRendering: "pixelated",
-                width: "100%",
-                height: "100%",
+                width: isFeatured ? "100%" : "115%",
+                height: isFeatured ? "100%" : "115%",
                 objectFit: "cover",
-                objectPosition: "top center",
+                objectPosition: isFeatured ? "top center" : "15% 10%",
                 display: "block",
+                marginLeft: isFeatured ? 0 : "-7%",
               }}
             />
           </div>
@@ -341,7 +341,7 @@ function BannerPullModal({
                   src={portraitSrc}
                   alt=""
                   style={{
-                    imageRendering: "pixelated",
+                    // imageRendering: "pixelated", // disabled for HQ portraits
                     width: "100%",
                     height: "100%",
                     objectFit: "cover",
