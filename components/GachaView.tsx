@@ -152,12 +152,12 @@ function BannerPreviewCard({
             <defs>
               <filter id={`${fogId}-a`} x="0%" y="0%" width="100%" height="100%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves={2} seed={42} stitchTiles="stitch" result="noise" />
-                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.8 0" />
+                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.55 0" />
                 <feGaussianBlur stdDeviation="12" />
               </filter>
               <filter id={`${fogId}-b`} x="0%" y="0%" width="100%" height="100%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.012 0.006" numOctaves={2} seed={137} stitchTiles="stitch" result="noise" />
-                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.7 0" />
+                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.45 0" />
                 <feGaussianBlur stdDeviation="10" />
               </filter>
             </defs>
@@ -406,12 +406,15 @@ function BannerPullModal({
 
         {/* Nyxara fog wisps (featured banner) — like runes for Thalos */}
         {isFeatured && (
-          <div className="absolute inset-0 pointer-events-none" style={{
+          <div className="pointer-events-none" style={{
+            position: "absolute",
+            left: "-40%",
+            top: "-30%",
+            width: "180%",
+            height: "160%",
             zIndex: 0,
-            overflow: "hidden",
-            borderRadius: "1rem",
-            maskImage: "none",
-            WebkitMaskImage: "none",
+            maskImage: "radial-gradient(ellipse 55% 50% at 52% 48%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.15) 65%, transparent 80%)",
+            WebkitMaskImage: "radial-gradient(ellipse 55% 50% at 52% 48%, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.5) 40%, rgba(0,0,0,0.15) 65%, transparent 80%)",
           }}>
             <svg width="0" height="0" style={{ position: "absolute" }}>
               <defs>
@@ -429,16 +432,16 @@ function BannerPullModal({
             </svg>
             <svg style={{
               position: "absolute", left: "-70%", top: "-30%", width: "240%", height: "160%",
-              opacity: 1.0,
-              animation: "fogDrift1 22s ease-in-out infinite alternate",
+              opacity: 0.8,
+              animation: "fogDrift1 14s ease-in-out infinite alternate",
               willChange: "transform",
             }}>
               <rect width="100%" height="100%" filter={`url(#${fogId}-modal-a)`} />
             </svg>
             <svg style={{
               position: "absolute", left: "-60%", top: "-25%", width: "220%", height: "150%",
-              opacity: 0.9,
-              animation: "fogDrift2 28s ease-in-out infinite alternate-reverse",
+              opacity: 0.65,
+              animation: "fogDrift2 18s ease-in-out infinite alternate-reverse",
               willChange: "transform",
             }}>
               <rect width="100%" height="100%" filter={`url(#${fogId}-modal-b)`} />
