@@ -7,8 +7,8 @@ import { ModalOverlay } from "./ModalPortal";
 
 // ─── Currency helpers ────────────────────────────────────────────────────────
 const CURRENCY_META: Record<string, { emoji: string; label: string; color: string }> = {
-  runensplitter: { emoji: "x", label: "Rune Shards", color: "#a78bfa" },
-  stardust:      { emoji: "x", label: "Stardust",    color: "#818cf8" },
+  runensplitter: { emoji: "x", label: "Rune Shards", color: "#818cf8" },
+  stardust:      { emoji: "x", label: "Stardust",    color: "#a78bfa" },
   gold:          { emoji: "x", label: "Gold",        color: "#f59e0b" },
   essenz:        { emoji: "x", label: "Essence",     color: "#ef4444" },
   gildentaler:   { emoji: "x", label: "Guild Coins", color: "#10b981" },
@@ -147,9 +147,9 @@ function BannerPreviewCard({
           animation: `rune-drift-${i % 3} ${3 + i * 0.5}s ease-in-out infinite`,
           animationDelay: `${i * 0.4}s`,
           pointerEvents: "none",
-          color: "#a78bfa",
+          color: "#818cf8",
           zIndex: 0,
-          textShadow: "0 0 6px rgba(167,139,250,0.4)",
+          textShadow: "0 0 6px rgba(129,140,248,0.4)",
         }}>{runeSymbols[i]}</span>
       ))}
       {isFeatured && nebulaWisps.map((wisp, i) => (
@@ -182,7 +182,7 @@ function BannerPreviewCard({
 
       {/* Character portrait with arch frame — bottom right */}
       {portraitSrc && (
-        <div className="absolute bottom-2 right-3 pointer-events-none" style={{ width: 120, height: 160, zIndex: 1 }}>
+        <div className="absolute -bottom-1 right-2 pointer-events-none" style={{ width: 120, height: 160, zIndex: 2 }}>
           {/* Glow behind frame */}
           <div style={{
             position: "absolute", inset: -6,
@@ -241,7 +241,7 @@ function BannerPreviewCard({
         </div>
 
         {/* Lore text */}
-        <p className="text-xs italic leading-relaxed pr-24" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <p className="text-xs italic leading-relaxed pr-32" style={{ color: "rgba(255,255,255,0.25)" }}>
           {banner.lore}
         </p>
 
