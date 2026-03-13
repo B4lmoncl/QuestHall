@@ -146,7 +146,7 @@ function BannerPreviewCard({
         }}>{runeSymbols[i]}</span>
       ))}
       {isFeatured && (
-        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none" style={{ zIndex: 0 }}>
+        <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none" style={{ zIndex: 3 }}>
           {/* Static SVG noise texture rendered once as background-image */}
           <svg width="0" height="0" style={{ position: "absolute" }}>
             <defs>
@@ -163,7 +163,7 @@ function BannerPreviewCard({
           {/* Layer 1: GPU-accelerated transform only (filter is static) */}
           <svg style={{
             position: "absolute", left: "-15%", bottom: "-10%", width: "130%", height: "75%",
-            opacity: 0.3,
+            opacity: 0.55,
             maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
             WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
             animation: "fogDrift1 12s ease-in-out infinite alternate",
@@ -174,7 +174,7 @@ function BannerPreviewCard({
           {/* Layer 2 */}
           <svg style={{
             position: "absolute", left: "-10%", bottom: "-5%", width: "120%", height: "65%",
-            opacity: 0.2,
+            opacity: 0.4,
             maskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
             WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
             animation: "fogDrift2 15s ease-in-out infinite alternate-reverse",
