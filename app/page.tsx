@@ -669,7 +669,8 @@ export default function Dashboard() {
   // Quest search + sort + type filter
   const applyFilter = useCallback((qs: Quest[]) => {
     let result = qs;
-    if (typeFilter !== "all") result = result.filter(q => (q.type ?? "development") === typeFilter);
+    if (typeFilter === "npc") result = result.filter(q => !!q.npcGiverId);
+    else if (typeFilter !== "all") result = result.filter(q => (q.type ?? "development") === typeFilter);
     // Class-specific quest filter
     if (playerName) {
       const currentUser = users.find(u => u.name.toLowerCase() === playerName.toLowerCase());
@@ -1522,14 +1523,20 @@ export default function Dashboard() {
                   {questBoardTab === "auftraege" && <div data-feedback-id="quest-board" className="space-y-2">
                     {/* Category filters — Quest Board only */}
                     <div data-feedback-id="quest-board.filters" className="flex gap-1 flex-wrap mb-2" data-tutorial="quest-filters">
-                      {(["all", "personal", "learning", "fitness", "social", "relationship-coop"] as const).map(t => {
-                        const cfg = t === "all" ? null : typeConfig[t];
+                      {(["all", "personal", "learning", "fitness", "social", "relationship-coop", "npc"] as const).map(t => {
+                        const cfg = t === "all" || t === "npc" ? null : typeConfig[t];
                         const isActive = typeFilter === t;
                         const iconFile = t === "relationship-coop" ? "coop" : t;
+                        const npcStyle = t === "npc" ? { color: "#e879f9", bg: "rgba(232,121,249,0.1)", border: "rgba(232,121,249,0.3)" } : null;
                         return (
                           <button key={t} onClick={() => setTypeFilter(t)} className="btn-interactive text-sm px-2 py-0.5 rounded inline-flex items-center gap-1.5"
-                            style={{ background: isActive ? (cfg ? cfg.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)", color: isActive ? (cfg ? cfg.color : "#e8e8e8") : "rgba(255,255,255,0.3)", border: `1px solid ${isActive ? (cfg ? cfg.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}` }}>
-                            {t === "all" ? "All" : (
+                            style={{ background: isActive ? (cfg ? cfg.bg : npcStyle ? npcStyle.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)", color: isActive ? (cfg ? cfg.color : npcStyle ? npcStyle.color : "#e8e8e8") : "rgba(255,255,255,0.3)", border: `1px solid ${isActive ? (cfg ? cfg.border : npcStyle ? npcStyle.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}` }}>
+                            {t === "all" ? "All" : t === "npc" ? (
+                              <>
+                                <span style={{ fontSize: 14 }}>🧙</span>
+                                NPC
+                              </>
+                            ) : (
                               <>
                                 <img src={`/images/icons/cat-${iconFile}.png`} alt="" width={28} height={28}
                                   style={{ imageRendering: "pixelated" }}

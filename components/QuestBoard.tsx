@@ -1866,6 +1866,12 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
           </div>
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             <TypeBadge type={quest.type} />
+            {quest.npcGiverId && quest.npcName && (
+              <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
+                style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9", background: `${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}15`, border: `1px solid ${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}40` }}>
+                🧙 {quest.npcName}
+              </span>
+            )}
             {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
             {cats.map(c => <CategoryBadge key={c} category={c} />)}
             {quest.product && <ProductBadge product={quest.product} />}
