@@ -162,7 +162,7 @@ function BannerPreviewCard({
           </svg>
           {/* Layer 1: GPU-accelerated transform only (filter is static) */}
           <svg style={{
-            position: "absolute", left: "-15%", bottom: "-10%", width: "130%", height: "75%",
+            position: "absolute", left: "-15%", bottom: "0%", width: "130%", height: "85%",
             opacity: 0.55,
             maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
             WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
@@ -173,7 +173,7 @@ function BannerPreviewCard({
           </svg>
           {/* Layer 2 */}
           <svg style={{
-            position: "absolute", left: "-10%", bottom: "-5%", width: "120%", height: "65%",
+            position: "absolute", left: "-10%", bottom: "5%", width: "120%", height: "75%",
             opacity: 0.4,
             maskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
             WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
