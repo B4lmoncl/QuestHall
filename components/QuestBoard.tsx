@@ -359,6 +359,8 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
           lastCompleted: r.lastCompleted ?? null,
           playerId: r.playerId,
           createdAt: r.lastCompleted ?? new Date().toISOString(),
+          longestStreak: r.longestStreak ?? (r.streak ?? 0),
+          completedDates: r.completedDates ?? [],
         })));
       }
     } catch { /* ignore */ }
@@ -419,6 +421,10 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
     const nextMilestone = ANTI_RITUAL_MILESTONES.find(m => days < m.days);
     const streakBorderColor = days >= 90 ? "#f59e0b" : days >= 30 ? "#a78bfa" : days >= 7 ? "#22c55e" : "rgba(255,255,255,0.1)";
     const streakGlow = days >= 30 ? `0 0 12px ${streakBorderColor}30` : "none";
+    const longestStreak = ar.longestStreak ?? days;
+    // Flame intensity based on streak (same as rituals)
+    const flameColor = days >= 30 ? "#f59e0b" : days >= 14 ? "#f97316" : days >= 7 ? "#ef4444" : "rgba(255,255,255,0.25)";
+    const flameGlow = days >= 7 ? `0 0 8px ${flameColor}44` : "none";
     return (
       <div key={ar.id} className="rounded-xl p-3" style={{
         background: "#252525",
@@ -428,12 +434,18 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
+              {/* Streak flame counter */}
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold" style={{ color: flameColor, background: `${flameColor}12`, border: `1px solid ${flameColor}30`, boxShadow: flameGlow, fontSize: 11 }}>
+                <span style={{ fontSize: 13 }}>{days >= 7 ? "\uD83D\uDD25" : "\u2728"}</span>
+                {days}
+              </span>
               <span className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>{ar.title}</span>
               {badge && <span className="text-sm" title={badge.label}>{badge.badge}</span>}
             </div>
             <p className="text-xs mb-1.5" style={{ color: mood.color }}>{mood.msg}</p>
             <div className="flex items-center gap-3 text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
               <span className="font-bold" style={{ color: mood.color }}>{days} days clean</span>
+              {longestStreak > 0 && <span title="Longest streak" style={{ color: "rgba(245,158,11,0.5)" }}>Best: {longestStreak}</span>}
               {nextMilestone && <span>→ {nextMilestone.badge} in {nextMilestone.days - days}d</span>}
             </div>
             {nextMilestone && (

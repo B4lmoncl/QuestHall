@@ -276,6 +276,8 @@ export interface AntiRitual {
   playerId: string;
   milestones?: number[];
   createdAt: string;
+  longestStreak?: number;
+  completedDates?: string[];
 }
 
 export interface Suggestion {
