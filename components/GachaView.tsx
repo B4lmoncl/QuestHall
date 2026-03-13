@@ -83,6 +83,11 @@ function GachaInfoModal({ onClose }: { onClose: () => void }) {
 }
 
 // ─── Banner Preview Card (premium, atmospheric) ─────────────────────────────
+const BANNER_PORTRAITS: Record<string, string> = {
+  standard: "/images/portraits/banner-thalos.png",
+  featured: "/images/portraits/banner-nyxara.png",
+};
+
 function BannerPreviewCard({
   banner,
   onClick,
@@ -93,6 +98,7 @@ function BannerPreviewCard({
   const isFeatured = banner.type === "featured";
   const accentColor = isFeatured ? "#818cf8" : "#a78bfa";
   const glowColor = isFeatured ? "rgba(129,140,248,0.15)" : "rgba(167,139,250,0.12)";
+  const portraitSrc = BANNER_PORTRAITS[banner.type];
 
   return (
     <button
@@ -116,7 +122,34 @@ function BannerPreviewCard({
         background: `linear-gradient(90deg, transparent, ${isFeatured ? "rgba(129,140,248,0.4)" : "rgba(212,196,251,0.3)"}, transparent)`,
       }} />
 
-      <div className="relative space-y-4">
+      {/* Character portrait — bottom right, cropped to upper body */}
+      {portraitSrc && (
+        <div className="absolute bottom-0 right-0 overflow-hidden pointer-events-none" style={{
+          width: 140,
+          height: 180,
+          maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 70%, transparent 100%)",
+          WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 30%, rgba(0,0,0,0.6) 70%, transparent 100%)",
+        }}>
+          <img
+            src={portraitSrc}
+            alt=""
+            className="transition-transform duration-500 group-hover:scale-105"
+            style={{
+              imageRendering: "pixelated",
+              width: "100%",
+              height: "auto",
+              display: "block",
+              position: "absolute",
+              bottom: -20,
+              right: -10,
+              opacity: 0.85,
+              filter: `drop-shadow(0 0 12px ${accentColor}40)`,
+            }}
+          />
+        </div>
+      )}
+
+      <div className="relative space-y-4" style={{ zIndex: 1 }}>
         {/* Banner type badge */}
         <div className="flex items-center justify-between">
           <span className="text-[9px] uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
@@ -138,7 +171,7 @@ function BannerPreviewCard({
         </div>
 
         {/* Lore text */}
-        <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.25)" }}>
+        <p className="text-xs italic leading-relaxed pr-24" style={{ color: "rgba(255,255,255,0.25)" }}>
           {banner.lore}
         </p>
 
@@ -199,6 +232,8 @@ function BannerPullModal({
     return itemId;
   });
 
+  const portraitSrc = BANNER_PORTRAITS[banner.type];
+
   return (
     <ModalOverlay isOpen onClose={onClose} zIndex={55}>
       <div className="w-full max-w-lg max-h-[85vh] rounded-2xl overflow-y-auto" style={{
@@ -207,22 +242,47 @@ function BannerPullModal({
         boxShadow: `0 0 80px ${isFeatured ? "rgba(129,140,248,0.1)" : "rgba(167,139,250,0.08)"}`,
         overscrollBehavior: "contain",
       }}>
-        {/* Header */}
-        <div className="p-5 pb-0">
-          <div className="flex items-start justify-between mb-1">
-            <div>
-              <span className="text-[9px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
-                color: accentColor, background: `${accentColor}15`, border: `1px solid ${accentColor}30`,
-              }}>
-                {isFeatured ? "Featured Banner" : "Standard Banner"}
-              </span>
-              <h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3>
+        {/* Header with character portrait */}
+        <div className="relative overflow-hidden" style={{ minHeight: portraitSrc ? 200 : undefined }}>
+          {/* Portrait — large, right side */}
+          {portraitSrc && (
+            <div className="absolute right-0 top-0 bottom-0 pointer-events-none" style={{ width: 180 }}>
+              <img
+                src={portraitSrc}
+                alt=""
+                style={{
+                  imageRendering: "pixelated",
+                  width: "100%",
+                  height: "auto",
+                  display: "block",
+                  position: "absolute",
+                  bottom: -30,
+                  right: -5,
+                  opacity: 0.9,
+                  filter: `drop-shadow(0 0 20px ${accentColor}50)`,
+                  maskImage: "linear-gradient(to left, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 75%, transparent 100%)",
+                  WebkitMaskImage: "linear-gradient(to left, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.4) 75%, transparent 100%)",
+                }}
+              />
             </div>
-            <button onClick={onClose} className="text-lg mt-1" style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>x</button>
+          )}
+
+          <div className="p-5 pb-0 relative" style={{ zIndex: 1 }}>
+            <div className="flex items-start justify-between mb-1">
+              <div style={{ maxWidth: portraitSrc ? "60%" : undefined }}>
+                <span className="text-[9px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
+                  color: accentColor, background: `${accentColor}15`, border: `1px solid ${accentColor}30`,
+                }}>
+                  {isFeatured ? "Featured Banner" : "Standard Banner"}
+                </span>
+                <h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3>
+              </div>
+              <button onClick={onClose} className="text-lg mt-1" style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer" }}>x</button>
+            </div>
+            <p className="text-xs italic leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.25)", maxWidth: portraitSrc ? "55%" : undefined }}>
+              {banner.lore}
+            </p>
           </div>
-          <p className="text-xs italic leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.25)" }}>
-            {banner.lore}
-          </p>
         </div>
 
         <div className="px-5 pb-5 space-y-4">
