@@ -277,7 +277,7 @@ export function WandererRest({
       {playerName && (
         <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
           <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
-          <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>x Companion Hearth x</span>
+          <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ Companion Hearth ◆</span>
           <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
         </div>
       )}
@@ -300,7 +300,7 @@ export function WandererRest({
       {/* ── Divider: Dobbie's Demands ↔ Starweaver ── */}
       <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
-        <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>x Chamber x</span>
+        <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ Chamber ◆</span>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
       </div>
 
@@ -490,7 +490,7 @@ export function WandererRest({
                                   style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", cursor: "pointer" }}
                                   onMouseEnter={e => { (e.currentTarget).style.background = "rgba(239,68,68,0.25)"; }}
                                   onMouseLeave={e => { (e.currentTarget).style.background = "rgba(239,68,68,0.12)"; }}
-                                >x Unclaim</button>
+                                >Unclaim</button>
                               )}
                             </div>
                           )}
@@ -507,7 +507,7 @@ export function WandererRest({
                               style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", transition: "all 0.2s" }}
                               onMouseEnter={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.35)"; }}
                               onMouseLeave={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.2)"; }}
-                            >x Accept Quest</button>
+                            >Accept Quest</button>
                           )}
                           {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && currentQuest.claimedBy?.toLowerCase() === playerName?.toLowerCase() && handleComplete && (
                             <button
@@ -516,7 +516,7 @@ export function WandererRest({
                               style={{ background: "rgba(34,197,94,0.2)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.4)", cursor: "pointer", transition: "all 0.2s" }}
                               onMouseEnter={e => { (e.currentTarget).style.background = "rgba(34,197,94,0.35)"; }}
                               onMouseLeave={e => { (e.currentTarget).style.background = "rgba(34,197,94,0.2)"; }}
-                            >x Complete</button>
+                            >Complete</button>
                           )}
                         </div>
                       </div>

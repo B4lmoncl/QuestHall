@@ -31,7 +31,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>x Forge Shop</h3>
+            <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>Forge Shop</h3>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{userName} · x {gold} gold</p>
           </div>
           <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)" }}>x</button>

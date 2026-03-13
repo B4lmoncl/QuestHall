@@ -241,7 +241,7 @@ function ProfileSettingsModal({ playerName, apiKey, initialStatus, initialPartne
         onClick={e => e.stopPropagation()}
       >
         <div>
-          <h2 className="text-base font-bold" style={{ color: "#f0f0f0" }}>x Profil-Einstellungen</h2>
+          <h2 className="text-base font-bold" style={{ color: "#f0f0f0" }}>⚙ Profil-Einstellungen</h2>
           <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Beziehungsstatus und weitere Einstellungen</p>
         </div>
 
