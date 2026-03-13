@@ -410,34 +410,34 @@ function BannerPullModal({
             zIndex: 0,
             overflow: "hidden",
             borderRadius: "1rem",
-            maskImage: "radial-gradient(ellipse 90% 85% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 55%, transparent 80%)",
-            WebkitMaskImage: "radial-gradient(ellipse 90% 85% at 50% 50%, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 55%, transparent 80%)",
+            maskImage: "radial-gradient(ellipse 95% 90% at 48% 50%, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 55%, transparent 82%)",
+            WebkitMaskImage: "radial-gradient(ellipse 95% 90% at 48% 50%, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.5) 55%, transparent 82%)",
           }}>
             <svg width="0" height="0" style={{ position: "absolute" }}>
               <defs>
                 <filter id={`${fogId}-modal-a`} x="-25%" y="-25%" width="150%" height="150%">
                   <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves={2} seed={77} stitchTiles="stitch" result="noise" />
-                  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.4 0" />
+                  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.55 0" />
                   <feGaussianBlur stdDeviation="14" />
                 </filter>
                 <filter id={`${fogId}-modal-b`} x="-25%" y="-25%" width="150%" height="150%">
                   <feTurbulence type="fractalNoise" baseFrequency="0.009 0.005" numOctaves={2} seed={199} stitchTiles="stitch" result="noise" />
-                  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.35 0" />
+                  <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.45 0" />
                   <feGaussianBlur stdDeviation="18" />
                 </filter>
               </defs>
             </svg>
             <svg style={{
-              position: "absolute", left: "-60%", top: "-30%", width: "220%", height: "160%",
-              opacity: 0.4,
+              position: "absolute", left: "-70%", top: "-30%", width: "240%", height: "160%",
+              opacity: 0.8,
               animation: "fogDrift1 22s ease-in-out infinite alternate",
               willChange: "transform",
             }}>
               <rect width="100%" height="100%" filter={`url(#${fogId}-modal-a)`} />
             </svg>
             <svg style={{
-              position: "absolute", left: "-40%", top: "-20%", width: "200%", height: "140%",
-              opacity: 0.3,
+              position: "absolute", left: "-60%", top: "-25%", width: "220%", height: "150%",
+              opacity: 0.65,
               animation: "fogDrift2 28s ease-in-out infinite alternate-reverse",
               willChange: "transform",
             }}>
