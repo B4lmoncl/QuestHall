@@ -5414,6 +5414,29 @@ app.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
   res.json({ ok: true, ritual, newAchievements, lootDrop, milestoneDrop });
 });
 
+// PATCH /api/rituals/:id/extend — extend ritual/vow deadline [auth]
+app.patch('/api/rituals/:id/extend', requireApiKey, (req, res) => {
+  const { newCommitment, newCommitmentDays } = req.body;
+  const ritual = rituals.find(r => r.id === req.params.id);
+  if (!ritual) return res.status(404).json({ error: 'Ritual not found' });
+
+  // Blood Oaths cannot be extended (they are permanent)
+  if (ritual.bloodPact) {
+    return res.status(403).json({ error: 'Blood Oaths are permanent and cannot be extended' });
+  }
+
+  // New commitment must be longer than current
+  if (!newCommitmentDays || newCommitmentDays <= (ritual.commitmentDays || 0)) {
+    return res.status(400).json({ error: 'New commitment must be longer than current commitment' });
+  }
+
+  ritual.commitment = newCommitment || ritual.commitment;
+  ritual.commitmentDays = newCommitmentDays;
+
+  saveRituals();
+  res.json({ ok: true, ritual });
+});
+
 // POST /api/rituals/:id/violate — mark vow as violated / slipped [auth]
 app.post('/api/rituals/:id/violate', requireApiKey, (req, res) => {
   const { playerId } = req.body;

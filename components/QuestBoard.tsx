@@ -336,6 +336,8 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   const [vowNameError, setVowNameError] = useState(false);
   const [vowCommitmentError, setVowCommitmentError] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [extendId, setExtendId] = useState<string | null>(null);
+  const [extendCommitment, setExtendCommitment] = useState("none");
 
   useEffect(() => {
     if (!createOpen) return;
@@ -361,6 +363,9 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
           createdAt: r.lastCompleted ?? new Date().toISOString(),
           longestStreak: r.longestStreak ?? (r.streak ?? 0),
           completedDates: r.completedDates ?? [],
+          commitment: (r as any).commitment ?? "none",
+          commitmentDays: (r as any).commitmentDays ?? 0,
+          bloodPact: (r as any).bloodPact ?? false,
         })));
       }
     } catch { /* ignore */ }
@@ -496,6 +501,16 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
             >
               Slip
             </button>
+            {reviewApiKey && !ar.bloodPact && (
+              <button
+                onClick={() => { setExtendId(ar.id); setExtendCommitment(ar.commitment ?? "none"); }}
+                className="text-xs px-2 py-1 rounded transition-all"
+                style={{ background: "rgba(99,102,241,0.06)", color: "rgba(99,102,241,0.5)", border: "1px solid rgba(99,102,241,0.15)", cursor: 'pointer' }}
+                title="Extend vow duration"
+              >
+                Extend
+              </button>
+            )}
             {reviewApiKey && (
               <button
                 onClick={() => setDeleteConfirmId(ar.id)}
@@ -683,6 +698,76 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
           </div>
         </div>
       )}
+
+      {/* Extend Vow Modal */}
+      {extendId && (() => {
+        const vowToExtend = antiRituals.find(r => r.id === extendId);
+        if (!vowToExtend) return null;
+        const currentDays = vowToExtend.commitmentDays ?? 0;
+        const selectedTier = COMMITMENT_TIERS_VOW.find(t => t.id === extendCommitment);
+        const canExtend = selectedTier && selectedTier.days > currentDays;
+        const closeExtend = () => { setExtendId(null); setExtendCommitment("none"); };
+
+        return (
+          <ModalPortal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={closeExtend}>
+            <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
+              {/* NPC Portrait */}
+              <div className="hidden md:flex flex-col" style={{ position: "absolute", right: -185, top: "50%", transform: "translateY(-50%)", width: 200, overflow: "visible" }}>
+                <img src="/images/portraits/npc-vael.png?v=3" alt="Vael the Silent" width={256} height={384} style={{ imageRendering: "pixelated", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 18px rgba(99,102,241,0.5))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
+                <div style={{ background: "rgba(8,8,20,0.92)", border: "1px solid rgba(99,102,241,0.4)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "10px 12px" }}>
+                  <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#a5b4fc", lineHeight: 1.5, margin: 0 }}>&ldquo;Your resolve deepens. The vow grows stronger.&rdquo;</p>
+                </div>
+              </div>
+              <div style={{ maxWidth: 480, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 0 40px rgba(99,102,241,0.07)" }}>
+                <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(99,102,241,0.12)" }}>
+                  <div>
+                    <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Extend Vow: {vowToExtend.title}</h3>
+                    <p className="text-xs" style={{ color: "rgba(165,180,252,0.4)" }}>Current: {COMMITMENT_TIERS_VOW.find(t => t.id === (vowToExtend.commitment ?? "none"))?.label ?? "None"} ({currentDays}d)</p>
+                  </div>
+                  <button onClick={closeExtend} style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "none", color: "rgba(255,255,255,0.45)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>×</button>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div>
+                    <label className="text-xs font-semibold mb-2 block" style={{ color: "rgba(165,180,252,0.55)" }}>New Aetherbond (must be longer)</label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {COMMITMENT_TIERS_VOW.filter(tier => tier.days > currentDays).map(tier => (
+                        <button key={tier.id} onClick={() => setExtendCommitment(tier.id)} className="text-left p-2 rounded-lg" style={{ background: extendCommitment === tier.id ? `${tier.color}1a` : "rgba(0,0,0,0.2)", border: `1px solid ${extendCommitment === tier.id ? tier.color : "rgba(255,255,255,0.07)"}`, boxShadow: extendCommitment === tier.id ? `0 0 12px ${tier.color}55` : "none" }}>
+                          <div className="text-xs font-bold" style={{ color: extendCommitment === tier.id ? tier.color : "rgba(255,255,255,0.5)" }}>{tier.label}</div>
+                          <div style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.28)", marginTop: 2 }}>{tier.days}d</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button onClick={closeExtend} className="text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(165,180,252,0.35)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+                    <button
+                      disabled={!canExtend}
+                      onClick={async () => {
+                        if (!canExtend || !selectedTier) return;
+                        try {
+                          await fetch(`/api/rituals/${extendId}/extend`, {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                            body: JSON.stringify({ newCommitment: selectedTier.id, newCommitmentDays: selectedTier.days }),
+                          });
+                          closeExtend();
+                          loadAntiRituals();
+                        } catch { /* ignore */ }
+                      }}
+                      className="flex-1 text-sm py-2.5 rounded-xl font-bold"
+                      style={{ background: canExtend ? "rgba(67,56,202,0.32)" : "rgba(255,255,255,0.04)", color: canExtend ? "#a5b4fc" : "rgba(255,255,255,0.2)", border: `1px solid ${canExtend ? "rgba(99,102,241,0.6)" : "rgba(255,255,255,0.08)"}`, cursor: canExtend ? "pointer" : "not-allowed" }}
+                    >
+                      Extend Vow
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          </ModalPortal>
+        );
+      })()}
     </div>
   );
 }

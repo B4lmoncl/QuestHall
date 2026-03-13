@@ -212,6 +212,13 @@ export interface Ritual {
   completedDates?: string[];
   lastCompleted: string | null;
   playerId: string;
+  isAntiRitual?: boolean;
+  commitment?: string;
+  commitmentDays?: number;
+  bloodPact?: boolean;
+  cleanDays?: number;
+  lastViolated?: string | null;
+  missedDays?: number;
 }
 
 export interface Habit {
@@ -278,6 +285,9 @@ export interface AntiRitual {
   createdAt: string;
   longestStreak?: number;
   completedDates?: string[];
+  commitment?: string;
+  commitmentDays?: number;
+  bloodPact?: boolean;
 }
 
 export interface Suggestion {
