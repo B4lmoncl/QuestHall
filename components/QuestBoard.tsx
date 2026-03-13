@@ -333,12 +333,13 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   const [newVowCommitment, setNewVowCommitment] = useState("none");
   const [newVowBloodPact, setNewVowBloodPact] = useState(false);
   const [newVowFrequency, setNewVowFrequency] = useState("daily");
+  const [vowNameError, setVowNameError] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!createOpen) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setCreateOpen(false); setNewTitle(""); setNewVowCommitment("none"); setNewVowBloodPact(false); }
+      if (e.key === "Escape") { setCreateOpen(false); setNewTitle(""); setVowNameError(false); setNewVowCommitment("none"); setNewVowBloodPact(false); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -376,7 +377,8 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   };
 
   const createAntiRitual = async () => {
-    if (!newTitle.trim() || !reviewApiKey || !playerName) return;
+    if (!newTitle.trim()) { setVowNameError(true); return; }
+    if (!reviewApiKey || !playerName) return;
     try {
       const tier = COMMITMENT_TIERS_VOW.find(t => t.id === newVowCommitment)!;
       await fetch("/api/rituals", {
@@ -395,6 +397,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         }),
       });
       setNewTitle("");
+      setVowNameError(false);
       setNewVowCommitment("none");
       setNewVowBloodPact(false);
       setCreateOpen(false);
@@ -548,7 +551,8 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
               <div className="p-5 space-y-4" style={{ paddingBottom: "1.75rem" }}>
                 <div>
                   <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(165,180,252,0.55)" }}>What are you vowing to avoid?</label>
-                  <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="e.g. No social media before noon..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
+                  <input value={newTitle} onChange={e => { setNewTitle(e.target.value); if (vowNameError) setVowNameError(false); }} placeholder="e.g. No social media before noon..." className="w-full text-sm px-3 py-2.5 rounded-lg" style={{ background: "rgba(0,0,0,0.35)", border: vowNameError ? "1px solid #ef4444" : "1px solid rgba(99,102,241,0.3)", color: "#e2e8f0", outline: "none" }} onKeyDown={e => e.key === "Enter" && createAntiRitual()} autoFocus />
+                  {vowNameError && <p style={{ color: "#ef4444", fontSize: "0.7rem", marginTop: 4 }}>Please enter a vow name</p>}
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
