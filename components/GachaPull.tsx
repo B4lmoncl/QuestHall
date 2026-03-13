@@ -39,14 +39,14 @@ function useScreenShake(active: boolean) {
 // ─── Charge Orb with 12 inward energy particles (neutral color) ─────────────
 function ChargeOrb({ durationMs }: { durationMs: number }) {
   const particles = useMemo(() =>
-    Array.from({ length: 36 }, (_, i) => {
+    Array.from({ length: 48 }, (_, i) => {
       const angle = Math.random() * 360;
-      const startDist = 200 + Math.random() * 100;
+      const startDist = 180 + Math.random() * 140;
       const size = 2 + Math.random() * 4;
-      // Earlier particles have more delay, later ones less — accelerating spawn
-      const wave = i / 36;
-      const delay = (1 - wave) * 2.5 + Math.random() * 0.5;
-      const dur = 1.2 + Math.random() * 0.8;
+      
+      const phase = i < 16 ? 0 : i < 32 ? 1 : 2;
+      const baseDelay = phase === 0 ? (i / 16) * 2.0 : phase === 1 ? 1.5 + ((i - 16) / 16) * 1.5 : 2.5 + ((i - 32) / 16) * 1.0; const delay = baseDelay + Math.random() * 0.4;
+      const dur = phase === 0 ? 1.5 + Math.random() * 0.5 : phase === 1 ? 1.0 + Math.random() * 0.4 : 0.6 + Math.random() * 0.3;
       return { angle, startDist, size, delay, dur, id: i };
     }), []);
 
