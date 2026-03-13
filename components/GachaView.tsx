@@ -100,18 +100,69 @@ function BannerPreviewCard({
   const glowColor = isFeatured ? "rgba(129,140,248,0.15)" : "rgba(167,139,250,0.12)";
   const portraitSrc = BANNER_PORTRAITS[banner.type];
 
+  // Rune symbols for Thalos (standard banner)
+  const runeSymbols = ["ᚱ", "ᛏ", "ᚨ", "ᛉ", "ᚹ", "ᛗ", "ᚲ", "ᛊ"];
+  const runePositions = ["8%,12%", "75%,8%", "15%,45%", "82%,52%", "5%,78%", "70%,82%", "45%,6%", "55%,88%"];
+
+  // Nebula blobs for Nyxara (featured banner)
+  const nebulaPositions = [
+    { left: "10%", top: "15%", size: 60, color: "rgba(129,140,248,0.15)" },
+    { left: "65%", top: "5%", size: 80, color: "rgba(168,85,247,0.12)" },
+    { left: "30%", top: "70%", size: 50, color: "rgba(129,140,248,0.1)" },
+    { left: "80%", top: "65%", size: 70, color: "rgba(192,132,252,0.1)" },
+    { left: "5%", top: "50%", size: 45, color: "rgba(139,92,246,0.08)" },
+  ];
+
   return (
     <button
       onClick={onClick}
       className="flex-1 min-w-[280px] rounded-2xl p-6 text-left transition-all duration-300 group relative overflow-hidden"
       style={{
         background: `linear-gradient(160deg, ${isFeatured ? "#16123a" : "#1c1328"} 0%, #0c0c18 70%, ${isFeatured ? "#0e0e2a" : "#120e1e"} 100%)`,
-        border: `1px solid ${isFeatured ? "rgba(129,140,248,0.2)" : "rgba(167,139,250,0.15)"}`,
-        boxShadow: `0 0 50px ${glowColor}, inset 0 1px 0 rgba(255,255,255,0.03)`,
+        border: `1px solid ${isFeatured ? "rgba(129,140,248,0.35)" : "rgba(167,139,250,0.3)"}`,
+        boxShadow: `0 0 50px ${glowColor}, 0 0 20px ${isFeatured ? "rgba(129,140,248,0.08)" : "rgba(167,139,250,0.06)"}, inset 0 1px 0 rgba(255,255,255,0.03)`,
         cursor: "pointer",
       }}
     >
-      {/* Subtle animated glow overlay */}
+      {/* Animated border glow */}
+      <div className="absolute inset-0 rounded-2xl pointer-events-none" style={{
+        boxShadow: `inset 0 0 30px ${isFeatured ? "rgba(129,140,248,0.06)" : "rgba(167,139,250,0.05)"}, 0 0 40px ${isFeatured ? "rgba(129,140,248,0.1)" : "rgba(167,139,250,0.08)"}`,
+        animation: "banner-glow-pulse 4s ease-in-out infinite",
+      }} />
+
+      {/* Floating particles — Runes for Standard, Nebula for Featured */}
+      {!isFeatured && runePositions.map((pos, i) => (
+        <span key={`rune-${i}`} style={{
+          position: "absolute",
+          left: pos.split(",")[0],
+          top: pos.split(",")[1],
+          fontSize: i % 2 === 0 ? 14 : 11,
+          opacity: 0.2,
+          animation: `rune-drift-${i % 3} ${3 + i * 0.5}s ease-in-out infinite`,
+          animationDelay: `${i * 0.4}s`,
+          pointerEvents: "none",
+          color: "#a78bfa",
+          zIndex: 0,
+          textShadow: "0 0 6px rgba(167,139,250,0.4)",
+        }}>{runeSymbols[i]}</span>
+      ))}
+      {isFeatured && nebulaPositions.map((blob, i) => (
+        <div key={`nebula-${i}`} style={{
+          position: "absolute",
+          left: blob.left,
+          top: blob.top,
+          width: blob.size,
+          height: blob.size,
+          borderRadius: "50%",
+          background: `radial-gradient(circle, ${blob.color}, transparent 70%)`,
+          animation: `nebula-pulse-${i % 3} ${4 + i * 0.7}s ease-in-out infinite`,
+          animationDelay: `${i * 0.6}s`,
+          pointerEvents: "none",
+          zIndex: 0,
+        }} />
+      ))}
+
+      {/* Subtle animated glow overlay on hover */}
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
         background: `radial-gradient(ellipse at 50% 30%, ${glowColor} 0%, transparent 70%)`,
         pointerEvents: "none",
