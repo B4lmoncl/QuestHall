@@ -478,7 +478,7 @@ export function WandererRest({
                         )}
                         <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
                         <div className="flex items-center gap-3 mt-3">
-                          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>⭐ +{currentQuest.rewards?.xp ?? 0} XP</span>
+                          <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>+{currentQuest.rewards?.xp ?? 0} XP</span>
                           <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0}g</span>
                           {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && (
                             <div className="flex items-center gap-2 ml-auto">
@@ -556,7 +556,7 @@ export function WandererRest({
                     <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
                       <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>🏆 Chain Reward</p>
+                        <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>Chain Reward</p>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
                         <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
                       </div>

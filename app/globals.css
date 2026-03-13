@@ -432,3 +432,8 @@ body {
 .shop-buy-btn:disabled {
   cursor: not-allowed;
 }
+
+/* Fog speed boost on hover */
+button:hover svg[style*='fogDrift'] {
+  animation-duration: 3s !important;
+}

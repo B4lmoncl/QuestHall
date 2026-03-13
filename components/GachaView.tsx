@@ -358,16 +358,16 @@ function BannerPullModal({
         </svg>
         <svg style={{
           position: "absolute", left: "-50%", top: "-20%", width: "200%", height: "140%",
-          opacity: 0.45, zIndex: 0, pointerEvents: "none",
-          animation: "fogDrift1 12s ease-in-out infinite alternate",
+          opacity: 0.55, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift1 6s ease-in-out infinite alternate",
           willChange: "transform",
         }}>
           <rect width="100%" height="100%" filter={`url(#${btnFogId}-a)`} />
         </svg>
         <svg style={{
           position: "absolute", left: "-30%", top: "-10%", width: "180%", height: "120%",
-          opacity: 0.3, zIndex: 0, pointerEvents: "none",
-          animation: "fogDrift2 16s ease-in-out infinite alternate-reverse",
+          opacity: 0.4, zIndex: 0, pointerEvents: "none",
+          animation: "fogDrift2 8s ease-in-out infinite alternate-reverse",
           willChange: "transform",
         }}>
           <rect width="100%" height="100%" filter={`url(#${btnFogId}-b)`} />
@@ -400,7 +400,7 @@ function BannerPullModal({
             pointerEvents: "none",
             zIndex: 0,
             opacity: 0, animation: `${runeAnimations[i % runeAnimations.length]} ${4 + i * 0.6}s ease-in-out infinite both`,
-            animationDelay: `${i * 0.08}s`,
+            animationDelay: `${i * 0.02}s`,
           }}>{runeSymbols[i]}</span>
         ))}
 
@@ -464,12 +464,12 @@ function BannerPullModal({
               <p className="text-sm font-mono font-bold" style={{ color: ci.color }}>{banner.costSingle} {ci.label}</p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Your balance</p>
+              <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Your Balance</p>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-mono font-bold" style={{ color: balance > 0 ? ci.color : "rgba(255,255,255,0.2)" }}>{balance}</p>
                 <button
                   onClick={() => setShowInfo(v => !v)}
-                  className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                   style={{
                     color: showInfo ? "#fff" : "rgba(255,255,255,0.45)",
                     background: showInfo ? accentColor + "40" : "rgba(255,255,255,0.06)",
