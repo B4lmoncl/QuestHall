@@ -96,8 +96,8 @@ body {
   100% { transform: translate(33%, -1%) scale(1.01); }
 }
 @keyframes fogDrift2 {
-  0%   { transform: translate(0%, 0%) scale(1.01); }
-  100% { transform: translate(25%, 1%) scale(0.99); }
+  0%   { transform: translate(0%, 1%) scale(1.01); }
+  100% { transform: translate(25%, -1%) scale(0.99); }
 }
 @keyframes banner-glow-pulse {
   0%, 100% { opacity: 0.4; }
