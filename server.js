@@ -5414,6 +5414,30 @@ app.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
   res.json({ ok: true, ritual, newAchievements, lootDrop, milestoneDrop });
 });
 
+// POST /api/rituals/:id/violate — mark vow as violated / slipped [auth]
+app.post('/api/rituals/:id/violate', requireApiKey, (req, res) => {
+  const { playerId } = req.body;
+  const ritual = rituals.find(r => r.id === req.params.id);
+  if (!ritual) return res.status(404).json({ error: 'Ritual not found' });
+  if (!playerId) return res.status(400).json({ error: 'playerId is required' });
+
+  // Track longest streak before resetting
+  if (!ritual.longestStreak || ritual.streak > ritual.longestStreak) {
+    ritual.longestStreak = ritual.streak;
+  }
+
+  // Reset streak to 0
+  ritual.streak = 0;
+  if (ritual.isAntiRitual) {
+    ritual.cleanDays = 0;
+  }
+  ritual.lastViolated = todayStr();
+  ritual.missedDays = (ritual.missedDays || 0) + 1;
+
+  saveRituals();
+  res.json({ ok: true, ritual });
+});
+
 // DELETE /api/rituals/:id [auth]
 app.delete('/api/rituals/:id', requireApiKey, (req, res) => {
   const idx = rituals.findIndex(r => r.id === req.params.id);
