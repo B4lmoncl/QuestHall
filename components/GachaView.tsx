@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useId } from "react";
 import type { User, GachaPullResult, GachaBanner, GachaPityInfo } from "@/app/types";
 import GachaPull, { RARITY_CONFIG } from "./GachaPull";
 import { ModalOverlay } from "./ModalPortal";
@@ -109,7 +109,8 @@ function BannerPreviewCard({
 
   // Nebula wisps for Nyxara (featured banner) — elongated fog shapes
   // SVG fog filter IDs (unique per banner instance)
-  const fogId = useRef(`fog-${Math.random().toString(36).slice(2, 8)}`).current;
+  const reactId = useId();
+  const fogId = `fog-${reactId.replace(/:/g, "")}`;
 
   return (
     <button
