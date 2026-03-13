@@ -376,20 +376,20 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
 
       {/* Summary after all items revealed */}
       {phase === "summary" && (
-        <div className="flex flex-col items-center gap-4 w-full max-w-2xl">
-          <h2 className="text-base font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <div className="flex flex-col items-center gap-5 w-full max-w-3xl">
+          <h2 className="text-lg font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
             10× Arcane Pull — Zusammenfassung
           </h2>
 
           {/* Card grid */}
-          <div className="grid grid-cols-5 gap-3 w-full">
+          <div className="grid grid-cols-5 gap-4 w-full max-w-3xl">
             {shuffledResults.map((result, i) => {
               const cfg = RARITY_CONFIG[result.item.rarity] || RARITY_CONFIG.common;
               const isLeg = result.item.rarity === "legendary";
               return (
                 <div
                   key={i}
-                  className="relative flex flex-col items-center gap-1 rounded-xl p-2"
+                  className="relative flex flex-col items-center gap-1.5 rounded-xl p-3 min-h-[120px] justify-center"
                   style={{
                     background: `linear-gradient(135deg, #1a1a1a 0%, ${cfg.bg} 100%)`,
                     border: `1px solid ${cfg.border}`,
@@ -398,22 +398,22 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
                     opacity: 0,
                   }}
                 >
-                  <span className="text-2xl sm:text-3xl" style={{
+                  <span className="text-3xl sm:text-4xl" style={{
                     filter: isLeg ? `drop-shadow(0 0 8px ${cfg.glow})` : undefined,
                   }}>
                     {result.item.emoji}
                   </span>
-                  <p className="text-[9px] sm:text-xs font-semibold text-center leading-tight" style={{ color: cfg.color }}>
+                  <p className="text-xs sm:text-sm font-semibold text-center leading-tight" style={{ color: cfg.color }}>
                     {result.item.name}
                   </p>
-                  <span className="text-[8px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.3)" }}>
                     {cfg.label}
                   </span>
                   {result.isDuplicate && (
-                    <span className="text-[7px]" style={{ color: "#a78bfa" }}>DUP +{result.duplicateRefund}×</span>
+                    <span className="text-[10px] font-mono" style={{ color: "#a78bfa" }}>DUP +{result.duplicateRefund}×</span>
                   )}
                   {result.isNew && (
-                    <div className="absolute -top-1 -right-1 text-[7px] font-bold px-1 rounded-full"
+                    <div className="absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
                       style={{ background: "#22c55e", color: "#000" }}>
                       NEU
                     </div>
@@ -430,7 +430,7 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
               if (count === 0) return null;
               const cfg = RARITY_CONFIG[r];
               return (
-                <span key={r} className="text-xs font-mono px-2 py-0.5 rounded" style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                <span key={r} className="text-sm font-mono px-3 py-1 rounded" style={{ color: cfg.color, background: cfg.bg, border: `1px solid ${cfg.border}` }}>
                   {cfg.label}: {count}
                 </span>
               );
