@@ -117,7 +117,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
 
 const rarityColors: Record<string, string> = { common: "#c4ccd8", uncommon: "#4ade80", rare: "#60a5fa", epic: "#c084fc", legendary: "#fbbf24" };
 const rarityRgb: Record<string, string> = { common: "196,204,216", uncommon: "74,222,128", rare: "96,165,250", epic: "192,132,252", legendary: "251,191,36" };
-const rarityStars: Record<string, string> = { common: "x", uncommon: "xx", rare: "xxx", epic: "xxxx", legendary: "xxxxx" };
+const rarityStars: Record<string, string> = { common: "★", uncommon: "★★", rare: "★★★", epic: "★★★★", legendary: "★★★★★" };
 
 export function WandererRest({
   npcBoardFilter, setNpcBoardFilter,
@@ -322,7 +322,7 @@ export function WandererRest({
         >
           {/* Star field */}
           {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%","50%,90%","30%,10%","60%,50%","10%,45%","90%,30%"].map((pos, i) => (
-            <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.2 + (i % 4) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>x</span>
+            <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.2 + (i % 4) * 0.1, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
           ))}
           <div className="relative flex items-center gap-6 px-8 py-5" style={{ zIndex: 1 }}>
             {/* Portal arch / gate icon */}
@@ -370,7 +370,7 @@ export function WandererRest({
       {selectedNpc && (() => {
         const npc = selectedNpc;
         const rarityColorsModal: Record<string, string> = { common: "#c4ccd8", uncommon: "#4ade80", rare: "#60a5fa", epic: "#c084fc", legendary: "#fbbf24" };
-        const rarityStarsModal: Record<string, string> = { common: "x Common", uncommon: "xx Uncommon", rare: "xxx Rare", epic: "xxxx Epic", legendary: "xxxxx Legendary" };
+        const rarityStarsModal: Record<string, string> = { common: "★ Common", uncommon: "★★ Uncommon", rare: "★★★ Rare", epic: "★★★★ Epic", legendary: "★★★★★ Legendary" };
         const rc = rarityColorsModal[npc.rarity] ?? "#9ca3af";
         const allDone = npc.questChain.length > 0 && npc.questChain.every(q => q.status === "completed");
         const currentQuest = npc.questChain.find(q => q.status === "open" || q.status === "in_progress" || q.status === "claimed") ?? null;
@@ -394,7 +394,7 @@ export function WandererRest({
               {isStarweaver && (
                 <>
                   {["8%,15%","15%,70%","25%,30%","35%,80%","45%,20%","55%,65%","65%,35%","75%,75%","85%,25%","92%,55%"].map((pos, i) => (
-                    <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.15 + (i % 3) * 0.08, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>x</span>
+                    <span key={i} style={{ position: "absolute", left: pos.split(",")[0], top: pos.split(",")[1], fontSize: i % 3 === 0 ? 10 : 8, opacity: 0.15 + (i % 3) * 0.08, animation: `star-float-${i % 3} ${2 + i * 0.3}s ease-in-out infinite`, pointerEvents: "none", color: "#c4b5fd", zIndex: 0 }}>✦</span>
                   ))}
                 </>
               )}
