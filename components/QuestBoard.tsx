@@ -354,7 +354,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
         const all = await r.json() as (Ritual & { isAntiRitual?: boolean; cleanDays?: number; lastViolated?: string | null })[];
         setAntiRituals(all.filter(r => r.isAntiRitual).map(r => ({
           id: r.id, title: r.title, isAntiRitual: true,
-          cleanDays: r.cleanDays ?? r.streak ?? 0,
+          cleanDays: r.streak ?? r.cleanDays ?? 0,
           lastViolated: r.lastViolated ?? null,
           lastCompleted: r.lastCompleted ?? null,
           playerId: r.playerId,
