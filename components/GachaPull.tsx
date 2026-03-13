@@ -39,12 +39,12 @@ function useScreenShake(active: boolean) {
 // ─── Charge Orb with 12 inward energy particles (neutral color) ─────────────
 function ChargeOrb({ durationMs }: { durationMs: number }) {
   const particles = useMemo(() =>
-    Array.from({ length: 24 }, (_, i) => {
-      const angle = (i / 24) * 360 + (Math.random() * 20 - 10);
+    Array.from({ length: 36 }, (_, i) => {
+      const angle = Math.random() * 360;
       const startDist = 200 + Math.random() * 100;
       const size = 2 + Math.random() * 4;
       // Earlier particles have more delay, later ones less — accelerating spawn
-      const wave = i / 24;
+      const wave = i / 36;
       const delay = (1 - wave) * 2.5 + Math.random() * 0.5;
       const dur = 1.2 + Math.random() * 0.8;
       return { angle, startDist, size, delay, dur, id: i };
@@ -218,8 +218,21 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
+  // ESC or click-outside during reveal → collect and close
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && phase === "reveal") onDone();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [phase, onDone]);
+
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.85)" }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center"
+      style={{ background: "rgba(0,0,0,0.85)" }}
+      onClick={() => { if (phase === "reveal") onDone(); }}
+    >
       {/* Skip button */}
       <button
         onClick={onDone}
@@ -247,6 +260,7 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
         <div
           className="relative flex flex-col items-center gap-4"
           style={{ animation: "gacha-reveal-card 0.5s ease-out forwards" }}
+          onClick={(e) => e.stopPropagation()}
         >
           <BurstParticles rarity={rarity} count={isLegendary ? 30 : 12} />
           <ItemRevealCard result={result} />
@@ -277,7 +291,7 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
 // ─── Multi Pull (10×) — Sequential HSR-style reveals ────────────────────────
 // 8s charge, flash shows BEST rarity, then sequential item reveals
 function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDone: () => void; onCollect?: (item: string) => void }) {
-  const [phase, setPhase] = useState<"charge" | "flash" | "sequential" | "summary">("charge");
+  const [phase, setPhase] = useState<"charge" | "flash" | "sequential" | "black" | "summary">("charge");
   const [currentIdx, setCurrentIdx] = useState(0);
 
   // Fisher-Yates shuffle order
@@ -304,29 +318,39 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
-  // ESC = skip to summary (take all)
+  // ESC = skip to summary (sequential), or close (summary)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         if (phase === "sequential") setPhase("summary");
+        else if (phase === "summary") onDone();
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [phase]);
+  }, [phase, onDone]);
 
   const handleNehmen = useCallback(() => {
-    if (currentIdx < shuffledResults.length - 1) {
-      setCurrentIdx(prev => prev + 1);
+    const nextIdx = currentIdx + 3;
+    if (nextIdx < shuffledResults.length) {
+      setCurrentIdx(nextIdx);
     } else {
-      setPhase("summary");
+      setPhase("black");
+      setTimeout(() => setPhase("summary"), 500);
     }
   }, [currentIdx, shuffledResults.length]);
 
   const currentResult = shuffledResults[currentIdx];
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.9)" }} onClick={() => { if (phase === "sequential") handleNehmen(); }}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      style={{ background: "rgba(0,0,0,0.9)" }}
+      onClick={() => {
+        if (phase === "sequential") handleNehmen();
+        else if (phase === "summary") onDone();
+      }}
+    >
       {/* Skip button */}
       <button
         onClick={onDone}
@@ -385,9 +409,12 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
         </div>
       )}
 
+      {/* Brief black screen before summary */}
+      {phase === "black" && <div className="absolute inset-0" style={{ background: "#000" }} />}
+
       {/* Summary after all items revealed */}
       {phase === "summary" && (
-        <div className="flex flex-col items-center gap-5 w-full max-w-3xl">
+        <div className="flex flex-col items-center gap-5 w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
           <h2 className="text-lg font-bold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.5)" }}>
             10× Arcane Pull — Zusammenfassung
           </h2>
