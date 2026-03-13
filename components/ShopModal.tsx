@@ -4,6 +4,7 @@ import type { ShopItem } from "@/app/types";
 import { useModalBehavior } from "./ModalPortal";
 import shopData from "../public/data/shopItems.json";
 
+const ITEMS_CLIENT: ShopItem[] = shopData.items as ShopItem[];
 const GEAR_TIERS_CLIENT = shopData.gearTiers;
 
 export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy, onGearBuy }: {
@@ -16,13 +17,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
   onGearBuy?: (userId: string, gearId: string) => void;
 }) {
   useModalBehavior(true, onClose);
-  const ITEMS: ShopItem[] = [
-    { id: "gaming_1h",   name: "1h Gaming",    cost: 100, icon: "x", desc: "1 hour of guilt-free gaming" },
-    { id: "snack_break", name: "Snack Break",   cost: 25,  icon: "x", desc: "Treat yourself to a snack" },
-    { id: "day_off",     name: "Day Off Quest", cost: 500, icon: "x", desc: "Skip one day of recurring quests" },
-    { id: "movie_night", name: "Movie Night",   cost: 150, icon: "x", desc: "Evening off for a movie" },
-    { id: "sleep_in",    name: "Sleep In",      cost: 75,  icon: "x", desc: "Extra hour of sleep, guilt-free" },
-  ];
+  const ITEMS = ITEMS_CLIENT;
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -48,7 +43,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
               className="flex items-center gap-3 p-3 rounded-xl"
               style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.07)" }}
             >
-              <span className="text-xl flex-shrink-0">{item.icon}</span>
+              <img src={item.icon} alt={item.name} className="w-6 h-6 flex-shrink-0" style={{ imageRendering: "auto" }} />
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold" style={{ color: "#f0f0f0" }}>{item.name}</p>
                 <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>
@@ -88,7 +83,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                       opacity: owned || canBuy || gear.tier === currentTier + 1 ? 1 : 0.4,
                     }}
                   >
-                    <span className="text-xl flex-shrink-0">{gear.icon}</span>
+                    <img src={gear.icon} alt={gear.name} className="w-6 h-6 flex-shrink-0" style={{ imageRendering: "auto" }} />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold" style={{ color: owned ? "#818cf8" : "#f0f0f0" }}>
                         {gear.name} {owned ? "x" : ""}
