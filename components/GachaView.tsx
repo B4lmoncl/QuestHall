@@ -147,39 +147,41 @@ function BannerPreviewCard({
       ))}
       {isFeatured && (
         <div className="absolute inset-0 overflow-hidden rounded-2xl pointer-events-none" style={{ zIndex: 0 }}>
-          {/* Hidden SVG filter definitions */}
+          {/* Static SVG noise texture rendered once as background-image */}
           <svg width="0" height="0" style={{ position: "absolute" }}>
             <defs>
-              <filter id={`${fogId}-a`} x="-20%" y="-20%" width="140%" height="140%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.006 0.009" numOctaves={3} seed={42} stitchTiles="stitch" result="noise" />
-                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.6 0" />
-                <feGaussianBlur stdDeviation="6" />
+              <filter id={`${fogId}-a`} x="0%" y="0%" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves={2} seed={42} stitchTiles="stitch" result="noise" />
+                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.35  0 0 0 0 0.18  0 0 0 0 0.55  0 0 0 0.55 0" />
               </filter>
-              <filter id={`${fogId}-b`} x="-20%" y="-20%" width="140%" height="140%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.008 0.005" numOctaves={2} seed={137} stitchTiles="stitch" result="noise" />
-                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.65  0 0 0 0.5 0" />
-                <feGaussianBlur stdDeviation="10" />
+              <filter id={`${fogId}-b`} x="0%" y="0%" width="100%" height="100%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.012 0.006" numOctaves={2} seed={137} stitchTiles="stitch" result="noise" />
+                <feColorMatrix in="noise" type="matrix" values="0 0 0 0 0.28  0 0 0 0 0.15  0 0 0 0 0.6  0 0 0 0.45 0" />
               </filter>
             </defs>
           </svg>
-          {/* Layer 1: Fast drift, bottom-heavy */}
-          <div style={{
-            position: "absolute", left: "-20%", right: "-20%", bottom: "-10%", height: "80%",
+          {/* Layer 1: GPU-accelerated transform only (filter is static) */}
+          <svg style={{
+            position: "absolute", left: "-15%", bottom: "-10%", width: "130%", height: "75%",
             opacity: 0.3,
-            filter: `url(#${fogId}-a)`,
-            maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
-            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)",
+            maskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
+            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
             animation: "fogDrift1 12s ease-in-out infinite alternate",
-          }} />
-          {/* Layer 2: Counter drift, edges */}
-          <div style={{
-            position: "absolute", left: "-20%", right: "-20%", bottom: "-5%", height: "70%",
+            willChange: "transform",
+          }}>
+            <rect width="100%" height="100%" filter={`url(#${fogId}-a)`} />
+          </svg>
+          {/* Layer 2 */}
+          <svg style={{
+            position: "absolute", left: "-10%", bottom: "-5%", width: "120%", height: "65%",
             opacity: 0.2,
-            filter: `url(#${fogId}-b)`,
-            maskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, transparent 85%)",
-            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 40%, transparent 85%)",
+            maskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
+            WebkitMaskImage: "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.2) 40%, transparent 85%)",
             animation: "fogDrift2 15s ease-in-out infinite alternate-reverse",
-          }} />
+            willChange: "transform",
+          }}>
+            <rect width="100%" height="100%" filter={`url(#${fogId}-b)`} />
+          </svg>
         </div>
       )}
 
