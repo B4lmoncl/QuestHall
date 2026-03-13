@@ -1,6 +1,7 @@
 "use client";
 
 import type { ShopItem } from "@/app/types";
+import { useModalBehavior } from "./ModalPortal";
 import shopData from "../public/data/shopItems.json";
 
 const GEAR_TIERS_CLIENT = shopData.gearTiers;
@@ -14,6 +15,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
   onBuy: (userId: string, itemId: string) => void;
   onGearBuy?: (userId: string, gearId: string) => void;
 }) {
+  useModalBehavior(true, onClose);
   const ITEMS: ShopItem[] = [
     { id: "gaming_1h",   name: "1h Gaming",    cost: 100, icon: "x", desc: "1 hour of guilt-free gaming" },
     { id: "snack_break", name: "Snack Break",   cost: 25,  icon: "x", desc: "Treat yourself to a snack" },
@@ -34,12 +36,12 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
       >
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>⚒ Forge Shop</h3>
+            <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>x Forge Shop</h3>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{userName} · x {gold} gold</p>
           </div>
           <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)" }}>✕</button>
         </div>
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-96 overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
           {ITEMS.map(item => (
             <div
               key={item.id}
@@ -70,7 +72,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
           {onGearBuy && (
             <>
               <div className="pt-2 pb-1">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.7)" }}>⚒ Workshop Tools</p>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.7)" }}>x Workshop Tools</p>
               </div>
               {GEAR_TIERS_CLIENT.filter(g => g.tier > 0).map(gear => {
                 const currentTier = GEAR_TIERS_CLIENT.find(g => g.id === (currentGear || "worn"))?.tier ?? 0;

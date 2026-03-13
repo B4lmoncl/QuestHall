@@ -1060,7 +1060,7 @@ export default function Dashboard() {
               </p>
             </div>
           )}
-          {/* TODO: replace 🔥⚔️✅🪙 with pixel art icons once ui-forge/ui-sword/ui-check/reward-gold assets exist */}
+          {/* TODO: replace icon placeholders with pixel art once ui-forge/ui-sword/ui-check/reward-gold assets exist */}
           <div data-feedback-id="stats.forge-temp">
           <StatBar
             label="Forge Streak"
@@ -1144,12 +1144,12 @@ export default function Dashboard() {
                 {/* Currency bar — prominent like HSR/Genshin */}
                 <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   {[
-                    { emoji: "🪙", key: "gold" as const, value: Number(loggedInUser?.currencies?.gold ?? animGold), color: "#f59e0b" },
-                    { emoji: "⭐", key: "stardust" as const, value: Number(loggedInUser?.currencies?.stardust ?? 0), color: "#818cf8" },
-                    { emoji: "💎", key: "runensplitter" as const, value: Number(loggedInUser?.currencies?.runensplitter ?? 0), color: "#a78bfa" },
-                    { emoji: "🔥", key: "essenz" as const, value: Number(loggedInUser?.currencies?.essenz ?? 0), color: "#ef4444" },
-                    { emoji: "🤝", key: "gildentaler" as const, value: Number(loggedInUser?.currencies?.gildentaler ?? 0), color: "#10b981" },
-                    { emoji: "🌙", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc" },
+                    { emoji: "x", key: "gold" as const, value: Number(loggedInUser?.currencies?.gold ?? animGold), color: "#f59e0b" },
+                    { emoji: "x", key: "stardust" as const, value: Number(loggedInUser?.currencies?.stardust ?? 0), color: "#818cf8" },
+                    { emoji: "x", key: "runensplitter" as const, value: Number(loggedInUser?.currencies?.runensplitter ?? 0), color: "#a78bfa" },
+                    { emoji: "x", key: "essenz" as const, value: Number(loggedInUser?.currencies?.essenz ?? 0), color: "#ef4444" },
+                    { emoji: "x", key: "gildentaler" as const, value: Number(loggedInUser?.currencies?.gildentaler ?? 0), color: "#10b981" },
+                    { emoji: "x", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
                       <span style={{ fontSize: 18 }}>{c.emoji}</span>
@@ -1226,12 +1226,12 @@ export default function Dashboard() {
               </div>
               <div className="space-y-2">
                 {[
-                  { icon: "🪙", name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Primary currency. Earned through quests." },
-                  { icon: "⭐", name: "Stardust", key: "stardust" as const, value: loggedInUser?.currencies?.stardust ?? 0, color: "#818cf8", desc: "Premium currency. Level-ups & achievements." },
-                  { icon: "🔥", name: "Essence", key: "essenz" as const, value: loggedInUser?.currencies?.essenz ?? 0, color: "#ef4444", desc: "Streak currency. Daily consistency." },
-                  { icon: "💎", name: "Rune Shards", key: "runensplitter" as const, value: loggedInUser?.currencies?.runensplitter ?? 0, color: "#a78bfa", desc: "Gacha pulls & quest rewards." },
-                  { icon: "🤝", name: "Guild Coins", key: "gildentaler" as const, value: loggedInUser?.currencies?.gildentaler ?? 0, color: "#10b981", desc: "Social & co-op quests." },
-                  { icon: "🌙", name: "Moondust", key: "mondstaub" as const, value: loggedInUser?.currencies?.mondstaub ?? 0, color: "#c084fc", desc: "Event-limited. Extremely rare." },
+                  { icon: "x", name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Primary currency. Earned through quests." },
+                  { icon: "x", name: "Stardust", key: "stardust" as const, value: loggedInUser?.currencies?.stardust ?? 0, color: "#818cf8", desc: "Premium currency. Level-ups & achievements." },
+                  { icon: "x", name: "Essence", key: "essenz" as const, value: loggedInUser?.currencies?.essenz ?? 0, color: "#ef4444", desc: "Streak currency. Daily consistency." },
+                  { icon: "x", name: "Rune Shards", key: "runensplitter" as const, value: loggedInUser?.currencies?.runensplitter ?? 0, color: "#a78bfa", desc: "Draw from the Wheel of Stars." },
+                  { icon: "x", name: "Guild Coins", key: "gildentaler" as const, value: loggedInUser?.currencies?.gildentaler ?? 0, color: "#10b981", desc: "Social & co-op quests." },
+                  { icon: "x", name: "Moondust", key: "mondstaub" as const, value: loggedInUser?.currencies?.mondstaub ?? 0, color: "#c084fc", desc: "Event-limited. Extremely rare." },
                 ].map(c => (
                   <div key={c.name} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
                     <span style={{ fontSize: 20 }}>{c.icon}</span>
@@ -1250,7 +1250,7 @@ export default function Dashboard() {
         )}
 
         {/* View toggle */}
-        {/* TODO: replace nav-tab emojis (⚔🎓🧙🏕🏆🏅🔭🔥) with pixel art once ui-nav-* assets exist */}
+        {/* TODO: replace nav-tab icons with pixel art once ui-nav-* assets exist */}
         <div className="flex gap-1 flex-wrap" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
             { key: "questBoard",    label: "The Great Hall",     tutorialKey: "quest-board-tab" },
@@ -1720,7 +1720,7 @@ export default function Dashboard() {
                               <div className="flex items-center gap-2 mb-1">
                                 {/* Streak flame counter */}
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold" style={{ color: flameColor, background: `${flameColor}12`, border: `1px solid ${flameColor}30`, boxShadow: flameGlow, fontSize: 11 }}>
-                                  <span style={{ fontSize: 13 }}>{ritual.streak >= 7 ? "\uD83D\uDD25" : "\u2728"}</span>
+                                  <span style={{ fontSize: 13 }}>{ritual.streak >= 7 ? "x" : "x"}</span>
                                   {ritual.streak}
                                 </span>
                                 <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
@@ -2096,7 +2096,7 @@ export default function Dashboard() {
                         </div>
                         <div style={{ maxWidth: 420, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: "1px solid rgba(167,139,250,0.35)", boxShadow: "0 0 40px rgba(167,139,250,0.08)" }}>
                           <div className="px-5 pt-5 pb-3 text-center" style={{ borderBottom: "1px solid rgba(245,158,11,0.12)" }}>
-                            <p className="text-3xl mb-2">⚔</p>
+                            <p className="text-3xl mb-2">x</p>
                             <h3 className="text-base font-bold" style={{ color: "#e8d5a3" }}>Rise Again</h3>
                             <p className="text-xs mt-1" style={{ color: "rgba(200,170,100,0.5)" }}>{ritualToRecommit.title}</p>
                           </div>
@@ -2127,7 +2127,7 @@ export default function Dashboard() {
                                 className="flex-1 text-sm py-2.5 rounded-xl font-bold"
                                 style={{ background: "rgba(167,139,250,0.2)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.5)", boxShadow: "0 0 16px rgba(167,139,250,0.12)", cursor: "pointer" }}
                               >
-                                ⚔ Rise Again
+                                x Rise Again
                               </button>
                             </div>
                           </div>

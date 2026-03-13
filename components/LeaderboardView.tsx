@@ -10,7 +10,7 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
   pixel: { avatar: "PX", color: "#f59e0b" },
   atlas: { avatar: "AT", color: "#6366f1" },
   lyra:  { avatar: "✦",  color: "#e879f9" },
-  forge: { avatar: "⚒",  color: "#f59e0b" },
+  forge: { avatar: "x",  color: "#f59e0b" },
 };
 
 const rankMedal = ["x", "x", "x"];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useModalBehavior } from "./ModalPortal";
 
 interface FeedbackModalProps {
   elementPath: string;
@@ -9,6 +10,7 @@ interface FeedbackModalProps {
 }
 
 export default function FeedbackModal({ elementPath, playerName, onClose }: FeedbackModalProps) {
+  useModalBehavior(true, onClose);
   const [type, setType] = useState<"bug" | "feedback">("feedback");
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -71,7 +73,7 @@ export default function FeedbackModal({ elementPath, playerName, onClose }: Feed
           <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
         </div>
 
-        <div className="px-5 py-4 space-y-4">
+        <div className="px-5 py-4 space-y-4" style={{ overscrollBehavior: "contain" }}>
           {submitted ? (
             <div className="text-center py-6">
               <div className="text-4xl mb-3">✓</div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { ModalPortal } from "./ModalPortal";
+import { ModalPortal, useModalBehavior } from "./ModalPortal";
 import type {
   Quest, QuestsData, Agent, AntiRitual, Ritual, Suggestion,
 } from "@/app/types";
@@ -50,6 +50,11 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   const [extendCommitment, setExtendCommitment] = useState("none");
   const [recommitId, setRecommitId] = useState<string | null>(null);
   const [slipAnimId, setSlipAnimId] = useState<string | null>(null);
+
+  const closeExtendModal = useCallback(() => { setExtendId(null); setExtendCommitment("none"); }, []);
+  const closeRecommitModal = useCallback(() => setRecommitId(null), []);
+  useModalBehavior(!!extendId, closeExtendModal);
+  useModalBehavior(!!recommitId, closeRecommitModal);
 
   useEffect(() => {
     if (!createOpen) return;
@@ -465,7 +470,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                   <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#a5b4fc", lineHeight: 1.5, margin: 0 }}>&ldquo;Dein Wille vertieft sich. Der Schwur wird stärker.&rdquo;</p>
                 </div>
               </div>
-              <div style={{ maxWidth: 480, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 0 40px rgba(99,102,241,0.07)" }}>
+              <div style={{ maxWidth: 480, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: "1px solid rgba(99,102,241,0.3)", boxShadow: "0 0 40px rgba(99,102,241,0.07)", overscrollBehavior: "contain" }}>
                 <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(99,102,241,0.12)" }}>
                   <div>
                     <h3 className="text-sm font-bold" style={{ color: "#e2e8f0" }}>Schwur verlängern: {vowToExtend.title}</h3>
@@ -530,9 +535,9 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                   <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#a5b4fc", lineHeight: 1.5, margin: 0 }}>&ldquo;You fell, adventurer. But you are still here. That is not nothing.&rdquo;</p>
                 </div>
               </div>
-              <div style={{ maxWidth: 420, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: "1px solid rgba(139,92,246,0.35)", boxShadow: "0 0 40px rgba(139,92,246,0.08)" }}>
+              <div style={{ maxWidth: 420, width: "100%", borderRadius: "1rem", background: "linear-gradient(160deg, #1e1c2c 0%, #141220 100%)", border: "1px solid rgba(139,92,246,0.35)", boxShadow: "0 0 40px rgba(139,92,246,0.08)", overscrollBehavior: "contain" }}>
                 <div className="px-5 pt-5 pb-3 text-center" style={{ borderBottom: "1px solid rgba(139,92,246,0.12)" }}>
-                  <p className="text-3xl mb-2">⚔</p>
+                  <p className="text-3xl mb-2">x</p>
                   <h3 className="text-base font-bold" style={{ color: "#e2e8f0" }}>Rise Again</h3>
                   <p className="text-xs mt-1" style={{ color: "rgba(165,180,252,0.5)" }}>{vowToRecommit.title}</p>
                 </div>
@@ -564,7 +569,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                       className="flex-1 text-sm py-2.5 rounded-xl font-bold"
                       style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.5)", boxShadow: "0 0 16px rgba(139,92,246,0.12)", cursor: "pointer" }}
                     >
-                      ⚔ Rise Again
+                      x Rise Again
                     </button>
                   </div>
                 </div>

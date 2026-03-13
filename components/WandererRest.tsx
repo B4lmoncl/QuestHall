@@ -432,7 +432,7 @@ export function WandererRest({
                           <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0} x</span>
                           {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && (
                             <div className="flex items-center gap-2 ml-auto">
-                              <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>⚔ Active</span>
+                              <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: "rgba(96,165,250,0.15)", color: "#60a5fa", border: "1px solid rgba(96,165,250,0.3)" }}>x Active</span>
                               {handleUnclaim && playerName && currentQuest.claimedBy?.toLowerCase() === playerName.toLowerCase() && (
                                 <button
                                   onClick={(e) => { e.stopPropagation(); handleUnclaim(currentQuest.questId); }}
@@ -454,7 +454,7 @@ export function WandererRest({
                               style={{ background: "rgba(245,158,11,0.2)", color: "#f59e0b", border: "1px solid rgba(245,158,11,0.4)", cursor: "pointer", transition: "all 0.2s" }}
                               onMouseEnter={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.35)"; }}
                               onMouseLeave={e => { (e.currentTarget).style.background = "rgba(245,158,11,0.2)"; }}
-                            >⚔ Accept Quest</button>
+                            >x Accept Quest</button>
                           )}
                           {(currentQuest.status === "claimed" || currentQuest.status === "in_progress") && currentQuest.claimedBy?.toLowerCase() === playerName?.toLowerCase() && handleComplete && (
                             <button
@@ -519,7 +519,7 @@ export function WandererRest({
                     {[
                       { icon: "x", label: "Special Requests", sub: "Coming soon" },
                       { icon: "x", label: "Prophecies",        sub: "Coming soon" },
-                      { icon: "⚔", label: "Legendary Quests",  sub: "Coming soon" },
+                      { icon: "x", label: "Legendary Quests",  sub: "Coming soon" },
                     ].map(({ icon, label, sub }) => (
                       <div
                         key={label}
@@ -550,7 +550,7 @@ export function WandererRest({
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>⚙ NPC Quest Board</h2>
+                    <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>x NPC Quest Board</h2>
                     <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests." />
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>

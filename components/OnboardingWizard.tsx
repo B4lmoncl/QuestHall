@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useModalBehavior } from "./ModalPortal";
 
 interface ClassDef {
   id: string;
@@ -51,6 +52,7 @@ const PET_EMOJI: Record<string, string> = {
 };
 
 export default function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps) {
+  useModalBehavior(true, onClose);
   const [step, setStep] = useState(0);
 
   // Step 0 fields
@@ -242,6 +244,7 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
           boxShadow: "0 0 80px rgba(139,92,246,0.2)",
           maxHeight: "92vh",
           overflowY: "auto",
+          overscrollBehavior: "contain",
         }}
       >
         {/* Step indicator dots */}

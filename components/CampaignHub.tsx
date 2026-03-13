@@ -336,7 +336,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
                         <button key={q.id} onClick={() => setSelectedQuestIds(prev => sel ? prev.filter(id => id !== q.id) : [...prev, q.id])}
                           className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors"
                           style={{ background: sel ? "rgba(139,92,246,0.12)" : "transparent", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                          <span className="text-xs" style={{ color: sel ? "#a78bfa" : "rgba(255,255,255,0.25)" }}>{sel ? "☑" : "☐"}</span>
+                          <span className="text-xs" style={{ color: sel ? "#a78bfa" : "rgba(255,255,255,0.25)" }}>{sel ? "x" : "x"}</span>
                           <span className="text-xs truncate" style={{ color: sel ? "#e9d5ff" : "rgba(255,255,255,0.5)" }}>{q.title}</span>
                         </button>
                       );

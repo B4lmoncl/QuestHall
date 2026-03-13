@@ -24,7 +24,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
   if (!loggedIn || !user) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-3">
-        <span className="text-4xl">🏪</span>
+        <span className="text-4xl">x</span>
         <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Bazaar</p>
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Sign in to enter the Bazaar and spend your hard-earned gold!</p>
       </div>
@@ -37,7 +37,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Bazaar</span>
         <div className="flex items-center gap-2 ml-auto">
-          <span style={{ fontSize: 18 }}>🪙</span>
+          <span style={{ fontSize: 18 }}>x</span>
           <span className="text-base font-mono font-bold" style={{ color: "#f59e0b" }}>{gold}</span>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                     border: `1px solid ${canAfford ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
                   }}
                 >
-                  🪙 {item.cost}
+                  x {item.cost}
                 </button>
               </div>
             );
@@ -108,7 +108,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                       border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
                     }}
                   >
-                    🪙 {gear.cost}
+                    x {gear.cost}
                   </button>
                 )}
                 {owned && <span className="text-xs px-2.5 py-1" style={{ color: "rgba(99,102,241,0.5)" }}>Owned</span>}

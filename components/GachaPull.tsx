@@ -116,7 +116,7 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
                   opacity: 0,
                 }}
               >
-                💎
+                x
               </div>
             ))}
           </div>
@@ -200,7 +200,7 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
             {/* Duplicate notice */}
             {result.isDuplicate && (
               <div className="text-[10px] px-2 py-1 rounded-lg" style={{ background: "rgba(167,139,250,0.15)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)" }}>
-                Duplikat → +{result.duplicateRefund} 💎 Runensplitter
+                Duplikat → +{result.duplicateRefund} x Runensplitter
               </div>
             )}
 
@@ -286,7 +286,7 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
                   {cfg.label}
                 </span>
                 {result.isDuplicate && (
-                  <span className="text-[7px]" style={{ color: "#a78bfa" }}>DUP +{result.duplicateRefund}💎</span>
+                  <span className="text-[7px]" style={{ color: "#a78bfa" }}>DUP +{result.duplicateRefund}x</span>
                 )}
                 {result.isNew && (
                   <div className="absolute -top-1 -right-1 text-[7px] font-bold px-1 rounded-full"

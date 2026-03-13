@@ -276,7 +276,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             {quest.npcGiverId && quest.npcName && (
               <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
                 style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9", background: `${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}15`, border: `1px solid ${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}40` }}>
-                🧙 {quest.npcName}
+                x {quest.npcName}
               </span>
             )}
             {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
@@ -313,7 +313,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
                     <span key={p} className="text-xs px-1.5 py-0.5 rounded flex items-center gap-1"
                       style={{ background: done ? "rgba(34,197,94,0.1)" : claimed ? "rgba(244,63,94,0.1)" : "rgba(255,255,255,0.05)", color: done ? "#22c55e" : claimed ? "#f43f5e" : "rgba(255,255,255,0.3)", border: `1px solid ${done ? "rgba(34,197,94,0.3)" : claimed ? "rgba(244,63,94,0.3)" : "rgba(255,255,255,0.1)"}` }}
                     >
-                      {done ? "✓" : claimed ? "⚔" : "○"} {p}
+                      {done ? "✓" : claimed ? "x" : "○"} {p}
                     </span>
                   );
                 })}
@@ -349,7 +349,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             <div className="mt-2 space-y-1">
               {quest.checklist.map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "☑" : "☐"}</span>
+                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "x" : "x"}</span>
                   <span style={{ color: item.done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.6)", textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
                 </div>
               ))}

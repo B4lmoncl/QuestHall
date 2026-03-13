@@ -110,10 +110,10 @@ export async function createStarterQuestsIfNew(playerName: string, apiKey: strin
     localStorage.setItem(key, "true");
     const headers = { "Content-Type": "application/json", "x-api-key": apiKey };
     const starterQuests = [
-      { title: "🎉 Welcome to the Guild!", description: "Complete this quest to earn your first companion — Dobbie the Cat! Just click 'Complete' to claim your reward. This teaches you the claim → complete flow.", type: "personal", priority: "high", createdBy: "system" },
-      { title: "🏠 Organize Your Desk", description: "Tidy up your workspace. A clear desk leads to a clear mind!", type: "personal", priority: "low", createdBy: "system" },
-      { title: "📚 Read for 30 Minutes", description: "Pick any book, article, or topic you're curious about and read for 30 minutes.", type: "learning", priority: "low", createdBy: "system" },
-      { title: "💪 10-Minute Stretch", description: "Do a short stretching routine to warm up and get your body moving!", type: "fitness", priority: "low", createdBy: "system" },
+      { title: "x Welcome to the Guild!", description: "Complete this quest to earn your first companion — Dobbie the Cat! Just click 'Complete' to claim your reward. This teaches you the claim → complete flow.", type: "personal", priority: "high", createdBy: "system" },
+      { title: "x Organize Your Desk", description: "Tidy up your workspace. A clear desk leads to a clear mind!", type: "personal", priority: "low", createdBy: "system" },
+      { title: "x Read for 30 Minutes", description: "Pick any book, article, or topic you're curious about and read for 30 minutes.", type: "learning", priority: "low", createdBy: "system" },
+      { title: "x 10-Minute Stretch", description: "Do a short stretching routine to warm up and get your body moving!", type: "fitness", priority: "low", createdBy: "system" },
     ];
     await Promise.all(starterQuests.map(q =>
       fetch("/api/quest", { method: "POST", headers, body: JSON.stringify(q) })
@@ -161,10 +161,10 @@ export function useCountUp(target: number, decimals = 0, duration = 1000): strin
 
 export function getSeason() {
   const m = new Date().getMonth(); // 0=Jan
-  if (m >= 2 && m <= 4) return { name: "Spring", icon: "🌸", color: "#ec4899", bg: "rgba(236,72,153,0.1)", particle: "rgba(255,182,193," };
-  if (m >= 5 && m <= 7) return { name: "Summer", icon: "☀️", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", particle: "rgba(255,220,100," };
-  if (m >= 8 && m <= 10) return { name: "Autumn", icon: "🍂", color: "#f97316", bg: "rgba(249,115,22,0.1)", particle: "rgba(255,140,50," };
-  return { name: "Winter", icon: "❄️", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", particle: "rgba(180,220,255," };
+  if (m >= 2 && m <= 4) return { name: "Spring", icon: "x", color: "#ec4899", bg: "rgba(236,72,153,0.1)", particle: "rgba(255,182,193," };
+  if (m >= 5 && m <= 7) return { name: "Summer", icon: "x", color: "#f59e0b", bg: "rgba(245,158,11,0.1)", particle: "rgba(255,220,100," };
+  if (m >= 8 && m <= 10) return { name: "Autumn", icon: "x", color: "#f97316", bg: "rgba(249,115,22,0.1)", particle: "rgba(255,140,50," };
+  return { name: "Winter", icon: "x", color: "#60a5fa", bg: "rgba(96,165,250,0.1)", particle: "rgba(180,220,255," };
 }
 export const CURRENT_SEASON = getSeason();
 
@@ -223,32 +223,32 @@ export function getUserXpProgress(xp: number) {
 
 export function getForgeTempInfo(temp: number): { statusMessage: string; actionSuggestion: string; tooltipText: string } {
   if (temp === 100) return {
-    statusMessage: "⚪🔥 The Forge Burns White Hot — You Are Unstoppable",
+    statusMessage: "x The Forge Burns White Hot — You Are Unstoppable",
     actionSuggestion: "You're at the summit. Complete any quest to hold this sacred temperature.",
     tooltipText: "Maximum Forge Temperature achieved. You are performing at the highest level.",
   };
   if (temp >= 80) return {
-    statusMessage: "🔴🔥 The Forge Roars — Your Hammer Strikes True",
+    statusMessage: "x The Forge Roars — Your Hammer Strikes True",
     actionSuggestion: "You're close to the peak. One or two more completed quests will push the Forge to white hot.",
     tooltipText: "High Forge Temperature. Keep completing quests to reach the maximum.",
   };
   if (temp >= 60) return {
-    statusMessage: "🟠 The Forge Glows Steady — A Craftsman's Rhythm",
+    statusMessage: "x The Forge Glows Steady — A Craftsman's Rhythm",
     actionSuggestion: "Good rhythm, Guild Member. Keep feeding the Forge with completed quests.",
     tooltipText: "Steady Forge Temperature. You're maintaining a good pace.",
   };
   if (temp >= 40) return {
-    statusMessage: "🟡 The Forge Cools — The Metal Stiffens",
+    statusMessage: "x The Forge Cools — The Metal Stiffens",
     actionSuggestion: "The embers still hold heat — but not for long. Complete a quest to stoke the fire.",
     tooltipText: "Forge Temperature is dropping. Complete quests to recover.",
   };
   if (temp >= 20) return {
-    statusMessage: "🔵 The Forge Has Gone Cold — But the Structure Holds",
+    statusMessage: "x The Forge Has Gone Cold — But the Structure Holds",
     actionSuggestion: "Return to the anvil. Pick the smallest quest on your board and complete it.",
     tooltipText: "Cold Forge. Your XP multiplier is reduced. Complete quests to warm it up.",
   };
   return {
-    statusMessage: "🧊 The Forge Is Frozen — But You Still Hold the Hammer",
+    statusMessage: "x The Forge Is Frozen — But You Still Hold the Hammer",
     actionSuggestion: "This is your rekindling moment. Complete one quest. Any quest.",
     tooltipText: "Forge is frozen. XP is at minimum. One quest is all it takes to begin recovery.",
   };

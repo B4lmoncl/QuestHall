@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useModalBehavior } from "./ModalPortal";
 import { CURRENT_SEASON } from "@/app/utils";
 
 // ─── GuideSection ─────────────────────────────────────────────────────────────
@@ -148,7 +149,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               <GuideSection icon="x" title="Gold">
                 Earn gold by completing quests. Gold is multiplied by your streak (up to 3×). Spend it in the Forge Shop on rewards like Gaming time, Snack breaks, or Days Off.
               </GuideSection>
-              <GuideSection icon="⚒" title="Workshop Gear">
+              <GuideSection icon="x" title="Workshop Gear">
                 <p>Upgrade your Workshop Tools to earn more XP per quest:</p>
                 <div className="space-y-1 mt-1">
                   {[
@@ -224,6 +225,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
 // ─── GuideModal ───────────────────────────────────────────────────────────────
 
 export function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void; onRestartTutorial?: () => void }) {
+  useModalBehavior(true, onClose);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -232,7 +234,7 @@ export function GuideModal({ onClose, onRestartTutorial }: { onClose: () => void
     >
       <div
         className="rounded-2xl w-full max-w-lg overflow-hidden"
-        style={{ background: "#1a1a1a", border: "1px solid rgba(255,140,68,0.3)", boxShadow: "0 0 60px rgba(255,100,0,0.15)", maxHeight: "90vh", overflowY: "auto" }}
+        style={{ background: "#1a1a1a", border: "1px solid rgba(255,140,68,0.3)", boxShadow: "0 0 60px rgba(255,100,0,0.15)", maxHeight: "90vh", overflowY: "auto", overscrollBehavior: "contain" }}
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-4 border-b" style={{ borderColor: "rgba(255,255,255,0.08)" }}>
@@ -289,7 +291,7 @@ export const TUTORIAL_STEPS = [
   {
     key: "claim-hint",
     title: "Claim Quests",
-    desc: "See a quest you want? Click ⚔ Claim to take it on! Complete it when done to earn XP and Gold.",
+    desc: "See a quest you want? Click x Claim to take it on! Complete it when done to earn XP and Gold.",
     target: null,
     position: "center" as const,
   },

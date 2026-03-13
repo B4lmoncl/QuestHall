@@ -22,22 +22,22 @@ export const productConfig: Record<string, { color: string; bg: string }> = {
 };
 
 export const typeConfig: Record<string, { label: string; icon: string; color: string; bg: string; border: string }> = {
-  development: { label: "Dev",      icon: "⚙️",  color: "#8b5cf6", bg: "rgba(139,92,246,0.1)",  border: "rgba(139,92,246,0.3)"  },
-  personal:    { label: "Personal", icon: "🏠", color: "#22c55e", bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.3)"   },
-  learning:    { label: "Learn",    icon: "📚", color: "#3b82f6", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.3)"  },
-  fitness:     { label: "Fitness",  icon: "💪", color: "#f97316", bg: "rgba(249,115,22,0.1)",  border: "rgba(249,115,22,0.3)"  },
-  social:      { label: "Social",   icon: "❤️", color: "#ec4899", bg: "rgba(236,72,153,0.1)",  border: "rgba(236,72,153,0.3)"  },
-  boss:        { label: "Boss",     icon: "🐉", color: "#ef4444", bg: "rgba(239,68,68,0.15)",  border: "rgba(239,68,68,0.5)"   },
-  "relationship-coop": { label: "Co-op", icon: "🤝", color: "#f43f5e", bg: "rgba(244,63,94,0.12)", border: "rgba(244,63,94,0.4)" },
+  development: { label: "Dev",      icon: "x",  color: "#8b5cf6", bg: "rgba(139,92,246,0.1)",  border: "rgba(139,92,246,0.3)"  },
+  personal:    { label: "Personal", icon: "x", color: "#22c55e", bg: "rgba(34,197,94,0.1)",   border: "rgba(34,197,94,0.3)"   },
+  learning:    { label: "Learn",    icon: "x", color: "#3b82f6", bg: "rgba(59,130,246,0.1)",  border: "rgba(59,130,246,0.3)"  },
+  fitness:     { label: "Fitness",  icon: "x", color: "#f97316", bg: "rgba(249,115,22,0.1)",  border: "rgba(249,115,22,0.3)"  },
+  social:      { label: "Social",   icon: "x", color: "#ec4899", bg: "rgba(236,72,153,0.1)",  border: "rgba(236,72,153,0.3)"  },
+  boss:        { label: "Boss",     icon: "x", color: "#ef4444", bg: "rgba(239,68,68,0.15)",  border: "rgba(239,68,68,0.5)"   },
+  "relationship-coop": { label: "Co-op", icon: "x", color: "#f43f5e", bg: "rgba(244,63,94,0.12)", border: "rgba(244,63,94,0.4)" },
 };
 
 export const STREAK_MILESTONES_CLIENT = [
-  { days: 7,   badge: '🥉', label: 'Bronze' },
-  { days: 14,  badge: '🎁', label: '2-Wochen' },
-  { days: 21,  badge: '🥈', label: 'Silber' },
-  { days: 30,  badge: '📅', label: 'Monat' },
-  { days: 60,  badge: '🥇', label: 'Gold' },
-  { days: 90,  badge: '🗿', label: 'Unerschütterlich' },
-  { days: 180, badge: '💎', label: 'Diamond' },
-  { days: 365, badge: '🟠', label: 'Legendary' },
+  { days: 7,   badge: 'x', label: 'Bronze' },
+  { days: 14,  badge: 'x', label: '2-Wochen' },
+  { days: 21,  badge: 'x', label: 'Silber' },
+  { days: 30,  badge: 'x', label: 'Monat' },
+  { days: 60,  badge: 'x', label: 'Gold' },
+  { days: 90,  badge: 'x', label: 'Unerschütterlich' },
+  { days: 180, badge: 'x', label: 'Diamond' },
+  { days: 365, badge: 'x', label: 'Legendary' },
 ];
