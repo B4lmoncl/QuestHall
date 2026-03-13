@@ -30,7 +30,7 @@ router.post('/api/users/:id/register', requireApiKey, (req, res) => {
   const id = req.params.id.toLowerCase();
   const { name, avatar, color } = req.body;
   if (!state.users[id]) {
-    state.users[id] = { id, name: name || id, avatar: avatar || id[0].toUpperCase(), color: color || '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], earnedAchievements: [], streakDays: 0, streakLastDate: null, forgeTemp: 100, gold: 0, _allCompletedTypes: [], createdAt: now() };
+    state.users[id] = { id, name: name || id, avatar: avatar || id[0].toUpperCase(), color: color || '#f59e0b', xp: 0, questsCompleted: 0, achievements: [], earnedAchievements: [], streakDays: 0, streakLastDate: null, forgeTemp: 100, gold: 0, currencies: { gold: 0, stardust: 0, essenz: 0, runensplitter: 0, gildentaler: 0, mondstaub: 0 }, _allCompletedTypes: [], createdAt: now() };
   } else {
     if (name) state.users[id].name = name;
     if (avatar) state.users[id].avatar = avatar;
@@ -195,6 +195,7 @@ router.post('/api/register', async (req, res) => {
     streakLastDate: null,
     forgeTemp: 100,
     gold: 0,
+    currencies: { gold: 0, stardust: 0, essenz: 0, runensplitter: 0, gildentaler: 0, mondstaub: 0 },
     apiKey,
     passwordHash: hashedPassword,
     _allCompletedTypes: [],
