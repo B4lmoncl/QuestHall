@@ -339,6 +339,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
   const [extendId, setExtendId] = useState<string | null>(null);
   const [extendCommitment, setExtendCommitment] = useState("none");
   const [recommitId, setRecommitId] = useState<string | null>(null);
+  const [slipAnimId, setSlipAnimId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!createOpen) return;
@@ -519,10 +520,17 @@ export function AntiRitualePanel({ playerName, reviewApiKey }: { playerName: str
                   {vowDoneToday ? "✓ Clean" : "Abhaken"}
                 </button>
                 <button
-                  onClick={() => markViolated(ar.id)}
+                  onClick={() => { setSlipAnimId(ar.id); markViolated(ar.id); setTimeout(() => setSlipAnimId(null), 400); }}
                   disabled={!reviewApiKey}
                   className="text-xs px-2 py-1 rounded transition-all"
-                  style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.2)" }}
+                  style={{
+                    background: slipAnimId === ar.id ? "rgba(239,68,68,0.35)" : "rgba(239,68,68,0.08)",
+                    color: slipAnimId === ar.id ? "#fca5a5" : "rgba(239,68,68,0.5)",
+                    border: `1px solid ${slipAnimId === ar.id ? "rgba(239,68,68,0.7)" : "rgba(239,68,68,0.2)"}`,
+                    boxShadow: slipAnimId === ar.id ? "0 0 14px rgba(239,68,68,0.4)" : "none",
+                    transform: slipAnimId === ar.id ? "scale(1.15)" : "scale(1)",
+                    transition: "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
+                  }}
                   title="I slipped... Streak reset."
                 >
                   Slip
