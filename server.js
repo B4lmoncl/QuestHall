@@ -52,7 +52,14 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // Static files
-app.use(express.static(path.join(__dirname, 'out')));
+// Static files with caching headers
+app.use('/_next/static', express.static(path.join(__dirname, 'out', '_next', 'static'), {
+  maxAge: '1y', immutable: true,
+}));
+app.use('/images', express.static(path.join(__dirname, 'out', 'images'), {
+  maxAge: '7d', immutable: true,
+}));
+app.use(express.static(path.join(__dirname, 'out'), { maxAge: '1h' }));
 app.use('/data', express.static(path.join(__dirname, 'public', 'data')));
 
 // ─── API Key initialization ──────────────────────────────────────────────────
