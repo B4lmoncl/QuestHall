@@ -51,7 +51,7 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
         onClick={() => setExpanded(v => !v)}
         className="w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors"
       >
-        <span className="text-xs font-mono flex-shrink-0" style={{ color: "rgba(34,197,94,0.6)" }}>x</span>
+        <span className="text-xs font-mono flex-shrink-0" style={{ color: "rgba(34,197,94,0.6)" }}>✓</span>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.6)" }}>{quest.title}</p>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -59,7 +59,7 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
               by <span style={{ color: "rgba(255,255,255,0.35)" }}>{quest.completedBy}</span>
             </span>
             {quest.humanInputRequired && (
-              <span className="text-xs" style={{ color: "rgba(245,158,11,0.6)" }}>x</span>
+              <span className="text-xs" style={{ color: "rgba(245,158,11,0.6)" }}>!</span>
             )}
           </div>
         </div>
@@ -82,7 +82,7 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
           </div>
           {quest.proof && (
             <div className="mt-2 p-2 rounded" style={{ background: "rgba(59,130,246,0.06)", border: "1px solid rgba(59,130,246,0.15)" }}>
-              <p className="text-xs font-semibold mb-1" style={{ color: "rgba(59,130,246,0.7)" }}>x Learning Proof</p>
+              <p className="text-xs font-semibold mb-1" style={{ color: "rgba(59,130,246,0.7)" }}>Learning Proof</p>
               <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: "rgba(255,255,255,0.4)" }}>
                 {quest.proof.length > 300 ? quest.proof.slice(0, 297) + "…" : quest.proof}
               </p>
@@ -90,7 +90,7 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
           )}
           {quest.lore && (
             <p className="text-xs italic" style={{ color: "rgba(167,139,250,0.5)", borderLeft: "2px solid rgba(139,92,246,0.2)", paddingLeft: "8px" }}>
-              x {quest.lore}
+              {quest.lore}
             </p>
           )}
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
@@ -254,7 +254,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
               border: `1px solid ${selected ? "rgba(255,102,51,0.9)" : "rgba(255,255,255,0.15)"}`,
             }}
           >
-            {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>x</span>}
+            {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>✓</span>}
           </button>
         )}
         {!onToggle && isInProgress && (
@@ -276,7 +276,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             {quest.npcGiverId && quest.npcName && (
               <span className="text-xs px-1.5 py-0.5 rounded flex-shrink-0 inline-flex items-center gap-1"
                 style={{ color: RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9", background: `${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}15`, border: `1px solid ${RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#e879f9"}40` }}>
-                x {quest.npcName}
+                {quest.npcName}
               </span>
             )}
             {quest.recurrence && <RecurringBadge recurrence={quest.recurrence} />}
@@ -290,7 +290,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             <div className="mt-2">
               {/* Raid HP bar — decreases as partners complete */}
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="text-xs font-semibold" style={{ color: "#f43f5e" }}>x Raid HP</span>
+                <span className="text-xs font-semibold" style={{ color: "#f43f5e" }}>Raid HP</span>
                 <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.07)" }}>
                   <div
                     className="h-full rounded-full transition-all duration-700"
@@ -313,7 +313,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
                     <span key={p} className="text-xs px-1.5 py-0.5 rounded flex items-center gap-1"
                       style={{ background: done ? "rgba(34,197,94,0.1)" : claimed ? "rgba(244,63,94,0.1)" : "rgba(255,255,255,0.05)", color: done ? "#22c55e" : claimed ? "#f43f5e" : "rgba(255,255,255,0.3)", border: `1px solid ${done ? "rgba(34,197,94,0.3)" : claimed ? "rgba(244,63,94,0.3)" : "rgba(255,255,255,0.1)"}` }}
                     >
-                      {done ? "x" : claimed ? "x" : "○"} {p}
+                      {done ? "✓" : claimed ? "◐" : "○"} {p}
                     </span>
                   );
                 })}
@@ -337,19 +337,19 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
           )}
           {expanded && quest.lore && (
             <p className="text-xs mt-1.5 leading-relaxed italic" style={{ color: "rgba(167,139,250,0.6)", borderLeft: "2px solid rgba(139,92,246,0.25)", paddingLeft: "8px" }}>
-              x {quest.lore}
+              {quest.lore}
             </p>
           )}
           {expanded && quest.chapter && (
             <span className="inline-flex text-xs mt-1 px-1.5 py-0.5 rounded" style={{ color: "rgba(251,191,36,0.7)", background: "rgba(251,191,36,0.06)", border: "1px solid rgba(251,191,36,0.15)" }}>
-              x {quest.chapter}
+              {quest.chapter}
             </span>
           )}
           {expanded && quest.checklist && quest.checklist.length > 0 && (
             <div className="mt-2 space-y-1">
               {quest.checklist.map((item, i) => (
                 <div key={i} className="flex items-center gap-2 text-xs">
-                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "x" : "x"}</span>
+                  <span style={{ color: item.done ? "#22c55e" : "rgba(255,255,255,0.25)" }}>{item.done ? "✓" : "○"}</span>
                   <span style={{ color: item.done ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.6)", textDecoration: item.done ? "line-through" : "none" }}>{item.text}</span>
                 </div>
               ))}
@@ -367,19 +367,19 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
             </div>
             <div className="flex items-center gap-1.5">
               {!isCoop && onClaim && quest.status === "open" && (
-                <button onClick={e => { e.stopPropagation(); onClaim(quest.id); }} className="text-xs font-bold" style={{ background: "radial-gradient(circle at 40% 35%, #c0392b, #7b1a10)", color: "#ffd6a5", border: "2px solid #8b2010", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,180,100,0.2)", flexShrink: 0, padding: 0 }} title="Claim quest">x</button>
+                <button onClick={e => { e.stopPropagation(); onClaim(quest.id); }} className="text-xs font-bold" style={{ background: "radial-gradient(circle at 40% 35%, #c0392b, #7b1a10)", color: "#ffd6a5", border: "2px solid #8b2010", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,180,100,0.2)", flexShrink: 0, padding: 0 }} title="Claim quest">!</button>
               )}
               {!isCoop && onUnclaim && isClaimedByMe && (
                 <button onClick={e => { e.stopPropagation(); onUnclaim(quest.id); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}>Unclaim</button>
               )}
               {!isCoop && onComplete && isClaimedByMe && (
-                <button onClick={e => { e.stopPropagation(); onComplete(quest.id, quest.title); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>x Done</button>
+                <button onClick={e => { e.stopPropagation(); onComplete(quest.id, quest.title); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.3)" }}>✓ Done</button>
               )}
               {isCoop && isCoopPartner && !hasCoopClaimed && quest.status !== "completed" && onCoopClaim && (
-                <button onClick={e => { e.stopPropagation(); onCoopClaim(quest.id); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(244,63,94,0.12)", color: "#f43f5e", border: "1px solid rgba(244,63,94,0.3)" }}>x Join</button>
+                <button onClick={e => { e.stopPropagation(); onCoopClaim(quest.id); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(244,63,94,0.12)", color: "#f43f5e", border: "1px solid rgba(244,63,94,0.3)" }}>Join</button>
               )}
               {isCoop && isCoopPartner && hasCoopClaimed && !hasCoopCompleted && quest.status !== "completed" && onCoopComplete && (
-                <button onClick={e => { e.stopPropagation(); onCoopComplete(quest.id); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>x My Part Done</button>
+                <button onClick={e => { e.stopPropagation(); onCoopComplete(quest.id); }} className="text-xs px-2 py-0.5 rounded font-medium" style={{ background: "rgba(34,197,94,0.12)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>✓ My Part Done</button>
               )}
             </div>
           </div>
@@ -420,7 +420,7 @@ export function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; sel
                 border: `1px solid ${selected ? "rgba(255,102,51,0.9)" : "rgba(255,255,255,0.15)"}`,
               }}
             >
-              {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>x</span>}
+              {selected && <span style={{ color: "#fff", fontSize: "8px", lineHeight: 1 }}>✓</span>}
             </button>
           )}
           <div className="flex-1 min-w-0">
@@ -439,7 +439,7 @@ export function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; sel
                   <>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-semibold" style={{ color: "#ef4444" }}>
-                        x Boss HP
+                        Boss HP
                       </span>
                       <span className="text-xs font-mono" style={{ color: progressPct === 100 ? "#22c55e" : "#ef4444" }}>
                         {progressPct === 100 ? "DEFEATED!" : `${Math.round(100 - progressPct)}% HP`}
@@ -512,7 +512,7 @@ export function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; sel
               }}
             >
               <span className="text-xs flex-shrink-0" style={{ color: child.status === "completed" ? "#22c55e" : "rgba(255,255,255,0.2)", marginLeft: 12 }}>
-                {child.status === "completed" ? "x" : "◦"}
+                {child.status === "completed" ? "✓" : "◦"}
               </span>
               <p
                 className="text-xs flex-1 truncate"

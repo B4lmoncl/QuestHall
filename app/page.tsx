@@ -1722,7 +1722,7 @@ export default function Dashboard() {
                               <div className="flex items-center gap-2 mb-1">
                                 {/* Streak flame counter */}
                                 <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-bold" style={{ color: flameColor, background: `${flameColor}12`, border: `1px solid ${flameColor}30`, boxShadow: flameGlow, fontSize: 11 }}>
-                                  <span style={{ fontSize: 13 }}>{ritual.streak >= 7 ? "x" : "x"}</span>
+                                  <span style={{ fontSize: 13 }}>{ritual.streak >= 7 ? "★" : "●"}</span>
                                   {ritual.streak}
                                 </span>
                                 <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>

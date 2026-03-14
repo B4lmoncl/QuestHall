@@ -52,17 +52,17 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
                 style={{ color: streak >= 30 ? "#ef4444" : streak >= 7 ? "#f59e0b" : "#fb923c" }}
                 title={`${streak} day streak!`}
               >
-                x{streak}
+                {streak}
               </span>
             )}
           </div>
           <p className="text-xs font-semibold" style={{ color: lvl.color }}>
-            {isMilestoneLevel && "x "}Lv {lvl.level}: {lvl.title}
+            {isMilestoneLevel && "★ "}Lv {lvl.level}: {lvl.title}
           </p>
         </div>
         {/* Gold */}
         <div className="flex flex-col items-end gap-1">
-          <span className="text-xs font-mono font-bold" style={{ color: "#f59e0b" }} title="Gold">x {gold}</span>
+          <span className="text-xs font-mono font-bold inline-flex items-center gap-1" style={{ color: "#f59e0b" }} title="Gold"><img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated" }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gold}</span>
         </div>
       </div>
 
@@ -73,7 +73,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
           <span className="text-xs font-mono font-medium" style={{ color: "#8b5cf6" }}>{user.questsCompleted ?? 0}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>XP{xpMalus ? " x −50%" : ""}</span>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>XP{xpMalus ? " −50%" : ""}</span>
           <span className="text-xs font-mono font-medium" style={{ color: xpMalus ? "#ef4444" : lvl.color }}>{xp}{nextLvlEntry ? ` / ${nextLvlEntry.xpRequired}` : " MAX"}</span>
         </div>
       </div>
@@ -90,7 +90,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
       <div className="mb-2" title={forgeInfo.tooltipText}>
         <div className="flex items-center justify-between mb-0.5">
           <span className="text-xs font-medium flex items-center gap-1" style={{ color: tempColor }}>
-            {tempIcon} {temp}% <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>|</span> <span style={{ color: "#f59e0b" }}>x {goldMultiplier}x</span>
+            {tempIcon} {temp}% <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>|</span> <span style={{ color: "#f59e0b" }}>{goldMultiplier}x</span>
           </span>
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Forge Temp</span>
         </div>
@@ -126,7 +126,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
               className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg"
               style={{ background: "rgba(245,158,11,0.07)", border: "1px solid rgba(245,158,11,0.2)" }}
             >
-              <span className="text-sm" style={{ animation: "pulse-online 1.5s ease-in-out infinite" }}>x</span>
+              <span className="text-sm" style={{ animation: "pulse-online 1.5s ease-in-out infinite" }}>★</span>
               <span className="text-xs font-semibold" style={{ color: "rgba(245,158,11,0.7)" }}>Klasse wird geschmiedet...</span>
             </div>
           );
@@ -157,7 +157,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
           >
             <span className="text-sm">{c.emoji}</span>
             <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>{c.name}</span>
-            {c.isReal && <span className="text-xs ml-auto" style={{ color: "rgba(255,255,255,0.25)" }}>x Haustier</span>}
+            {c.isReal && <span className="text-xs ml-auto" style={{ color: "rgba(255,255,255,0.25)" }}>Haustier</span>}
           </div>
         );
       })()}

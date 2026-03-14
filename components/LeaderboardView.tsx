@@ -17,7 +17,7 @@ const RANK_ICONS = ["/images/icons/ui-rank-gold.png", "/images/icons/ui-rank-sil
 const RankMedal = ({ rank }: { rank: number }) => rank <= 3 
   ? <img src={RANK_ICONS[rank - 1]} alt={`#${rank}`} width={24} height={24} style={{ imageRendering: "pixelated" as const }} />
   : <span>#{rank}</span>;
-const rankMedal = ["x", "x", "x"]; // legacy fallback
+const rankMedal = ["★", "●", "●"]; // legacy fallback
 
 // Extended entry with optional classId for player mode
 type LbEntry = LeaderboardEntry & { classId?: string | null };

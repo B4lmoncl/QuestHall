@@ -103,7 +103,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 48, color: cc.accent,
             }}>
-              {companionEmoji || "x"}
+              {companionEmoji || "?"}
             </div>
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -227,7 +227,7 @@ export function WandererRest({
                       )}
                       {allDone && (
                         <div className="absolute inset-0" style={{ background: "rgba(34,197,94,0.15)" }}>
-                          <span className="absolute" style={{ top: 4, right: 4, fontSize: 18, color: "#22c55e", fontWeight: 700, lineHeight: 1 }}>x</span>
+                          <span className="absolute" style={{ top: 4, right: 4, fontSize: 18, color: "#22c55e", fontWeight: 700, lineHeight: 1 }}>✓</span>
                         </div>
                       )}
                       {urgent && !allDone && (
@@ -250,7 +250,7 @@ export function WandererRest({
                     </div>
                     <div className="text-center" style={{ maxWidth: 148 }}>
                       <p className="text-xs font-semibold leading-tight" style={{ color: "#e8e8e8" }}>{npc.name}</p>
-                      <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "x"}</p>
+                      <p className="text-xs mt-0.5" style={{ color: rc, fontSize: 10 }}>{rarityStars[npc.rarity] ?? "●"}</p>
                       {!allDone && (
                         <p className="text-xs mt-0.5 flex items-center gap-1" style={{ color: urgent ? "#f59e0b" : "rgba(255,255,255,0.3)", fontSize: 10 }}>
                           Departs in {urgent ? `${npc.hoursLeft}h` : `${npc.daysLeft}d`}
@@ -347,7 +347,7 @@ export function WandererRest({
                   style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
                 />
-                <div style={{ display: "none", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", fontSize: 32 }}>x</div>
+                <div style={{ display: "none", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", fontSize: 32 }}>?</div>
                 <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(255,215,0,0.08) 0%, transparent 60%)", pointerEvents: "none" }} />
               </div>
             </div>
@@ -457,7 +457,7 @@ export function WandererRest({
                 <div className="px-5 pt-4 pb-5">
                   {allDone ? (
                     <div className="text-center py-4">
-                      <p className="text-2xl mb-2">x</p>
+                      <p className="text-2xl mb-2">✓</p>
                       <p className="text-sm font-bold" style={{ color: "#22c55e" }}>All quests completed!</p>
                       <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.4)" }}>Well done, brave adventurer.</p>
                     </div>
@@ -534,7 +534,7 @@ export function WandererRest({
                             key={q.questId}
                             style={{ fontSize: 9, opacity: 0.3, lineHeight: 1, display: "inline-block" }}
                             title={`Quest ${q.position}: ${q.title} (locked)`}
-                          >x</span>
+                          >○</span>
                         ) : (
                           <div
                             key={q.questId}

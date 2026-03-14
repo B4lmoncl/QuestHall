@@ -73,8 +73,8 @@ function getCompanionColor(type?: string) {
 
 // Portrait path helper: falls back to "x" placeholder per type
 const COMPANION_PORTRAIT_FALLBACK: Record<string, string> = {
-  cat: "x", dog: "x", hamster: "x", bird: "x", fish: "x", rabbit: "x",
-  dragon: "x", owl: "x", phoenix: "x", wolf: "x", fox: "x", bear: "x",
+  cat: "", dog: "", hamster: "", bird: "", fish: "", rabbit: "",
+  dragon: "", owl: "", phoenix: "", wolf: "", fox: "", bear: "",
 };
 
 function getCompanionQuotes(companionType?: string, companionName?: string): string[] {
@@ -247,7 +247,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 48, color: cColor.accent,
             }}>
-              {user?.companion?.emoji || COMPANION_PORTRAIT_FALLBACK[companionType ?? ""] || "x"}
+              {user?.companion?.emoji || COMPANION_PORTRAIT_FALLBACK[companionType ?? ""] || "?"}
             </div>
           )}
 
@@ -384,7 +384,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
                                 onMouseDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(0.95)"; }}
                                 onMouseUp={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
                               >
-                                x
+                                ✓
                               </button>
                             )}
                           </div>

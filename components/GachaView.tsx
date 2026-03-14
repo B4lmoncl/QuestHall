@@ -26,9 +26,9 @@ function GachaInfoModal({ onClose }: { onClose: () => void }) {
       <div className="w-full max-w-lg max-h-[80vh] rounded-2xl p-6 overflow-y-auto" style={{ background: "linear-gradient(180deg, #1a1020 0%, #12121c 100%)", border: "1px solid rgba(167,139,250,0.25)", boxShadow: "0 0 60px rgba(167,139,250,0.1)", overscrollBehavior: "contain" }}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-base font-bold flex items-center gap-2" style={{ color: "#e8e8e8" }}>
-            <span style={{ fontSize: 20 }}>x</span> How the Wheel of Stars Works
+            <span style={{ fontSize: 20 }}>★</span> How the Wheel of Stars Works
           </h3>
-          <button onClick={onClose} className="text-xl" style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer" }}>x</button>
+          <button onClick={onClose} className="text-xl" style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer" }}>×</button>
         </div>
 
         <div className="space-y-4 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>

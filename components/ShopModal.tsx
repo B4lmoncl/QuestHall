@@ -32,9 +32,9 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>Forge Shop</h3>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{userName} · x {gold} gold</p>
+            <p className="text-xs inline-flex items-center gap-1" style={{ color: "rgba(255,255,255,0.3)" }}>{userName} · <img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated" }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gold} gold</p>
           </div>
-          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)" }}>x</button>
+          <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)" }}>×</button>
         </div>
         <div className="space-y-2 max-h-96 overflow-y-auto" style={{ overscrollBehavior: "contain" }}>
           {ITEMS.map(item => (
@@ -58,7 +58,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                   border: `1px solid ${gold >= item.cost ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
                 }}
               >
-                x {item.cost}
+                <img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {item.cost}
               </button>
             </div>
           ))}
@@ -67,7 +67,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
           {onGearBuy && (
             <>
               <div className="pt-2 pb-1">
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.7)" }}>x Workshop Tools</p>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.7)" }}>Workshop Tools</p>
               </div>
               {GEAR_TIERS_CLIENT.filter(g => g.tier > 0).map(gear => {
                 const currentTier = GEAR_TIERS_CLIENT.find(g => g.id === (currentGear || "worn"))?.tier ?? 0;
@@ -86,7 +86,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                     <img src={gear.icon} alt={gear.name} className="w-6 h-6 flex-shrink-0" style={{ imageRendering: "auto" }} />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold" style={{ color: owned ? "#818cf8" : "#f0f0f0" }}>
-                        {gear.name} {owned ? "x" : ""}
+                        {gear.name} {owned ? "✓" : ""}
                       </p>
                       <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{gear.desc}</p>
                     </div>
@@ -101,7 +101,7 @@ export function ShopModal({ userId, userName, gold, currentGear, onClose, onBuy,
                           border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
                         }}
                       >
-                        x {gear.cost}
+                        <img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gear.cost}
                       </button>
                     )}
                   </div>
