@@ -402,7 +402,7 @@ export interface CharacterData {
   equipment: Record<string, string | null>;
   stats: { kraft: number; ausdauer: number; weisheit: number; glueck: number; _setBonus?: number };
   baseStats: { kraft: number; ausdauer: number; weisheit: number; glueck: number };
-  inventory: { id: string; slot: string; name: string; emoji: string; tier: number; minLevel: number; stats: Record<string, number>; rarity: string }[];
+  inventory: { id: string; slot: string; name: string; emoji?: string; icon?: string; tier: number; minLevel: number; stats: Record<string, number>; rarity: string; desc?: string; type?: string; effect?: any }[];
   forgeTemp: number;
   season: string;
   setBonusInfo: { name: string; count: number; total: number } | null;

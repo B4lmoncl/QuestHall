@@ -308,6 +308,169 @@ const RARITY_BORDER: Record<number, string> = {
   5: "#f97316",  // orange
 };
 
+const RARITY_COLORS: Record<string, string> = {
+  common: "#9ca3af",
+  uncommon: "#22c55e",
+  rare: "#3b82f6",
+  epic: "#a855f7",
+  legendary: "#f59e0b",
+};
+
+const RARITY_LABELS: Record<string, string> = {
+  common: "Common",
+  uncommon: "Uncommon",
+  rare: "Rare",
+  epic: "Epic",
+  legendary: "Legendary",
+};
+
+const STAT_LABELS: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
+
+const GRID_COLS = 7;
+const GRID_ROWS = 12;
+const GRID_TOTAL = GRID_COLS * GRID_ROWS;
+
+type InventoryItem = CharacterData["inventory"][number];
+
+function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: { x: number; y: number } }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ left: 0, top: 0 });
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    let left = mousePos.x + 12;
+    let top = mousePos.y + 12;
+    if (left + rect.width > vw - 8) left = mousePos.x - rect.width - 12;
+    if (top + rect.height > vh - 8) top = mousePos.y - rect.height - 12;
+    if (left < 4) left = 4;
+    if (top < 4) top = 4;
+    setPos({ left, top });
+  }, [mousePos]);
+
+  const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
+  const hasStats = item.stats && Object.keys(item.stats).length > 0;
+
+  return (
+    <div
+      ref={ref}
+      className="fixed z-[200] pointer-events-none"
+      style={{ left: pos.left, top: pos.top, minWidth: 180, maxWidth: 240 }}
+    >
+      <div
+        className="rounded-lg p-3 space-y-2"
+        style={{
+          background: "#1a1a1a",
+          borderTop: `3px solid ${rarityColor}`,
+          border: `1px solid rgba(255,255,255,0.12)`,
+          borderTopColor: rarityColor,
+          borderTopWidth: 3,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+        }}
+      >
+        {/* Icon + Name */}
+        <div className="flex items-center gap-2.5">
+          <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 48, height: 48, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
+            {item.icon
+              ? <img src={item.icon} alt={item.name} width={40} height={40} style={{ imageRendering: "auto" }} />
+              : <span style={{ fontSize: 24, color: rarityColor }}>◆</span>
+            }
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-bold truncate" style={{ color: "#fff" }}>{item.name}</p>
+            <p className="text-xs font-semibold" style={{ color: rarityColor }}>{RARITY_LABELS[item.rarity] || item.rarity}</p>
+          </div>
+        </div>
+
+        {/* Description */}
+        {item.desc && (
+          <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{item.desc}</p>
+        )}
+
+        {/* Stats */}
+        {hasStats && (
+          <div className="space-y-0.5 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            {Object.entries(item.stats).map(([stat, val]) => (
+              <div key={stat} className="flex items-center justify-between text-xs">
+                <span style={{ color: "rgba(255,255,255,0.55)" }}>{STAT_LABELS[stat] || stat}</span>
+                <span className="font-mono font-semibold" style={{ color: "#4ade80" }}>+{val as number}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Slot type */}
+        {item.slot && (
+          <p className="text-xs pt-1" style={{ color: "rgba(255,255,255,0.3)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            {item.type || item.slot}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InventorySlot({ item, rarityColor, isSelected, level, onSelect }: {
+  item: InventoryItem | null;
+  rarityColor?: string;
+  isSelected: boolean;
+  level: number;
+  onSelect: (id: string) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+
+  if (!item) {
+    return (
+      <div
+        style={{
+          width: "100%",
+          aspectRatio: "1",
+          background: "rgba(255,255,255,0.04)",
+          border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 3,
+        }}
+      />
+    );
+  }
+
+  const locked = item.minLevel > level;
+
+  return (
+    <>
+      <button
+        onClick={() => onSelect(item.id)}
+        onMouseEnter={(e) => { setHovered(true); setMousePos({ x: e.clientX, y: e.clientY }); }}
+        onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          width: "100%",
+          aspectRatio: "1",
+          background: isSelected ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.04)",
+          border: `2px solid ${isSelected ? "rgba(167,139,250,0.6)" : (rarityColor || "rgba(255,255,255,0.08)")}`,
+          borderRadius: 3,
+          cursor: "pointer",
+          opacity: locked ? 0.4 : 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 1,
+          position: "relative",
+        }}
+      >
+        {item.icon
+          ? <img src={item.icon} alt={item.name} style={{ width: "85%", height: "85%", imageRendering: "auto", objectFit: "contain" }} />
+          : <span style={{ fontSize: 14, color: rarityColor || "#9ca3af", lineHeight: 1 }}>◆</span>
+        }
+      </button>
+      {hovered && <InventoryTooltip item={item} mousePos={mousePos} />}
+    </>
+  );
+}
+
 const EQUIP_SLOT_LABELS: { slot: string; emoji: string; label: string; iconSrc?: string }[] = [
   { slot: "helm", emoji: "", iconSrc: "/images/icons/equip-helm.png", label: "Helm" },
   { slot: "weapon", emoji: "", iconSrc: "/images/icons/equip-weapon.png", label: "Waffe" },
@@ -437,22 +600,24 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
 
           {/* Equipment Slots */}
           <div className="space-y-1.5 mb-4">
-            {EQUIP_SLOT_LABELS.map(({ slot, emoji, label }) => {
+            {EQUIP_SLOT_LABELS.map(({ slot, iconSrc, label }) => {
               const equippedItemId = charData?.equipment[slot];
               const item = equippedItemId
                 ? charData?.inventory.find(i => i.id === equippedItemId) ?? null
                 : null;
-              const borderColor = item ? (RARITY_BORDER[item.tier] ?? "#9ca3af") : "rgba(255,255,255,0.1)";
+              const borderColor = item ? (RARITY_COLORS[item.rarity] || RARITY_BORDER[item.tier] || "#9ca3af") : "rgba(255,255,255,0.1)";
               return (
                 <div
                   key={slot}
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
                   style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${borderColor}` }}
                 >
-                  <span className="text-sm w-5 text-center">{emoji}</span>
+                  <span className="w-5 flex items-center justify-center">
+                    {iconSrc ? <img src={iconSrc} alt={label} width={16} height={16} style={{ imageRendering: "auto" }} /> : null}
+                  </span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
-                      {item ? <><span className="inline-flex items-center gap-1">{(item as any).icon ? <img src={(item as any).icon} alt="" width={14} height={14} style={{ imageRendering: "auto" }} /> : (item.emoji && item.emoji !== "x" ? item.emoji : "◆")} {item.name}</span></> : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
+                      {item ? <><span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={14} height={14} style={{ imageRendering: "auto" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span></> : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
                     </p>
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
                   </div>
@@ -479,102 +644,91 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
           {!loading && charData && (() => {
             const equippedIds = new Set(Object.values(charData.equipment).filter(Boolean));
             const unequipped = charData.inventory.filter(i => !equippedIds.has(i.id));
-            if (unequipped.length === 0) return (
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Keine Gegenstände im Inventar.</p>
-            );
-            const selected = selectedItem ? unequipped.find(i => i.id === selectedItem) ?? null : null;
-            const equippedInSlot = selected
-              ? charData.inventory.find(i => i.id === charData.equipment[selected.slot]) ?? null
-              : null;
+
+            // TODO: drag-and-drop reordering
+
             return (
               <>
-                {/* Grid */}
-                <div className="grid grid-cols-3 gap-1.5 mb-2">
-                  {unequipped.map(item => {
-                    const locked = item.minLevel > charData.level;
-                    const bc = RARITY_BORDER[item.tier] ?? "#9ca3af";
-                    const isSelected = selectedItem === item.id;
+                {/* Diablo-style inventory grid */}
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
+                    gap: 2,
+                  }}
+                >
+                  {Array.from({ length: GRID_TOTAL }, (_, idx) => {
+                    const item = unequipped[idx] ?? null;
+                    const rarityColor = item ? (RARITY_COLORS[item.rarity] || "#9ca3af") : undefined;
                     return (
-                      <button
-                        key={item.id}
-                        onClick={() => setSelectedItem(isSelected ? null : item.id)}
-                        className="flex flex-col items-center justify-center p-1.5 rounded-lg text-center transition-all"
-                        style={{
-                          background: isSelected ? "rgba(167,139,250,0.12)" : "rgba(255,255,255,0.03)",
-                          border: `1px solid ${isSelected ? "rgba(167,139,250,0.5)" : locked ? "rgba(255,255,255,0.06)" : bc}`,
-                          opacity: locked ? 0.45 : 1,
-                          cursor: "pointer",
-                        }}
-                        title={locked ? `Lv.${item.minLevel} benötigt` : item.name}
-                      >
-                        {(item as any).icon ? <img src={(item as any).icon} alt={item.name} width={32} height={32} style={{ imageRendering: "auto" }} /> : <span className="text-lg">{item.emoji && item.emoji !== "x" ? item.emoji : "◆"}</span>}
-                        <p className="text-xs mt-0.5 truncate w-full" style={{ fontSize: 9, color: locked ? "rgba(255,255,255,0.3)" : "#e8e8e8" }}>
-                          {locked ? `Lv.${item.minLevel}` : item.name.split(" ").slice(-1)[0]}
-                        </p>
-                      </button>
+                      <InventorySlot
+                        key={idx}
+                        item={item}
+                        rarityColor={rarityColor}
+                        isSelected={item ? selectedItem === item.id : false}
+                        level={charData.level}
+                        onSelect={(id) => setSelectedItem(selectedItem === id ? null : id)}
+                      />
                     );
                   })}
                 </div>
 
-                {/* Item detail panel */}
-                {selected && (
-                  <div
-                    className="rounded-xl p-3 space-y-2"
-                    style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${RARITY_BORDER[selected.tier] ?? "#9ca3af"}50` }}
-                  >
-                    <div className="flex items-center gap-2">
-                      {(selected as any).icon ? <img src={(selected as any).icon} alt={selected.name} width={40} height={40} style={{ imageRendering: "auto" }} /> : <span className="text-2xl">{selected.emoji && selected.emoji !== "x" ? selected.emoji : "◆"}</span>}
-                      <div>
-                        <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{selected.name}</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                          Tier {selected.tier} · {selected.rarity}
-                          {selected.minLevel > 1 && ` · Lv.${selected.minLevel}+`}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Stat comparison */}
-                    {Object.keys(selected.stats).length > 0 && (
-                      <div className="space-y-0.5">
-                        {Object.entries(selected.stats).map(([stat, val]) => {
-                          const equippedVal = (equippedInSlot?.stats?.[stat] ?? 0) as number;
-                          const diff = (val as number) - equippedVal;
-                          const statLabel: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
-                          return (
-                            <div key={stat} className="flex items-center justify-between text-xs">
-                              <span style={{ color: "rgba(255,255,255,0.5)" }}>{statLabel[stat] ?? stat}</span>
-                              <span style={{ color: "#e8e8e8" }} className="font-mono">
-                                +{val as number}
-                                {equippedInSlot && diff !== 0 && (
-                                  <span className="ml-1 text-xs" style={{ color: diff > 0 ? "#4ade80" : "#f87171" }}>
-                                    ({diff > 0 ? `↑+${diff}` : `↓${diff}`})
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          );
-                        })}
-                        {equippedInSlot && (
-                          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                            Vergleich mit: {equippedInSlot.emoji} {equippedInSlot.name}
+                {/* Item detail panel (click-to-select backup) */}
+                {(() => {
+                  const selected = selectedItem ? unequipped.find(i => i.id === selectedItem) ?? null : null;
+                  if (!selected) return null;
+                  const equippedInSlot = charData.inventory.find(i => i.id === charData.equipment[selected.slot]) ?? null;
+                  return (
+                    <div
+                      className="rounded-xl p-3 space-y-2 mt-2"
+                      style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${RARITY_COLORS[selected.rarity] ?? "#9ca3af"}50` }}
+                    >
+                      <div className="flex items-center gap-2">
+                        {selected.icon ? <img src={selected.icon} alt={selected.name} width={40} height={40} style={{ imageRendering: "auto" }} /> : <span className="text-2xl" style={{ color: RARITY_COLORS[selected.rarity] || "#9ca3af" }}>◆</span>}
+                        <div>
+                          <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{selected.name}</p>
+                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+                            {RARITY_LABELS[selected.rarity] || selected.rarity}
+                            {selected.minLevel > 1 && ` · Lv.${selected.minLevel}+`}
                           </p>
-                        )}
+                        </div>
                       </div>
-                    )}
 
-                    {/* Equip button */}
-                    {selected.minLevel <= charData.level && (
-                      <button
-                        onClick={() => { handleEquip(selected.id); setSelectedItem(null); }}
-                        disabled={equipping === selected.id}
-                        className="w-full py-1.5 rounded-lg text-xs font-semibold"
-                        style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.2)", cursor: "pointer" }}
-                      >
-                        {equipping === selected.id ? "…" : "Ausrüsten"}
-                      </button>
-                    )}
-                  </div>
-                )}
+                      {Object.keys(selected.stats).length > 0 && (
+                        <div className="space-y-0.5">
+                          {Object.entries(selected.stats).map(([stat, val]) => {
+                            const equippedVal = (equippedInSlot?.stats?.[stat] ?? 0) as number;
+                            const diff = (val as number) - equippedVal;
+                            return (
+                              <div key={stat} className="flex items-center justify-between text-xs">
+                                <span style={{ color: "rgba(255,255,255,0.5)" }}>{STAT_LABELS[stat] ?? stat}</span>
+                                <span style={{ color: "#e8e8e8" }} className="font-mono">
+                                  +{val as number}
+                                  {equippedInSlot && diff !== 0 && (
+                                    <span className="ml-1 text-xs" style={{ color: diff > 0 ? "#4ade80" : "#f87171" }}>
+                                      ({diff > 0 ? `↑+${diff}` : `↓${diff}`})
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {selected.minLevel <= charData.level && (
+                        <button
+                          onClick={() => { handleEquip(selected.id); setSelectedItem(null); }}
+                          disabled={equipping === selected.id}
+                          className="w-full py-1.5 rounded-lg text-xs font-semibold"
+                          style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.2)", cursor: "pointer" }}
+                        >
+                          {equipping === selected.id ? "…" : "Ausrüsten"}
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
               </>
             );
           })()}

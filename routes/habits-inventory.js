@@ -295,15 +295,49 @@ router.get('/api/player/:name/character', (req, res) => {
       if (tier) classTier = tier.title;
     }
   }
-  const inventoryIds = u.inventory || [];
-  const inventoryItems = inventoryIds.map(id => {
-    const item = state.FULL_GEAR_ITEMS.find(g => g.id === id);
-    if (!item) return null;
-    return { id: item.id, slot: item.slot, name: item.name, emoji: item.emoji, tier: item.tier, minLevel: item.minLevel, stats: item.stats || {}, rarity: item.rarity || 'common' };
+  // Build icon lookup from gachaPool for backfilling old items missing icons
+  const gachaIconMap = {};
+  for (const pool of [state.gachaPool.standardPool, state.gachaPool.featuredPool]) {
+    for (const gi of (pool || [])) {
+      if (gi.icon) {
+        if (gi.id) gachaIconMap[gi.id] = gi.icon;
+        if (gi.name) gachaIconMap[gi.name] = gi.icon;
+      }
+    }
+  }
+
+  const rawInventory = u.inventory || [];
+  const inventoryItems = rawInventory.map(entry => {
+    // Entry can be a string ID (gear from FULL_GEAR_ITEMS) or a full loot object
+    if (typeof entry === 'string') {
+      const item = state.FULL_GEAR_ITEMS.find(g => g.id === entry);
+      if (!item) return null;
+      return { id: item.id, slot: item.slot, name: item.name, icon: item.icon || gachaIconMap[item.id] || gachaIconMap[item.name] || undefined, tier: item.tier, minLevel: item.minLevel, stats: item.stats || {}, rarity: item.rarity || 'common', desc: item.desc || undefined, type: item.type || item.slot || undefined };
+    }
+    // Full loot object from addLootToInventory
+    if (entry && typeof entry === 'object') {
+      // Try to backfill icon from gachaPool or FULL_GEAR_ITEMS
+      let icon = entry.icon;
+      if (!icon && entry.itemId) icon = gachaIconMap[entry.itemId];
+      if (!icon && entry.name) icon = gachaIconMap[entry.name];
+      // Check if it has resolvedGear referencing a FULL_GEAR_ITEMS entry
+      const gearRef = entry.resolvedGear;
+      let gearItem = null;
+      if (gearRef?.id) gearItem = state.FULL_GEAR_ITEMS.find(g => g.id === gearRef.id);
+      if (!gearItem && entry.itemId) gearItem = state.FULL_GEAR_ITEMS.find(g => g.id === entry.itemId);
+      if (gearItem) {
+        if (!icon) icon = gearItem.icon || gachaIconMap[gearItem.id] || gachaIconMap[gearItem.name];
+        return { id: entry.id, slot: gearItem.slot, name: gearItem.name, icon: icon || undefined, tier: gearItem.tier, minLevel: gearItem.minLevel, stats: gearItem.stats || {}, rarity: entry.rarity || gearItem.rarity || 'common', desc: gearItem.desc || entry.desc || undefined, type: gearItem.type || gearItem.slot || undefined };
+      }
+      // Pure loot item (consumable, etc.) — no gear reference
+      return { id: entry.id, slot: entry.type || 'consumable', name: entry.name || 'Unknown', icon: icon || undefined, tier: 0, minLevel: 0, stats: entry.stats || {}, rarity: entry.rarity || 'common', desc: entry.desc || undefined, type: entry.type || 'consumable', effect: entry.effect || undefined };
+    }
+    return null;
   }).filter(Boolean);
   for (const item of equippedItems) {
     if (!inventoryItems.find(i => i.id === item.id)) {
-      inventoryItems.push({ id: item.id, slot: item.slot, name: item.name, emoji: item.emoji, tier: item.tier, minLevel: item.minLevel, stats: item.stats || {}, rarity: item.rarity || 'common' });
+      const icon = item.icon || gachaIconMap[item.id] || gachaIconMap[item.name] || undefined;
+      inventoryItems.push({ id: item.id, slot: item.slot, name: item.name, icon, tier: item.tier, minLevel: item.minLevel, stats: item.stats || {}, rarity: item.rarity || 'common', desc: item.desc || undefined, type: item.type || item.slot || undefined });
     }
   }
   const companion = u.companion ? {
