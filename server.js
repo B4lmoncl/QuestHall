@@ -16,7 +16,7 @@ const rateLimit = require('express-rate-limit');
 // ─── Shared modules ──────────────────────────────────────────────────────────
 const {
   state, AGENT_NAMES, NPC_ROTATION_MS,
-  ensureDataDir, ensureRuntimeDir, ensureRuntimeFiles, ensureTemplateFiles,
+  ensureDataDir, ensureRuntimeDir, ensureRuntimeFiles, seedMutableFiles, ensureTemplateFiles,
   initStore, loadData, loadQuests, loadCampaigns, loadManagedKeys,
   loadUsers, loadPlayerProgress, loadQuestCatalog, loadClasses,
   loadCompanionsData, loadRoadmap, loadRituals, loadHabits,
@@ -96,6 +96,7 @@ app.use(require('./routes/npcs-misc'));  // Must be last (has SPA fallback catch
 // ─── Boot sequence ───────────────────────────────────────────────────────────
 ensureDataDir();
 ensureRuntimeFiles();
+seedMutableFiles();
 ensureTemplateFiles();
 initStore();
 loadData();
