@@ -353,17 +353,16 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
   const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
   const hasStats = item.stats && Object.keys(item.stats).length > 0;
 
-  // Position: top-right corner of tooltip at cursor
-  const tw = 340; // estimated tooltip width
-  const th = 300; // estimated tooltip height
-  let left = mousePos.x - tw;
-  let top = mousePos.y - 4;
+  // Position: top-left corner of tooltip at cursor
+  const th = 300;
+  let left = mousePos.x + 16;
+  let top = mousePos.y;
   if (typeof window !== "undefined") {
-    // If tooltip would go off left edge, flip to right of cursor
-    if (left < 8) left = mousePos.x + 12;
-    // If tooltip would go off bottom, shift up
+    const tw = 340;
+    if (left + tw > window.innerWidth - 8) left = mousePos.x - tw - 8;
     if (top + th > window.innerHeight - 8) top = window.innerHeight - th - 8;
     if (top < 4) top = 4;
+    if (left < 4) left = 4;
   }
 
   return (
@@ -551,11 +550,11 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
   const cls = charData?.classId ? classesList.find(c => c.id === charData.classId) : null;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
+    <div>
     <div
       className="relative overflow-hidden rounded-t-2xl"
       style={{
-        minHeight: 520, flex: 1,
+        minHeight: 520,
         backgroundImage: "url('/images/bg-character-spring.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -607,7 +606,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         {/* LEFT: Inventory Panel */}
         <div
           className="flex-shrink-0 rounded-xl p-2 overflow-y-auto"
-          style={{ width: 352, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh" }}
+          style={{ width: 362, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh", paddingRight: 10 }}
         >
           <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Inventar</p>
 
