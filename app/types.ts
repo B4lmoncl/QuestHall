@@ -324,6 +324,7 @@ export interface GachaItem {
   rarity: "common" | "uncommon" | "rare" | "epic" | "legendary";
   type: "weapon" | "armor" | "consumable" | "gacha";
   emoji: string;
+  icon?: string;
   stats?: Record<string, number>;
   effect?: string;
   desc: string;
