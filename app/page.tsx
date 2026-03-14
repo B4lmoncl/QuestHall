@@ -2435,7 +2435,7 @@ export default function Dashboard() {
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ color: rarityColor, background: `${rarityColor}18`, border: `1px solid ${rarityColor}40` }}>{rarity}</span>
                       <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.35)" }}>{q.type ?? "personal"}</span>
-                      {q.priority && <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.3)" }}>· {q.priority}</span>}
+                      {/* priority hidden from modal header */}
                       {q.minLevel != null && q.minLevel > 0 && (() => {
                         const meets = playerLevelInfo.level >= q.minLevel;
                         return (
@@ -2538,7 +2538,13 @@ export default function Dashboard() {
                 {!isCoop && reviewApiKey && playerName && isClaimedByMe && (
                   <>
                     <button onClick={() => { handleUnclaim(q.id); setQuestDetailModal(null); }} className="text-xs px-3 py-1.5 rounded font-medium" style={{ background: "rgba(239,68,68,0.1)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)", cursor: "pointer" }}>Unclaim</button>
-                    <button onClick={() => { handleComplete(q.id, q.title); setQuestDetailModal(null); }} className="text-sm px-4 py-1.5 rounded font-semibold" style={{ background: "rgba(251,191,36,0.15)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.35)", cursor: "pointer" }}>Abgeschlossen</button>
+                    <button
+                      onClick={() => { handleComplete(q.id, q.title); setQuestDetailModal(null); }}
+                      className="text-sm px-4 py-1.5 rounded font-semibold"
+                      style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.35)", cursor: "pointer", transition: "background 0.15s, color 0.15s" }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#22c55e"; (e.currentTarget as HTMLButtonElement).style.color = "#1a1a1a"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(34,197,94,0.15)"; (e.currentTarget as HTMLButtonElement).style.color = "#22c55e"; }}
+                    >Abgeschlossen</button>
                   </>
                 )}
                 {isCoop && isCoopPartner && !hasCoopClaimed && q.status !== "completed" && reviewApiKey && playerName && (
