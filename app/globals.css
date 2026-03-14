@@ -481,8 +481,8 @@ body {
   100% { filter: drop-shadow(0 0 20px rgba(167,139,250,0.55)) drop-shadow(0 0 45px rgba(167,139,250,0.3)); }
 }
 
-/* Pool card glow breathing for epic/legendary items */
+/* Pool card glow breathing for epic/legendary items — glow overlay only */
 @keyframes pool-glow-breathe {
-  0%, 100% { opacity: 1; filter: brightness(1); }
-  50% { opacity: 0.85; filter: brightness(1.15); }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
