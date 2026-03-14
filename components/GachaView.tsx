@@ -873,7 +873,10 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                 const hasGlow = rarity === "legendary" || rarity === "epic";
                 return (
                   <div key={rarity}>
-                    <p className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: cfg.color }}>{cfg.label} ({items.length})</p>
+                    <div className="flex items-center gap-3 mb-3">
+                      <p className="text-[10px] font-bold uppercase tracking-wider flex-shrink-0" style={{ color: cfg.color }}>{cfg.label} ({items.length})</p>
+                      <div className="flex-1 h-px" style={{ background: `linear-gradient(90deg, ${cfg.border}, transparent)` }} />
+                    </div>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                       {items.map(item => (
                         <div
