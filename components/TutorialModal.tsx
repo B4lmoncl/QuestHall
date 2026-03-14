@@ -68,7 +68,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li><span style={{ color: "#f0f0f0" }}>Über dich</span> — Optionales Alter und Ziele (helfen bei Quest-Vorschlägen).</li>
                   <li><span style={{ color: "#f0f0f0" }}>Klasse</span> — Wähle deinen Berufspfad oder reiche eine neue Klasse ein.</li>
                   <li><span style={{ color: "#f0f0f0" }}>Begleiter</span> — Haustier oder virtueller Begleiter.</li>
-                  <li><span style={{ color: "#f0f0f0" }}>API-Key</span> — Dein einzigartiger Login-Schlüssel. Sicher aufbewahren!</li>
+                  <li><span style={{ color: "#f0f0f0" }}>Passwort</span> — Wähle ein sicheres Passwort. Damit loggst du dich ein.</li>
                 </ol>
               </GuideSection>
               <GuideSection title="Klassen">
@@ -106,6 +106,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li><span style={{ color: "#3b82f6" }}>Learning (blau)</span> — Lernen, Lesen, Weiterbildung</li>
                   <li><span style={{ color: "#f97316" }}>Fitness (orange)</span> — Training, Sport, Gesundheit</li>
                   <li><span style={{ color: "#ec4899" }}>Social (pink)</span> — Freunde treffen, Kontakte pflegen</li>
+                  <li><span style={{ color: "#f43f5e" }}>Coop (rot)</span> — Gemeinsam mit Partner oder Freund</li>
                 </ul>
               </GuideSection>
               <GuideSection title="Schwierigkeit & Rarity">
@@ -119,6 +120,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               </GuideSection>
               <GuideSection title="Quest annehmen">
                 Klicke auf eine Quest → &quot;Annehmen&quot;. Nach Abschluss → &quot;Abschließen&quot;. XP und Gold werden sofort gutgeschrieben.
+                <p className="mt-1.5">Dein Quest-Pool wird automatisch aufgefüllt. Klicke auf das Scroll-Icon um neue Quests zu laden.</p>
               </GuideSection>
             </>
           )}
@@ -148,12 +150,12 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           )}
           {tab === "gacha" && (
             <>
-              <GuideSection title="Das Sternentor">
-                Am Sternentor kannst du Items ziehen — Ausrüstung, Tränke und seltene Artefakte.
+              <GuideSection title="Vault of Fate">
+                Im Vault of Fate kannst du Items ziehen — Ausrüstung, Tränke und seltene Artefakte.
               </GuideSection>
               <GuideSection title="Wie es funktioniert">
                 <ul className="space-y-1 mt-1">
-                  <li>• Ein Pull kostet 100 Gold.</li>
+                  <li>• Ein Pull kostet 100 Stardust.</li>
                   <li>• Jedes Item hat eine Rarity: Common, Uncommon, Rare, Epic oder Legendary.</li>
                   <li>• Das Pity-System garantiert nach einer bestimmten Anzahl Pulls ein seltenes Item.</li>
                 </ul>
@@ -163,6 +165,9 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               </GuideSection>
               <GuideSection title="Inventar">
                 Gezogene Items landen in deinem Inventar auf dem Charakter-Screen.
+              </GuideSection>
+              <GuideSection title="Währungen">
+                Gold, Stardust, Rune Shards und weitere Währungen bekommst du durch Quests und Rituale.
               </GuideSection>
             </>
           )}
@@ -185,8 +190,14 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li>• <span style={{ color: "#a855f7" }}>Legend</span> (365 Tage)</li>
                 </ul>
               </GuideSection>
-              <GuideSection title="Gelübde">
-                Gelübde sind langfristige Versprechen an dich selbst. Sie erscheinen im Shrine of Vows und erinnern dich an deine großen Ziele.
+              <GuideSection title="Ätherbund">
+                Wähle einen Ätherbund (Spark bis Eternity) um dein Ritual zu verlängern und bessere Boni zu bekommen.
+              </GuideSection>
+              <GuideSection title="Blutknoten">
+                Der Blutknoten verdreifacht Belohnungen, aber bei Versagen verfallen alle Rewards.
+              </GuideSection>
+              <GuideSection title="Vow Shrine">
+                Im Vow Shrine legst du langfristige Gelübde ab — Versprechen an dich selbst.
               </GuideSection>
             </>
           )}
@@ -198,13 +209,23 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               <GuideSection title="Gold">
                 Gold bekommst du für Quests, Rituale und NPC-Aufträge. Ausgeben kannst du es:
                 <ul className="space-y-1 mt-1">
-                  <li>• Im Forge Shop — echte Belohnungen einlösen</li>
-                  <li>• Am Sternentor — Gacha Pulls</li>
-                  <li>• (Bald) Im Bazaar — Items verkaufen</li>
+                  <li>• Im The Bazaar — echte Belohnungen einlösen</li>
+                  <li>• Im Vault of Fate — Gacha Pulls</li>
                 </ul>
               </GuideSection>
               <GuideSection title="Forge-Temperatur">
                 Deine Forge-Temperatur zeigt wie aktiv du bist (0-100%). Erledige Quests um sie hochzuhalten. Bei 0% bekommst du eine <span style={{ color: "#ef4444" }}>XP-Strafe</span>.
+                <p className="mt-1">Die Deepforge-Temperatur zeigt wie aktiv du bist.</p>
+              </GuideSection>
+              <GuideSection title="Währungen">
+                <ul className="space-y-1 mt-1">
+                  <li><span style={{ color: "#f59e0b" }}>Gold</span> — Hauptwährung für Belohnungen und Gacha</li>
+                  <li><span style={{ color: "#67e8f9" }}>Stardust</span> — Gacha-Währung für Vault of Fate Pulls</li>
+                  <li><span style={{ color: "#34d399" }}>Essenz</span> — Crafting-Ressource für besondere Items</li>
+                  <li><span style={{ color: "#a855f7" }}>Rune Shards</span> — Seltene Währung für Rune-Upgrades</li>
+                  <li><span style={{ color: "#3b82f6" }}>Guild Coins</span> — Gildenwährung für Guild-Shop</li>
+                  <li><span style={{ color: "#c084fc" }}>Moondust</span> — Mondphasen-Währung für Mondrituale</li>
+                </ul>
               </GuideSection>
               <GuideSection title="Streaks">
                 Erledige jeden Tag mindestens eine Quest oder ein Ritual um deinen Streak zu halten. Längere Streaks erhöhen deinen Gold-Multiplikator.
@@ -223,6 +244,9 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li>• Spezial-Achievements (alle Quest-Typen, Speed-Runs, Easter Eggs...)</li>
                 </ul>
                 <p className="mt-1.5" style={{ color: "rgba(255,255,255,0.4)" }}>Eingeloggt siehst du welche Achievements du schon hast (goldener Rahmen).</p>
+              </GuideSection>
+              <GuideSection title="Begleiter-Achievements">
+                Spezielle Achievements für deine Begleiter: <span style={{ color: "#f97316" }}>Ember Sprite</span>, <span style={{ color: "#a78bfa" }}>Lore Owl</span> und <span style={{ color: "#9ca3af" }}>Gear Golem</span> schalten eigene Meilensteine frei.
               </GuideSection>
             </>
           )}
@@ -272,7 +296,7 @@ export const TUTORIAL_STEPS = [
   {
     key: "stat-cards",
     title: "Deine Stats",
-    desc: "Forge-Temperatur, aktive Quests, abgeschlossene Quests und Gold. Logge dich ein um deine persönlichen Werte zu sehen.",
+    desc: "Forge Streak, aktive Quests, abgeschlossene Quests und Gold. Logge dich ein um deine persönlichen Werte zu sehen.",
     target: "stat-cards",
     position: "bottom" as const,
   },
@@ -313,8 +337,8 @@ export const TUTORIAL_STEPS = [
   },
   {
     key: "gacha",
-    title: "Das Sternentor",
-    desc: "Ziehe Items am Sternentor — Ausrüstung, Tränke und seltene Artefakte. Pity-System inklusive!",
+    title: "Vault of Fate",
+    desc: "Ziehe Items im Vault of Fate — Ausrüstung, Tränke und seltene Artefakte. Pity-System inklusive!",
     target: null,
     position: "center" as const,
   },
@@ -416,7 +440,7 @@ export function TutorialOverlay({ step, onNext, onSkip }: { step: number; onNext
       {isCentered && (
         <div
           className="fixed inset-0"
-          style={{ background: "rgba(0,0,0,0.78)", zIndex: 9998 }}
+          style={{ background: "rgba(0,0,0,0.55)", zIndex: 9998, animation: "tutorial-fade-step 0.5s ease forwards" }}
           onClick={onNext}
         />
       )}
