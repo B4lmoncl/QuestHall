@@ -134,12 +134,11 @@ function ItemRevealCard({ result }: { result: GachaPullResult }) {
 
   return (
     <div
-      className="relative rounded-2xl p-8 flex flex-col items-center gap-4 min-w-[260px] max-w-[340px]"
+      className={`relative rounded-2xl p-8 flex flex-col items-center gap-4 min-w-[260px] max-w-[340px] ${rarity === "legendary" ? "gacha-card-legendary" : rarity === "epic" ? "gacha-card-epic" : ""}`}
       style={{
         background: `linear-gradient(135deg, #1a1a1a 0%, ${cfg.bg} 100%)`,
         border: `2px solid ${cfg.border}`,
         boxShadow: `0 0 40px ${cfg.glow}, 0 0 80px ${cfg.glow}, inset 0 0 20px ${cfg.bg}`,
-        animation: "gacha-card-glow-pulse 2.5s ease-in-out infinite alternate",
       }}
     >
       {/* Prominent rarity label */}
@@ -150,13 +149,21 @@ function ItemRevealCard({ result }: { result: GachaPullResult }) {
         {cfg.label}
       </span>
 
-      {/* Item emoji — bigger */}
-      <span className="text-7xl" style={{
-        filter: `drop-shadow(0 0 16px ${cfg.glow})`,
-        animation: isLegendary ? "gacha-legendary-glow 2s ease-in-out infinite" : undefined,
-      }}>
-        {result.item.emoji}
-      </span>
+      {/* Item icon */}
+      {result.item.icon && result.item.icon.startsWith("/") ? (
+        <img src={result.item.icon} alt="" width={80} height={80} style={{
+          imageRendering: "auto",
+          filter: `drop-shadow(0 0 16px ${cfg.glow})`,
+          animation: isLegendary ? "gacha-legendary-glow 2s ease-in-out infinite" : undefined,
+        }} />
+      ) : (
+        <span className="text-7xl" style={{
+          filter: `drop-shadow(0 0 16px ${cfg.glow})`,
+          animation: isLegendary ? "gacha-legendary-glow 2s ease-in-out infinite" : undefined,
+        }}>
+          {result.item.emoji || result.item.name?.slice(0, 2)}
+        </span>
+      )}
 
       {/* Item name — bigger */}
       <p className="text-base font-bold text-center" style={{ color: cfg.color }}>
@@ -437,11 +444,18 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
                     opacity: 0,
                   }}
                 >
-                  <span className="text-3xl sm:text-4xl" style={{
-                    filter: isLeg ? `drop-shadow(0 0 8px ${cfg.glow})` : undefined,
-                  }}>
-                    {result.item.emoji}
-                  </span>
+                  {result.item.icon && result.item.icon.startsWith("/") ? (
+                    <img src={result.item.icon} alt="" width={40} height={40} style={{
+                      imageRendering: "auto",
+                      filter: isLeg ? `drop-shadow(0 0 8px ${cfg.glow})` : undefined,
+                    }} />
+                  ) : (
+                    <span className="text-3xl sm:text-4xl" style={{
+                      filter: isLeg ? `drop-shadow(0 0 8px ${cfg.glow})` : undefined,
+                    }}>
+                      {result.item.emoji || result.item.name?.slice(0, 2)}
+                    </span>
+                  )}
                   <p className="text-xs sm:text-sm font-semibold text-center leading-tight" style={{ color: cfg.color }}>
                     {result.item.name}
                   </p>

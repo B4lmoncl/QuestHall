@@ -41,7 +41,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
           className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg flex-shrink-0"
           style={{ background: `linear-gradient(135deg, ${user.color}, ${user.color}99)`, boxShadow: `0 4px 14px ${user.color}50`, color: "#fff" }}
         >
-          {user.avatar}
+          {user.avatar || user.name?.slice(0, 2).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
             className="mt-2 flex items-center gap-1.5 px-2 py-1 rounded-lg"
             style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}
           >
-            <span className="text-sm">{c.emoji}</span>
+            {c.emoji && c.emoji !== "x" && c.emoji.startsWith("/") ? <img src={c.emoji} alt="" width={18} height={18} style={{ imageRendering: "auto" }} /> : c.emoji && c.emoji !== "x" ? <span className="text-sm">{c.emoji}</span> : null}
             <span className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>{c.name}</span>
             {c.isReal && <span className="text-xs ml-auto" style={{ color: "rgba(255,255,255,0.25)" }}>Haustier</span>}
           </div>
@@ -187,13 +187,13 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
                   title={`${COMPANION_META[c.id]?.name ?? c.name} (+2% XP) — ${mood.tip}`}
                   style={{ cursor: "default" }}
                 >
-                  {COMPANION_META[c.id]?.icon ?? c.icon}
+                  {(() => { const iconVal = COMPANION_META[c.id]?.icon ?? c.icon; return iconVal && iconVal.startsWith("/") ? <img src={iconVal} alt="" width={18} height={18} style={{ imageRendering: "auto" }} /> : iconVal; })()}
                 </span>
               ))}
               <span className="text-xs ml-auto" style={{ color: "rgba(99,102,241,0.5)" }}>+{companions.length * 2}% XP</span>
             </div>
             <div className="flex items-center gap-1">
-              <span className="text-xs" title={mood.tip}>{mood.emoji}</span>
+              {mood.emoji.startsWith("/") ? <img src={mood.emoji} alt="" width={14} height={14} style={{ imageRendering: "auto" }} title={mood.tip} /> : <span className="text-xs" title={mood.tip}>{mood.emoji}</span>}
               <span className="text-xs" style={{ color: mood.label === "happy" ? "#22c55e" : mood.label === "sad" ? "#ef4444" : "rgba(255,255,255,0.25)" }}>
                 {mood.label === "happy" ? "Companions are happy!" : mood.label === "sad" ? "Companions need attention" : "Companions are fine"}
               </span>
@@ -212,7 +212,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
               title={`${a.name}: ${a.desc}`}
               style={{ cursor: "default" }}
             >
-              {a.icon}
+              {a.icon && a.icon.startsWith("/") ? <img src={a.icon} alt="" width={18} height={18} style={{ imageRendering: "auto" }} /> : a.icon}
             </span>
           ))}
         </div>

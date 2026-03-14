@@ -57,7 +57,7 @@ function FlavorToastContent({ toast, onClose }: { toast: { message: string; icon
       className="rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl"
       style={{ background: "#1e2a1e", border: "1px solid rgba(34,197,94,0.4)", boxShadow: "0 8px 32px rgba(34,197,94,0.15)", maxWidth: 320, width: "100%" }}
     >
-      <span className="text-2xl flex-shrink-0">{toast.icon}</span>
+      {toast.icon && toast.icon.startsWith("/") ? <img src={toast.icon} alt="" width={28} height={28} style={{ imageRendering: "auto", flexShrink: 0 }} /> : <span className="text-2xl flex-shrink-0">{toast.icon}</span>}
       <div className="flex-1 min-w-0">
         <p className="text-sm font-bold" style={{ color: "#22c55e" }}>{toast.message}</p>
         {toast.sub && <p className="text-xs mt-0.5 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{toast.sub}</p>}
@@ -73,7 +73,7 @@ function AchievementToastContent({ achievement, onClose }: { achievement: Earned
       className="rounded-xl px-5 py-4 flex items-center gap-4 shadow-2xl"
       style={{ background: "#252525", border: "1px solid rgba(245,158,11,0.5)", boxShadow: "0 8px 48px rgba(245,158,11,0.3)", maxWidth: 360, width: "100%" }}
     >
-      <span className="text-2xl flex-shrink-0">{achievement.icon}</span>
+      {achievement.icon && achievement.icon.startsWith("/") ? <img src={achievement.icon} alt="" width={28} height={28} style={{ imageRendering: "auto", flexShrink: 0 }} /> : <span className="text-2xl flex-shrink-0">{achievement.icon}</span>}
       <div className="flex-1 min-w-0">
         <p className="text-xs font-bold" style={{ color: "#f59e0b" }}>Achievement Unlocked!</p>
         <p className="text-sm font-semibold" style={{ color: "#f0f0f0" }}>{achievement.name}</p>

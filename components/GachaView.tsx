@@ -876,7 +876,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                     <div className="space-y-1.5">
                       {items.map(item => (
                         <div key={item.id} className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                          <span className="text-base">{item.emoji || "?"}</span>
+                          {item.icon && item.icon.startsWith("/") ? <img src={item.icon} alt="" width={24} height={24} style={{ imageRendering: "auto" }} /> : item.emoji ? <span className="text-base">{item.emoji}</span> : <span className="text-xs font-medium" style={{ color: "rgba(255,255,255,0.4)" }}>{item.name?.slice(0, 2)}</span>}
                           <span className="text-xs font-semibold" style={{ color: cfg.color }}>{item.name}</span>
                           <span className="text-[9px] ml-auto font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}

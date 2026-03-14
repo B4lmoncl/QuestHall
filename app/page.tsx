@@ -791,7 +791,7 @@ export default function Dashboard() {
                       padding: 0,
                     }}
                   >
-                    <img src="/images/portraits/hero-male.png" alt={playerName} style={{ width: "100%", height: "100%", objectFit: "cover", imageRendering: "pixelated" }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"; }} />
+                    <img src="/images/portraits/hero-male.png" alt={playerName} style={{ width: "100%", height: "100%", objectFit: "cover", imageRendering: "auto" }} onError={e => { (e.currentTarget as HTMLImageElement).style.display = "none"; (e.currentTarget.nextElementSibling as HTMLElement).style.display = "flex"; }} />
                     <div style={{ display: "none", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: `linear-gradient(135deg, ${loggedInUser?.color ?? "#a78bfa"}, ${loggedInUser?.color ?? "#a78bfa"}88)`, color: "#fff", fontSize: 13, fontWeight: "bold" }}>{playerName.slice(0, 1).toUpperCase()}</div>
                   </button>
                   {settingsPopupOpen && (
@@ -1102,7 +1102,7 @@ export default function Dashboard() {
                   src="/images/portraits/hero-male.png"
                   alt={playerName}
                   className="w-28 h-28 rounded-xl object-cover"
-                  style={{ imageRendering: "pixelated", border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
+                  style={{ imageRendering: "auto", border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
                   onError={e => {
                     const img = e.currentTarget as HTMLImageElement;
                     img.style.display = "none";
@@ -1276,19 +1276,18 @@ export default function Dashboard() {
         })()}
 
         {/* View toggle */}
-        {/* TODO: replace nav-tab icons with pixel art once ui-nav-* assets exist */}
         <div className="flex gap-1 flex-wrap" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
-            { key: "questBoard",    label: "The Great Hall",     tutorialKey: "quest-board-tab" },
-            { key: "npcBoard",      label: "The Wanderer's Rest", tutorialKey: "npc-board-tab" },
-            { key: "campaign",    label: "The Observatory",        tutorialKey: "campaign-tab" },
-            { key: "klassenquests", label: "The Arcanum",  tutorialKey: null },
-            ...(playerName ? [{ key: "character", label: "Character", tutorialKey: null }] : []),
-            { key: "shop",        label: "The Bazaar",               tutorialKey: null },
-            { key: "gacha",       label: "Vault of Fate",            tutorialKey: null },
-            { key: "leaderboard", label: "The Proving Grounds", tutorialKey: "leaderboard-tab" },
-            { key: "honors",      label: "Hall of Honors",  tutorialKey: null },
-            { key: "season",      label: `${CURRENT_SEASON.icon} Season`, tutorialKey: "season-tab" },
+            { key: "questBoard",    label: "The Great Hall",     tutorialKey: "quest-board-tab", iconSrc: "/images/icons/nav-great-hall.png" },
+            { key: "npcBoard",      label: "The Wanderer's Rest", tutorialKey: "npc-board-tab", iconSrc: "/images/icons/nav-wanderer.png" },
+            { key: "campaign",    label: "The Observatory",        tutorialKey: "campaign-tab", iconSrc: "/images/icons/nav-observatory.png" },
+            { key: "klassenquests", label: "The Arcanum",  tutorialKey: null, iconSrc: "/images/icons/nav-arcanum.png" },
+            ...(playerName ? [{ key: "character", label: "Character", tutorialKey: null, iconSrc: "/images/icons/nav-character.png" }] : []),
+            { key: "shop",        label: "The Bazaar",               tutorialKey: null, iconSrc: "/images/icons/nav-bazaar.png" },
+            { key: "gacha",       label: "Vault of Fate",            tutorialKey: null, iconSrc: "/images/icons/nav-vault.png" },
+            { key: "leaderboard", label: "The Proving Grounds", tutorialKey: "leaderboard-tab", iconSrc: "/images/icons/nav-proving.png" },
+            { key: "honors",      label: "Hall of Honors",  tutorialKey: null, iconSrc: "/images/icons/nav-honors.png" },
+            { key: "season",      label: `${CURRENT_SEASON.name} Season`, tutorialKey: "season-tab", iconSrc: "" },
           ].map(v => (
             "isDivider" in v && v.isDivider ? (
               <span key={v.key} className="text-xs font-semibold uppercase tracking-widest px-2 py-1.5 flex items-center" style={{ color: "rgba(255,215,0,0.5)", letterSpacing: "0.1em", pointerEvents: "none" }}>
@@ -1299,13 +1298,14 @@ export default function Dashboard() {
               key={v.key}
               data-feedback-id={`nav.tab.${v.key}`}
               onClick={() => setDashView(v.key as typeof dashView)}
-              className="btn-interactive text-sm font-semibold px-3 py-1.5 rounded transition-all"
+              className="btn-interactive text-sm font-semibold px-3 py-1.5 rounded transition-all inline-flex items-center gap-1.5"
               style={{
                 background: dashView === v.key ? "#252525" : "transparent",
                 color: dashView === v.key ? "#f0f0f0" : "rgba(255,255,255,0.3)",
               }}
               {...(v.tutorialKey ? { "data-tutorial": v.tutorialKey } : {})}
             >
+              {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={16} height={16} style={{ imageRendering: "pixelated", opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
               {v.label}
             </button>
             )
@@ -1914,7 +1914,7 @@ export default function Dashboard() {
                                 <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(245,158,11,0.12)" }}>
                                   <img src="/images/icons/ui-ritual-rune.png" alt="" width={28} height={28} style={{ imageRendering: "pixelated" }} onError={e => (e.currentTarget.style.display = "none")} />
                                   <div>
-                                    <h3 className="text-sm font-bold" style={{ color: "#e8d5a3" }}><img src="/images/icons/ui-ritual-rune.png" alt="" width={20} height={20} style={{ imageRendering: "pixelated", verticalAlign: "middle", marginRight: 6 }} />Forge a New Rite</h3>
+                                    <h3 className="text-sm font-bold" style={{ color: "#e8d5a3" }}>Forge a New Rite</h3>
                                     <p className="text-xs" style={{ color: "rgba(200,170,100,0.4)" }}>Seraine Ashwell — Ritual Chamber</p>
                                   </div>
                                   <button onClick={closeRitualModal} style={{ marginLeft: "auto", width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.07)", border: "none", color: "rgba(255,255,255,0.45)", fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }} onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.filter = "brightness(1.6)"; }} onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.filter = ""; }}>×</button>
@@ -1972,8 +1972,8 @@ export default function Dashboard() {
                                   </div>
                                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(245,158,11,0.1)" }}>
                                     <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(200,170,100,0.45)" }}>Reward Preview</p>
-                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Daily: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>5 <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated" }} /></span> <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Bond Bonus: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={14} height={14} style={{ imageRendering: "pixelated" }} /></span> <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
+                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Daily: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>5 <img src="/images/icons/reward-gold.png" width={20} height={20} style={{ imageRendering: "auto" }} /></span> <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Bond Bonus: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={20} height={20} style={{ imageRendering: "auto" }} /></span> <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
                                   </div>
                                   <div className="flex gap-2 pt-1">
                                     <button onClick={closeRitualModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>

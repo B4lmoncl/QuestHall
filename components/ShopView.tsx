@@ -37,7 +37,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Bazaar</span>
         <div className="flex items-center gap-2 ml-auto">
-          <img src="/images/icons/currency-gold.png" alt="" width={18} height={18} style={{ imageRendering: "pixelated" }} onError={e => { e.currentTarget.style.display = "none"; }} />
+          <img src="/images/icons/currency-gold.png" alt="" width={24} height={24} style={{ imageRendering: "auto" }} onError={e => { e.currentTarget.style.display = "none"; }} />
           <span className="text-base font-mono font-bold" style={{ color: "#f59e0b" }}>{gold}</span>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                     border: `1px solid ${canAfford ? "rgba(245,158,11,0.4)" : "rgba(255,255,255,0.08)"}`,
                   }}
                 >
-                  <img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {item.cost}
+                  <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "auto", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {item.cost}
                 </button>
               </div>
             );
@@ -108,7 +108,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
                       border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
                     }}
                   >
-                    <img src="/images/icons/currency-gold.png" alt="" width={12} height={12} style={{ imageRendering: "pixelated", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gear.cost}
+                    <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "auto", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gear.cost}
                   </button>
                 )}
                 {owned && <span className="text-xs px-2.5 py-1" style={{ color: "rgba(99,102,241,0.5)" }}>Owned</span>}

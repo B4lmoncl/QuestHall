@@ -56,6 +56,36 @@ body {
   border-radius: 2px;
 }
 
+@keyframes premium-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--glow-color)); opacity: 1; }
+  50% { filter: drop-shadow(0 0 8px var(--glow-color)); opacity: 0.9; }
+}
+
+@keyframes premium-breathe-strong {
+  0%, 100% { filter: drop-shadow(0 0 6px var(--glow-color)); opacity: 1; transform: scale(1); }
+  50% { filter: drop-shadow(0 0 14px var(--glow-color)); opacity: 0.88; transform: scale(1.02); }
+}
+
+.premium-stardust {
+  --glow-color: rgba(167, 139, 250, 0.7);
+  animation: premium-breathe 2.5s ease-in-out infinite;
+}
+
+.premium-rune-shards {
+  --glow-color: rgba(129, 140, 248, 0.7);
+  animation: premium-breathe 2.5s ease-in-out infinite;
+}
+
+.gacha-card-epic {
+  --glow-color: rgba(168, 85, 247, 0.6);
+  animation: premium-breathe-strong 2.5s ease-in-out infinite;
+}
+
+.gacha-card-legendary {
+  --glow-color: rgba(249, 115, 22, 0.7);
+  animation: premium-breathe-strong 2s ease-in-out infinite;
+}
+
 @keyframes pulse-gold-dot {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); opacity: 1; }
   50% { box-shadow: 0 0 0 4px rgba(245,158,11,0); opacity: 0.75; }
