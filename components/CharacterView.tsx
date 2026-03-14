@@ -821,7 +821,21 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>Forge Temp</span>
-                    <span className="text-xs font-mono" style={{ color: charData.forgeTemp >= 70 ? "#f97316" : charData.forgeTemp >= 40 ? "#facc15" : "#9ca3af" }}>
+                    <span className="flex items-center gap-1 text-xs font-mono" style={{ color: charData.forgeTemp >= 70 ? "#f97316" : charData.forgeTemp >= 40 ? "#facc15" : "#9ca3af" }}>
+                      <img
+                        src="/images/icons/ach-forge-novice.png"
+                        alt="forge"
+                        width={16}
+                        height={16}
+                        style={{
+                          imageRendering: "auto",
+                          filter: charData.forgeTemp >= 70
+                            ? "brightness(1.2) sepia(1) saturate(3) hue-rotate(-10deg)"
+                            : charData.forgeTemp >= 40
+                            ? "brightness(1.1) sepia(1) saturate(2) hue-rotate(10deg)"
+                            : "brightness(0.6) grayscale(0.8)",
+                        }}
+                      />
                       {charData.forgeTemp}%
                     </span>
                   </div>

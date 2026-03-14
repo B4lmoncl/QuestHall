@@ -18,10 +18,13 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
   const temp = Math.min(user.forgeTemp ?? 0, 100);
   const gold = user.gold ?? 0;
   const achs = user.earnedAchievements ?? [];
-  const tempIcons = { cold: "/images/icons/temp-cold.png", warm: "/images/icons/temp-warm.png", hot: "/images/icons/temp-hot.png" };
   const tempKey = temp <= 33 ? "cold" : temp <= 66 ? "warm" : "hot";
-  const tempIcon = tempKey;
-  const tempColor = temp <= 33 ? "#ef4444" : temp <= 66 ? "#f97316" : "#60a5fa";
+  const tempColor = temp <= 33 ? "#9ca3af" : temp <= 66 ? "#facc15" : "#f97316";
+  const forgeFilter = temp >= 70
+    ? "brightness(1.2) sepia(1) saturate(3) hue-rotate(-10deg)"
+    : temp >= 40
+    ? "brightness(1.1) sepia(1) saturate(2) hue-rotate(10deg)"
+    : "brightness(0.6) grayscale(0.8)";
   const goldMultiplier = (1 + (temp / 100) * 0.5).toFixed(1);
   const xpMalus = temp === 0;
   const forgeInfo = getForgeTempInfo(temp);
@@ -90,7 +93,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
       <div className="mb-2" title={forgeInfo.tooltipText}>
         <div className="flex items-center justify-between mb-0.5">
           <span className="text-xs font-medium flex items-center gap-1" style={{ color: tempColor }}>
-            {tempIcon} {temp}% <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>|</span> <span style={{ color: "#f59e0b" }}>{goldMultiplier}x</span>
+            <img src="/images/icons/ach-forge-novice.png" alt="forge" width={14} height={14} style={{ imageRendering: "auto", filter: forgeFilter }} /> {temp}% <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>|</span> <span style={{ color: "#f59e0b" }}>{goldMultiplier}x</span>
           </span>
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Forge Temp</span>
         </div>
