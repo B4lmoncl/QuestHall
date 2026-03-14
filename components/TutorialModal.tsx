@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useModalBehavior } from "./ModalPortal";
-import { CURRENT_SEASON } from "@/app/utils";
 
 // ─── GuideSection ─────────────────────────────────────────────────────────────
 

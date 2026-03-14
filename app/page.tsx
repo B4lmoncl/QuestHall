@@ -1341,10 +1341,12 @@ export default function Dashboard() {
         {dashView === "campaign" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Campaign</span>
-              <InfoTooltip text="Long-term quest chains and story arcs. Complete all quests in a campaign to earn special rewards!" />
+              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Observatory</span>
             </div>
-            <CampaignHub campaigns={campaigns} quests={quests} reviewApiKey={reviewApiKey} onRefresh={refresh} />
+            <div className="rounded-xl px-6 py-16 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-lg font-bold mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Coming Soon</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>Das Observatory wird bald eröffnet. Halte Ausschau nach den Sternen.</p>
+            </div>
           </div>
         )}
 
@@ -2165,10 +2167,12 @@ export default function Dashboard() {
         {dashView === "klassenquests" && (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#60a5fa" }}>Klassenquests</h2>
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Klassen-Fortschritt und Skill Tree</span>
+              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#60a5fa" }}>The Arcanum</h2>
             </div>
-            <CVBuilderPanel quests={quests} users={users} playerName={playerName} />
+            <div className="rounded-xl px-6 py-16 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-lg font-bold mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Coming Soon</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>Das Arcanum sammelt seine Schriftrollen. Klassenquests und Skill Trees folgen bald.</p>
+            </div>
           </div>
         )}
 
