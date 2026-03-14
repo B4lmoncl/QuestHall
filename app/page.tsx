@@ -1283,7 +1283,7 @@ export default function Dashboard() {
             { key: "campaign",    label: "The Observatory",        tutorialKey: "campaign-tab", iconSrc: "/images/icons/nav-observatory.png" },
             { key: "klassenquests", label: "The Arcanum",  tutorialKey: null, iconSrc: "/images/icons/nav-arcanum.png" },
             ...(playerName ? [{ key: "character", label: "Character", tutorialKey: null, iconSrc: "/images/icons/nav-character.png" }] : []),
-            { key: "shop",        label: "The Deepforge",               tutorialKey: null, iconSrc: "/images/icons/nav-bazaar.png" },
+            { key: "shop",        label: "The Bazaar",               tutorialKey: null, iconSrc: "/images/icons/nav-bazaar.png" },
             { key: "gacha",       label: "Vault of Fate",            tutorialKey: null, iconSrc: "/images/icons/vault-of-fate.png" },
             { key: "leaderboard", label: "The Proving Grounds", tutorialKey: "leaderboard-tab", iconSrc: "/images/icons/nav-proving.png" },
             { key: "honors",      label: "Hall of Honors",  tutorialKey: null, iconSrc: "/images/icons/nav-honors.png" },

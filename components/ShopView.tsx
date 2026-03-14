@@ -25,8 +25,8 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-3">
         <span className="text-4xl">○</span>
-        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Deepforge</p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Sign in to enter the Deepforge and spend your hard-earned gold!</p>
+        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Bazaar</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Sign in to enter the Bazaar and spend your hard-earned gold!</p>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Deepforge</span>
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Bazaar</span>
         <div className="flex items-center gap-2 ml-auto">
           <img src="/images/icons/currency-gold.png" alt="" width={24} height={24} style={{ imageRendering: "auto" }} onError={e => { e.currentTarget.style.display = "none"; }} />
           <span className="text-base font-mono font-bold" style={{ color: "#f59e0b" }}>{gold}</span>
