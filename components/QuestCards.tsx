@@ -182,7 +182,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
                 style={{ imageRendering: "pixelated" }}
                 onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }}
               />
-              <span style={{ display: "none" }}>{typeCfg.icon}</span>
+              <span style={{ display: "none" }}>{typeCfg.icon?.startsWith("/") ? typeCfg.label : typeCfg.icon}</span>
             </span>
             <p className="text-sm font-semibold leading-snug" style={{ color: isInProgress ? "#c4b5fd" : "#e8d5a3" }}>{quest.title}</p>
           </div>
