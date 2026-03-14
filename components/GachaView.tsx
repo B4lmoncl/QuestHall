@@ -879,7 +879,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                       {items.map(item => (
                         <div
                           key={item.id}
-                          className="relative flex flex-col items-center gap-2.5 rounded-xl px-6 py-5 text-center"
+                          className="group relative flex flex-col items-center gap-2.5 rounded-xl px-6 py-5 text-center cursor-default"
                           style={{
                             background: cfg.bg,
                             border: `1px solid ${cfg.border}`,
@@ -893,10 +893,15 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                               ? <span className="text-4xl relative z-10">{item.emoji}</span>
                               : <span className="text-sm font-medium relative z-10" style={{ color: "rgba(255,255,255,0.4)" }}>{item.name?.slice(0, 2)}</span>
                           }
-                          <span className="text-xs font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
+                          <span className="text-sm font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
                           <span className="text-[9px] uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}
                           </span>
+                          {(item as any).desc && (
+                            <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg px-3 py-2.5 opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50" style={{ background: "#0f1220", border: `1px solid ${cfg.border}`, boxShadow: `0 4px 20px rgba(0,0,0,0.6), 0 0 8px ${cfg.glow}` }}>
+                              <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.75)" }}>{(item as any).desc}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
