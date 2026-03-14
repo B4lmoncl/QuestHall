@@ -452,7 +452,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                   <span className="text-sm w-5 text-center">{emoji}</span>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
-                      {item ? `${item.emoji} ${item.name}` : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
+                      {item ? <><span className="inline-flex items-center gap-1">{(item as any).icon ? <img src={(item as any).icon} alt="" width={14} height={14} style={{ imageRendering: "auto" }} /> : (item.emoji && item.emoji !== "x" ? item.emoji : "◆")} {item.name}</span></> : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
                     </p>
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
                   </div>
@@ -507,7 +507,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                         }}
                         title={locked ? `Lv.${item.minLevel} benötigt` : item.name}
                       >
-                        <span className="text-lg">{item.emoji}</span>
+                        {(item as any).icon ? <img src={(item as any).icon} alt={item.name} width={32} height={32} style={{ imageRendering: "auto" }} /> : <span className="text-lg">{item.emoji && item.emoji !== "x" ? item.emoji : "◆"}</span>}
                         <p className="text-xs mt-0.5 truncate w-full" style={{ fontSize: 9, color: locked ? "rgba(255,255,255,0.3)" : "#e8e8e8" }}>
                           {locked ? `Lv.${item.minLevel}` : item.name.split(" ").slice(-1)[0]}
                         </p>
@@ -523,7 +523,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                     style={{ background: "rgba(0,0,0,0.5)", border: `1px solid ${RARITY_BORDER[selected.tier] ?? "#9ca3af"}50` }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-2xl">{selected.emoji}</span>
+                      {(selected as any).icon ? <img src={(selected as any).icon} alt={selected.name} width={40} height={40} style={{ imageRendering: "auto" }} /> : <span className="text-2xl">{selected.emoji && selected.emoji !== "x" ? selected.emoji : "◆"}</span>}
                       <div>
                         <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{selected.name}</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
@@ -615,7 +615,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                     const bonus = s.val - s.base;
                     return (
                       <div key={s.label} className="flex items-center gap-2" title={s.tooltip}>
-                        <span className="text-sm w-5 text-center">{s.icon}</span>
+                        <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "auto" }} className="w-4 h-4" />
                         <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
                         <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
                         {bonus > 0 && (
