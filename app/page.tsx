@@ -170,6 +170,7 @@ export default function Dashboard() {
   const settingsPopupRef = useRef<HTMLDivElement>(null);
   const [questDetailModal, setQuestDetailModal] = useState<Quest | null>(null);
   const [currenciesOpen, setCurrenciesOpen] = useState(false);
+  const [currencyExpanded, setCurrencyExpanded] = useState<string | null>(null);
   const [feedbackMode, setFeedbackMode] = useState(false);
 
   // Quest detail modal — ESC to close
@@ -1216,39 +1217,63 @@ export default function Dashboard() {
         )}
 
         {/* Currencies Modal */}
-        {currenciesOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.7)" }}
-            onClick={() => setCurrenciesOpen(false)}>
-            <div className="w-full max-w-xs rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.1)" }}
+        {currenciesOpen && (() => {
+          const CURRENCY_HOW: Record<string, string> = {
+            gold: "Schließe Quests ab, verkaufe Loot, oder erledige tägliche Herausforderungen. Das ehrliche Metall — ehrlich verdient.",
+            stardust: "Geronnenes Sternenlicht. Fällt bei Level-Ups, seltenen Achievements und besonderen Events vom Himmel.",
+            essenz: "Der stille Trank. Entsteht durch Beständigkeit — halte deinen Streak aufrecht und die Essenz fließt.",
+            runensplitter: "Echos der vergessenen Sprache. Belohnung für abgeschlossene Quest-Ketten und NPC-Aufträge. Ziehe am Rad der Sterne.",
+            gildentaler: "Zeichen des Zusammenhalts. Verdient durch Co-op Quests und soziale Herausforderungen mit deinen Verbündeten.",
+            mondstaub: "Der Atem der Konzentration. Extrem selten — fällt nur bei zeitlich begrenzten Events und legendären Taten.",
+          };
+          return (
+          <ModalPortal>
+          <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}
+            onClick={() => { setCurrenciesOpen(false); setCurrencyExpanded(null); }}>
+            <div className="w-full max-w-xs rounded-2xl p-5" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>Currencies</h3>
-                <button onClick={() => setCurrenciesOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <button onClick={() => { setCurrenciesOpen(false); setCurrencyExpanded(null); }} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 overflow-y-auto flex-1">
                 {[
-                  { icon: "", name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Primary currency. Earned through quests.", iconSrc: "/images/icons/currency-gold.png" },
-                  { icon: "", name: "Stardust", key: "stardust" as const, value: loggedInUser?.currencies?.stardust ?? 0, color: "#818cf8", desc: "Premium currency. Level-ups & achievements.", iconSrc: "/images/icons/currency-stardust.png" },
-                  { icon: "", name: "Essence", key: "essenz" as const, value: loggedInUser?.currencies?.essenz ?? 0, color: "#ef4444", desc: "Streak currency. Daily consistency.", iconSrc: "/images/icons/currency-essenz.png" },
-                  { icon: "", name: "Rune Shards", key: "runensplitter" as const, value: loggedInUser?.currencies?.runensplitter ?? 0, color: "#a78bfa", desc: "Draw from the Wheel of Stars.", iconSrc: "/images/icons/currency-runensplitter.png" },
-                  { icon: "", name: "Guild Coins", key: "gildentaler" as const, value: loggedInUser?.currencies?.gildentaler ?? 0, color: "#10b981", desc: "Social & co-op quests.", iconSrc: "/images/icons/currency-gildentaler.png" },
-                  { icon: "", name: "Moondust", key: "mondstaub" as const, value: loggedInUser?.currencies?.mondstaub ?? 0, color: "#c084fc", desc: "Event-limited. Extremely rare.", iconSrc: "/images/icons/currency-mondstaub.png" },
+                  { name: "Gold", key: "gold" as const, value: loggedInUser?.currencies?.gold ?? animGold, color: "#f59e0b", desc: "Das ehrliche Metall der Halle.", iconSrc: "/images/icons/currency-gold.png" },
+                  { name: "Stardust", key: "stardust" as const, value: loggedInUser?.currencies?.stardust ?? 0, color: "#818cf8", desc: "Geronnenes Sternenlicht.", iconSrc: "/images/icons/currency-stardust.png" },
+                  { name: "Essence", key: "essenz" as const, value: loggedInUser?.currencies?.essenz ?? 0, color: "#ef4444", desc: "Der stille Trank der Beständigkeit.", iconSrc: "/images/icons/currency-essenz.png" },
+                  { name: "Rune Shards", key: "runensplitter" as const, value: loggedInUser?.currencies?.runensplitter ?? 0, color: "#a78bfa", desc: "Echos der vergessenen Sprache.", iconSrc: "/images/icons/currency-runensplitter.png" },
+                  { name: "Guild Coins", key: "gildentaler" as const, value: loggedInUser?.currencies?.gildentaler ?? 0, color: "#10b981", desc: "Zeichen des Zusammenhalts.", iconSrc: "/images/icons/currency-gildentaler.png" },
+                  { name: "Moondust", key: "mondstaub" as const, value: loggedInUser?.currencies?.mondstaub ?? 0, color: "#c084fc", desc: "Atem der Konzentration. Extrem selten.", iconSrc: "/images/icons/currency-mondstaub.png" },
                 ].map(c => (
-                  <div key={c.name} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}>
-                    {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={22} height={22} style={{ imageRendering: "pixelated" }} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 20 }}>{c.icon}</span>}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold" style={{ color: c.color }}>{c.name}</p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{c.desc}</p>
+                  <div key={c.name}>
+                    <div
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 cursor-pointer transition-colors"
+                      style={{ background: currencyExpanded === c.key ? `${c.color}12` : "rgba(255,255,255,0.03)", border: `1px solid ${currencyExpanded === c.key ? c.color + "30" : "rgba(255,255,255,0.07)"}` }}
+                      onClick={() => setCurrencyExpanded(currencyExpanded === c.key ? null : c.key)}
+                    >
+                      <img src={c.iconSrc} alt="" width={22} height={22} style={{ imageRendering: "pixelated" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold" style={{ color: c.color }}>{c.name}</p>
+                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{c.desc}</p>
+                      </div>
+                      <span className="text-sm font-mono font-bold" style={{ color: c.value === 0 && c.key !== "gold" ? "rgba(255,255,255,0.2)" : c.color }}>
+                        {c.value === 0 && c.key !== "gold" ? "—" : c.value}
+                      </span>
                     </div>
-                    <span className="text-sm font-mono font-bold" style={{ color: c.value === 0 && c.key !== "gold" ? "rgba(255,255,255,0.2)" : c.color }}>
-                      {c.value === 0 && c.key !== "gold" ? "—" : c.value}
-                    </span>
+                    {currencyExpanded === c.key && (
+                      <div className="rounded-b-xl px-4 py-3 -mt-1" style={{ background: `${c.color}08`, borderLeft: `1px solid ${c.color}30`, borderRight: `1px solid ${c.color}30`, borderBottom: `1px solid ${c.color}30` }}>
+                        <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: `${c.color}99` }}>Wie erhältst du {c.name}?</p>
+                        <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>{CURRENCY_HOW[c.key]}</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </div>
           </div>
-        )}
+          </ModalPortal>
+          );
+        })()}
 
         {/* View toggle */}
         {/* TODO: replace nav-tab icons with pixel art once ui-nav-* assets exist */}
