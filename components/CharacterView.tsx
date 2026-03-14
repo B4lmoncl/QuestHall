@@ -550,11 +550,11 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
   const cls = charData?.classId ? classesList.find(c => c.id === charData.classId) : null;
 
   return (
-    <>
+    <div style={{ display: "flex", flexDirection: "column" }}>
     <div
       className="relative overflow-hidden rounded-t-2xl"
       style={{
-        minHeight: 520,
+        minHeight: 520, flex: 1,
         backgroundImage: "url('/images/bg-character-spring.png')",
         backgroundSize: "cover",
         backgroundPosition: "center",
@@ -606,7 +606,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         {/* LEFT: Inventory Panel */}
         <div
           className="flex-shrink-0 rounded-xl p-2 overflow-y-auto"
-          style={{ width: 352, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
+          style={{ width: 352, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh" }}
         >
           <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Inventar</p>
 
@@ -652,7 +652,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         {/* RIGHT: Stats / Gear Panel */}
         <div
           className="flex-shrink-0 rounded-xl p-3 overflow-y-auto"
-          style={{ width: 250, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
+          style={{ width: 250, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh" }}
         >
           {/* Tab toggle */}
           <div className="flex gap-1 mb-3">
@@ -874,6 +874,6 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         </div>
       )}
     </div>
-    </>
+    </div>
   );
 }
