@@ -122,7 +122,8 @@ function executePull(playerId, banner) {
       id: `gacha-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
       itemId: item.id,
       name: item.name,
-      emoji: item.emoji || 'x',
+      emoji: item.emoji || null,
+      icon: item.icon || null,
       rarity: item.rarity,
       rarityColor: { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f97316' }[item.rarity] || '#9ca3af',
       effect: item.effect || null,
@@ -138,6 +139,7 @@ function executePull(playerId, banner) {
     name: item.name,
     rarity: item.rarity,
     emoji: item.emoji,
+    icon: item.icon || null,
     isDuplicate,
     duplicateRefund,
     bannerId: banner.id,
@@ -176,7 +178,7 @@ router.get('/api/gacha/pool', (req, res) => {
   const grouped = {};
   for (const item of pool) {
     if (!grouped[item.rarity]) grouped[item.rarity] = [];
-    grouped[item.rarity].push({ id: item.id, name: item.name, emoji: item.emoji, type: item.type, desc: item.desc });
+    grouped[item.rarity].push({ id: item.id, name: item.name, emoji: item.emoji, icon: item.icon || null, type: item.type, desc: item.desc });
   }
   res.json({ pool: grouped, totalItems: pool.length });
 });

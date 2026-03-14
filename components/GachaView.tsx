@@ -845,7 +845,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                 const cfg = RARITY_CONFIG[h.rarity] || RARITY_CONFIG.common;
                 return (
                   <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                    <span className="text-base">{h.emoji || "?"}</span>
+                    {(h as any).icon && (h as any).icon.startsWith("/") ? <img src={(h as any).icon} alt="" width={24} height={24} style={{ imageRendering: "auto" }} /> : <span className="text-base">{h.emoji || "?"}</span>}
                     <span className="text-xs font-semibold flex-1" style={{ color: cfg.color }}>{h.name}</span>
                     <span className="text-[9px] uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
                     {h.isDuplicate && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
