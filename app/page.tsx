@@ -1305,7 +1305,7 @@ export default function Dashboard() {
               }}
               {...(v.tutorialKey ? { "data-tutorial": v.tutorialKey } : {})}
             >
-              {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={16} height={16} style={{ imageRendering: "auto", opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
+              {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={24} height={24} style={{ imageRendering: "auto", opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
               {v.label}
             </button>
             )
