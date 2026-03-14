@@ -353,15 +353,16 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
   const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
   const hasStats = item.stats && Object.keys(item.stats).length > 0;
 
-  // Compute position directly — clamp to viewport
-  let left = mousePos.x + 12;
-  let top = mousePos.y + 12;
+  // Position: top-right corner of tooltip at cursor
+  const tw = 340; // estimated tooltip width
+  const th = 300; // estimated tooltip height
+  let left = mousePos.x - tw;
+  let top = mousePos.y - 4;
   if (typeof window !== "undefined") {
-    const tw = 320; // estimated tooltip width
-    const th = 280; // estimated tooltip height
-    if (left + tw > window.innerWidth - 8) left = mousePos.x - tw - 12;
-    if (top + th > window.innerHeight - 8) top = mousePos.y - th - 12;
-    if (left < 4) left = 4;
+    // If tooltip would go off left edge, flip to right of cursor
+    if (left < 8) left = mousePos.x + 12;
+    // If tooltip would go off bottom, shift up
+    if (top + th > window.innerHeight - 8) top = window.innerHeight - th - 8;
     if (top < 4) top = 4;
   }
 
