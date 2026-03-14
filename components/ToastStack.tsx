@@ -52,11 +52,11 @@ export function useToastStack() {
 // ─── Individual Toast Renderers ──────────────────────────────────────────────
 
 const RARITY_TOAST_STYLE: Record<string, { bg: string; border: string; shadow: string; color: string; label: string }> = {
-  legendary: { bg: "#2a1e0e", border: "rgba(249,115,22,0.5)", shadow: "rgba(249,115,22,0.2)", color: "#f97316", label: "Legendär" },
-  epic:      { bg: "#1e1a2e", border: "rgba(168,85,247,0.5)", shadow: "rgba(168,85,247,0.2)", color: "#a855f7", label: "Episch" },
-  rare:      { bg: "#0e1e2a", border: "rgba(59,130,246,0.5)", shadow: "rgba(59,130,246,0.2)", color: "#3b82f6", label: "Selten" },
-  uncommon:  { bg: "#0e2a1e", border: "rgba(34,197,94,0.5)",  shadow: "rgba(34,197,94,0.2)",  color: "#22c55e", label: "Ungewöhnlich" },
-  common:    { bg: "#1e2a1e", border: "rgba(156,163,175,0.4)", shadow: "rgba(156,163,175,0.15)", color: "#9ca3af", label: "Gewöhnlich" },
+  legendary: { bg: "#2a1e0e", border: "rgba(249,115,22,0.5)", shadow: "rgba(249,115,22,0.2)", color: "#f97316", label: "Legendary" },
+  epic:      { bg: "#1e1a2e", border: "rgba(168,85,247,0.5)", shadow: "rgba(168,85,247,0.2)", color: "#a855f7", label: "Epic" },
+  rare:      { bg: "#0e1e2a", border: "rgba(59,130,246,0.5)", shadow: "rgba(59,130,246,0.2)", color: "#3b82f6", label: "Rare" },
+  uncommon:  { bg: "#0e2a1e", border: "rgba(34,197,94,0.5)",  shadow: "rgba(34,197,94,0.2)",  color: "#22c55e", label: "Uncommon" },
+  common:    { bg: "#1e2a1e", border: "rgba(156,163,175,0.4)", shadow: "rgba(156,163,175,0.15)", color: "#9ca3af", label: "Common" },
 };
 
 function FlavorToastContent({ toast, onClose }: { toast: { message: string; icon: string; sub?: string }; onClose: () => void }) {
