@@ -1186,9 +1186,9 @@ export default function Dashboard() {
                     className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
                   >
-                    <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0" }}>The Bazaar</p>
+                    <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0" }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      The Bazaar burns hotter with each quest you complete.
+                      Die Deepforge brennt heißer mit jeder Quest die du abschließt.
                     </p>
                     <div className="space-y-0.5 mb-2">
                       {[
@@ -1207,7 +1207,7 @@ export default function Dashboard() {
                       ))}
                     </div>
                     <p style={{ color: "rgba(255,255,255,0.4)" }}>
-                      Keep the forge burning to maximize your XP gains!
+                      Halte die Esse am Brennen für maximale XP!
                     </p>
                   </div>
                 </div>
@@ -1283,7 +1283,7 @@ export default function Dashboard() {
             { key: "campaign",    label: "The Observatory",        tutorialKey: "campaign-tab", iconSrc: "/images/icons/nav-observatory.png" },
             { key: "klassenquests", label: "The Arcanum",  tutorialKey: null, iconSrc: "/images/icons/nav-arcanum.png" },
             ...(playerName ? [{ key: "character", label: "Character", tutorialKey: null, iconSrc: "/images/icons/nav-character.png" }] : []),
-            { key: "shop",        label: "The Bazaar",               tutorialKey: null, iconSrc: "/images/icons/nav-bazaar.png" },
+            { key: "shop",        label: "The Deepforge",               tutorialKey: null, iconSrc: "/images/icons/nav-bazaar.png" },
             { key: "gacha",       label: "Vault of Fate",            tutorialKey: null, iconSrc: "/images/icons/vault-of-fate.png" },
             { key: "leaderboard", label: "The Proving Grounds", tutorialKey: "leaderboard-tab", iconSrc: "/images/icons/nav-proving.png" },
             { key: "honors",      label: "Hall of Honors",  tutorialKey: null, iconSrc: "/images/icons/nav-honors.png" },

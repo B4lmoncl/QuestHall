@@ -26,7 +26,7 @@ export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGea
       <div className="flex flex-col items-center justify-center py-16 space-y-3">
         <span className="text-4xl">○</span>
         <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Deepforge</p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Sign in to enter the Bazaar and spend your hard-earned gold!</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Sign in to enter the Deepforge and spend your hard-earned gold!</p>
       </div>
     );
   }
