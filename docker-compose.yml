@@ -13,7 +13,7 @@ services:
       # Multiple keys (one per agent): API_KEYS=lyra-key,hex-key,nova-key
       - API_KEYS=${API_KEYS:-}
     volumes:
-      - quest-data:/app/public/data
+      - quest-data:/app/data
 
 volumes:
   quest-data:

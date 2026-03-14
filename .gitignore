@@ -20,6 +20,9 @@
 # production
 /build
 
+# runtime data (Docker volume mount)
+/data
+
 # misc
 .DS_Store
 *.pem
