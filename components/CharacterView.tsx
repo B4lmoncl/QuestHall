@@ -189,7 +189,7 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
       <canvas
         ref={canvasRef}
         style={{
-          imageRendering: 'pixelated',
+          imageRendering: 'auto',
           filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))',
         }}
       />
@@ -326,7 +326,7 @@ const RARITY_LABELS: Record<string, string> = {
 
 const STAT_LABELS: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
 
-const GRID_COLS = 5;
+const GRID_COLS = 4;
 const GRID_ROWS = 12;
 const GRID_TOTAL = GRID_COLS * GRID_ROWS;
 
@@ -358,10 +358,10 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
     const rect = el.getBoundingClientRect();
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    let left = mousePos.x + 12;
-    let top = mousePos.y + 12;
-    if (left + rect.width > vw - 8) left = mousePos.x - rect.width - 12;
-    if (top + rect.height > vh - 8) top = mousePos.y - rect.height - 12;
+    let left = mousePos.x + 8;
+    let top = mousePos.y + 8;
+    if (left + rect.width > vw - 8) left = mousePos.x - rect.width - 8;
+    if (top + rect.height > vh - 8) top = mousePos.y - rect.height - 8;
     if (left < 4) left = 4;
     if (top < 4) top = 4;
     setPos({ left, top });
@@ -374,7 +374,7 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
     <div
       ref={ref}
       className="fixed z-[200] pointer-events-none"
-      style={{ left: pos.left, top: pos.top, minWidth: 180, maxWidth: 240 }}
+      style={{ left: pos.left, top: pos.top, minWidth: 240, maxWidth: 300 }}
     >
       <div
         className="rounded-lg p-3 space-y-2"
@@ -389,10 +389,10 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
       >
         {/* Icon + Name */}
         <div className="flex items-center gap-2.5">
-          <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 48, height: 48, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
+          <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 108, height: 108, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
             {item.icon
-              ? <img src={item.icon} alt={item.name} width={40} height={40} style={{ imageRendering: "auto" }} />
-              : <span style={{ fontSize: 24, color: rarityColor }}>◆</span>
+              ? <img src={item.icon} alt={item.name} width={100} height={100} style={{ imageRendering: "auto" }} />
+              : <span className="text-5xl" style={{ color: rarityColor }}>◆</span>
             }
           </div>
           <div className="min-w-0">
@@ -441,8 +441,8 @@ function InventorySlot({ item, level, onEquip }: {
     return (
       <div
         style={{
-          width: "100%",
-          aspectRatio: "1",
+          width: 56,
+          height: 56,
           background: "rgba(255,255,255,0.04)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 3,
@@ -463,8 +463,8 @@ function InventorySlot({ item, level, onEquip }: {
         onMouseMove={(e) => setMousePos({ x: e.clientX, y: e.clientY })}
         onMouseLeave={() => setHovered(false)}
         style={{
-          width: "100%",
-          aspectRatio: "1",
+          width: 56,
+          height: 56,
           background: rarityBg,
           border: `1px solid ${rarityBorder}`,
           borderRadius: 3,
@@ -478,7 +478,7 @@ function InventorySlot({ item, level, onEquip }: {
         }}
       >
         {item.icon
-          ? <img src={item.icon} alt={item.name} style={{ width: "85%", height: "85%", imageRendering: "auto", objectFit: "contain" }} />
+          ? <img src={item.icon} alt={item.name} style={{ width: 44, height: 44, imageRendering: "auto", objectFit: "contain" }} />
           : <span style={{ fontSize: 14, color: RARITY_COLORS[item.rarity] || "#9ca3af", lineHeight: 1 }}>◆</span>
         }
       </button>
@@ -609,8 +609,8 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
 
         {/* LEFT: Inventory Panel */}
         <div
-          className="flex-shrink-0 rounded-xl p-3 overflow-y-auto"
-          style={{ width: 250, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
+          className="flex-shrink-0 rounded-xl p-2 overflow-y-auto"
+          style={{ width: 248, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
         >
           <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Inventar</p>
 
@@ -622,8 +622,8 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-                  gap: 3,
+                  gridTemplateColumns: `repeat(${GRID_COLS}, 56px)`,
+                  gap: 2,
                 }}
               >
                 {Array.from({ length: GRID_TOTAL }, (_, idx) => {
