@@ -555,8 +555,9 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
   const cls = charData?.classId ? classesList.find(c => c.id === charData.classId) : null;
 
   return (
+    <>
     <div
-      className="relative overflow-hidden rounded-2xl"
+      className="relative overflow-hidden rounded-t-2xl"
       style={{
         minHeight: 520,
         backgroundImage: "url('/images/bg-character-spring.png')",
@@ -827,48 +828,6 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         </div>
       </div>
 
-      {/* ── Bottom Info Bar ── */}
-      <div
-        className="relative flex items-center gap-4 px-4 py-3"
-        style={{ zIndex: 5, background: "rgba(0,0,0,0.82)", borderTop: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        {/* Left: name + title */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1">
-            <p className="text-sm font-bold truncate" style={{ color: "#e8e8e8" }}>{playerName}</p>
-            <button
-              onClick={() => setProfileSettingsOpen(true)}
-              className="text-xs px-1.5 py-0.5 rounded-lg ml-2"
-              title="Profil-Einstellungen"
-              style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}
-            >...</button>
-          </div>
-          {charData && <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{charData.title}</p>}
-        </div>
-        {/* Center: class */}
-        {cls && (
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-lg">{cls.icon}</span>
-            <div className="text-center">
-              <p className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{cls.fantasy}</p>
-              {charData?.classTier && <p className="text-xs" style={{ color: "rgba(167,139,250,0.45)" }}>{charData.classTier}</p>}
-            </div>
-          </div>
-        )}
-        {/* Right: companion + bond */}
-        {charData?.companion && (
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-xl">{charData.companion.emoji}</span>
-            <div>
-              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>{charData.companion.name}</p>
-              <p className="text-xs" style={{ color: "#f48fb1" }}>
-                {"♥".repeat(Math.min(charData.companion.bondLevel, 5))}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
-
       {/* Profile Settings Modal */}
       {profileSettingsOpen && (
         <ProfileSettingsModal
@@ -881,5 +840,45 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         />
       )}
     </div>
+
+    {/* ── Bottom Info Bar (below character art) ── */}
+    <div
+      className="flex items-center gap-4 px-4 py-3 rounded-b-2xl"
+      style={{ background: "rgba(0,0,0,0.82)", borderTop: "1px solid rgba(255,255,255,0.08)" }}
+    >
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-1">
+          <p className="text-sm font-bold truncate" style={{ color: "#e8e8e8" }}>{playerName}</p>
+          <button
+            onClick={() => setProfileSettingsOpen(true)}
+            className="text-xs px-1.5 py-0.5 rounded-lg ml-2"
+            title="Profil-Einstellungen"
+            style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}
+          >...</button>
+        </div>
+        {charData && <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{charData.title}</p>}
+      </div>
+      {cls && (
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-lg">{cls.icon}</span>
+          <div className="text-center">
+            <p className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{cls.fantasy}</p>
+            {charData?.classTier && <p className="text-xs" style={{ color: "rgba(167,139,250,0.45)" }}>{charData.classTier}</p>}
+          </div>
+        </div>
+      )}
+      {charData?.companion && (
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xl">{charData.companion.emoji}</span>
+          <div>
+            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>{charData.companion.name}</p>
+            <p className="text-xs" style={{ color: "#f48fb1" }}>
+              {"♥".repeat(Math.min(charData.companion.bondLevel, 5))}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+    </>
   );
 }
