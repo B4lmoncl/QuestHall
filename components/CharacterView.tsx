@@ -326,7 +326,7 @@ const RARITY_LABELS: Record<string, string> = {
 
 const STAT_LABELS: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
 
-const GRID_COLS = 4;
+const GRID_COLS = 6;
 const GRID_ROWS = 12;
 const GRID_TOTAL = GRID_COLS * GRID_ROWS;
 
@@ -350,31 +350,26 @@ type InventoryItem = CharacterData["inventory"][number];
 
 function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: { x: number; y: number } }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [pos, setPos] = useState({ left: 0, top: 0 });
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    let left = mousePos.x + 8;
-    let top = mousePos.y + 8;
-    if (left + rect.width > vw - 8) left = mousePos.x - rect.width - 8;
-    if (top + rect.height > vh - 8) top = mousePos.y - rect.height - 8;
-    if (left < 4) left = 4;
-    if (top < 4) top = 4;
-    setPos({ left, top });
-  }, [mousePos]);
-
   const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
   const hasStats = item.stats && Object.keys(item.stats).length > 0;
+
+  // Compute position directly — clamp to viewport
+  let left = mousePos.x + 12;
+  let top = mousePos.y + 12;
+  if (typeof window !== "undefined") {
+    const tw = 320; // estimated tooltip width
+    const th = 280; // estimated tooltip height
+    if (left + tw > window.innerWidth - 8) left = mousePos.x - tw - 12;
+    if (top + th > window.innerHeight - 8) top = mousePos.y - th - 12;
+    if (left < 4) left = 4;
+    if (top < 4) top = 4;
+  }
 
   return (
     <div
       ref={ref}
       className="fixed z-[200] pointer-events-none"
-      style={{ left: pos.left, top: pos.top, minWidth: 240, maxWidth: 300 }}
+      style={{ left, top, minWidth: 260, maxWidth: 340 }}
     >
       <div
         className="rounded-lg p-3 space-y-2"
@@ -389,10 +384,10 @@ function InventoryTooltip({ item, mousePos }: { item: InventoryItem; mousePos: {
       >
         {/* Icon + Name */}
         <div className="flex items-center gap-2.5">
-          <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 108, height: 108, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
+          <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
             {item.icon
-              ? <img src={item.icon} alt={item.name} width={100} height={100} style={{ imageRendering: "auto" }} />
-              : <span className="text-5xl" style={{ color: rarityColor }}>◆</span>
+              ? <img src={item.icon} alt={item.name} width={148} height={148} style={{ imageRendering: "auto" }} />
+              : <span className="text-6xl" style={{ color: rarityColor }}>◆</span>
             }
           </div>
           <div className="min-w-0">
@@ -611,7 +606,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
         {/* LEFT: Inventory Panel */}
         <div
           className="flex-shrink-0 rounded-xl p-2 overflow-y-auto"
-          style={{ width: 248, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
+          style={{ width: 352, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", maxHeight: 440 }}
         >
           <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Inventar</p>
 
