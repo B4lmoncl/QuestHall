@@ -859,9 +859,9 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
 
       {/* Pool info modal */}
       <ModalOverlay isOpen={poolOpen && !!poolInfo} onClose={closePool}>
-        <div className="w-full max-w-6xl max-h-[85vh] rounded-2xl p-6 overflow-y-auto" style={{ background: "linear-gradient(180deg, #0f1729 0%, #1a1028 40%, #0f1729 100%)", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>Item Pool</h3>
+        <div className="w-full max-h-[88vh] rounded-2xl p-7 overflow-y-auto" style={{ maxWidth: "1100px", background: "linear-gradient(180deg, #0f1729 0%, #1a1028 40%, #0f1729 100%)", border: "1px solid rgba(255,255,255,0.1)", overscrollBehavior: "contain" }}>
+          <div className="flex items-center justify-between mb-5">
+            <h3 className="text-base font-bold uppercase tracking-wider" style={{ color: "rgba(167,139,250,0.7)" }}>Item Pool</h3>
             <button onClick={closePool} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>✕</button>
           </div>
           {poolInfo && (
@@ -875,25 +875,25 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
                   <div key={rarity}>
                     <p className="text-sm font-bold uppercase tracking-wider mb-1" style={{ color: cfg.color }}>{cfg.label} ({items.length})</p>
                     <div className="h-px mb-3" style={{ background: `linear-gradient(90deg, ${cfg.border}, transparent)` }} />
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
                       {items.map(item => (
                         <div
                           key={item.id}
-                          className="relative flex flex-col items-center gap-2.5 rounded-xl px-5 py-5 text-center"
+                          className="relative flex flex-col items-center gap-2.5 rounded-xl px-6 py-5 text-center"
                           style={{
                             background: cfg.bg,
                             border: `1px solid ${cfg.border}`,
                             boxShadow: hasGlow ? `0 0 8px ${cfg.glow}` : undefined,
                           }}
                         >
-                          {hasGlow && <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: `inset 0 0 10px ${cfg.glow}, 0 0 12px ${cfg.glow}`, animation: "pool-glow-breathe 5s ease-in-out infinite" }} />}
+                          {hasGlow && <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: `inset 0 0 10px ${cfg.glow}, 0 0 12px ${cfg.glow}`, animation: "pool-glow-breathe 3.5s ease-in-out infinite" }} />}
                           {(item as any).icon && (item as any).icon.startsWith("/")
                             ? <img src={(item as any).icon} alt="" width={52} height={52} style={{ imageRendering: "auto", filter: `drop-shadow(0 0 8px ${cfg.glow})`, position: "relative", zIndex: 1 }} />
                             : item.emoji
                               ? <span className="text-4xl relative z-10">{item.emoji}</span>
                               : <span className="text-sm font-medium relative z-10" style={{ color: "rgba(255,255,255,0.4)" }}>{item.name?.slice(0, 2)}</span>
                           }
-                          <span className="text-[11px] font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
+                          <span className="text-xs font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
                           <span className="text-[9px] uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}
                           </span>
