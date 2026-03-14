@@ -472,11 +472,11 @@ export function WandererRest({
                         )}
                       </div>
                       <div className="rounded-xl px-4 py-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                        <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title}</p>
+                        <p className="text-sm font-bold leading-snug" style={{ color: "#f0f0f0" }}>{currentQuest.title?.replace(/^x\s+/i, "")}</p>
                         {currentQuest.flavorText && (
-                          <p className="mt-1 truncate" style={{ fontSize: "0.65rem", fontStyle: "italic", color: "rgba(255,255,255,0.35)" }}>{currentQuest.flavorText}</p>
+                          <p className="mt-1.5 leading-relaxed" style={{ fontSize: "0.8rem", fontStyle: "italic", color: "rgba(255,255,255,0.45)" }}>{currentQuest.flavorText}</p>
                         )}
-                        <p className="text-xs mt-1.5 leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{currentQuest.description}</p>
+                        <p className="text-sm mt-2 leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>{currentQuest.description}</p>
                         <div className="flex items-center gap-3 mt-3">
                           <span className="text-xs font-semibold" style={{ color: "#f59e0b" }}>+{currentQuest.rewards?.xp ?? 0} XP</span>
                           <span className="text-xs" style={{ color: "rgba(255,193,7,0.6)" }}>+{currentQuest.rewards?.gold ?? 0}g</span>
@@ -554,11 +554,11 @@ export function WandererRest({
                   {/* Final reward */}
                   {npc.finalReward?.item && (
                     <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
-                      <span className="text-lg flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji}</span>
+                      {(npc.finalReward.item as any).icon && (npc.finalReward.item as any).icon.startsWith("/") ? <img src={(npc.finalReward.item as any).icon} alt="" width={36} height={36} style={{ imageRendering: "auto", flexShrink: 0, marginTop: 2 }} /> : <span className="text-xl flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji || "?"}</span>}
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold" style={{ color: "rgba(255,215,0,0.7)" }}>Chain Reward</p>
-                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{npc.finalReward.item.name}</p>
-                        <p className="text-xs mt-0.5 italic" style={{ color: "rgba(255,255,255,0.25)" }}>{npc.finalReward.item.desc}</p>
+                        <p className="text-sm font-semibold" style={{ color: "rgba(255,215,0,0.8)" }}>Chain Reward</p>
+                        <p className="text-sm mt-0.5 font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>{npc.finalReward.item.name}</p>
+                        <p className="text-xs mt-1 italic leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>{npc.finalReward.item.desc}</p>
                       </div>
                     </div>
                   )}
