@@ -91,7 +91,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
             <img
               src="/images/portraits/companion-dobbie.png"
               alt={petName ?? "Companion"}
-              style={{ width: 128, height: 160, imageRendering: "pixelated", borderRadius: 4, border: `2px solid ${cc.border}`, boxShadow: `0 0 12px rgba(${cc.accentRgb},0.15)`, flexShrink: 0 }}
+              style={{ width: 128, height: 160, imageRendering: "auto", borderRadius: 4, border: `2px solid ${cc.border}`, boxShadow: `0 0 12px rgba(${cc.accentRgb},0.15)`, flexShrink: 0 }}
             />
           ) : (
             <div style={{
@@ -218,7 +218,7 @@ export function WandererRest({
                           alt={npc.name}
                           width={148}
                           height={148}
-                          style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                          style={{ imageRendering: "auto", display: "block", width: "100%", height: "100%", objectFit: "cover" }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 56 }}>
@@ -344,7 +344,7 @@ export function WandererRest({
                   alt="The Starweaver"
                   width={144}
                   height={144}
-                  style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
+                  style={{ imageRendering: "auto", display: "block", width: "100%", height: "100%", objectFit: "cover", opacity: 0.85 }}
                   onError={e => { (e.target as HTMLImageElement).style.display = "none"; const fb = (e.target as HTMLImageElement).nextElementSibling as HTMLElement; if (fb) fb.style.display = "flex"; }}
                 />
                 <div style={{ display: "none", position: "absolute", inset: 0, alignItems: "center", justifyContent: "center", fontSize: 32 }}>?</div>
@@ -403,7 +403,7 @@ export function WandererRest({
               <div className="relative px-5 pt-5 pb-4 flex items-start gap-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", zIndex: 1 }}>
                 <div className="flex-shrink-0 rounded-lg overflow-hidden" style={{ width: isStarweaver ? 128 : 96, height: isStarweaver ? 128 : 96, background: "#0a0a15", border: `3px solid ${isStarweaver ? "rgba(255,215,0,0.5)" : `rgba(${rarityRgb[npc.rarity] ?? "196,204,216"},0.6)`}`, boxShadow: isStarweaver ? "0 0 24px rgba(255,215,0,0.35), 0 0 8px rgba(100,60,200,0.3)" : `0 0 12px rgba(${rarityRgb[npc.rarity] ?? "196,204,216"},0.25)` }}>
                   {npc.portrait ? (
-                    <img src={npc.portrait} alt={npc.name} width={isStarweaver ? 128 : 96} height={isStarweaver ? 128 : 96} style={{ imageRendering: "pixelated", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
+                    <img src={npc.portrait} alt={npc.name} width={isStarweaver ? 128 : 96} height={isStarweaver ? 128 : 96} style={{ imageRendering: "auto", display: "block", width: "100%", height: "100%", objectFit: "cover" }} />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.04)", fontSize: 40 }}>{npc.emoji && npc.emoji !== "x" && npc.emoji !== "" ? npc.emoji : null}</div>
                   )}
@@ -712,7 +712,7 @@ export function WandererRest({
                     <img
                       src="/images/portraits/companion-dobbie.png"
                       alt={petName ?? "Companion"}
-                      style={{ width: 128, height: 160, imageRendering: "pixelated", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)", flexShrink: 0 }}
+                      style={{ width: 128, height: 160, imageRendering: "auto", borderRadius: 4, border: "2px solid rgba(255,107,157,0.4)", boxShadow: "0 0 12px rgba(255,107,157,0.15)", flexShrink: 0 }}
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <DobbieQuestPanel reviewApiKey={reviewApiKey} onRefresh={refresh} playerName={playerName} petName={petName} quests={quests} streak={streak} user={user} />
