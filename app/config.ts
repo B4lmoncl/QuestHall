@@ -32,12 +32,12 @@ export const typeConfig: Record<string, { label: string; icon: string | null; co
 };
 
 export const STREAK_MILESTONES_CLIENT = [
-  { days: 7,   badge: 'Bronze',  label: 'Bronze' },
-  { days: 14,  badge: '2W',      label: '2-Wochen' },
-  { days: 21,  badge: 'Silber',  label: 'Silber' },
-  { days: 30,  badge: '1M',      label: 'Monat' },
-  { days: 60,  badge: 'Gold',    label: 'Gold' },
-  { days: 90,  badge: 'Titan',   label: 'Unerschütterlich' },
-  { days: 180, badge: 'Diamond', label: 'Diamond' },
-  { days: 365, badge: 'Legend',  label: 'Legendary' },
+  { days: 7,   badge: 'Bronze',  label: 'Bronze',           icon: '/images/icons/streak-bronze.png' },
+  { days: 14,  badge: '2W',      label: '2-Wochen',         icon: '/images/icons/streak-2w.png' },
+  { days: 21,  badge: 'Silber',  label: 'Silber',           icon: '/images/icons/streak-silver.png' },
+  { days: 30,  badge: '1M',      label: 'Monat',            icon: '/images/icons/streak-1m.png' },
+  { days: 60,  badge: 'Gold',    label: 'Gold',             icon: '/images/icons/streak-gold.png' },
+  { days: 90,  badge: 'Titan',   label: 'Unerschütterlich', icon: '/images/icons/streak-titan.png' },
+  { days: 180, badge: 'Diamond', label: 'Diamond',          icon: '/images/icons/streak-diamond.png' },
+  { days: 365, badge: 'Legend',  label: 'Legendary',        icon: '/images/icons/streak-legend.png' },
 ];

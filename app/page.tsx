@@ -1742,7 +1742,7 @@ export default function Dashboard() {
                                   {ritual.streak}
                                 </span>
                                 <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
-                                {milestone && <span className="text-xs">{milestone.badge}</span>}
+                                {milestone && ((milestone as any).icon ? <img src={(milestone as any).icon} alt={milestone.badge} width={20} height={20} style={{ imageRendering: "auto" }} /> : <span className="text-xs">{milestone.badge}</span>)}
                               </div>
                               <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: "rgba(255,255,255,0.35)" }}>
                                 <span style={{ color: ritual.streak >= 21 ? "#818cf8" : ritual.streak >= 7 ? "#f97316" : "rgba(255,255,255,0.35)" }}>
