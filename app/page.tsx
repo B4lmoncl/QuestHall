@@ -1655,7 +1655,7 @@ export default function Dashboard() {
                         {playerVisibleInProgress.length > 0 && (
                           <>
                             <button data-feedback-id="quest-board.in-progress" onClick={() => { const next = !inProgressSectionCollapsed; setInProgressSectionCollapsed(next); try { localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
-                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#a78bfa", background: "linear-gradient(90deg, rgba(139,92,246,0.15), transparent)" }}>In Progress</span>
+                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#a78bfa", background: "linear-gradient(90deg, rgba(139,92,246,0.18), rgba(139,92,246,0.1) 60%, transparent 100%)", minWidth: 180 }}>In Progress</span>
                               <span className="text-xs px-2 py-0.5 rounded-md font-mono font-bold" style={{ background: "rgba(139,92,246,0.18)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.3)" }}>{playerVisibleInProgress.length}</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{inProgressSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
@@ -1687,7 +1687,7 @@ export default function Dashboard() {
                               </div>
                             )}
                             <button data-feedback-id="quest-board.open" onClick={() => { const next = !openSectionCollapsed; setOpenSectionCollapsed(next); try { localStorage.setItem("qb_open_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
-                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#94a3b8", background: "linear-gradient(90deg, rgba(148,163,184,0.12), transparent)" }}>Open</span>
+                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#94a3b8", background: "linear-gradient(90deg, rgba(148,163,184,0.15), rgba(148,163,184,0.08) 60%, transparent 100%)", minWidth: 180 }}>Open</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{openSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
                             {!openSectionCollapsed && (
