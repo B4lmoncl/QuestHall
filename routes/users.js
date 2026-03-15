@@ -10,11 +10,27 @@ const router = require('express').Router();
 
 // GET /api/users
 router.get('/api/users', (req, res) => {
-  // Inject dynamic per-player forgeTemp based on last 24h completions
-  const result = Object.values(state.users).map(u => ({
-    ...u,
-    forgeTemp: calcDynamicForgeTemp(u.id),
-  }));
+  const { getXpMultiplier, getGoldMultiplier, getUserGear } = require('../lib/helpers');
+  const companionIds = ['ember_sprite', 'lore_owl', 'gear_golem'];
+  const result = Object.values(state.users).map(u => {
+    const ft = calcDynamicForgeTemp(u.id);
+    const forgeXp = getXpMultiplier(u.id);
+    const forgeGold = getGoldMultiplier(u.id);
+    const gear = getUserGear(u.id);
+    const gearBonus = 1 + (gear.xpBonus || 0) / 100;
+    const earnedIds = new Set((u.earnedAchievements || []).map(a => a.id));
+    const compBonus = 1 + 0.02 * companionIds.filter(id => earnedIds.has(id)).length;
+    const bondBonus = 1 + 0.01 * Math.max(0, (u.companion?.bondLevel ?? 1) - 1);
+    const streakGold = Math.min(1 + (u.streakDays || 0) * 0.1, 3);
+    return {
+      ...u,
+      forgeTemp: ft,
+      modifiers: {
+        xp: { forge: forgeXp, gear: gearBonus, companions: compBonus, bond: bondBonus, total: +(forgeXp * gearBonus * compBonus * bondBonus).toFixed(2) },
+        gold: { forge: forgeGold, streak: streakGold, total: +(forgeGold * streakGold).toFixed(2) },
+      },
+    };
+  });
   res.json(result);
 });
 

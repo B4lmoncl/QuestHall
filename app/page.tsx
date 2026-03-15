@@ -1188,6 +1188,17 @@ export default function Dashboard() {
                     </span>
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
                   </div>
+                  {/* Total Modifiers */}
+                  {loggedInUser?.modifiers && (
+                    <div className="flex items-center gap-3 mt-1">
+                      <span className="text-xs font-mono font-bold" style={{ color: loggedInUser.modifiers.xp.total >= 1 ? "#a855f7" : "#ef4444" }}>
+                        XP ×{loggedInUser.modifiers.xp.total}
+                      </span>
+                      <span className="text-xs font-mono font-bold" style={{ color: "#fbbf24" }}>
+                        Gold ×{loggedInUser.modifiers.gold.total}
+                      </span>
+                    </div>
+                  )}
                   {/* Forge bar */}
                   <div className="mt-1 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.06)", width: 120 }}>
                     <div

@@ -31,6 +31,22 @@ router.get('/api/player/:name', (req, res) => {
   const dynamicForgeTemp = calcDynamicForgeTemp(uid);
   // Also update stored value for XP multiplier calculations
   userRecord.forgeTemp = dynamicForgeTemp;
+  // Calculate modifier breakdown
+  const { getXpMultiplier, getGoldMultiplier, getUserGear } = require('../lib/helpers');
+  const forgeXp = getXpMultiplier(uid);
+  const forgeGold = getGoldMultiplier(uid);
+  const gear = getUserGear(uid);
+  const gearBonus = 1 + (gear.xpBonus || 0) / 100;
+  const companionIds = ['ember_sprite', 'lore_owl', 'gear_golem'];
+  const earnedIds = new Set((userRecord.earnedAchievements || []).map(a => a.id));
+  const companionBonus = 1 + 0.02 * companionIds.filter(id => earnedIds.has(id)).length;
+  const bondLevel = userRecord.companion?.bondLevel ?? 1;
+  const bondBonus = 1 + 0.01 * Math.max(0, bondLevel - 1);
+  const streakDays = userRecord.streakDays || 0;
+  const streakGold = Math.min(1 + streakDays * 0.1, 3);
+  const totalXp = +(forgeXp * gearBonus * companionBonus * bondBonus).toFixed(2);
+  const totalGold = +(forgeGold * streakGold).toFixed(2);
+
   res.json({
     id: uid,
     name: userRecord.name,
@@ -42,8 +58,12 @@ router.get('/api/player/:name', (req, res) => {
     gold: userRecord.gold || 0,
     completedQuestsCount: Object.keys(pp.completedQuests || {}).length,
     claimedQuests: pp.claimedQuests || [],
-    streakDays: userRecord.streakDays || 0,
+    streakDays,
     forgeTemp: dynamicForgeTemp,
+    modifiers: {
+      xp: { forge: forgeXp, gear: gearBonus, companions: companionBonus, bond: bondBonus, total: totalXp },
+      gold: { forge: forgeGold, streak: streakGold, total: totalGold },
+    },
   });
 });
 

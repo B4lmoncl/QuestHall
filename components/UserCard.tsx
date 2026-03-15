@@ -182,6 +182,17 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
             <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{goldMultiplier}×</span>
           </span>
         </div>
+        {/* Total Modifiers */}
+        {user.modifiers && (
+          <div className="flex items-center justify-between mt-1.5 pt-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+            <span className="text-xs inline-flex items-center gap-1" style={{ color: "#a855f7" }}>
+              XP <span className="font-mono font-bold" style={{ color: user.modifiers.xp.total >= 1 ? "#a855f7" : "#ef4444" }}>×{user.modifiers.xp.total}</span>
+            </span>
+            <span className="text-xs inline-flex items-center gap-1" style={{ color: "#fbbf24" }}>
+              Gold <span className="font-mono font-bold" style={{ color: "#fbbf24" }}>×{user.modifiers.gold.total}</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Bottom section — companions + achievements */}
