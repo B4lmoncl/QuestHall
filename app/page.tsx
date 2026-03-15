@@ -2437,6 +2437,9 @@ export default function Dashboard() {
                     <h3 className="text-base font-bold leading-snug" style={{ color: "#f0f0f0" }}>{q.title}</h3>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ color: rarityColor, background: `${rarityColor}18`, border: `1px solid ${rarityColor}40` }}>{rarity}</span>
+                      {q.difficulty && q.difficulty !== "none" && (
+                        <span className="text-xs font-mono px-1.5 py-0.5 rounded capitalize" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>{q.difficulty}</span>
+                      )}
                       <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.35)" }}>{q.type ?? "personal"}</span>
                       {/* priority hidden from modal header */}
                       {q.minLevel != null && q.minLevel > 0 && (() => {

@@ -173,6 +173,7 @@ function generatePlayerQuests(playerName, playerLevel) {
       classRequired: t.classId || null,
       requiresRelationship: t.requiresRelationship || false,
       rarity: assignRarity(t),
+      difficulty: (t.vars && t.vars.difficulty) || t.difficulty || 'starter',
       flavorText: resolved.flavorText || null,
       rewards: resolved.rewards,
       templateId: t.id,
