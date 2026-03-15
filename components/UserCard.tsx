@@ -175,7 +175,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
             title={forgeInfo.tooltipText}
             style={{ cursor: "default" }}
           >
-            <SmartIcon src="/images/icons/ach-forge-novice.png" size={14} style={{ filter: forgeFilter }} />
+            <SmartIcon src="/images/icons/ach-forge-novice.png" size={35} style={{ filter: forgeFilter }} />
             <span className="font-mono font-semibold" style={{ color: forgeColor }}>{temp}%</span>
             <span style={{ color: forgeColor, fontSize: 10, fontWeight: 600 }}>{forgeTierLabel}</span>
             <span style={{ color: "rgba(255,255,255,0.2)" }}>·</span>

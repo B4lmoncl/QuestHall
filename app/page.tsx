@@ -1182,7 +1182,7 @@ export default function Dashboard() {
                 {/* Forge Temperature */}
                 <div data-feedback-id="player-card.forge-tooltip" className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
-                    <img src="/images/icons/ach-forge-novice.png" alt="forge" width={22} height={22} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
+                    <img src="/images/icons/ach-forge-novice.png" alt="forge" width={35} height={35} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
                       {forgeTemp}%
                     </span>
