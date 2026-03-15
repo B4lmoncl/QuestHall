@@ -22,8 +22,8 @@ export default function StatBar({ label, value, value2, value2Color, sub, accent
     >
       {inline ? (
         <>
+          <p className="text-xs uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>
           <div className="flex items-baseline gap-2">
-            <span className="text-xs uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</span>
             <span className="text-base font-bold" style={{ color: accent }}>{value}</span>
             {value2 && (
               <>
