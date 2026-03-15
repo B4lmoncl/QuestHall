@@ -175,6 +175,7 @@ export interface AchievementDef {
   desc: string;
   category: string;
   hidden?: boolean;
+  condition?: Record<string, unknown>;
 }
 
 export interface ClassDef {

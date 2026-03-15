@@ -1201,28 +1201,29 @@ export default function Dashboard() {
                     className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
                     style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
                   >
-                    <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0" }}>The Deepforge</p>
+                    <p className="font-semibold mb-1" style={{ color: "#f0f0f0" }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
-                      Die Deepforge brennt heißer mit jeder Quest die du abschließt.
+                      Dein Aktivitäts-Level. Steigt mit jeder Quest, sinkt wenn du pausierst.
                     </p>
+                    <p className="mb-1.5 font-semibold" style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>Was bringt's?</p>
                     <div className="space-y-0.5 mb-2">
                       {[
-                        { q: "0 quests", t: "0%", note: "Cold — XP ×0.5" },
-                        { q: "1 quest",  t: "20%", note: "" },
-                        { q: "2 quests", t: "40%", note: "" },
-                        { q: "3 quests", t: "60%", note: "" },
-                        { q: "5+ quests", t: "80%", note: "" },
-                        { q: "8+ quests", t: "100%", note: "White-hot!" },
+                        { t: "0%", label: "Cold", bonus: "XP ×0.5 (Malus!)", color: "#6b7280" },
+                        { t: "20%", label: "Smoldering", bonus: "XP ×0.8", color: "#78716c" },
+                        { t: "40%", label: "Warming", bonus: "XP ×1.0", color: "#d97706" },
+                        { t: "60%", label: "Burning", bonus: "Gold ×1.15", color: "#ea580c" },
+                        { t: "80%", label: "Blazing", bonus: "Gold ×1.3", color: "#f97316" },
+                        { t: "100%", label: "White-hot!", bonus: "Gold ×1.5", color: "#fbbf24" },
                       ].map(row => (
-                        <div key={row.q} className="flex gap-2">
-                          <span style={{ color: "rgba(255,255,255,0.35)", minWidth: 72 }}>{row.q}</span>
-                          <span style={{ color: "#f97316" }}>{row.t}</span>
-                          {row.note && <span style={{ color: "#a78bfa" }}>{row.note}</span>}
+                        <div key={row.t} className="flex items-center gap-2">
+                          <span className="font-mono font-bold" style={{ color: row.color, minWidth: 32 }}>{row.t}</span>
+                          <span style={{ color: "rgba(255,255,255,0.4)", minWidth: 72 }}>{row.label}</span>
+                          <span style={{ color: row.color, fontSize: 10 }}>{row.bonus}</span>
                         </div>
                       ))}
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.4)" }}>
-                      Halte die Esse am Brennen für maximale XP!
+                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>
+                      Quests abschließen heizt die Forge auf. Inaktivität kühlt sie ab.
                     </p>
                   </div>
                 </div>
@@ -1654,7 +1655,7 @@ export default function Dashboard() {
                         {playerVisibleInProgress.length > 0 && (
                           <>
                             <button data-feedback-id="quest-board.in-progress" onClick={() => { const next = !inProgressSectionCollapsed; setInProgressSectionCollapsed(next); try { localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
-                              <span className="text-base font-extrabold uppercase tracking-widest" style={{ color: "#a78bfa", textShadow: "0 0 12px rgba(167,139,250,0.35)", borderLeft: "3px solid #a78bfa", paddingLeft: 8 }}>In Progress</span>
+                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#a78bfa", background: "linear-gradient(90deg, rgba(139,92,246,0.15), transparent)" }}>In Progress</span>
                               <span className="text-xs px-2 py-0.5 rounded-md font-mono font-bold" style={{ background: "rgba(139,92,246,0.18)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.3)" }}>{playerVisibleInProgress.length}</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{inProgressSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
@@ -1679,14 +1680,14 @@ export default function Dashboard() {
                         {boardOpen.length > 0 && (
                           <>
                             {playerVisibleInProgress.length > 0 && (
-                              <div className="flex items-center gap-3 my-3">
-                                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.25), rgba(148,163,184,0.15), transparent)" }} />
-                                <span className="text-xs font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.12)", fontSize: 9 }}>◆</span>
-                                <div className="flex-1 h-px" style={{ background: "linear-gradient(90deg, transparent, rgba(148,163,184,0.15), rgba(167,139,250,0.25), transparent)" }} />
+                              <div className="flex items-center gap-3 my-4">
+                                <div className="flex-1" style={{ height: 2, background: "linear-gradient(90deg, transparent, rgba(167,139,250,0.35), rgba(148,163,184,0.25), transparent)" }} />
+                                <span className="text-xs font-mono uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>◆</span>
+                                <div className="flex-1" style={{ height: 2, background: "linear-gradient(90deg, transparent, rgba(148,163,184,0.25), rgba(167,139,250,0.35), transparent)" }} />
                               </div>
                             )}
                             <button data-feedback-id="quest-board.open" onClick={() => { const next = !openSectionCollapsed; setOpenSectionCollapsed(next); try { localStorage.setItem("qb_open_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
-                              <span className="text-base font-extrabold uppercase tracking-widest" style={{ color: "#94a3b8", textShadow: "0 0 8px rgba(148,163,184,0.2)", borderLeft: "3px solid #94a3b8", paddingLeft: 8 }}>Offen</span>
+                              <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#94a3b8", background: "linear-gradient(90deg, rgba(148,163,184,0.12), transparent)" }}>Open</span>
                               <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{openSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
                             {!openSectionCollapsed && (
