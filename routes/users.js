@@ -69,7 +69,7 @@ router.get('/api/streaks', (req, res) => {
 
 // GET /api/achievements — list all achievement definitions
 router.get('/api/achievements', (req, res) => {
-  res.json(state.ACHIEVEMENT_CATALOGUE.map(a => ({ id: a.id, name: a.name, icon: a.icon, desc: a.desc, category: a.category, hidden: !!a.hidden })));
+  res.json(state.ACHIEVEMENT_CATALOGUE.map(a => ({ id: a.id, name: a.name, icon: a.icon, desc: a.desc, category: a.category, hidden: !!a.hidden, condition: a.condition || null })));
 });
 
 // GET /api/quest-flavor — quest flavor text
