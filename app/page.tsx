@@ -1112,10 +1112,10 @@ export default function Dashboard() {
           <StatBar
             label="Modifier"
             value={loading ? "—" : playerName && loggedInUser?.modifiers ? `XP ×${loggedInUser.modifiers.xp.total}` : "—"}
-            sub={playerName && loggedInUser?.modifiers ? `Gold ×${loggedInUser.modifiers.gold.total}` : "login to view"}
+            value2={playerName && loggedInUser?.modifiers ? `◆ Gold ×${loggedInUser.modifiers.gold.total}` : undefined}
+            value2Color="#fbbf24"
+            sub={playerName ? "all active bonuses" : "login to view"}
             accent="#a855f7"
-            subColor="#fbbf24"
-            horizontal
             onClick={loggedInUser?.modifiers ? () => setModifierOpen(true) : undefined}
           />
           </div>
