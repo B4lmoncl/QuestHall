@@ -1520,7 +1520,7 @@ export default function Dashboard() {
                             disabled={poolRefreshing}
                             className="btn-interactive px-2 py-1 rounded"
                             style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)", opacity: poolRefreshing ? 0.6 : 1 }}
-                            title="Refresh quest pool (1x per hour)"
+                            title="Refresh quest pool (1x per 6h)"
                           >
                             {poolRefreshing ? (
                               <span className="text-sm">—</span>
