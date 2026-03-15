@@ -672,8 +672,8 @@ export default function Dashboard() {
     q.completedAt && new Date(q.completedAt).getTime() > now24h
   ).length;
   const forgeTemp = Math.min(loggedInUser?.forgeTemp ?? 0, 100);
-  const forgeTempLabel = forgeTemp === 0 ? "Cold" : forgeTemp <= 20 ? "Smoldering" : forgeTemp <= 40 ? "Warming" : forgeTemp <= 60 ? "Burning" : forgeTemp <= 80 ? "Blazing" : "White-hot";
-  const forgeTempColor = forgeTemp === 0 ? "#4b5563" : forgeTemp <= 20 ? "#78716c" : forgeTemp <= 40 ? "#b45309" : forgeTemp <= 60 ? "#ea580c" : forgeTemp <= 80 ? "#f97316" : "#e0f0ff";
+  const forgeTempLabel = forgeTemp >= 100 ? "White-hot" : forgeTemp >= 80 ? "Blazing" : forgeTemp >= 60 ? "Burning" : forgeTemp >= 40 ? "Warming" : forgeTemp >= 20 ? "Smoldering" : "Cold";
+  const forgeTempColor = forgeTemp >= 100 ? "#e0f0ff" : forgeTemp >= 80 ? "#f97316" : forgeTemp >= 60 ? "#ea580c" : forgeTemp >= 40 ? "#b45309" : forgeTemp >= 20 ? "#78716c" : "#4b5563";
   const forgeTempIcon = forgeTemp === 0 ? "×" : forgeTemp <= 20 ? "×" : forgeTemp <= 40 ? "×" : forgeTemp <= 60 ? "×" : forgeTemp <= 80 ? "×" : "×";
 
   const playerActiveCount = playerActiveQuests.length;
@@ -1071,9 +1071,9 @@ export default function Dashboard() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 2, background: "rgba(11,13,17,0.75)", borderRadius: 16, backdropFilter: "blur(8px)", marginTop: 8 }}>
         {/* Stats — Player-specific */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3" data-tutorial="stat-cards">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">
           {!playerName && !loading && (
-            <div className="col-span-1 sm:col-span-3 rounded-xl p-3 text-center" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
+            <div className="col-span-1 sm:col-span-4 rounded-xl p-3 text-center" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
                 <button onClick={() => setLoginOpen(true)} className="underline" style={{ color: "#a78bfa" }}>Log in</button> to see your personal stats
               </p>
@@ -1105,6 +1105,15 @@ export default function Dashboard() {
             sub={playerName ? "your completions" : "login to view"}
             accent="#22c55e"
             tooltip={<InfoTooltip text="Total quests you've finished. Each one earns XP toward your next level." />}
+          />
+          </div>
+          <div data-feedback-id="stats.modifiers">
+          <StatBar
+            label="Earn Modifier"
+            value={loading ? "—" : playerName && loggedInUser?.modifiers ? `×${loggedInUser.modifiers.xp.total}` : "—"}
+            sub={playerName && loggedInUser?.modifiers ? `Gold ×${loggedInUser.modifiers.gold.total}` : "login to view"}
+            accent="#a855f7"
+            tooltip={<InfoTooltip text="Your total XP and Gold earn multiplier from all sources: Forge Temperature, Gear, Companion Bond, and Streak." />}
           />
           </div>
         </div>
@@ -1188,17 +1197,6 @@ export default function Dashboard() {
                     </span>
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
                   </div>
-                  {/* Total Modifiers */}
-                  {loggedInUser?.modifiers && (
-                    <div className="flex items-center gap-3 mt-1">
-                      <span className="text-xs font-mono font-bold" style={{ color: loggedInUser.modifiers.xp.total >= 1 ? "#a855f7" : "#ef4444" }}>
-                        XP ×{loggedInUser.modifiers.xp.total}
-                      </span>
-                      <span className="text-xs font-mono font-bold" style={{ color: "#fbbf24" }}>
-                        Gold ×{loggedInUser.modifiers.gold.total}
-                      </span>
-                    </div>
-                  )}
                   {/* Forge bar */}
                   <div className="mt-1 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.06)", width: 120 }}>
                     <div
