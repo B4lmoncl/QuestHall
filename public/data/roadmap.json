@@ -174,5 +174,13 @@
     "status": "planned",
     "eta": "TBD",
     "category": "polish"
+  },
+  {
+    "id": "r24",
+    "title": "Economy & Progression Balancing",
+    "desc": "XP/Gold Rewards, Modifier-Stacking (additiv vs multiplikativ), Forge Temp Werte, Quest Schwierigkeiten, Gacha Rates",
+    "status": "planned",
+    "eta": "April 2026",
+    "category": "balance"
   }
 ]
