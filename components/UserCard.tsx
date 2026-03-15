@@ -25,7 +25,8 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
     : temp >= 40
     ? "brightness(1.1) sepia(1) saturate(2) hue-rotate(10deg)"
     : "brightness(0.6) grayscale(0.8)";
-  const goldMultiplier = (1 + (temp / 100) * 0.5).toFixed(1);
+  const goldMultiplier = temp >= 100 ? "1.5" : temp >= 80 ? "1.3" : temp >= 60 ? "1.15" : "1.0";
+  const xpMultiplier = temp >= 100 ? "1.5" : temp >= 80 ? "1.25" : temp >= 60 ? "1.15" : temp >= 40 ? "1.0" : temp >= 20 ? "0.8" : "0.5";
   const xpMalus = temp === 0;
   const forgeInfo = getForgeTempInfo(temp);
 

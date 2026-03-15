@@ -1205,25 +1205,25 @@ export default function Dashboard() {
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>
                       Dein Aktivitäts-Level. Steigt mit jeder Quest, sinkt wenn du pausierst.
                     </p>
-                    <p className="mb-1.5 font-semibold" style={{ color: "rgba(255,255,255,0.6)", fontSize: 10 }}>Was bringt's?</p>
-                    <div className="space-y-0.5 mb-2">
+                    <p className="mb-1.5 font-semibold" style={{ color: "rgba(255,255,255,0.6)", fontSize: 11 }}>Was bringt&apos;s?</p>
+                    <div className="space-y-1 mb-2">
                       {[
-                        { t: "0%", label: "Cold", bonus: "XP ×0.5 (Malus!)", color: "#6b7280" },
+                        { t: "0%", label: "Cold", bonus: "XP ×0.5 (Malus!)", color: "#4b5563" },
                         { t: "20%", label: "Smoldering", bonus: "XP ×0.8", color: "#78716c" },
-                        { t: "40%", label: "Warming", bonus: "XP ×1.0", color: "#d97706" },
-                        { t: "60%", label: "Burning", bonus: "Gold ×1.15", color: "#ea580c" },
-                        { t: "80%", label: "Blazing", bonus: "Gold ×1.3", color: "#f97316" },
-                        { t: "100%", label: "White-hot!", bonus: "Gold ×1.5", color: "#fbbf24" },
+                        { t: "40%", label: "Warming", bonus: "XP ×1.0", color: "#b45309" },
+                        { t: "60%", label: "Burning", bonus: "XP ×1.15 · Gold ×1.15", color: "#ea580c" },
+                        { t: "80%", label: "Blazing", bonus: "XP ×1.25 · Gold ×1.3", color: "#f97316" },
+                        { t: "100%", label: "White-hot!", bonus: "XP ×1.5 · Gold ×1.5", color: "#fbbf24" },
                       ].map(row => (
                         <div key={row.t} className="flex items-center gap-2">
-                          <span className="font-mono font-bold" style={{ color: row.color, minWidth: 32 }}>{row.t}</span>
-                          <span style={{ color: "rgba(255,255,255,0.4)", minWidth: 72 }}>{row.label}</span>
-                          <span style={{ color: row.color, fontSize: 10 }}>{row.bonus}</span>
+                          <span className="font-mono font-bold" style={{ color: row.color, minWidth: 36, fontSize: 12 }}>{row.t}</span>
+                          <span style={{ color: row.color, minWidth: 76, fontSize: 11 }}>{row.label}</span>
+                          <span className="font-mono" style={{ color: row.color, fontSize: 11 }}>{row.bonus}</span>
                         </div>
                       ))}
                     </div>
-                    <p style={{ color: "rgba(255,255,255,0.35)", fontSize: 10 }}>
-                      Quests abschließen heizt die Forge auf. Inaktivität kühlt sie ab.
+                    <p className="mb-1" style={{ color: "rgba(255,255,255,0.5)", fontSize: 11 }}>
+                      +10% pro abgeschlossener Quest. Sinkt um ~2% pro Stunde Inaktivität.
                     </p>
                   </div>
                 </div>
