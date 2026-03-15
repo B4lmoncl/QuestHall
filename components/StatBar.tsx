@@ -6,13 +6,15 @@ interface StatBarProps {
   sub?: string;
   accent?: string;
   tooltip?: ReactNode;
+  onClick?: () => void;
 }
 
-export default function StatBar({ label, value, sub, accent = "rgba(255,255,255,0.8)", tooltip }: StatBarProps) {
+export default function StatBar({ label, value, sub, accent = "rgba(255,255,255,0.8)", tooltip, onClick }: StatBarProps) {
   return (
     <div
-      className="rounded-2xl px-5 py-4 flex flex-col gap-0.5 relative group cursor-default"
-      style={{ background: "#181818", border: "1px solid rgba(255,68,68,0.15)" }}
+      className="rounded-2xl px-5 py-4 flex flex-col gap-0.5 relative group"
+      style={{ background: "#181818", border: "1px solid rgba(255,68,68,0.15)", cursor: onClick ? "pointer" : "default" }}
+      onClick={onClick}
     >
       <div className="flex items-center gap-1">
         <p className="text-xs uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.3)" }}>{label}</p>

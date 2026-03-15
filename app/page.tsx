@@ -170,6 +170,7 @@ export default function Dashboard() {
   const settingsPopupRef = useRef<HTMLDivElement>(null);
   const [questDetailModal, setQuestDetailModal] = useState<Quest | null>(null);
   const [currenciesOpen, setCurrenciesOpen] = useState(false);
+  const [modifierOpen, setModifierOpen] = useState(false);
   const [currencyExpanded, setCurrencyExpanded] = useState<string | null>(null);
   const [feedbackMode, setFeedbackMode] = useState(false);
 
@@ -1109,41 +1110,11 @@ export default function Dashboard() {
           </div>
           <div data-feedback-id="stats.modifiers">
           <StatBar
-            label="Earn Modifier"
+            label="Modifier"
             value={loading ? "—" : playerName && loggedInUser?.modifiers ? `×${loggedInUser.modifiers.xp.total}` : "—"}
-            sub={playerName && loggedInUser?.modifiers ? `Gold ×${loggedInUser.modifiers.gold.total}` : "login to view"}
+            sub={playerName && loggedInUser?.modifiers ? `◆ Gold ×${loggedInUser.modifiers.gold.total}` : "login to view"}
             accent="#a855f7"
-            tooltip={loggedInUser?.modifiers ? (
-              <div className="text-xs leading-relaxed" style={{ minWidth: 240 }}>
-                <p className="font-semibold mb-1.5" style={{ color: "#f0f0f0", fontSize: 13 }}>Modifier Breakdown</p>
-                <p className="font-semibold mb-1" style={{ color: "#a855f7", fontSize: 12 }}>XP ×{loggedInUser.modifiers.xp.total}</p>
-                <div className="space-y-0.5 mb-2">
-                  {[
-                    { label: "Forge Temp", val: loggedInUser.modifiers.xp.forge, color: forgeTempColor },
-                    { label: "Gear", val: loggedInUser.modifiers.xp.gear, color: "#818cf8" },
-                    { label: "Companions", val: loggedInUser.modifiers.xp.companions, color: "#f472b6" },
-                    { label: "Bond Level", val: loggedInUser.modifiers.xp.bond, color: "#fb923c" },
-                  ].map(r => (
-                    <div key={r.label} className="flex items-center justify-between">
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>{r.label}</span>
-                      <span className="font-mono font-semibold" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.25)" }}>×{r.val}</span>
-                    </div>
-                  ))}
-                </div>
-                <p className="font-semibold mb-1" style={{ color: "#fbbf24", fontSize: 12 }}>Gold ×{loggedInUser.modifiers.gold.total}</p>
-                <div className="space-y-0.5">
-                  {[
-                    { label: "Forge Temp", val: loggedInUser.modifiers.gold.forge, color: forgeTempColor },
-                    { label: `Streak (${loggedInUser.streakDays ?? 0}d)`, val: loggedInUser.modifiers.gold.streak, color: "#f97316" },
-                  ].map(r => (
-                    <div key={r.label} className="flex items-center justify-between">
-                      <span style={{ color: "rgba(255,255,255,0.5)" }}>{r.label}</span>
-                      <span className="font-mono font-semibold" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.25)" }}>×{r.val}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : <InfoTooltip text="Log in to see your modifier breakdown." />}
+            onClick={loggedInUser?.modifiers ? () => setModifierOpen(true) : undefined}
           />
           </div>
         </div>
@@ -1328,6 +1299,69 @@ export default function Dashboard() {
           </ModalPortal>
           );
         })()}
+
+        {/* Modifier Breakdown Modal */}
+        {modifierOpen && loggedInUser?.modifiers && (
+          <ModalPortal>
+            <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
+              onClick={() => setModifierOpen(false)}>
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
+              <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>Modifier Breakdown</h3>
+                  <button onClick={() => setModifierOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                </div>
+
+                {/* XP Section */}
+                <div className="mb-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a855f7" }}>XP Modifier</span>
+                    <span className="text-lg font-mono font-black" style={{ color: loggedInUser.modifiers.xp.total >= 1 ? "#a855f7" : "#ef4444" }}>×{loggedInUser.modifiers.xp.total}</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Forge Temp", val: loggedInUser.modifiers.xp.forge, color: forgeTempColor, desc: `${forgeTemp}% — ${forgeTempLabel}` },
+                      { label: "Gear", val: loggedInUser.modifiers.xp.gear, color: "#818cf8", desc: loggedInUser.modifiers.xp.gear > 1 ? `+${Math.round((loggedInUser.modifiers.xp.gear - 1) * 100)}% von Tools` : "Kein Gear-Bonus" },
+                      { label: "Companions", val: loggedInUser.modifiers.xp.companions, color: "#f472b6", desc: loggedInUser.modifiers.xp.companions > 1 ? `+${Math.round((loggedInUser.modifiers.xp.companions - 1) * 100)}% (2% pro Companion)` : "Keine Companions beschworen" },
+                      { label: "Bond Level", val: loggedInUser.modifiers.xp.bond, color: "#fb923c", desc: loggedInUser.modifiers.xp.bond > 1 ? `+${Math.round((loggedInUser.modifiers.xp.bond - 1) * 100)}% (1% pro Bond-Level)` : "Bond Level 1" },
+                    ].map(r => (
+                      <div key={r.label} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: r.val !== 1 ? "rgba(255,255,255,0.03)" : "transparent" }}>
+                        <div>
+                          <span className="text-xs font-medium" style={{ color: r.val !== 1 ? "#f0f0f0" : "rgba(255,255,255,0.3)" }}>{r.label}</span>
+                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{r.desc}</p>
+                        </div>
+                        <span className="font-mono font-bold text-sm" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.2)" }}>×{r.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Gold Section */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#fbbf24" }}>Gold Modifier</span>
+                    <span className="text-lg font-mono font-black" style={{ color: "#fbbf24" }}>×{loggedInUser.modifiers.gold.total}</span>
+                  </div>
+                  <div className="space-y-1.5">
+                    {[
+                      { label: "Forge Temp", val: loggedInUser.modifiers.gold.forge, color: forgeTempColor, desc: `${forgeTemp}% — ${forgeTempLabel}` },
+                      { label: "Streak", val: loggedInUser.modifiers.gold.streak, color: "#f97316", desc: `${loggedInUser.streakDays ?? 0} Tage (+10% pro Tag, max ×3)` },
+                    ].map(r => (
+                      <div key={r.label} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: r.val !== 1 ? "rgba(255,255,255,0.03)" : "transparent" }}>
+                        <div>
+                          <span className="text-xs font-medium" style={{ color: r.val !== 1 ? "#f0f0f0" : "rgba(255,255,255,0.3)" }}>{r.label}</span>
+                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{r.desc}</p>
+                        </div>
+                        <span className="font-mono font-bold text-sm" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.2)" }}>×{r.val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalPortal>
+        )}
 
         {/* View toggle */}
         <div className="flex gap-1 flex-wrap" data-tutorial="nav-bar" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
