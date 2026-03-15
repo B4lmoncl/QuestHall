@@ -1182,11 +1182,11 @@ export default function Dashboard() {
                 {/* Forge Temperature */}
                 <div data-feedback-id="player-card.forge-tooltip" className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
+                    <img src="/images/icons/ach-forge-novice.png" alt="forge" width={14} height={14} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
-                      {forgeTempIcon} {forgeTemp}%
+                      {forgeTemp}%
                     </span>
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
-                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>?</span>
                   </div>
                   {/* Forge bar */}
                   <div className="mt-1 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.06)", width: 120 }}>
@@ -1198,7 +1198,7 @@ export default function Dashboard() {
                   {/* Tooltip */}
                   <div
                     className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 260, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
+                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 380, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
                   >
                     <p className="font-semibold mb-1" style={{ color: "#f0f0f0", fontSize: 14 }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
