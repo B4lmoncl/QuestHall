@@ -603,7 +603,7 @@ export function WandererRest({
                   {/* Final reward */}
                   {npc.finalReward?.item && (
                     <div className="mt-4 px-4 py-3 rounded-xl flex items-start gap-3" style={{ background: "rgba(255,215,0,0.04)", border: "1px solid rgba(255,215,0,0.12)" }}>
-                      {(npc.finalReward.item as any).icon && (npc.finalReward.item as any).icon.startsWith("/") ? <img src={(npc.finalReward.item as any).icon} alt="" width={36} height={36} style={{ imageRendering: "auto", flexShrink: 0, marginTop: 2 }} /> : <span className="text-xl flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji || "?"}</span>}
+                      {(npc.finalReward.item as any).icon && (npc.finalReward.item as any).icon.startsWith("/") ? <img src={(npc.finalReward.item as any).icon} alt="" width={96} height={96} style={{ imageRendering: "pixelated", flexShrink: 0, marginTop: 2 }} /> : <span className="text-xl flex-shrink-0 mt-0.5">{npc.finalReward.item.emoji || "?"}</span>}
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold" style={{ color: "rgba(255,215,0,0.8)" }}>Chain Reward</p>
                         <p className="text-sm mt-0.5 font-medium" style={{ color: "rgba(255,255,255,0.6)" }}>{npc.finalReward.item.name}</p>
