@@ -79,7 +79,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
   const cc = getCC(companionType);
   const isDobbiePortrait = companionType === "cat" && petName?.toLowerCase() === "dobbie";
   return (
-    <div style={{ maxWidth: 1000, margin: "32px auto 0", padding: 8 }}>
+    <div data-feedback-id="wanderers-rest.companion-hearth" style={{ maxWidth: 1000, margin: "32px auto 0", padding: 8 }}>
       <div style={{
         background: "#0c0e14",
         border: "2px solid #2a2a3e",
@@ -419,6 +419,7 @@ export function WandererRest({
         const isStarweaver = npc.id === "lyra-permanent";
         return createPortal(
           <div
+            data-feedback-id={`wanderers-rest.npc-modal.${npc.id}`}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             style={{ background: "rgba(0,0,0,0.82)" }}
             onClick={e => { if (e.target === e.currentTarget) setSelectedNpc(null); }}
@@ -472,7 +473,7 @@ export function WandererRest({
 
               {/* Starweaver's Quests heading */}
               {isStarweaver && (lyraQuestsOpen.length > 0 || lyraQuestsInProgress.length > 0) && (
-                <div className="relative px-5 pt-4 pb-0" style={{ zIndex: 1 }}>
+                <div data-feedback-id="wanderers-rest.starweaver-quests" className="relative px-5 pt-4 pb-0" style={{ zIndex: 1 }}>
                   <div className="flex items-center gap-2 mb-2">
                     <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#c084fc" }}>Starweaver&apos;s Quests</h3>
                     <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(192,132,252,0.1)", color: "#c084fc", border: "1px solid rgba(192,132,252,0.2)" }}>{lyraQuestsOpen.length + lyraQuestsInProgress.length}</span>
@@ -494,7 +495,7 @@ export function WandererRest({
 
               {/* Quest content (for wandering NPCs) */}
               {!isStarweaver && (
-                <div className="px-5 pt-4 pb-5">
+                <div data-feedback-id={`wanderers-rest.npc-modal.${npc.id}.quest-chain`} className="px-5 pt-4 pb-5">
                   {allDone ? (
                     <div className="text-center py-4">
                       <p className="text-2xl mb-2">✓</p>
