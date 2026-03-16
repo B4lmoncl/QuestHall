@@ -134,7 +134,9 @@ router.post('/api/rituals', requireApiKey, (req, res) => {
     playerId: playerId.toLowerCase(),
     createdAt: now(),
     status: 'active',
-    ...(isAntiRitual ? { isAntiRitual: true, category, commitment, commitmentDays, bloodPact, cleanDays: 0, lastViolated: null } : {}),
+    ...(commitment ? { commitment } : {}),
+    ...(commitmentDays ? { commitmentDays } : {}),
+    ...(isAntiRitual ? { isAntiRitual: true, category, bloodPact, cleanDays: 0, lastViolated: null } : {}),
   };
   state.rituals.push(ritual);
   saveRituals();
