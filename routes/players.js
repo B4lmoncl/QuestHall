@@ -9,15 +9,40 @@ router.patch('/api/player/:name/profile', requireApiKey, (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
-  const { relationshipStatus, partnerName } = req.body;
+  const { relationshipStatus, partnerName, classId } = req.body;
   const validStatuses = ['single', 'relationship', 'married', 'complicated', 'other'];
   if (relationshipStatus !== undefined) {
     if (!validStatuses.includes(relationshipStatus)) return res.status(400).json({ error: 'Invalid status' });
     u.relationshipStatus = relationshipStatus;
   }
   if (partnerName !== undefined) u.partnerName = partnerName || null;
+  // Allow setting/changing class
+  if (classId !== undefined) {
+    if (classId === null || classId === '') {
+      u.classId = null;
+      u.classPending = false;
+    } else {
+      const cls = state.classesData.classes.find(c => c.id === classId);
+      if (cls) {
+        // Decrement old class playerCount
+        if (u.classId && u.classId !== classId) {
+          const oldCls = state.classesData.classes.find(c => c.id === u.classId);
+          if (oldCls) oldCls.playerCount = Math.max(0, (oldCls.playerCount || 1) - 1);
+        }
+        // Only increment if actually changing to new class
+        if (u.classId !== classId) cls.playerCount = (cls.playerCount || 0) + 1;
+        u.classId = cls.id;
+        u.classPending = cls.status === 'pending';
+        u.classPendingNotified = false;
+        const { saveClasses } = require('../lib/state');
+        saveClasses();
+      } else {
+        return res.status(400).json({ error: 'Class not found' });
+      }
+    }
+  }
   saveUsers();
-  res.json({ ok: true, relationshipStatus: u.relationshipStatus || 'single', partnerName: u.partnerName || null });
+  res.json({ ok: true, relationshipStatus: u.relationshipStatus || 'single', partnerName: u.partnerName || null, classId: u.classId || null });
 });
 
 // GET /api/player/:name — get player progress (level, xp, gold, quest counts, claimed)
