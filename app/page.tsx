@@ -29,7 +29,7 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 import { WandererRest } from "@/components/WandererRest";
 import GuildHallBackground from "@/components/GuildHallBackground";
 import FeedbackOverlay from "@/components/FeedbackOverlay";
-import { ModalPortal, useModalBehavior } from "@/components/ModalPortal";
+import { ModalPortal, useModalBehavior, ModalOverlay } from "@/components/ModalPortal";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
@@ -175,6 +175,7 @@ export default function Dashboard() {
   const [streakInfoOpen, setStreakInfoOpen] = useState(false);
   const [activeQuestsInfoOpen, setActiveQuestsInfoOpen] = useState(false);
   const [completedInfoOpen, setCompletedInfoOpen] = useState(false);
+  const [xpInfoOpen, setXpInfoOpen] = useState(false);
   const [currencyExpanded, setCurrencyExpanded] = useState<string | null>(null);
   const [feedbackMode, setFeedbackMode] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -187,10 +188,12 @@ export default function Dashboard() {
   const closeStreakInfo = useCallback(() => setStreakInfoOpen(false), []);
   const closeActiveQuestsInfo = useCallback(() => setActiveQuestsInfoOpen(false), []);
   const closeCompletedInfo = useCallback(() => setCompletedInfoOpen(false), []);
+  const closeXpInfo = useCallback(() => setXpInfoOpen(false), []);
   const closeModifier = useCallback(() => setModifierOpen(false), []);
   useModalBehavior(streakInfoOpen, closeStreakInfo);
   useModalBehavior(activeQuestsInfoOpen, closeActiveQuestsInfo);
   useModalBehavior(completedInfoOpen, closeCompletedInfo);
+  useModalBehavior(xpInfoOpen, closeXpInfo);
   useModalBehavior(modifierOpen, closeModifier);
 
   // Currencies modal — ESC to close + scroll lock
@@ -1792,6 +1795,11 @@ export default function Dashboard() {
                         <div className="flex items-center gap-1.5">
                           <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Quest Board</h2>
                           <InfoTooltip text="Your personal quest board. Claim quests to start them, complete them to earn XP and Gold. Filter by type to find what interests you." />
+                          <button
+                            onClick={() => setXpInfoOpen(true)}
+                            title="How does XP work?"
+                            style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", borderRadius: "50%", width: 16, height: 16, fontSize: 9, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}
+                          >XP</button>
                         </div>
                         <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
                           {playerName
@@ -3077,67 +3085,43 @@ export default function Dashboard() {
             <div style={{ overflowY: "auto", flex: 1, padding: "1.25rem" }}>
               {infoOverlayTab === "roadmap" && <RoadmapView isAdmin={isAdmin} reviewApiKey={reviewApiKey} />}
               {infoOverlayTab === "changelog" && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 pb-1">
                     <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Changelog</span>
-                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>— recent commits from GitHub</span>
                   </div>
-                  {changelogLoading && (
-                    <div className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>Loading commits…</div>
-                  )}
-                  {!changelogLoading && changelog.length === 0 && (
+                  {changelogData.length === 0 && (
                     <div className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No changelog data available.</div>
                   )}
-                  {changelog.map(entry => (
-                    <div key={entry.date} className="space-y-1.5">
-                      <div
-                        className="text-xs font-semibold uppercase tracking-widest pt-2 pb-1"
-                        style={{ color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                  {changelogData.map(entry => (
+                    <div key={entry.version} className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
+                      <button
+                        onClick={() => setChangelogExpanded(changelogExpanded === entry.version ? null : entry.version)}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-left"
+                        style={{ background: "rgba(255,255,255,0.03)", cursor: "pointer", border: "none" }}
                       >
-                        {entry.date}
-                      </div>
-                      {entry.commits.map((c, i) => {
-                        const typeStyle: Record<string, { badge: string; color: string; bg: string }> = {
-                          feat:     { badge: "feat",     color: "#4ade80", bg: "rgba(74,222,128,0.1)"  },
-                          fix:      { badge: "fix",      color: "#f59e0b", bg: "rgba(245,158,11,0.1)"  },
-                          chore:    { badge: "chore",    color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
-                          docs:     { badge: "docs",     color: "#60a5fa", bg: "rgba(96,165,250,0.1)"  },
-                          refactor: { badge: "refactor", color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
-                        };
-                        const ts = typeStyle[c.type] || { badge: c.type, color: "#9ca3af", bg: "rgba(156,163,175,0.1)" };
-                        return (
-                          <div
-                            key={i}
-                            className="flex items-start gap-2 px-3 py-2 rounded"
-                            style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.05)" }}
-                          >
-                            <span
-                              className="text-xs font-mono px-1.5 py-0.5 rounded shrink-0"
-                              style={{ color: ts.color, background: ts.bg, whiteSpace: "nowrap" }}
-                            >
-                              {ts.badge}
-                            </span>
-                            <span className="text-sm flex-1 leading-snug" style={{ color: "rgba(255,255,255,0.7)" }}>
-                              {c.message}
-                            </span>
-                            {c.sha && (
-                              c.url ? (
-                                <a
-                                  href={c.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs font-mono shrink-0"
-                                  style={{ color: "rgba(255,255,255,0.2)", textDecoration: "none" }}
-                                >
-                                  {c.sha}
-                                </a>
-                              ) : (
-                                <span className="text-xs font-mono shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>{c.sha}</span>
-                              )
-                            )}
-                          </div>
-                        );
-                      })}
+                        <span className="text-xs font-mono px-2 py-0.5 rounded shrink-0" style={{ background: "rgba(255,68,68,0.15)", color: "#ff6666", border: "1px solid rgba(255,68,68,0.25)" }}>
+                          v{entry.version}
+                        </span>
+                        <span className="flex-1 text-sm font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
+                          {entry.title}
+                        </span>
+                        <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>
+                          {entry.date}
+                        </span>
+                        <span className="shrink-0" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>
+                          {changelogExpanded === entry.version ? "▲" : "▼"}
+                        </span>
+                      </button>
+                      {changelogExpanded === entry.version && (
+                        <ul className="px-4 py-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.2)" }}>
+                          {entry.changes.map((change, i) => (
+                            <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+                              <span className="shrink-0" style={{ color: "rgba(255,68,68,0.6)", marginTop: 2 }}>•</span>
+                              {change}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -3221,6 +3205,51 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Version Update Popup */}
+      {versionPopupOpen && (
+        <ModalOverlay isOpen={versionPopupOpen} onClose={dismissVersionPopup} zIndex={70}>
+          <div
+            className="w-full max-w-sm rounded-2xl p-6 space-y-4"
+            style={{
+              background: "#1a1a1a",
+              border: "1px solid rgba(255,68,68,0.35)",
+              boxShadow: "0 0 60px rgba(255,68,68,0.12)",
+            }}
+          >
+            <div className="text-center space-y-2">
+              <h2 className="text-lg font-bold" style={{ color: "#f0f0f0" }}>
+                Version {gameVersion} is live! ✨
+              </h2>
+              {changelogData[0] && (
+                <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                  {changelogData[0].title}
+                </p>
+              )}
+            </div>
+            <div className="flex gap-2 pt-2">
+              <button
+                onClick={() => {
+                  setVersionPopupOpen(false);
+                  setInfoOverlayOpen(true);
+                  setInfoOverlayTab("changelog");
+                }}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
+                style={{ background: "rgba(255,68,68,0.15)", color: "#ff6666", border: "1px solid rgba(255,68,68,0.3)", cursor: "pointer" }}
+              >
+                View Changelog
+              </button>
+              <button
+                onClick={dismissVersionPopup}
+                className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
+                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </ModalOverlay>
       )}
 
       {/* Create Quest Modal */}
