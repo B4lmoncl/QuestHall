@@ -102,7 +102,7 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
   );
 }
 
-export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, playerLevel, gridMode, onDetails }: {
+export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, playerLevel, gridMode, onDetails, isFavorite, onToggleFavorite }: {
   quest: Quest;
   selected?: boolean;
   onToggle?: (id: string) => void;
@@ -115,6 +115,8 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
   playerLevel?: number;
   gridMode?: boolean;
   onDetails?: (quest: Quest) => void;
+  isFavorite?: boolean;
+  onToggleFavorite?: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const isInProgress = quest.status === "in_progress";
@@ -168,8 +170,18 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
       >
         {/* Rarity top strip */}
         <div style={{ height: 3, background: `linear-gradient(90deg, transparent, ${rarityColor}bb, transparent)`, borderRadius: "10px 10px 0 0" }} />
-        {/* Rarity gem — top right corner */}
-        <div style={{ position: "absolute", top: 10, right: 10, width: 8, height: 8, borderRadius: "50%", background: rarityColor, boxShadow: `0 0 7px ${rarityColor}`, opacity: 0.88 }} />
+        {/* Favorite star — top right corner */}
+        {onToggleFavorite && (
+          <button
+            onClick={e => { e.stopPropagation(); onToggleFavorite(quest.id); }}
+            style={{ position: "absolute", top: 6, right: 6, background: "none", border: "none", cursor: "pointer", fontSize: 16, lineHeight: 1, color: isFavorite ? "#fbbf24" : "rgba(255,255,255,0.2)", textShadow: isFavorite ? "0 0 6px rgba(251,191,36,0.5)" : "none", transition: "color 0.2s, text-shadow 0.2s", zIndex: 2, padding: 2 }}
+            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+          >
+            {isFavorite ? "\u2605" : "\u2606"}
+          </button>
+        )}
+        {/* Rarity gem — top right corner (shifted if star present) */}
+        <div style={{ position: "absolute", top: onToggleFavorite ? 26 : 10, right: 10, width: 8, height: 8, borderRadius: "50%", background: rarityColor, boxShadow: `0 0 7px ${rarityColor}`, opacity: 0.88 }} />
         {/* Card body */}
         <div className="p-3 flex-1">
           <div className="flex items-start gap-2 mb-1.5">
@@ -244,6 +256,16 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
     >
       {/* Rarity left accent line */}
       <div style={{ position: "absolute", left: 0, top: 0, bottom: 0, width: 3, background: `linear-gradient(180deg, ${rarityColor}cc, ${rarityColor}44)`, borderRadius: "8px 0 0 8px" }} />
+      {/* Favorite star — top right */}
+      {onToggleFavorite && (
+        <button
+          onClick={e => { e.stopPropagation(); onToggleFavorite(quest.id); }}
+          style={{ position: "absolute", top: 6, right: 8, background: "none", border: "none", cursor: "pointer", fontSize: 14, lineHeight: 1, color: isFavorite ? "#fbbf24" : "rgba(255,255,255,0.15)", textShadow: isFavorite ? "0 0 6px rgba(251,191,36,0.5)" : "none", transition: "color 0.2s, text-shadow 0.2s", zIndex: 2, padding: 2 }}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorite ? "\u2605" : "\u2606"}
+        </button>
+      )}
       <div className="flex items-start gap-2">
         {onToggle && (
           <button

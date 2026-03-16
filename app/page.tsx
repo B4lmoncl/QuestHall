@@ -1791,7 +1791,8 @@ export default function Dashboard() {
                                         onCoopClaim={reviewApiKey && playerName ? handleCoopClaim : undefined}
                                         onCoopComplete={reviewApiKey && playerName ? handleCoopComplete : undefined}
                                         playerName={playerName} playerLevel={currentPlayerLevel} gridMode
-                                        onDetails={q => setQuestDetailModal(q)} />
+                                        onDetails={q => setQuestDetailModal(q)}
+                                        isFavorite={favorites.includes(q.id)} onToggleFavorite={reviewApiKey && playerName ? handleToggleFavorite : undefined} />
                                 )}
                               </div>
                             )}
@@ -1822,7 +1823,8 @@ export default function Dashboard() {
                                         onCoopClaim={reviewApiKey && playerName ? handleCoopClaim : undefined}
                                         onCoopComplete={reviewApiKey && playerName ? handleCoopComplete : undefined}
                                         playerName={playerName} playerLevel={currentPlayerLevel} gridMode
-                                        onDetails={q => setQuestDetailModal(q)} /></div>
+                                        onDetails={q => setQuestDetailModal(q)}
+                                        isFavorite={favorites.includes(q.id)} onToggleFavorite={reviewApiKey && playerName ? handleToggleFavorite : undefined} /></div>
                                 )}
                               </div>
                             )}

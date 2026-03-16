@@ -1,6 +1,6 @@
 // ─── Player API ────────────────────────────────────────────────────────────────
 const router = require('express').Router();
-const { state, NPC_META, saveUsers } = require('../lib/state');
+const { state, NPC_META, saveUsers, savePlayerProgress } = require('../lib/state');
 const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel } = require('../lib/helpers');
 const { requireApiKey } = require('../lib/middleware');
 
@@ -164,6 +164,31 @@ router.get('/api/cv-export', (req, res) => {
     .filter(q => q.title && q.title.toLowerCase().includes('cert'))
     .map(q => ({ title: q.title, earnedAt: q.completedAt, questId: q.id }));
   res.json({ userId: userId || 'all', skills, certifications, totalLearningQuests: learningQuests.length, generatedAt: now() });
+});
+
+// POST /api/player/:name/favorites — toggle a quest template as favorite
+router.post('/api/player/:name/favorites', requireApiKey, (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  if (!state.users[uid]) return res.status(404).json({ error: 'Player not found' });
+  const pp = getPlayerProgress(uid);
+  const { questId, action } = req.body;
+  if (!questId) return res.status(400).json({ error: 'questId required' });
+  if (!pp.favorites) pp.favorites = [];
+  if (action === 'remove') {
+    pp.favorites = pp.favorites.filter(id => id !== questId);
+  } else {
+    if (!pp.favorites.includes(questId)) pp.favorites.push(questId);
+  }
+  savePlayerProgress();
+  res.json({ ok: true, favorites: pp.favorites });
+});
+
+// GET /api/player/:name/favorites — get favorites list
+router.get('/api/player/:name/favorites', (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  if (!state.users[uid]) return res.status(404).json({ error: 'Player not found' });
+  const pp = getPlayerProgress(uid);
+  res.json({ favorites: pp.favorites || [] });
 });
 
 // GET /api/npcs — list all NPC profiles
