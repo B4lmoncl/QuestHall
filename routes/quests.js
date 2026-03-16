@@ -291,9 +291,12 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
     pp.npcQuests[quest.id] = { status: 'completed', completedAt: now(), completedBy: agentKey };
     savePlayerProgress();
     // Award XP/achievements to the player
+    const prevLevel = getLevelInfo(state.users[agentKey]?.xp ?? 0).level;
     const newAchievements = onQuestCompletedByUser(agentKey, quest);
-    const lootDrop = state.users[agentKey]?._lastLoot || null;
-    if (state.users[agentKey]) delete state.users[agentKey]._lastLoot;
+    const u = state.users[agentKey];
+    const newLevelInfo = getLevelInfo(u?.xp ?? 0);
+    const lootDrop = u?._lastLoot || null;
+    if (u) delete u._lastLoot;
     console.log(`[quest] ${quest.id} completed (npc per-player) by ${agentKey}`);
     return res.json({
       ok: true,
@@ -301,6 +304,7 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
       newAchievements,
       lootDrop,
       chainQuestTemplate: null,
+      levelUp: newLevelInfo.level > prevLevel ? { level: newLevelInfo.level, title: newLevelInfo.title } : null,
     });
   }
 
@@ -320,9 +324,12 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
     }
     savePlayerProgress();
     unlockNextChainQuest(quest);
+    const prevLevel2 = getLevelInfo(state.users[agentKey]?.xp ?? 0).level;
     const newAchievements = onQuestCompletedByUser(agentKey, quest);
-    const lootDrop = state.users[agentKey]?._lastLoot || null;
-    if (state.users[agentKey]) delete state.users[agentKey]._lastLoot;
+    const u2 = state.users[agentKey];
+    const newLevelInfo2 = getLevelInfo(u2?.xp ?? 0);
+    const lootDrop = u2?._lastLoot || null;
+    if (u2) delete u2._lastLoot;
     console.log(`[quest] ${quest.id} completed (per-player) by ${agentKey}`);
     return res.json({
       ok: true,
@@ -330,6 +337,7 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
       newAchievements,
       lootDrop,
       chainQuestTemplate: quest.nextQuestTemplate || null,
+      levelUp: newLevelInfo2.level > prevLevel2 ? { level: newLevelInfo2.level, title: newLevelInfo2.title } : null,
     });
   }
 
@@ -345,6 +353,7 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   saveQuests();
   unlockNextChainQuest(quest);
   let newAchievements = [];
+  const prevLevel3 = getLevelInfo(state.users[agentKey]?.xp ?? 0).level;
   if (state.users[agentKey]) {
     newAchievements = onQuestCompletedByUser(agentKey, quest);
   } else if (state.store.agents[agentKey]) {
@@ -354,10 +363,12 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
     updateAgentStreak(agentKey);
     saveData();
   }
-  const lootDrop = state.users[agentKey]?._lastLoot || null;
-  if (state.users[agentKey]) delete state.users[agentKey]._lastLoot;
+  const u3 = state.users[agentKey];
+  const newLevelInfo3 = getLevelInfo(u3?.xp ?? 0);
+  const lootDrop = u3?._lastLoot || null;
+  if (u3) delete u3._lastLoot;
   console.log(`[quest] ${quest.id} completed by ${agentId}`);
-  res.json({ ok: true, quest, newAchievements, lootDrop, chainQuestTemplate: quest.nextQuestTemplate || null });
+  res.json({ ok: true, quest, newAchievements, lootDrop, chainQuestTemplate: quest.nextQuestTemplate || null, levelUp: u3 && newLevelInfo3.level > prevLevel3 ? { level: newLevelInfo3.level, title: newLevelInfo3.title } : null });
 });
 
 // POST /api/quest/:id/unclaim — agent/player unclaims a quest

@@ -1161,7 +1161,7 @@ export default function Dashboard() {
 
         {/* Player Card — shown when logged in */}
         {playerName && loggedInUser && (
-          <div data-feedback-id="player-card" className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
+          <div data-feedback-id="player-card" className={`rounded-xl p-4${levelUpCelebration ? " levelup-glow-header" : ""}`} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.09)" }}>
             <div className="flex items-center gap-4">
               {/* Portrait */}
               <div data-feedback-id="player-card.portrait" className="relative flex-shrink-0 cursor-pointer" onClick={() => setDashView("character")} title="Character">
@@ -2737,6 +2737,44 @@ export default function Dashboard() {
               style={{ background: `${lootDrop.rarityColor}22`, color: lootDrop.rarityColor, border: `1px solid ${lootDrop.rarityColor}55` }}
             >
               Einsammeln x
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Level Up Celebration */}
+      {levelUpCelebration && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }}>
+          <div className="levelup-modal w-full max-w-sm rounded-2xl p-8 text-center relative overflow-hidden" style={{ background: "linear-gradient(180deg, #1a1400 0%, #0d0d14 60%)", border: "2px solid rgba(255,215,0,0.5)", boxShadow: "0 0 60px rgba(255,215,0,0.3), 0 0 120px rgba(255,215,0,0.1)" }}
+            onClick={e => e.stopPropagation()}>
+            {/* Sparkle particles */}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="absolute rounded-full" style={{
+                width: 4 + (i % 3) * 2, height: 4 + (i % 3) * 2,
+                background: i % 2 === 0 ? "#FFD700" : "#FFF8DC",
+                top: "50%", left: "50%",
+                animation: `levelup-sparkle ${1.5 + (i % 4) * 0.3}s ease-out ${i * 0.1}s infinite`,
+                "--sx": `${Math.cos(i * Math.PI / 6) * (80 + i * 8)}px`,
+                "--sy": `${Math.sin(i * Math.PI / 6) * (80 + i * 8)}px`,
+                boxShadow: "0 0 6px rgba(255,215,0,0.8)",
+                pointerEvents: "none",
+              } as React.CSSProperties} />
+            ))}
+            {/* Expanding ring */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div style={{ width: 100, height: 100, borderRadius: "50%", border: "2px solid rgba(255,215,0,0.6)", animation: "levelup-ring 2s ease-out infinite" }} />
+            </div>
+            <div className="text-5xl mb-3" style={{ filter: "drop-shadow(0 0 16px rgba(255,215,0,0.6))" }}>⚔</div>
+            <div className="text-xs font-bold uppercase tracking-[0.3em] mb-2" style={{ color: "rgba(255,215,0,0.6)" }}>Level Up!</div>
+            <div className="levelup-title text-3xl font-black mb-1" style={{ color: "#FFD700" }}>Level {levelUpCelebration.level}</div>
+            <div className="text-sm font-semibold mb-5" style={{ color: "rgba(255,215,0,0.7)" }}>{levelUpCelebration.title}</div>
+            <div className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>The Forge recognizes your dedication, adventurer.</div>
+            <button
+              onClick={() => setLevelUpCelebration(null)}
+              className="action-btn w-full py-2.5 rounded-xl text-sm font-bold"
+              style={{ background: "rgba(255,215,0,0.12)", color: "#FFD700", border: "1px solid rgba(255,215,0,0.35)" }}
+            >
+              Continue the Journey
             </button>
           </div>
         </div>
