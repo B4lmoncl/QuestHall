@@ -2550,7 +2550,7 @@ export default function Dashboard() {
 
         {/* ── CHARACTER TAB ── */}
         {dashView === "character" && playerName && (
-          <CharacterView playerName={playerName} apiKey={reviewApiKey} users={users} classesList={classesList} />
+          <CharacterView playerName={playerName} apiKey={reviewApiKey} users={users} classesList={classesList} addToast={addToast} />
         )}
 
         {/* ── THE WANDERER'S REST (NPC Tab) ── */}

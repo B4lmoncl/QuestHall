@@ -4,7 +4,7 @@
 const router = require('express').Router();
 const { state, saveGachaState } = require('../lib/state');
 const { requireApiKey } = require('../lib/middleware');
-const { spendCurrency, awardCurrency } = require('../lib/helpers');
+const { spendCurrency, awardCurrency, hasPassiveEffect } = require('../lib/helpers');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -33,10 +33,12 @@ function getEffectiveLegendaryRate(pityCounter) {
   return BASE_RATE;
 }
 
-function rollRarity(pityCounter, epicPityCounter) {
+function rollRarity(pityCounter, epicPityCounter, hasRarityBoost = false) {
   const legendaryRate = getEffectiveLegendaryRate(pityCounter);
-  const epicRate = 0.13;
-  const rareRate = 0.35;
+  // Passive: rarity_boost_15 adds +15% to rare+ rates
+  const boostMult = hasRarityBoost ? 1.15 : 1.0;
+  const epicRate = 0.13 * boostMult;
+  const rareRate = 0.35 * boostMult;
   const uncommonRate = 0.40;
   // common fills the rest
 
@@ -68,13 +70,21 @@ function executePull(playerId, banner) {
   const u = state.users[playerId];
   if (!u) return null;
   const gs = getPlayerGachaState(playerId);
+
+  // Passive: pity_minus_5 — reduce pity counter by 5
+  if (hasPassiveEffect(playerId, 'pity_minus_5')) {
+    gs.pityCounter = Math.max(0, gs.pityCounter - 5);
+  }
+
   const pool = banner.type === 'featured' && state.gachaPool.featuredPool?.length > 0
     ? state.gachaPool.featuredPool
     : state.gachaPool.standardPool || [];
 
   if (pool.length === 0) return null;
 
-  const rarity = rollRarity(gs.pityCounter, gs.epicPityCounter);
+  // Passive: rarity_boost_15 — +15% chance for rare+ rarity
+  const hasRarityBoost = hasPassiveEffect(playerId, 'rarity_boost_15');
+  const rarity = rollRarity(gs.pityCounter, gs.epicPityCounter, hasRarityBoost);
   let item = pickItemFromPool(pool, rarity, banner.id);
 
   // 50/50 system for legendaries on featured banner

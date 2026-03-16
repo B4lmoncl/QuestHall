@@ -1,0 +1,217 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import type { CharacterData } from "@/app/types";
+
+type InventoryItem = CharacterData["inventory"][number];
+
+const RARITY_COLORS: Record<string, string> = {
+  common: "#9ca3af",
+  uncommon: "#22c55e",
+  rare: "#3b82f6",
+  epic: "#a855f7",
+  legendary: "#f97316",
+};
+
+const RARITY_BG: Record<string, string> = {
+  common: "rgba(156,163,175,0.08)",
+  uncommon: "rgba(34,197,94,0.1)",
+  rare: "rgba(59,130,246,0.12)",
+  epic: "rgba(168,85,247,0.15)",
+  legendary: "rgba(249,115,22,0.18)",
+};
+
+const STAT_LABELS: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
+
+interface ItemActionPopupProps {
+  item: InventoryItem;
+  anchorRect: { x: number; y: number; width: number; height: number };
+  playerLevel: number;
+  isEquipped: boolean;
+  equippedSlot?: string;
+  onEquip: (itemId: string) => Promise<void>;
+  onUnequip: (slot: string) => Promise<void>;
+  onUse: (itemId: string) => Promise<void>;
+  onDiscard: (itemId: string) => Promise<void>;
+  onClose: () => void;
+}
+
+export default function ItemActionPopup({
+  item, anchorRect, playerLevel, isEquipped, equippedSlot,
+  onEquip, onUnequip, onUse, onDiscard, onClose,
+}: ItemActionPopupProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  const itemType = item.type || "consumable";
+  const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
+  const hasStats = item.stats && Object.keys(item.stats).length > 0;
+  const meetsLevel = !item.minLevel || playerLevel >= item.minLevel;
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    const keyHandler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("keydown", keyHandler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("keydown", keyHandler); };
+  }, [onClose]);
+
+  // Position popup near the clicked item
+  const popupStyle: React.CSSProperties = (() => {
+    const pw = 280;
+    const ph = 400;
+    let left = anchorRect.x + anchorRect.width + 8;
+    let top = anchorRect.y;
+    if (left + pw > window.innerWidth - 8) left = anchorRect.x - pw - 8;
+    if (top + ph > window.innerHeight - 8) top = window.innerHeight - ph - 8;
+    if (top < 4) top = 4;
+    if (left < 4) left = 4;
+    return { position: "fixed" as const, left, top, width: pw, zIndex: 200 };
+  })();
+
+  const wrap = async (fn: () => Promise<void>) => {
+    setBusy(true);
+    try { await fn(); } finally { setBusy(false); }
+  };
+
+  const content = (
+    <div ref={ref} style={popupStyle}>
+      <div
+        className="rounded-xl p-3 space-y-2.5"
+        style={{
+          background: "#1a1a1a",
+          border: `1px solid ${rarityColor}50`,
+          borderTop: `3px solid ${rarityColor}`,
+          boxShadow: `0 12px 40px rgba(0,0,0,0.8), 0 0 20px ${rarityColor}15`,
+        }}
+      >
+        {/* Header: Icon + Name */}
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex-shrink-0 flex items-center justify-center"
+            style={{ width: 56, height: 56, background: RARITY_BG[item.rarity] || "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}
+          >
+            {item.icon
+              ? <img src={item.icon} alt={item.name} width={48} height={48} style={{ imageRendering: "auto", objectFit: "contain" }} />
+              : <span className="text-2xl" style={{ color: rarityColor }}>◆</span>}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-bold truncate" style={{ color: "#fff" }}>{item.name}</p>
+            <p className="text-xs font-semibold" style={{ color: rarityColor }}>
+              {item.rarity?.charAt(0).toUpperCase() + item.rarity?.slice(1)}
+              {itemType === "equipment" && item.slot ? ` · ${item.slot}` : ""}
+            </p>
+            {item.minLevel > 0 && (
+              <p className="text-xs" style={{ color: meetsLevel ? "rgba(255,255,255,0.3)" : "#ef4444" }}>
+                Lv. {item.minLevel}{!meetsLevel ? " (zu niedrig)" : ""}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Description */}
+        {item.desc && (
+          <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>{item.desc}</p>
+        )}
+
+        {/* Flavor text */}
+        {"flavorText" in item && (item as any).flavorText && (
+          <p className="text-xs italic" style={{ color: "rgba(255,255,255,0.3)" }}>{(item as any).flavorText}</p>
+        )}
+
+        {/* Stats */}
+        {hasStats && (
+          <div className="space-y-0.5 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+            {Object.entries(item.stats).map(([stat, val]) => (
+              <div key={stat} className="flex items-center justify-between text-xs">
+                <span style={{ color: "rgba(255,255,255,0.55)" }}>{STAT_LABELS[stat] || stat}</span>
+                <span className="font-mono font-semibold" style={{ color: "#4ade80" }}>+{val as number}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Passive badge */}
+        {itemType === "passive" && (
+          <div className="px-2 py-1 rounded-lg text-xs font-semibold text-center" style={{ background: "rgba(34,197,94,0.1)", border: "1px solid rgba(34,197,94,0.3)", color: "#22c55e" }}>
+            Aktiv solange im Inventar
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div className="space-y-1.5 pt-1" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          {/* Equipment actions */}
+          {itemType === "equipment" && !isEquipped && meetsLevel && (
+            <button
+              onClick={() => wrap(() => onEquip(item.id))}
+              disabled={busy}
+              className="w-full py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "rgba(34,197,94,0.15)", color: "#4ade80", border: "1px solid rgba(34,197,94,0.3)", cursor: "pointer" }}
+            >{busy ? "…" : "Ausrüsten"}</button>
+          )}
+          {itemType === "equipment" && !isEquipped && !meetsLevel && (
+            <button
+              disabled
+              className="w-full py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.06)", cursor: "not-allowed" }}
+            >Lv. {item.minLevel} benötigt</button>
+          )}
+          {itemType === "equipment" && isEquipped && equippedSlot && (
+            <button
+              onClick={() => wrap(() => onUnequip(equippedSlot))}
+              disabled={busy}
+              className="w-full py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "rgba(239,68,68,0.12)", color: "#f87171", border: "1px solid rgba(239,68,68,0.25)", cursor: "pointer" }}
+            >{busy ? "…" : "Ablegen"}</button>
+          )}
+
+          {/* Consumable actions */}
+          {itemType === "consumable" && (
+            <button
+              onClick={() => wrap(() => onUse(item.id))}
+              disabled={busy}
+              className="w-full py-1.5 rounded-lg text-xs font-semibold"
+              style={{ background: "rgba(59,130,246,0.15)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)", cursor: "pointer" }}
+            >{busy ? "…" : "Benutzen"}</button>
+          )}
+
+          {/* Discard */}
+          {!isEquipped && !confirmDiscard && (
+            <button
+              onClick={() => setConfirmDiscard(true)}
+              className="w-full py-1.5 rounded-lg text-xs"
+              style={{ background: "rgba(255,255,255,0.03)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}
+            >Wegwerfen</button>
+          )}
+          {confirmDiscard && (
+            <div className="space-y-1">
+              <p className="text-xs text-center" style={{ color: "#f87171" }}>
+                Willst du {item.name} wirklich wegwerfen?
+              </p>
+              <div className="flex gap-1">
+                <button
+                  onClick={() => wrap(() => onDiscard(item.id))}
+                  disabled={busy}
+                  className="flex-1 py-1.5 rounded-lg text-xs font-semibold"
+                  style={{ background: "rgba(239,68,68,0.2)", color: "#f87171", border: "1px solid rgba(239,68,68,0.4)", cursor: "pointer" }}
+                >{busy ? "…" : "Wegwerfen"}</button>
+                <button
+                  onClick={() => setConfirmDiscard(false)}
+                  className="flex-1 py-1.5 rounded-lg text-xs"
+                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)", cursor: "pointer" }}
+                >Abbrechen</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return createPortal(content, document.body);
+}

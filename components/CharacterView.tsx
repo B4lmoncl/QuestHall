@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useModalBehavior } from "@/components/ModalPortal";
+import ItemActionPopup from "@/components/ItemActionPopup";
 import type { User, CharacterData, ClassDef, PixelCharacterProps } from "@/app/types";
+import type { ToastInput } from "@/components/ToastStack";
 
 // ─── PixelCharacter Canvas Component ─────────────────────────────────────────
 
@@ -442,13 +444,14 @@ function InventoryTooltip({ item, mousePosRef }: { item: InventoryItem; mousePos
   );
 }
 
-function InventorySlot({ item, level, onEquip }: {
+function InventorySlot({ item, level, onItemClick }: {
   item: InventoryItem | null;
   level: number;
-  onEquip: (id: string) => void;
+  onItemClick: (item: InventoryItem, rect: { x: number; y: number; width: number; height: number }) => void;
 }) {
   const [hovered, setHovered] = useState(false);
   const mousePosRef = useRef({ x: 0, y: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   if (!item) {
     return (
@@ -464,14 +467,19 @@ function InventorySlot({ item, level, onEquip }: {
     );
   }
 
-  const locked = item.minLevel > level;
   const rarityBg = RARITY_BG[item.rarity] ?? "rgba(255,255,255,0.04)";
   const rarityBorder = RARITY_BORDER_30[item.rarity] ?? "rgba(255,255,255,0.08)";
 
   return (
     <>
       <button
-        onClick={() => !locked && onEquip(item.id)}
+        ref={btnRef}
+        onClick={() => {
+          const el = btnRef.current;
+          if (!el) return;
+          const r = el.getBoundingClientRect();
+          onItemClick(item, { x: r.left, y: r.top, width: r.width, height: r.height });
+        }}
         onMouseEnter={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; setHovered(true); }}
         onMouseMove={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; }}
         onMouseLeave={() => setHovered(false)}
@@ -481,8 +489,7 @@ function InventorySlot({ item, level, onEquip }: {
           background: rarityBg,
           border: `1px solid ${rarityBorder}`,
           borderRadius: 3,
-          cursor: locked ? "not-allowed" : "pointer",
-          opacity: locked ? 0.4 : 1,
+          cursor: "pointer",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -494,6 +501,12 @@ function InventorySlot({ item, level, onEquip }: {
           ? <img src={item.icon} alt={item.name} style={{ width: 44, height: 44, imageRendering: "auto", objectFit: "contain" }} />
           : <span style={{ fontSize: 14, color: RARITY_COLORS[item.rarity] || "#9ca3af", lineHeight: 1 }}>◆</span>
         }
+        {/* Level requirement indicator */}
+        {item.minLevel > 0 && item.minLevel > level && (
+          <span style={{ position: "absolute", bottom: 1, right: 1, fontSize: 8, color: "#ef4444", fontWeight: 700, background: "rgba(0,0,0,0.7)", borderRadius: 2, padding: "0 2px" }}>
+            Lv{item.minLevel}
+          </span>
+        )}
       </button>
       {hovered && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} />, document.body)}
     </>
@@ -509,13 +522,14 @@ const EQUIP_SLOT_LABELS: { slot: string; emoji: string; label: string; iconSrc?:
   { slot: "boots", emoji: "", iconSrc: "/images/icons/equip-boots.png", label: "Stiefel" },
 ];
 
-export default function CharacterView({ playerName, apiKey, users, classesList }: { playerName: string; apiKey: string; users: User[]; classesList: ClassDef[] }) {
+export default function CharacterView({ playerName, apiKey, users, classesList, addToast }: { playerName: string; apiKey: string; users: User[]; classesList: ClassDef[]; addToast?: (t: ToastInput) => void }) {
   const [charData, setCharData] = useState<CharacterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [equipping, setEquipping] = useState<string | null>(null);
   const [unequipping, setUnequipping] = useState<string | null>(null);
   const [rightTab, setRightTab] = useState<"stats" | "ausrustung">("stats");
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<{ item: CharacterData["inventory"][number]; rect: { x: number; y: number; width: number; height: number } } | null>(null);
 
   const PETAL_COUNT = 35;
   const petals = useMemo(() => Array.from({ length: PETAL_COUNT }, (_, i) => ({
@@ -542,11 +556,18 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
   const handleEquip = async (itemId: string) => {
     if (!apiKey) return;
     setEquipping(itemId);
+    setSelectedItem(null);
     try {
-      await fetch(`/api/player/${encodeURIComponent(playerName)}/equip/${itemId}`, {
+      const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/equip/${itemId}`, {
         method: "POST",
         headers: { "x-api-key": apiKey },
       });
+      if (r.ok) {
+        const item = charData?.inventory.find(i => i.id === itemId);
+        if (item && addToast) {
+          addToast({ type: "item", itemName: item.name, message: `${item.name} ausgerüstet!`, icon: item.icon, rarity: item.rarity || "common" });
+        }
+      }
       await fetchChar();
     } finally { setEquipping(null); }
   };
@@ -554,6 +575,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
   const handleUnequip = async (slot: string) => {
     if (!apiKey) return;
     setUnequipping(slot);
+    setSelectedItem(null);
     try {
       await fetch(`/api/player/${encodeURIComponent(playerName)}/unequip/${slot}`, {
         method: "POST",
@@ -561,6 +583,37 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
       });
       await fetchChar();
     } finally { setUnequipping(null); }
+  };
+
+  const handleUseItem = async (itemId: string) => {
+    if (!apiKey) return;
+    setSelectedItem(null);
+    try {
+      const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/inventory/use/${itemId}`, {
+        method: "POST",
+        headers: { "x-api-key": apiKey },
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const item = charData?.inventory.find(i => i.id === itemId);
+        if (addToast && item) {
+          addToast({ type: "item", itemName: item.name, message: data.message || "Item benutzt!", icon: item.icon, rarity: item.rarity || "common" });
+        }
+      }
+      await fetchChar();
+    } catch { /* ignore */ }
+  };
+
+  const handleDiscardItem = async (itemId: string) => {
+    if (!apiKey) return;
+    setSelectedItem(null);
+    try {
+      await fetch(`/api/player/${encodeURIComponent(playerName)}/inventory/discard/${itemId}`, {
+        method: "POST",
+        headers: { "x-api-key": apiKey },
+      });
+      await fetchChar();
+    } catch { /* ignore */ }
   };
 
   const loggedInUser = users.find(u => u.name.toLowerCase() === playerName.toLowerCase());
@@ -654,7 +707,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
                       key={idx}
                       item={item}
                       level={charData.level}
-                      onEquip={handleEquip}
+                      onItemClick={(itm, rect) => setSelectedItem({ item: itm, rect })}
                     />
                   );
                 })}
@@ -873,6 +926,29 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
           onSaved={fetchChar}
         />
       )}
+
+      {/* Item Action Popup */}
+      {selectedItem && charData && (() => {
+        const equippedIds = Object.values(charData.equipment).filter(Boolean);
+        const isEquipped = equippedIds.includes(selectedItem.item.id);
+        const equippedSlot = isEquipped
+          ? Object.entries(charData.equipment).find(([, v]) => v === selectedItem.item.id)?.[0]
+          : undefined;
+        return (
+          <ItemActionPopup
+            item={selectedItem.item}
+            anchorRect={selectedItem.rect}
+            playerLevel={charData.level}
+            isEquipped={isEquipped}
+            equippedSlot={equippedSlot}
+            onEquip={handleEquip}
+            onUnequip={handleUnequip}
+            onUse={handleUseItem}
+            onDiscard={handleDiscardItem}
+            onClose={() => setSelectedItem(null)}
+          />
+        );
+      })()}
     </div>
 
     {/* ── Bottom Info Bar (below character art) ── */}

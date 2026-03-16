@@ -433,20 +433,85 @@ router.post('/api/player/:name/equip/:itemId', requireApiKey, (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
-  const item = state.FULL_GEAR_ITEMS.find(g => g.id === req.params.itemId);
-  if (!item) return res.status(404).json({ error: 'Gear item not found' });
-  const { level } = getLevelInfo(u.xp || 0);
-  if (level < item.minLevel) return res.status(400).json({ error: `Requires level ${item.minLevel}` });
-  if ((u.gold || 0) < item.cost) return res.status(400).json({ error: `Insufficient gold. Need ${item.cost}, have ${u.gold || 0}` });
   if (!u.equipment) u.equipment = {};
-  if (u.equipment[item.slot] === item.id) return res.status(409).json({ error: 'Already equipped' });
-  u.gold -= item.cost;
-  u.equipment[item.slot] = item.id;
-  if (!u.purchases) u.purchases = [];
-  u.purchases.push({ type: 'equipment', item: item.id, cost: item.cost, at: now() });
+  if (!u.inventory) u.inventory = [];
+  const { level } = getLevelInfo(u.xp || 0);
+
+  // 1. Check FULL_GEAR_ITEMS (shop buy+equip flow — costs gold)
+  const shopItem = state.FULL_GEAR_ITEMS.find(g => g.id === req.params.itemId);
+  if (shopItem) {
+    if (level < shopItem.minLevel) return res.status(400).json({ error: `Requires level ${shopItem.minLevel}` });
+    if ((u.gold || 0) < shopItem.cost) return res.status(400).json({ error: `Insufficient gold. Need ${shopItem.cost}, have ${u.gold || 0}` });
+    if (u.equipment[shopItem.slot] === shopItem.id) return res.status(409).json({ error: 'Already equipped' });
+
+    // Swap: return currently equipped item to inventory
+    const prevItemId = u.equipment[shopItem.slot];
+    if (prevItemId) {
+      const prevTemplate = resolveItem(prevItemId);
+      u.inventory.push({
+        id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        itemId: prevItemId,
+        name: prevTemplate?.name || prevItemId,
+        emoji: prevTemplate?.emoji || null,
+        icon: prevTemplate?.icon || null,
+        rarity: prevTemplate?.rarity || 'common',
+        stats: prevTemplate?.stats || {},
+        obtainedAt: now(),
+        source: 'unequip',
+      });
+    }
+
+    u.gold -= shopItem.cost;
+    u.equipment[shopItem.slot] = shopItem.id;
+    if (!u.purchases) u.purchases = [];
+    u.purchases.push({ type: 'equipment', item: shopItem.id, cost: shopItem.cost, at: now() });
+    const stats = getUserStats(uid);
+    saveUsers();
+    return res.json({ ok: true, equipment: u.equipment, stats, gold: u.gold });
+  }
+
+  // 2. Check user.inventory[] for equipment-type items (already owned — no gold cost)
+  const invEntry = u.inventory.find(i => i.id === req.params.itemId);
+  if (!invEntry) return res.status(404).json({ error: 'Gear item not found' });
+
+  const templateId = invEntry.itemId || invEntry.id;
+  const template = resolveItem(templateId);
+  if (!template || template.type !== 'equipment') {
+    return res.status(400).json({ error: 'Item is not equipment' });
+  }
+
+  const minLevel = template.minLevel || 1;
+  if (level < minLevel) return res.status(400).json({ error: `Requires level ${minLevel}` });
+
+  const slot = template.slot;
+  if (!slot) return res.status(400).json({ error: 'Item has no equipment slot' });
+
+  if (u.equipment[slot] === templateId) return res.status(409).json({ error: 'Already equipped' });
+
+  // Swap: return currently equipped item to inventory
+  const prevItemId = u.equipment[slot];
+  if (prevItemId) {
+    const prevTemplate = resolveItem(prevItemId);
+    u.inventory.push({
+      id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      itemId: prevItemId,
+      name: prevTemplate?.name || prevItemId,
+      emoji: prevTemplate?.emoji || null,
+      icon: prevTemplate?.icon || null,
+      rarity: prevTemplate?.rarity || 'common',
+      stats: prevTemplate?.stats || {},
+      obtainedAt: now(),
+      source: 'unequip',
+    });
+  }
+
+  // Remove from inventory and equip
+  u.inventory = u.inventory.filter(i => i.id !== invEntry.id);
+  u.equipment[slot] = templateId;
+
   const stats = getUserStats(uid);
   saveUsers();
-  res.json({ ok: true, equipment: u.equipment, stats, gold: u.gold });
+  res.json({ ok: true, equipment: u.equipment, stats, gold: u.gold || 0, fromInventory: true });
 });
 
 router.get('/api/player/:name/stats', (req, res) => {
@@ -550,7 +615,14 @@ router.get('/api/player/:name/character', (req, res) => {
   let baseStats = { kraft: 0, ausdauer: 0, weisheit: 0, glueck: 0 };
   const equippedItems = [];
   for (const itemId of equippedIds) {
-    const item = state.FULL_GEAR_ITEMS.find(g => g.id === itemId);
+    let item = state.FULL_GEAR_ITEMS.find(g => g.id === itemId);
+    if (!item) {
+      // Check item templates for gacha/loot equipment
+      const tmpl = resolveItem(itemId);
+      if (tmpl && tmpl.type === 'equipment') {
+        item = { id: tmpl.id, name: tmpl.name, stats: tmpl.stats || {}, slot: tmpl.slot, rarity: tmpl.rarity, setId: tmpl.setId || null, icon: tmpl.icon, tier: 0, minLevel: tmpl.minLevel || 1, desc: tmpl.description || tmpl.desc };
+      }
+    }
     if (item) {
       equippedItems.push(item);
       for (const [stat, val] of Object.entries(item.stats)) {
@@ -628,7 +700,22 @@ router.get('/api/player/:name/character', (req, res) => {
         if (!icon) icon = gearItem.icon || gachaIconMap[gearItem.id] || gachaIconMap[gearItem.name];
         return { id: entry.id, slot: gearItem.slot, name: gearItem.name, icon: icon || undefined, tier: gearItem.tier, minLevel: gearItem.minLevel, stats: gearItem.stats || {}, rarity: entry.rarity || gearItem.rarity || 'common', desc: gearItem.desc || entry.desc || undefined, type: gearItem.type || gearItem.slot || undefined };
       }
-      // Pure loot item (consumable, etc.) — no gear reference
+      // Try resolving from itemTemplates for enriched data
+      const templateId = entry.itemId || entry.id;
+      const tmpl = resolveItem(templateId);
+      if (tmpl) {
+        if (!icon) icon = tmpl.icon;
+        const itemType = tmpl.type || entry.type || 'consumable';
+        return {
+          id: entry.id, slot: tmpl.slot || itemType, name: tmpl.name || entry.name || 'Unknown',
+          icon: icon || undefined, tier: tmpl.tier || 0, minLevel: tmpl.minLevel || 0,
+          stats: tmpl.stats || entry.stats || {}, rarity: entry.rarity || tmpl.rarity || 'common',
+          desc: tmpl.description || tmpl.desc || entry.desc || undefined,
+          flavorText: tmpl.flavorText || undefined,
+          type: itemType, effect: tmpl.effect || entry.effect || undefined,
+        };
+      }
+      // Pure loot item (consumable, etc.) — no gear reference, no template
       return { id: entry.id, slot: entry.type || 'consumable', name: entry.name || 'Unknown', icon: icon || undefined, tier: 0, minLevel: 0, stats: entry.stats || {}, rarity: entry.rarity || 'common', desc: entry.desc || undefined, type: entry.type || 'consumable', effect: entry.effect || undefined };
     }
     return null;
@@ -677,6 +764,25 @@ router.post('/api/player/:name/unequip/:slot', requireApiKey, (req, res) => {
   const slot = req.params.slot;
   if (!EQUIPMENT_SLOTS.includes(slot)) return res.status(400).json({ error: 'Invalid slot' });
   if (!u.equipment) u.equipment = {};
+  if (!u.inventory) u.inventory = [];
+
+  const itemId = u.equipment[slot];
+  if (itemId) {
+    // Return the item to inventory
+    const template = resolveItem(itemId);
+    u.inventory.push({
+      id: `inv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      itemId: itemId,
+      name: template?.name || itemId,
+      emoji: template?.emoji || null,
+      icon: template?.icon || null,
+      rarity: template?.rarity || 'common',
+      stats: template?.stats || {},
+      obtainedAt: now(),
+      source: 'unequip',
+    });
+  }
+
   delete u.equipment[slot];
   saveUsers();
   const stats = getUserStats(uid);

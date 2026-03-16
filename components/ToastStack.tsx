@@ -9,19 +9,22 @@ export type ToastItem =
   | { type: "flavor"; id: string; message: string; icon: string; sub?: string }
   | { type: "achievement"; id: string; achievement: EarnedAchievement }
   | { type: "chain"; id: string; parentTitle: string; template: { title: string; description?: string | null; type?: string; priority?: string }; onAccept: () => void }
-  | { type: "purchase"; id: string; message: string };
+  | { type: "purchase"; id: string; message: string }
+  | { type: "item"; id: string; itemName: string; message: string; icon?: string; rarity: string };
 
 export type ToastInput =
   | { type: "flavor"; message: string; icon: string; sub?: string }
   | { type: "achievement"; achievement: EarnedAchievement }
   | { type: "chain"; parentTitle: string; template: { title: string; description?: string | null; type?: string; priority?: string }; onAccept: () => void }
-  | { type: "purchase"; message: string };
+  | { type: "purchase"; message: string }
+  | { type: "item"; itemName: string; message: string; icon?: string; rarity: string };
 
 const TOAST_DURATION: Record<ToastItem["type"], number> = {
   flavor: 4000,
   achievement: 5000,
   chain: 8000,
   purchase: 3000,
+  item: 3000,
 };
 
 const MAX_VISIBLE = 4;
@@ -152,6 +155,25 @@ function ChainToastContent({ parentTitle, template, onAccept, onClose }: {
   );
 }
 
+function ItemToastContent({ toast, onClose }: { toast: { itemName: string; message: string; icon?: string; rarity: string }; onClose: () => void }) {
+  const rs = RARITY_TOAST_STYLE[toast.rarity] || RARITY_TOAST_STYLE.common;
+  return (
+    <div
+      className="rounded-xl px-4 py-3 flex items-center gap-3 shadow-2xl"
+      style={{ background: rs.bg, border: `1px solid ${rs.border}`, boxShadow: `0 8px 32px ${rs.shadow}`, maxWidth: 340, width: "100%" }}
+    >
+      {toast.icon && toast.icon.startsWith("/")
+        ? <img src={toast.icon} alt="" width={32} height={32} style={{ imageRendering: "auto", flexShrink: 0 }} />
+        : <span className="text-2xl flex-shrink-0" style={{ color: rs.color }}>◆</span>}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold" style={{ color: rs.color }}>{toast.itemName}</p>
+        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.6)" }}>{toast.message}</p>
+      </div>
+      <button onClick={onClose} style={{ color: "rgba(255,255,255,0.3)", flexShrink: 0 }}>×</button>
+    </div>
+  );
+}
+
 function PurchaseToastContent({ message, onClose }: { message: string; onClose: () => void }) {
   return (
     <div
@@ -201,6 +223,7 @@ function ToastWrapper({ toast, index, onRemove }: { toast: ToastItem; index: num
       {toast.type === "achievement" && <AchievementToastContent achievement={toast.achievement} onClose={handleClose} />}
       {toast.type === "chain" && <ChainToastContent parentTitle={toast.parentTitle} template={toast.template} onAccept={toast.onAccept} onClose={handleClose} />}
       {toast.type === "purchase" && <PurchaseToastContent message={toast.message} onClose={handleClose} />}
+      {toast.type === "item" && <ItemToastContent toast={toast} onClose={handleClose} />}
     </div>
   );
 }
