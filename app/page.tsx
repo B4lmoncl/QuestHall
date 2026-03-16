@@ -136,6 +136,7 @@ export default function Dashboard() {
   const [rituals, setRituals] = useState<Ritual[]>([]);
   const [habits, setHabits] = useState<Habit[]>([]);
   const [lootDrop, setLootDrop] = useState<LootItem | null>(null);
+  const [levelUpCelebration, setLevelUpCelebration] = useState<{ level: number; title: string } | null>(null);
   const [questBoardTab, setQuestBoardTab] = useState<"auftraege" | "rituale" | "anti-rituale">("auftraege");
   const [createRitualOpen, setCreateRitualOpen] = useState(false);
   const [newRitualTitle, setNewRitualTitle] = useState("");
@@ -453,6 +454,9 @@ export default function Dashboard() {
         }
         if (data.lootDrop) {
           setLootDrop(data.lootDrop);
+        }
+        if (data.levelUp) {
+          setLevelUpCelebration(data.levelUp);
         }
         // Show flavor feedback on completion
         const currentUser = users.find(u => u.id === pName.toLowerCase() || u.name.toLowerCase() === pName.toLowerCase());
@@ -1475,14 +1479,20 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Season & Battle Pass View */}
+        {/* Season & Battle Pass View — Coming Soon (logic commented out for rework) */}
         {dashView === "season" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{CURRENT_SEASON.icon} Season & Battle Pass</span>
-              <InfoTooltip text="Each season (3 months) brings a new Battle Pass. Earn season XP to unlock rewards at each tier." />
             </div>
-            <BattlePassView users={users} quests={quests} />
+            {/* <BattlePassView users={users} quests={quests} /> */}
+            <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #1a1a1a 0%, rgba(139,92,246,0.06) 100%)", border: "1px solid rgba(139,92,246,0.15)", boxShadow: "0 0 40px rgba(139,92,246,0.04)" }}>
+              <p className="text-3xl mb-3" style={{ opacity: 0.6 }}>&#x1F6E0;&#xFE0F;</p>
+              <h3 className="text-base font-bold mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Coming Soon</h3>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)", maxWidth: 320, margin: "0 auto" }}>
+                The Season Pass is being reworked. Check back soon for an improved experience with new rewards, tiers, and seasonal content.
+              </p>
+            </div>
           </div>
         )}
 
@@ -1690,14 +1700,15 @@ export default function Dashboard() {
                     {/* Category filters — Quest Board only */}
                     <div data-feedback-id="quest-board.filters" className="flex gap-1 flex-wrap mb-2" data-tutorial="quest-filters">
                       {(["all", "favorites", "personal", "learning", "fitness", "social", "relationship-coop", "npc"] as const).map(t => {
-                        const cfg = t === "all" || t === "npc" ? null : typeConfig[t];
+                        const cfg = t === "all" || t === "npc" || t === "favorites" ? null : typeConfig[t];
                         const isActive = typeFilter === t;
                         const iconFile = t === "relationship-coop" ? "coop" : t;
                         const npcStyle = t === "npc" ? { color: "#e879f9", bg: "rgba(232,121,249,0.1)", border: "rgba(232,121,249,0.3)" } : null;
+                        const favStyle = t === "favorites" ? { color: "#fbbf24", bg: "rgba(251,191,36,0.1)", border: "rgba(251,191,36,0.3)" } : null;
                         return (
                           <button key={t} onClick={() => setTypeFilter(t)} className="btn-interactive text-sm px-2 py-0.5 rounded inline-flex items-center gap-1.5"
-                            style={{ background: isActive ? (cfg ? cfg.bg : npcStyle ? npcStyle.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)", color: isActive ? (cfg ? cfg.color : npcStyle ? npcStyle.color : "#e8e8e8") : "rgba(255,255,255,0.3)", border: `1px solid ${isActive ? (cfg ? cfg.border : npcStyle ? npcStyle.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}` }}>
-                            {t === "all" ? "All" : t === "npc" ? (
+                            style={{ background: isActive ? (cfg ? cfg.bg : npcStyle ? npcStyle.bg : favStyle ? favStyle.bg : "rgba(255,255,255,0.1)") : "rgba(255,255,255,0.03)", color: isActive ? (cfg ? cfg.color : npcStyle ? npcStyle.color : favStyle ? favStyle.color : "#e8e8e8") : "rgba(255,255,255,0.3)", border: `1px solid ${isActive ? (cfg ? cfg.border : npcStyle ? npcStyle.border : favStyle ? favStyle.border : "rgba(255,255,255,0.2)") : "rgba(255,255,255,0.07)"}` }}>
+                            {t === "all" ? "All" : t === "favorites" ? (<><span style={{ fontSize: 14 }}>&#9733;</span> Favorites</>) : t === "npc" ? (
                               <>
                                 <img src="/images/icons/cat-npc.png" alt="" width={28} height={28}
                                   style={{ imageRendering: "auto" }}
