@@ -172,6 +172,9 @@ export default function Dashboard() {
   const [questDetailModal, setQuestDetailModal] = useState<Quest | null>(null);
   const [currenciesOpen, setCurrenciesOpen] = useState(false);
   const [modifierOpen, setModifierOpen] = useState(false);
+  const [streakInfoOpen, setStreakInfoOpen] = useState(false);
+  const [activeQuestsInfoOpen, setActiveQuestsInfoOpen] = useState(false);
+  const [completedInfoOpen, setCompletedInfoOpen] = useState(false);
   const [currencyExpanded, setCurrencyExpanded] = useState<string | null>(null);
   const [feedbackMode, setFeedbackMode] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -1124,7 +1127,7 @@ export default function Dashboard() {
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
             sub={playerName ? "your streak" : "login to view"}
             accent="#f97316"
-            tooltip={<InfoTooltip text="Your consecutive days of quest completion. Keep the streak alive to earn bonus XP and keep companions happy!" />}
+            onClick={playerName ? () => setStreakInfoOpen(true) : undefined}
           />
           </div>
           <div data-feedback-id="stats.active-quests">
@@ -1133,7 +1136,7 @@ export default function Dashboard() {
             value={loading ? "—" : playerName ? animActive : "—"}
             sub={playerName ? `${openQuestsCount} open` : "login to view"}
             accent="#ef4444"
-            tooltip={<InfoTooltip text="Quests you've claimed and are currently working on." />}
+            onClick={playerName ? () => setActiveQuestsInfoOpen(true) : undefined}
           />
           </div>
           <div data-feedback-id="stats.completed">
@@ -1142,7 +1145,7 @@ export default function Dashboard() {
             value={loading ? "—" : playerName ? animCompleted : "—"}
             sub={playerName ? "your completions" : "login to view"}
             accent="#22c55e"
-            tooltip={<InfoTooltip text="Total quests you've finished. Each one earns XP toward your next level." />}
+            onClick={playerName ? () => setCompletedInfoOpen(true) : undefined}
           />
           </div>
           <div data-feedback-id="stats.modifiers">
@@ -1397,6 +1400,96 @@ export default function Dashboard() {
                         <span className="font-mono font-bold text-sm" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.2)" }}>×{r.val}</span>
                       </div>
                     ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalPortal>
+        )}
+
+        {/* Streak Info Popup */}
+        {streakInfoOpen && (
+          <ModalPortal>
+            <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
+              onClick={() => setStreakInfoOpen(false)}>
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
+              <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold" style={{ color: "#f97316" }}>Forge Streak</h3>
+                  <button onClick={() => setStreakInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                </div>
+                <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  Your consecutive days of quest completion. Keep the streak alive to earn bonus XP and keep companions happy!
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Current Streak</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "#f97316" }}>{loggedInUser?.streakDays ?? 0}d</span>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Gold Bonus</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "#fbbf24" }}>+{Math.min((loggedInUser?.streakDays ?? 0) * 10, 200)}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalPortal>
+        )}
+
+        {/* Active Quests Info Popup */}
+        {activeQuestsInfoOpen && (
+          <ModalPortal>
+            <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
+              onClick={() => setActiveQuestsInfoOpen(false)}>
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
+              <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold" style={{ color: "#ef4444" }}>Active Quests</h3>
+                  <button onClick={() => setActiveQuestsInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                </div>
+                <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  Quests you&apos;ve claimed and are currently working on. Claiming too many quests at once (&gt;20) will apply an XP hoarding penalty.
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>In Progress</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "#ef4444" }}>{quests.inProgress.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Open on Board</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{openQuestsCount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ModalPortal>
+        )}
+
+        {/* Quests Completed Info Popup */}
+        {completedInfoOpen && (
+          <ModalPortal>
+            <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
+              onClick={() => setCompletedInfoOpen(false)}>
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
+              <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold" style={{ color: "#22c55e" }}>Quests Completed</h3>
+                  <button onClick={() => setCompletedInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                </div>
+                <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+                  Total quests you&apos;ve finished. Each one earns XP toward your next level.
+                </p>
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Total Completed</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "#22c55e" }}>{loggedInUser?.questsCompleted ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
+                    <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Total XP Earned</span>
+                    <span className="font-mono font-bold text-sm" style={{ color: "#a855f7" }}>{loggedInUser?.xp ?? 0}</span>
                   </div>
                 </div>
               </div>
