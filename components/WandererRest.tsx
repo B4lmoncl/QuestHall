@@ -214,11 +214,11 @@ export function WandererRest({
                       className="relative rounded-lg overflow-hidden flex-shrink-0"
                       style={{
                         width: 148, height: 148,
-                        border: urgent && !allDone ? "3px solid rgba(220,38,38,0.5)" : `3px solid ${`${rc}60`}`,
+                        border: `3px solid ${rc}60`,
                         boxShadow: `0 0 0 0 ${rc}`,
                         transition: "box-shadow 0.2s ease",
                       }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = urgent && !allDone ? "0 0 18px 4px rgba(220,38,38,0.35)" : `0 0 18px 4px ${rc}55`; }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 18px 4px ${rc}55`; }}
                       onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.boxShadow = `0 0 0 0 ${rc}`; }}
                     >
                       {npc.portrait ? (
