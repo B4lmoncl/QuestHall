@@ -32,9 +32,9 @@ const VIRTUAL_COMPANIONS = [
   { type: "dragon", emoji: "", iconSrc: "/images/icons/companion-dragon.png", name: "Ember",  desc: "Ein feuriger Drache der dich antreibt",            personality: "fierce",    trait: "Fordernd",  questHint: "Erledige 3 Quests täglich!" },
   { type: "owl", emoji: "", iconSrc: "/images/icons/companion-owl.png", name: "Sage",   desc: "Eine weise Eule die dich beim Lernen begleitet",   personality: "wise",      trait: "Weise",     questHint: "Lerne jeden Tag etwas Neues" },
   { type: "phoenix", emoji: "", iconSrc: "/images/icons/companion-phoenix.png", name: "Blaze",  desc: "Ein Phoenix der aus jeder Niederlage aufsteht",    personality: "resilient", trait: "Resilient", questHint: "Nach jedem Rückschlag stärker" },
-  { type: "wolf",    emoji: "", name: "Shadow", desc: "Ein treuer Wolf der immer an deiner Seite steht",  personality: "loyal",     trait: "Treu",      questHint: "Tägliche Routine einhalten" },
-  { type: "fox",     emoji: "", name: "Trick",  desc: "Ein schlauer Fuchs der kreative Lösungen findet",  personality: "clever",    trait: "Clever",    questHint: "Finde einen kreativeren Weg" },
-  { type: "bear",    emoji: "", name: "Bjorn",  desc: "Ein starker Bär der dich durch harte Zeiten trägt",personality: "strong",    trait: "Stark",     questHint: "Sport und Kraft quests" },
+  { type: "wolf",    emoji: "", iconSrc: "/images/portraits/companion-wolf.png",    name: "Shadow", desc: "Ein treuer Wolf der immer an deiner Seite steht",  personality: "loyal",     trait: "Treu",      questHint: "Tägliche Routine einhalten" },
+  { type: "fox",     emoji: "", iconSrc: "/images/portraits/companion-fox.png",     name: "Trick",  desc: "Ein schlauer Fuchs der kreative Lösungen findet",  personality: "clever",    trait: "Clever",    questHint: "Finde einen kreativeren Weg" },
+  { type: "bear",    emoji: "", iconSrc: "/images/portraits/companion-bear.png",    name: "Bjorn",  desc: "Ein starker Bär der dich durch harte Zeiten trägt",personality: "strong",    trait: "Stark",     questHint: "Sport und Kraft quests" },
 ];
 
 const PET_SPECIES = [
@@ -665,7 +665,10 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
                         }}
                       >
                         <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-2xl">{vc.emoji}</span>
+                          {vc.iconSrc
+                            ? <img src={vc.iconSrc} alt={vc.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+                            : <span className="text-2xl">{vc.emoji}</span>
+                          }
                           <span className="text-xs px-1.5 py-0.5 rounded-full font-semibold" style={{ background: "rgba(167,139,250,0.12)", color: "#a78bfa", fontSize: 10 }}>{vc.trait}</span>
                         </div>
                         <p className="text-xs font-semibold" style={{ color: "#f0f0f0" }}>{vc.name}</p>

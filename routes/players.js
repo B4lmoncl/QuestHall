@@ -115,7 +115,7 @@ router.get('/api/player/:name/companion', (req, res) => {
   res.json({ companion: { ...u.companion, bondInfo }, quests: companionQuests });
 });
 
-// POST /api/player/:name/companion/pet — pet the companion (bond XP + mood boost, max 2x/day)
+// POST /api/player/:name/companion/pet — pet the companion (bond XP for first 2x/day, unlimited petting)
 router.post('/api/player/:name/companion/pet', requireApiKey, (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
@@ -127,16 +127,26 @@ router.post('/api/player/:name/companion/pet', requireApiKey, (req, res) => {
     u.companion.petCountToday = 0;
     u.companion.petDateStr = today;
   }
-  if ((u.companion.petCountToday || 0) >= 2) {
-    return res.status(429).json({ error: 'Already petted 2x today', nextPetAvailable: 'tomorrow' });
+
+  const petsToday = u.companion.petCountToday || 0;
+  const xpLimitReached = petsToday >= 2;
+
+  // Always allow petting, but only award XP for first 2 per day
+  if (!xpLimitReached) {
+    u.companion.petCountToday = petsToday + 1;
+    u.companion.bondXp = (u.companion.bondXp || 0) + 0.5;
+    u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   }
-  u.companion.petCountToday = (u.companion.petCountToday || 0) + 1;
   u.companion.lastPetted = now();
-  u.companion.bondXp = (u.companion.bondXp || 0) + 0.5;
-  u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   saveUsers();
-  const bondInfo = getBondLevel(u.companion.bondXp);
-  res.json({ success: true, companion: { ...u.companion, bondInfo }, petsToday: u.companion.petCountToday });
+  const bondInfo = getBondLevel(u.companion.bondXp || 0);
+  res.json({
+    success: true,
+    companion: { ...u.companion, bondInfo },
+    petsToday: u.companion.petCountToday || 0,
+    xpAwarded: !xpLimitReached,
+    message: xpLimitReached ? 'Your companion loves the attention! (XP limit reached for today)' : undefined,
+  });
 });
 
 // GET /api/cv-export — export skills/certs from completed learning quests

@@ -390,7 +390,7 @@ export interface RoadmapItem {
 export interface PixelCharacterProps {
   appearance?: { skinColor?: string; hairStyle?: string; hairColor?: string };
   equipment?: Record<string, string | null>;
-  companion?: { name: string; emoji: string } | null;
+  companion?: { type?: string; name: string; emoji: string } | null;
 }
 
 export interface CharacterData {
@@ -403,7 +403,7 @@ export interface CharacterData {
   classTier: string | null;
   classFantasy: string | null;
   classIcon: string | null;
-  companion: { name: string; emoji: string; bondLevel: number } | null;
+  companion: { type?: string; name: string; emoji: string; bondLevel: number } | null;
   appearance?: { skinColor?: string; hairStyle?: string; hairColor?: string };
   equipment: Record<string, string | null>;
   stats: { kraft: number; ausdauer: number; weisheit: number; glueck: number; _setBonus?: number };

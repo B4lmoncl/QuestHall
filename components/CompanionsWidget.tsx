@@ -48,6 +48,13 @@ const COMPANION_QUOTES: Record<string, string[]> = {
 };
 
 const REAL_PET_TYPES = new Set(["cat", "dog", "hamster", "bird", "fish", "rabbit", "other"]);
+const VIRTUAL_COMPANION_TYPES = new Set(["dragon", "owl", "phoenix", "wolf", "fox", "bear"]);
+
+function getCompanionPortrait(type?: string, name?: string): string | null {
+  if (type === "cat" && name?.toLowerCase() === "dobbie") return "/images/portraits/companion-dobbie.png";
+  if (type && VIRTUAL_COMPANION_TYPES.has(type)) return `/images/portraits/companion-${type}.png`;
+  return null;
+}
 
 // Per-type accent colors for the companion panel
 const COMPANION_COLORS: Record<string, { accent: string; accentRgb: string; border: string }> = {
@@ -104,6 +111,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
   const [petting, setPetting] = useState(false);
   const [heartAnim, setHeartAnim] = useState(false);
   const [petError, setPetError] = useState("");
+  const [petsToday, setPetsToday] = useState<number | null>(null);
   const [showHearts, setShowHearts] = useState(false);
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [completingId, setCompletingId] = useState<string | null>(null);
@@ -189,18 +197,24 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
     if (!playerName || !apiKey || petting) return;
     setPetting(true);
     setPetError("");
+    // Always play heart animation
+    setHeartAnim(true);
+    setTimeout(() => setHeartAnim(false), 1200);
     try {
       const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/companion/pet`, {
         method: "POST",
         headers: { "x-api-key": apiKey },
       });
+      const d = await r.json();
       if (r.ok) {
-        setHeartAnim(true);
-        setTimeout(() => setHeartAnim(false), 1200);
+        setPetsToday(d.petsToday ?? null);
+        if (d.message) {
+          setPetError(d.message);
+          setTimeout(() => setPetError(""), 4000);
+        }
         if (onUserRefresh) onUserRefresh();
       } else {
-        const d = await r.json();
-        setPetError(d.error || "Already petted today");
+        setPetError(d.error || "Error");
         setTimeout(() => setPetError(""), 3000);
       }
     } catch { setPetError("Error"); setTimeout(() => setPetError(""), 3000); }
@@ -248,27 +262,30 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
       >
         {/* Portrait + Content layout */}
         <div style={{ display: "flex", gap: 16, padding: 16 }}>
-          {/* Left: Portrait — uses specific portrait if available, otherwise type-based fallback */}
-          {companionType === "cat" && companionName?.toLowerCase() === "dobbie" ? (
-            <img
-              src="/images/portraits/companion-dobbie.png"
-              alt={companionName}
-              style={{ width: 128, height: 160, imageRendering: "auto", borderRadius: 4, border: `2px solid ${cColor.border}`, boxShadow: companionGlow ? `0 0 24px rgba(${cColor.accentRgb},0.6), 0 0 48px rgba(${cColor.accentRgb},0.3)` : `0 0 12px rgba(${cColor.accentRgb},0.15)`, flexShrink: 0, transition: "box-shadow 0.5s ease" }}
-            />
-          ) : (
-            <div style={{
-              width: 128, height: 160, borderRadius: 4,
-              border: `2px solid ${cColor.border}`,
-              boxShadow: companionGlow ? `0 0 24px rgba(${cColor.accentRgb},0.6), 0 0 48px rgba(${cColor.accentRgb},0.3)` : `0 0 12px rgba(${cColor.accentRgb},0.15)`,
-              flexShrink: 0,
-              transition: "box-shadow 0.5s ease",
-              background: `linear-gradient(135deg, rgba(${cColor.accentRgb},0.08), rgba(${cColor.accentRgb},0.02))`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 48, color: cColor.accent,
-            }}>
-              {user?.companion?.emoji || COMPANION_PORTRAIT_FALLBACK[companionType ?? ""] || "?"}
-            </div>
-          )}
+          {/* Left: Portrait — virtual types get pixel art portrait, real pets use emoji fallback */}
+          {(() => {
+            const portraitSrc = getCompanionPortrait(companionType, companionName);
+            return portraitSrc ? (
+              <img
+                src={portraitSrc}
+                alt={companionName}
+                style={{ width: 128, height: 160, imageRendering: "auto", borderRadius: 4, border: `2px solid ${cColor.border}`, boxShadow: companionGlow ? `0 0 24px rgba(${cColor.accentRgb},0.6), 0 0 48px rgba(${cColor.accentRgb},0.3)` : `0 0 12px rgba(${cColor.accentRgb},0.15)`, flexShrink: 0, transition: "box-shadow 0.5s ease" }}
+              />
+            ) : (
+              <div style={{
+                width: 128, height: 160, borderRadius: 4,
+                border: `2px solid ${cColor.border}`,
+                boxShadow: companionGlow ? `0 0 24px rgba(${cColor.accentRgb},0.6), 0 0 48px rgba(${cColor.accentRgb},0.3)` : `0 0 12px rgba(${cColor.accentRgb},0.15)`,
+                flexShrink: 0,
+                transition: "box-shadow 0.5s ease",
+                background: `linear-gradient(135deg, rgba(${cColor.accentRgb},0.08), rgba(${cColor.accentRgb},0.02))`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 48, color: cColor.accent,
+              }}>
+                {user?.companion?.emoji || COMPANION_PORTRAIT_FALLBACK[companionType ?? ""] || "?"}
+              </div>
+            );
+          })()}
 
           {/* Right: Name + Mood + Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -312,15 +329,34 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
                   </div>
                   {playerName && apiKey && (
                     <div className="flex flex-col items-center gap-0.5 relative">
+                      {/* Floating hearts animation */}
+                      {heartAnim && (
+                        <div className="absolute pointer-events-none" style={{ bottom: "100%", left: "50%", transform: "translateX(-50%)" }}>
+                          {["❤️","💕","❤️"].map((h, i) => (
+                            <span key={i} style={{
+                              position: "absolute",
+                              left: `${(i - 1) * 14}px`,
+                              bottom: 0,
+                              fontSize: 14,
+                              animation: `petHeartFloat 1.2s ease-out forwards`,
+                              animationDelay: `${i * 0.15}s`,
+                              opacity: 0,
+                            }}>{h}</span>
+                          ))}
+                        </div>
+                      )}
                       <button onClick={handlePet} disabled={petting} className="text-xs px-2.5 py-1 rounded-lg font-semibold transition-all" style={{
                         background: heartAnim ? "linear-gradient(135deg, rgba(255,107,157,0.3), rgba(255,107,157,0.15))" : "linear-gradient(135deg, rgba(255,107,157,0.12), rgba(255,107,157,0.06))",
                         color: "#a78bfa", border: "1px solid rgba(167,139,250,0.3)",
                         boxShadow: heartAnim ? "0 0 12px rgba(255,107,157,0.3)" : "0 0 6px rgba(255,107,157,0.1)",
                         cursor: petting ? "wait" : "pointer",
                       }} title="Pet your companion (+0.5 bond XP, max 2x/day)">
-                        Pet
+                        🐾 Pet
                       </button>
-                      {petError && <span className="text-xs mt-0.5" style={{ color: "#f59e0b", whiteSpace: "nowrap" }}>{petError}</span>}
+                      <span className="text-xs" style={{ color: "rgba(255,107,157,0.5)", fontSize: 10, whiteSpace: "nowrap" }}>
+                        {petsToday !== null ? petsToday : (user?.companion?.petCountToday ?? 0)}/2 belly rubs today
+                      </span>
+                      {petError && <span className="text-xs mt-0.5" style={{ color: "#f59e0b", whiteSpace: "nowrap", maxWidth: 120, textAlign: "center", fontSize: 10 }}>{petError}</span>}
                     </div>
                   )}
                 </div>

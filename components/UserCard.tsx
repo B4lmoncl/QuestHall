@@ -134,7 +134,13 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-xs"
                 style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)" }}
               >
-                <SmartIcon src={c.emoji && c.emoji !== "x" ? c.emoji : ""} size={14} /> {c.name}
+                <SmartIcon src={
+                  c.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(c.type)
+                    ? `/images/portraits/companion-${c.type}.png`
+                    : c.type === "cat" && c.name?.toLowerCase() === "dobbie"
+                      ? "/images/portraits/companion-dobbie.png"
+                      : c.emoji && c.emoji !== "x" ? c.emoji : ""
+                } size={14} /> {c.name}
               </span>
             );
           })()}

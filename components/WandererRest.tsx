@@ -70,6 +70,14 @@ const COMPANION_COLORS_WR: Record<string, { accent: string; accentRgb: string; b
 const DEFAULT_CC = { accent: "#00bcd4", accentRgb: "0,188,212", border: "rgba(0,188,212,0.4)" };
 function getCC(type?: string) { return type ? (COMPANION_COLORS_WR[type] ?? DEFAULT_CC) : COMPANION_COLORS_WR.cat; }
 
+const VIRTUAL_COMPANION_TYPES_WR = new Set(["dragon", "owl", "phoenix", "wolf", "fox", "bear"]);
+
+function getCompanionPortraitWR(type?: string, name?: string): string | null {
+  if (type === "cat" && name?.toLowerCase() === "dobbie") return "/images/portraits/companion-dobbie.png";
+  if (type && VIRTUAL_COMPANION_TYPES_WR.has(type)) return `/images/portraits/companion-${type}.png`;
+  return null;
+}
+
 function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewApiKey, onRefresh, playerName, quests, streak, user }: {
   petName?: string; companionType?: string; companionEmoji?: string;
   reviewApiKey: string; onRefresh: () => void; playerName: string;
@@ -77,7 +85,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
   user?: WandererRestProps["user"];
 }) {
   const cc = getCC(companionType);
-  const isDobbiePortrait = companionType === "cat" && petName?.toLowerCase() === "dobbie";
+  const portraitSrc = getCompanionPortraitWR(companionType, petName);
   return (
     <div data-feedback-id="wanderers-rest.companion-hearth" style={{ maxWidth: 1000, margin: "32px auto 0", padding: 8 }}>
       <div style={{
@@ -87,9 +95,9 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
         borderRadius: 2, overflow: "visible",
       }}>
         <div style={{ display: "flex", gap: 16, padding: 16 }}>
-          {isDobbiePortrait ? (
+          {portraitSrc ? (
             <img
-              src="/images/portraits/companion-dobbie.png"
+              src={portraitSrc}
               alt={petName ?? "Companion"}
               style={{ width: 128, height: 160, imageRendering: "auto", borderRadius: 4, border: `2px solid ${cc.border}`, boxShadow: `0 0 12px rgba(${cc.accentRgb},0.15)`, flexShrink: 0 }}
             />

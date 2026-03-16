@@ -200,7 +200,12 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
           className="flex items-center gap-2 px-3 py-1.5 rounded-xl"
           style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)" }}
         >
-          <span className="text-xl">{companion.emoji}</span>
+          {companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(companion.type)
+            ? <img src={`/images/portraits/companion-${companion.type}.png`} alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+            : companion.type === "cat" && companion.name?.toLowerCase() === "dobbie"
+              ? <img src="/images/portraits/companion-dobbie.png" alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+              : <span className="text-xl">{companion.emoji}</span>
+          }
           <span className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{companion.name}</span>
         </div>
       )}
@@ -898,7 +903,12 @@ export default function CharacterView({ playerName, apiKey, users, classesList }
       )}
       {charData?.companion && (
         <div className="flex items-center gap-2 shrink-0">
-          <span className="text-xl">{charData.companion.emoji}</span>
+          {charData.companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(charData.companion.type)
+            ? <img src={`/images/portraits/companion-${charData.companion.type}.png`} alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+            : charData.companion.type === "cat" && charData.companion.name?.toLowerCase() === "dobbie"
+              ? <img src="/images/portraits/companion-dobbie.png" alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+              : <span className="text-xl">{charData.companion.emoji}</span>
+          }
           <div>
             <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>{charData.companion.name}</p>
             <p className="text-xs" style={{ color: "#f48fb1" }}>

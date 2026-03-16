@@ -341,6 +341,7 @@ router.get('/api/player/:name/character', (req, res) => {
     }
   }
   const companion = u.companion ? {
+    type: u.companion.type,
     name: u.companion.name,
     emoji: u.companion.emoji,
     bondLevel: u.companion.bondLevel || 0,
