@@ -1566,6 +1566,48 @@ export default function Dashboard() {
           </ModalPortal>
         )}
 
+        {/* XP Info Popup */}
+        {xpInfoOpen && (
+          <ModalPortal>
+            <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
+              onClick={() => setXpInfoOpen(false)}>
+              <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
+              <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(167,139,250,0.25)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }}
+                onClick={e => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold" style={{ color: "#a78bfa" }}>How XP Works</h3>
+                  <button onClick={() => setXpInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                </div>
+                <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  XP scales with quest rarity. Higher rarity quests reward significantly more experience.
+                </p>
+                <div className="space-y-1.5 mb-4">
+                  {([
+                    { rarity: "Common",    color: "#9ca3af", xp: 10 },
+                    { rarity: "Uncommon",  color: "#22c55e", xp: 18 },
+                    { rarity: "Rare",      color: "#3b82f6", xp: 30 },
+                    { rarity: "Epic",      color: "#a855f7", xp: 50 },
+                    { rarity: "Legendary", color: "#FFD700", xp: 80 },
+                  ] as { rarity: string; color: string; xp: number }[]).map(({ rarity, color, xp }) => (
+                    <div key={rarity} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${color}22` }}>
+                      <span className="text-xs font-semibold" style={{ color }}>{rarity}</span>
+                      <span className="font-mono font-bold text-sm" style={{ color: "#a78bfa" }}>{xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-lg px-3 py-2.5 mb-3" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)" }}>
+                  <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+                    Your <span style={{ color: "#a78bfa" }}>Forge</span>, <span style={{ color: "#fbbf24" }}>Gear</span>, and <span style={{ color: "#f43f5e" }}>Companion</span> bonuses multiply all earned XP — stack them for maximum gains.
+                  </p>
+                </div>
+                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Higher levels require exponentially more XP. Every level up is an achievement.
+                </p>
+              </div>
+            </div>
+          </ModalPortal>
+        )}
+
         {/* View toggle */}
         <div className="flex gap-1 flex-wrap" data-tutorial="nav-bar" style={{ background: "#111", borderRadius: 8, padding: 3, display: "inline-flex" }}>
           {[
