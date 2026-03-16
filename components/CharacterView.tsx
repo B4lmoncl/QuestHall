@@ -203,9 +203,9 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
           style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)" }}
         >
           {companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(companion.type)
-            ? <img src={`/images/portraits/companion-${companion.type}.png`} alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+            ? <img src={`/images/portraits/companion-${companion.type}.png`} alt={companion.name} width={28} height={28} style={{ imageRendering: "pixelated", borderRadius: 3, objectFit: "cover" }} />
             : companion.type === "cat" && companion.name?.toLowerCase() === "dobbie"
-              ? <img src="/images/portraits/companion-dobbie.png" alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+              ? <img src="/images/portraits/companion-dobbie.png" alt={companion.name} width={28} height={28} style={{ imageRendering: "pixelated", borderRadius: 3, objectFit: "cover" }} />
               : <span className="text-xl">{companion.emoji}</span>
           }
           <span className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{companion.name}</span>
@@ -406,7 +406,7 @@ function InventoryTooltip({ item, mousePosRef }: { item: InventoryItem; mousePos
         <div className="flex items-center gap-2.5">
           <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
             {item.icon
-              ? <img src={item.icon} alt={item.name} width={148} height={148} style={{ imageRendering: "auto" }} />
+              ? <img src={item.icon} alt={item.name} width={148} height={148} style={{ imageRendering: "pixelated" }} />
               : <span className="text-6xl" style={{ color: rarityColor }}>◆</span>
             }
           </div>
@@ -433,12 +433,19 @@ function InventoryTooltip({ item, mousePosRef }: { item: InventoryItem; mousePos
           </div>
         )}
 
-        {/* Slot type */}
-        {item.slot && (
-          <p className="text-xs pt-1" style={{ color: "rgba(255,255,255,0.3)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            {item.type || item.slot}
-          </p>
-        )}
+        {/* Level requirement + Slot type */}
+        <div className="text-xs pt-1 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          {item.minLevel && item.minLevel > 1 && (
+            <p style={{ color: item.minLevel > (item as any)._playerLevel ? "#ef4444" : "rgba(255,255,255,0.4)" }}>
+              Benötigt Level {item.minLevel}
+            </p>
+          )}
+          {item.slot && (
+            <p style={{ color: "rgba(255,255,255,0.3)" }}>
+              {item.type || item.slot}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -498,7 +505,7 @@ function InventorySlot({ item, level, onItemClick }: {
         }}
       >
         {item.icon
-          ? <img src={item.icon} alt={item.name} style={{ width: 44, height: 44, imageRendering: "auto", objectFit: "contain" }} />
+          ? <img src={item.icon} alt={item.name} style={{ width: 44, height: 44, imageRendering: "pixelated", objectFit: "contain" }} />
           : <span style={{ fontSize: 14, color: RARITY_COLORS[item.rarity] || "#9ca3af", lineHeight: 1 }}>◆</span>
         }
         {/* Level requirement indicator */}
@@ -637,7 +644,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
           backgroundSize: "cover",
           backgroundPosition: "bottom center",
           backgroundRepeat: "no-repeat",
-          imageRendering: "auto" as any,
+          imageRendering: "pixelated" as any,
           filter: "brightness(1.3)",
           pointerEvents: "none",
         }}
@@ -664,10 +671,10 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
               opacity: 0,
               "--drift": `${p.drift}px`,
               pointerEvents: "none",
-              imageRendering: "auto",
+              imageRendering: "pixelated",
             } as React.CSSProperties}
           >
-            <img src={p.image} alt="" style={{ width: "100%", height: "100%", imageRendering: "auto" }} />
+            <img src={p.image} alt="" style={{ width: "100%", height: "100%", imageRendering: "pixelated" }} />
           </div>
         ))}
       </div>
@@ -767,12 +774,12 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                     style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${borderColor}` }}
                   >
                     <span className="flex items-center justify-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
-                      {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "auto" }} /> : null}
+                      {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "pixelated" }} /> : null}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
                         {item
-                          ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "auto" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
+                          ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "pixelated" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
                           : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
                       </p>
                       <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
@@ -811,7 +818,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                     const bonus = s.val - s.base;
                     return (
                       <div key={s.label} className="flex items-center gap-2" title={s.tooltip}>
-                        <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "auto" }} className="w-4 h-4" />
+                        <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "pixelated" }} className="w-4 h-4" />
                         <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
                         <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
                         {bonus > 0 && (
@@ -888,7 +895,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                         width={16}
                         height={16}
                         style={{
-                          imageRendering: "auto",
+                          imageRendering: "pixelated",
                           filter: charData.forgeTemp >= 70
                             ? "brightness(1.2) sepia(1) saturate(3) hue-rotate(-10deg)"
                             : charData.forgeTemp >= 40
@@ -980,9 +987,9 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
       {charData?.companion && (
         <div className="flex items-center gap-2 shrink-0">
           {charData.companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(charData.companion.type)
-            ? <img src={`/images/portraits/companion-${charData.companion.type}.png`} alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+            ? <img src={`/images/portraits/companion-${charData.companion.type}.png`} alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
             : charData.companion.type === "cat" && charData.companion.name?.toLowerCase() === "dobbie"
-              ? <img src="/images/portraits/companion-dobbie.png" alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+              ? <img src="/images/portraits/companion-dobbie.png" alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
               : <span className="text-xl">{charData.companion.emoji}</span>
           }
           <div>
