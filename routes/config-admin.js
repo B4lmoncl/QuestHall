@@ -90,7 +90,7 @@ function buildVisiblePool(playerName, playerLevel) {
   // Pick from this player's generated quest pool (pp.generatedQuests)
   const generated = (pp.generatedQuests || [])
     .map(id => state.quests.find(q => q.id === id))
-    .filter(q => q && q.status === 'open' && !claimedIds.has(q.id));
+    .filter(q => q && q.status === 'open' && !claimedIds.has(q.id) && (!q.minLevel || q.minLevel <= playerLevel));
 
   for (const type of POOL_TYPES) {
     const target = POOL_MIX[type] || 1;
