@@ -364,7 +364,7 @@ router.get('/api/player/:name/character', (req, res) => {
     baseStats,
     inventory: inventoryItems,
     forgeTemp: calcDynamicForgeTemp(uid),
-    season: 'spring',
+    // season: 'spring', // Season Pass disabled — Coming Soon
     setBonusInfo,
     namedSetBonuses,
   });

@@ -7,7 +7,7 @@ import OnboardingWizard from "@/components/OnboardingWizard";
 import LeaderboardView from "@/components/LeaderboardView";
 import HonorsView from "@/components/HonorsView";
 import CVBuilderPanel from "@/components/CVBuilderPanel";
-import BattlePassView from "@/components/BattlePassView";
+// import BattlePassView from "@/components/BattlePassView"; // Season Pass disabled — Coming Soon
 import CampaignHub from "@/components/CampaignHub";
 import ShopView from "@/components/ShopView";
 import GachaView from "@/components/GachaView";
@@ -1619,12 +1619,15 @@ export default function Dashboard() {
               <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{CURRENT_SEASON.icon} Season & Battle Pass</span>
             </div>
             {/* <BattlePassView users={users} quests={quests} /> */}
-            <div className="rounded-2xl p-8 text-center" style={{ background: "linear-gradient(135deg, #1a1a1a 0%, rgba(139,92,246,0.06) 100%)", border: "1px solid rgba(139,92,246,0.15)", boxShadow: "0 0 40px rgba(139,92,246,0.04)" }}>
-              <p className="text-3xl mb-3" style={{ opacity: 0.6 }}>&#x1F6E0;&#xFE0F;</p>
-              <h3 className="text-base font-bold mb-2" style={{ color: "rgba(255,255,255,0.5)" }}>Coming Soon</h3>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)", maxWidth: 320, margin: "0 auto" }}>
-                The Season Pass is being reworked. Check back soon for an improved experience with new rewards, tiers, and seasonal content.
+            <div className="rounded-2xl p-8 text-center" style={{ background: `linear-gradient(135deg, #1a1a1a 0%, ${CURRENT_SEASON.color}10 100%)`, border: `1px solid ${CURRENT_SEASON.color}25`, boxShadow: `0 0 40px ${CURRENT_SEASON.color}08` }}>
+              <p className="text-4xl mb-3" style={{ opacity: 0.5 }}>{CURRENT_SEASON.icon}</p>
+              <h3 className="text-lg font-bold mb-2" style={{ color: `${CURRENT_SEASON.color}90` }}>Coming Soon</h3>
+              <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.3)", maxWidth: 340, margin: "0 auto" }}>
+                The Season Pass is being forged anew. New rewards, tiers, and seasonal challenges are on the way.
               </p>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: `${CURRENT_SEASON.color}12`, border: `1px solid ${CURRENT_SEASON.color}30`, color: `${CURRENT_SEASON.color}` }}>
+                {CURRENT_SEASON.icon} {CURRENT_SEASON.name} Season Active
+              </div>
             </div>
           </div>
         )}
