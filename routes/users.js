@@ -21,7 +21,7 @@ router.get('/api/users', (req, res) => {
     const earnedIds = new Set((u.earnedAchievements || []).map(a => a.id));
     const compBonus = 1 + 0.02 * companionIds.filter(id => earnedIds.has(id)).length;
     const bondBonus = 1 + 0.01 * Math.max(0, (u.companion?.bondLevel ?? 1) - 1);
-    const streakGold = Math.min(1 + (u.streakDays || 0) * 0.1, 3);
+    const streakGold = Math.min(1 + (u.streakDays || 0) * 0.015, 1.45);
     const hoarding = getQuestHoardingMalus(u.id);
     const hoardingMultiplier = hoarding.multiplier;
     return {
