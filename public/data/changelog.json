@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.5.3",
+    "date": "2026-03-17",
+    "title": "Quality of Life — Tooltips, Flavor & Fixes",
+    "changes": [
+      "98 Item Flavor Texts — jedes Item hat jetzt atmosphärische Beschreibungen",
+      "Gear Hover Tooltips — Name, Rarity, Stats und Beschreibung beim Hovern",
+      "Stats Tooltips — Klick auf Kraft/Weisheit/Ausdauer/Glück erklärt den Effekt",
+      "Companion Bond Info — Bond Level, XP-Fortschritt und nächste Stufe sichtbar",
+      "Active Passives Section — ausgerüstete Passiv-Items unter dem Gear Grid",
+      "Bug Fix: Hintergrundbild im Character Screen nicht mehr oben abgeschnitten",
+      "Bug Fix: Klassen-Anzeige zeigt jetzt den Namen statt der ID",
+      "Locked Quests Section entfernt — Quests unter deinem Level tauchen einfach nicht auf",
+      "Feedback API: PATCH Endpoint zum Resolven von Feedback-Einträgen"
+    ]
+  },
+  {
     "version": "1.5.2",
     "date": "2026-03-17",
     "title": "The Item System Overhaul — Equip, Consume & Loot",
