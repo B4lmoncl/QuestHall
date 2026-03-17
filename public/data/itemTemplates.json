@@ -68,7 +68,7 @@
         "amount": 15
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "A few coins can change a wanderer's fate."
     },
     {
       "id": "xp-small",
@@ -82,7 +82,7 @@
         "amount": 10
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Knowledge crystallized into its purest form."
     },
     {
       "id": "companion-snack",
@@ -96,7 +96,7 @@
         "amount": 1
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "The quickest path to any creature's heart."
     },
     {
       "id": "repair-kit-s",
@@ -110,7 +110,7 @@
         "amount": 5
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Duct tape of the realm. Fixes everything. Mostly."
     },
     {
       "id": "bandage",
@@ -124,7 +124,7 @@
         "amount": 3
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Applied with hope, held together by stubbornness."
     },
     {
       "id": "apple",
@@ -138,7 +138,7 @@
         "amount": 5
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Keeps the healer away. Probably."
     },
     {
       "id": "gold-medium",
@@ -152,7 +152,7 @@
         "amount": 50
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Someone went through a lot of trouble to fill this chest."
     },
     {
       "id": "xp-scroll",
@@ -167,7 +167,7 @@
         "duration": "3_tasks"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "The words rearrange themselves as you read. Unsettling, but effective."
     },
     {
       "id": "companion-toy",
@@ -181,7 +181,7 @@
         "amount": 3
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Squeaks when squeezed. Your companion loves it. Your sanity does not."
     },
     {
       "id": "streak-shield",
@@ -195,7 +195,7 @@
         "amount": 1
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "One shield, one save. Use it wisely — or panic and waste it."
     },
     {
       "id": "lucky-coin",
@@ -209,7 +209,7 @@
         "amount": 75
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Heads you win, tails you also win. It's a magic coin."
     },
     {
       "id": "training-manual",
@@ -224,7 +224,7 @@
         "duration": "5_tasks"
       },
       "minLevel": 5,
-      "flavorText": ""
+      "flavorText": "Chapter 1: Stop Dying. Chapter 2: Advanced Not-Dying."
     },
     {
       "id": "gold-large",
@@ -238,7 +238,7 @@
         "amount": 150
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "The lock was already broken when you found it. Honest."
     },
     {
       "id": "gear-random",
@@ -251,7 +251,7 @@
         "type": "random_gear"
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "Could be legendary armor. Could be cursed socks. That's the fun part."
     },
     {
       "id": "companion-egg",
@@ -264,7 +264,7 @@
         "type": "companion_egg"
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "Something stirs within. Something ancient."
     },
     {
       "id": "streak-shield-x3",
@@ -278,7 +278,7 @@
         "amount": 3
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "For the adventurer who keeps almost losing their streak."
     },
     {
       "id": "sakura-petal",
@@ -292,7 +292,7 @@
         "cosmetic": "sakura_aura"
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "It has bloomed for a thousand years. It will bloom for a thousand more."
     },
     {
       "id": "forge-ember",
@@ -306,7 +306,7 @@
         "amount": 30
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "Handle with extreme caution. And tongs. Definitely tongs."
     },
     {
       "id": "gold-huge",
@@ -320,7 +320,7 @@
         "amount": 500
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "The dragon won't miss it. Probably. Best not to check."
     },
     {
       "id": "gear-upgrade",
@@ -333,7 +333,7 @@
         "type": "gear_next_tier"
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "One strike of this hammer can change destiny."
     },
     {
       "id": "second-chance",
@@ -346,7 +346,7 @@
         "type": "undo_missed_ritual"
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Time bends, the mistake unmakes itself. Don't ask how."
     },
     {
       "id": "xp-mega",
@@ -361,7 +361,7 @@
         "duration": "24h"
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Stare into it long enough and it stares back. With experience points."
     },
     {
       "id": "dragon-scale",
@@ -374,7 +374,7 @@
         "type": "random_gear_epic"
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Still warm. The dragon wants it back."
     },
     {
       "id": "time-crystal",
@@ -388,7 +388,7 @@
         "amount": 2
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Frozen moments from a timeline that never was."
     },
     {
       "id": "named-weapon",
@@ -401,7 +401,7 @@
         "type": "named_gear"
       },
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "Forged at dawn, named at dusk. It chose you."
     },
     {
       "id": "guild-blessing",
@@ -416,7 +416,7 @@
         "duration": "24h"
       },
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "A rising tide lifts all boats. Even the leaky ones."
     },
     {
       "id": "legendary-title",
@@ -430,7 +430,7 @@
         "title": "Glückskind"
       },
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "Names have power. This one has more than most."
     },
     {
       "id": "world-key",
@@ -443,7 +443,7 @@
         "type": "unlock_secret_quest"
       },
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "Opens a door that shouldn't exist."
     },
     {
       "id": "phoenix-feather",
@@ -456,7 +456,7 @@
         "type": "revive"
       },
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "It burned once already. It won't burn again."
     },
     {
       "id": "klinge-aetherstrom",
@@ -474,7 +474,7 @@
       },
       "passiveEffect": "xp_boost_10",
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "Forged in the purest aetherstream. Reality bends around its edge."
     },
     {
       "id": "mantel-sternenwaechter",
@@ -491,7 +491,7 @@
       },
       "passiveEffect": "xp_boost_10",
       "minLevel": 25,
-      "flavorText": ""
+      "flavorText": "Woven from the light of dying stars."
     },
     {
       "id": "phoenixfeder",
@@ -504,7 +504,7 @@
         "type": "revive"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "The last gift of a dying flame reborn."
     },
     {
       "id": "schild-eiserner-wille",
@@ -519,7 +519,7 @@
         "kraft": 3
       },
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Forged in the heart of an extinct volcano."
     },
     {
       "id": "stab-erkenntnis",
@@ -535,7 +535,7 @@
       },
       "passiveEffect": "xp_boost_5",
       "minLevel": 17,
-      "flavorText": ""
+      "flavorText": "Carved from the World Tree's oldest branch."
     },
     {
       "id": "goldene-schriftrolle",
@@ -549,7 +549,7 @@
         "duration": "24h"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Written in ink that shimmers like liquid gold."
     },
     {
       "id": "essenz-magnet",
@@ -563,7 +563,7 @@
         "duration": "48h"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Hums at a frequency only essence can hear."
     },
     {
       "id": "abenteuerklinge",
@@ -578,7 +578,7 @@
         "glueck": 1
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "Veteran's weapon. Has seen things."
     },
     {
       "id": "wanderermantel",
@@ -593,7 +593,7 @@
         "weisheit": 2
       },
       "minLevel": 9,
-      "flavorText": ""
+      "flavorText": "A thousand miles of weather-beaten stories."
     },
     {
       "id": "gluecksklee",
@@ -606,7 +606,7 @@
         "type": "rarity_boost_15"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Four leaves, each luckier than the last."
     },
     {
       "id": "schatzkompass",
@@ -619,7 +619,7 @@
         "type": "gold_boost_next"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Always points to treasure. Unfortunately, treasure is often guarded."
     },
     {
       "id": "mitleids-katalysator",
@@ -632,7 +632,7 @@
         "type": "pity_minus_5"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "The gacha gods take pity. Briefly."
     },
     {
       "id": "eisenschwert",
@@ -646,7 +646,7 @@
         "kraft": 4
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Forged in fire, tempered by will."
     },
     {
       "id": "lederschultern",
@@ -660,7 +660,7 @@
         "ausdauer": 3
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Battle-scarred leather that's saved more lives than any healer."
     },
     {
       "id": "kleine-erinnerungssplitter",
@@ -673,7 +673,7 @@
         "type": "streak_recovery_50"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Fragments of a day that never ended."
     },
     {
       "id": "sanduhr-gnade",
@@ -686,7 +686,7 @@
         "type": "quest_timer_24h"
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Sand falls upward. Time is merely a suggestion."
     },
     {
       "id": "rostiger-dolch",
@@ -700,7 +700,7 @@
         "kraft": 2
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Previous owner didn't need it anymore. Ominous."
     },
     {
       "id": "flickenumhang",
@@ -714,7 +714,7 @@
         "ausdauer": 1
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Every patch tells a story. Most of them end badly."
     },
     {
       "id": "heiltrank",
@@ -728,7 +728,7 @@
         "amount": 10
       },
       "minLevel": 1,
-      "flavorText": ""
+      "flavorText": "Tastes like burnt cinnamon and regret. Works though."
     },
     {
       "id": "t1-sword",
@@ -752,7 +752,7 @@
       "maxStack": 1,
       "sellPrice": 16,
       "buyPrice": 50,
-      "flavorText": ""
+      "flavorText": "Every legend starts with a wooden sword and too much confidence."
     },
     {
       "id": "t1-dagger",
@@ -777,7 +777,7 @@
       "maxStack": 1,
       "sellPrice": 13,
       "buyPrice": 40,
-      "flavorText": ""
+      "flavorText": "The rust adds character. And tetanus."
     },
     {
       "id": "t1-staff",
@@ -802,7 +802,7 @@
       "maxStack": 1,
       "sellPrice": 25,
       "buyPrice": 75,
-      "flavorText": ""
+      "flavorText": "Gnarled, ancient, and smells faintly of adventure."
     },
     {
       "id": "t1-axe",
@@ -826,7 +826,7 @@
       "maxStack": 1,
       "sellPrice": 30,
       "buyPrice": 90,
-      "flavorText": ""
+      "flavorText": "The trees fear it. Monsters... less so."
     },
     {
       "id": "t1-shield",
@@ -850,7 +850,7 @@
       "maxStack": 1,
       "sellPrice": 16,
       "buyPrice": 50,
-      "flavorText": ""
+      "flavorText": "Splinters build character."
     },
     {
       "id": "t1-buckler",
@@ -875,7 +875,7 @@
       "maxStack": 1,
       "sellPrice": 26,
       "buyPrice": 80,
-      "flavorText": ""
+      "flavorText": "Small but reliable. Like a very aggressive frisbee."
     },
     {
       "id": "t1-helm",
@@ -899,7 +899,7 @@
       "maxStack": 1,
       "sellPrice": 13,
       "buyPrice": 40,
-      "flavorText": ""
+      "flavorText": "Keeps the rain out. Sometimes even swords."
     },
     {
       "id": "t1-hood",
@@ -923,7 +923,7 @@
       "maxStack": 1,
       "sellPrice": 20,
       "buyPrice": 60,
-      "flavorText": ""
+      "flavorText": "You look suspicious. But lucky."
     },
     {
       "id": "t1-armor",
@@ -948,7 +948,7 @@
       "maxStack": 1,
       "sellPrice": 20,
       "buyPrice": 60,
-      "flavorText": ""
+      "flavorText": "Smells like adventure. And leather. Mostly leather."
     },
     {
       "id": "t1-tunic",
@@ -973,7 +973,7 @@
       "maxStack": 1,
       "sellPrice": 33,
       "buyPrice": 100,
-      "flavorText": ""
+      "flavorText": "Fashion meets function. Function is winning."
     },
     {
       "id": "t1-amulet",
@@ -997,7 +997,7 @@
       "maxStack": 1,
       "sellPrice": 15,
       "buyPrice": 45,
-      "flavorText": ""
+      "flavorText": "Green with age, warm with memories."
     },
     {
       "id": "t1-charm",
@@ -1021,7 +1021,7 @@
       "maxStack": 1,
       "sellPrice": 23,
       "buyPrice": 70,
-      "flavorText": ""
+      "flavorText": "The rabbit had less luck."
     },
     {
       "id": "t1-boots",
@@ -1045,7 +1045,7 @@
       "maxStack": 1,
       "sellPrice": 11,
       "buyPrice": 35,
-      "flavorText": ""
+      "flavorText": "A thousand miles begin with a single comfortable step."
     },
     {
       "id": "t1-sandals",
@@ -1070,7 +1070,7 @@
       "maxStack": 1,
       "sellPrice": 21,
       "buyPrice": 65,
-      "flavorText": ""
+      "flavorText": "Feel the breeze between your toes. And the occasional sword."
     },
     {
       "id": "t2-sword",
@@ -1095,7 +1095,7 @@
       "maxStack": 1,
       "sellPrice": 66,
       "buyPrice": 200,
-      "flavorText": ""
+      "flavorText": "Forged in the heat of a hundred battles."
     },
     {
       "id": "t2-katana",
@@ -1120,7 +1120,7 @@
       "maxStack": 1,
       "sellPrice": 100,
       "buyPrice": 300,
-      "flavorText": ""
+      "flavorText": "The wind itself bows to this blade."
     },
     {
       "id": "t2-hammer",
@@ -1144,7 +1144,7 @@
       "maxStack": 1,
       "sellPrice": 116,
       "buyPrice": 350,
-      "flavorText": ""
+      "flavorText": "Heavy. Effective. No nonsense."
     },
     {
       "id": "t2-shield",
@@ -1168,7 +1168,7 @@
       "maxStack": 1,
       "sellPrice": 73,
       "buyPrice": 220,
-      "flavorText": ""
+      "flavorText": "Outlasts your willpower. Every time."
     },
     {
       "id": "t2-tower",
@@ -1193,7 +1193,7 @@
       "maxStack": 1,
       "sellPrice": 106,
       "buyPrice": 320,
-      "flavorText": ""
+      "flavorText": "A whole hero fits behind this thing."
     },
     {
       "id": "t2-helm",
@@ -1218,7 +1218,7 @@
       "maxStack": 1,
       "sellPrice": 66,
       "buyPrice": 200,
-      "flavorText": ""
+      "flavorText": "Cold in winter, hot in summer. Always useful."
     },
     {
       "id": "t2-circlet",
@@ -1243,7 +1243,7 @@
       "maxStack": 1,
       "sellPrice": 93,
       "buyPrice": 280,
-      "flavorText": ""
+      "flavorText": "Radiates quiet authority."
     },
     {
       "id": "t2-armor",
@@ -1268,7 +1268,7 @@
       "maxStack": 1,
       "sellPrice": 83,
       "buyPrice": 250,
-      "flavorText": ""
+      "flavorText": "A thousand rings, one great protection."
     },
     {
       "id": "t2-brigandine",
@@ -1294,7 +1294,7 @@
       "maxStack": 1,
       "sellPrice": 133,
       "buyPrice": 400,
-      "flavorText": ""
+      "flavorText": "Steel under leather. Best of both worlds."
     },
     {
       "id": "t2-amulet",
@@ -1318,7 +1318,7 @@
       "maxStack": 1,
       "sellPrice": 60,
       "buyPrice": 180,
-      "flavorText": ""
+      "flavorText": "Gleams in moonlight like a good omen."
     },
     {
       "id": "t2-pendant",
@@ -1343,7 +1343,7 @@
       "maxStack": 1,
       "sellPrice": 100,
       "buyPrice": 300,
-      "flavorText": ""
+      "flavorText": "Ancient runes whisper forgotten knowledge."
     },
     {
       "id": "t2-boots",
@@ -1368,7 +1368,7 @@
       "maxStack": 1,
       "sellPrice": 63,
       "buyPrice": 190,
-      "flavorText": ""
+      "flavorText": "Blades on the ground? Not a problem."
     },
     {
       "id": "t2-strider",
@@ -1393,7 +1393,7 @@
       "maxStack": 1,
       "sellPrice": 90,
       "buyPrice": 270,
-      "flavorText": ""
+      "flavorText": "Silent through the forest. Like a shadow with better shoes."
     },
     {
       "id": "t3-sword",
@@ -1418,7 +1418,7 @@
       "maxStack": 1,
       "sellPrice": 166,
       "buyPrice": 500,
-      "flavorText": ""
+      "flavorText": "The runes glow brighter when danger is near."
     },
     {
       "id": "t3-lance",
@@ -1443,7 +1443,7 @@
       "maxStack": 1,
       "sellPrice": 233,
       "buyPrice": 700,
-      "flavorText": ""
+      "flavorText": "Forged to slay dragons. Still waiting for its first."
     },
     {
       "id": "t3-wand",
@@ -1468,7 +1468,7 @@
       "maxStack": 1,
       "sellPrice": 250,
       "buyPrice": 750,
-      "flavorText": ""
+      "flavorText": "Pulses with raw magical energy. Occasionally sparks."
     },
     {
       "id": "t3-shield",
@@ -1493,7 +1493,7 @@
       "maxStack": 1,
       "sellPrice": 183,
       "buyPrice": 550,
-      "flavorText": ""
+      "flavorText": "From a real dragon. It doesn't miss it anymore."
     },
     {
       "id": "t3-barrier",
@@ -1518,7 +1518,7 @@
       "maxStack": 1,
       "sellPrice": 233,
       "buyPrice": 700,
-      "flavorText": ""
+      "flavorText": "Pure energy, shaped by will alone."
     },
     {
       "id": "t3-helm",
@@ -1543,7 +1543,7 @@
       "maxStack": 1,
       "sellPrice": 166,
       "buyPrice": 500,
-      "flavorText": ""
+      "flavorText": "Knowledge flows through the fabric."
     },
     {
       "id": "t3-crown",
@@ -1569,7 +1569,7 @@
       "maxStack": 1,
       "sellPrice": 266,
       "buyPrice": 800,
-      "flavorText": ""
+      "flavorText": "See three moves ahead. Checkmate."
     },
     {
       "id": "t3-armor",
@@ -1595,7 +1595,7 @@
       "maxStack": 1,
       "sellPrice": 200,
       "buyPrice": 600,
-      "flavorText": ""
+      "flavorText": "Light as silk, hard as steel. The metallurgists are baffled."
     },
     {
       "id": "t3-plate",
@@ -1621,7 +1621,7 @@
       "maxStack": 1,
       "sellPrice": 300,
       "buyPrice": 900,
-      "flavorText": ""
+      "flavorText": "Every plate bears a protective rune. Every rune tells a story."
     },
     {
       "id": "t3-amulet",
@@ -1646,7 +1646,7 @@
       "maxStack": 1,
       "sellPrice": 166,
       "buyPrice": 500,
-      "flavorText": ""
+      "flavorText": "Contains the portrait of a hero the world forgot."
     },
     {
       "id": "t3-eye",
@@ -1671,7 +1671,7 @@
       "maxStack": 1,
       "sellPrice": 250,
       "buyPrice": 750,
-      "flavorText": ""
+      "flavorText": "Sees what others cannot. Sometimes that's a blessing."
     },
     {
       "id": "t3-boots",
@@ -1696,7 +1696,7 @@
       "maxStack": 1,
       "sellPrice": 160,
       "buyPrice": 480,
-      "flavorText": ""
+      "flavorText": "The wind itself carries your steps."
     },
     {
       "id": "t3-shadow",
@@ -1722,7 +1722,7 @@
       "maxStack": 1,
       "sellPrice": 240,
       "buyPrice": 720,
-      "flavorText": ""
+      "flavorText": "Walk between shadows. Silent. Unseen."
     },
     {
       "id": "t4-dawn",
@@ -1748,7 +1748,7 @@
       "maxStack": 1,
       "sellPrice": 666,
       "buyPrice": 2000,
-      "flavorText": ""
+      "flavorText": "Forged in the first light of the world. Warms the soul."
     },
     {
       "id": "t4-void",
@@ -1774,7 +1774,7 @@
       "maxStack": 1,
       "sellPrice": 1000,
       "buyPrice": 3000,
-      "flavorText": ""
+      "flavorText": "Absorbs the light around it. Terrifying."
     },
     {
       "id": "t4-aegis",
@@ -1799,7 +1799,7 @@
       "maxStack": 1,
       "sellPrice": 666,
       "buyPrice": 2000,
-      "flavorText": ""
+      "flavorText": "No sword, no spell, no god can pierce this shield."
     },
     {
       "id": "t4-crown",
@@ -1824,7 +1824,7 @@
       "maxStack": 1,
       "sellPrice": 666,
       "buyPrice": 2000,
-      "flavorText": ""
+      "flavorText": "Worn by the greatest minds across all ages."
     },
     {
       "id": "t4-armor",
@@ -1850,7 +1850,7 @@
       "maxStack": 1,
       "sellPrice": 833,
       "buyPrice": 2500,
-      "flavorText": ""
+      "flavorText": "Hardened in ancient dragon blood. Indestructible."
     },
     {
       "id": "t4-heart",
@@ -1875,7 +1875,7 @@
       "maxStack": 1,
       "sellPrice": 666,
       "buyPrice": 2000,
-      "flavorText": ""
+      "flavorText": "Pulses with the luck of every soul who ever carried it."
     },
     {
       "id": "t4-boots",
@@ -1901,7 +1901,7 @@
       "maxStack": 1,
       "sellPrice": 666,
       "buyPrice": 2000,
-      "flavorText": ""
+      "flavorText": "Have walked every continent. Every dimension."
     },
     {
       "id": "t4-excalibur",
@@ -1928,7 +1928,7 @@
       "maxStack": 1,
       "sellPrice": 0,
       "buyPrice": 0,
-      "flavorText": ""
+      "flavorText": "The blade of legends. Cannot be bought — only earned."
     },
     {
       "id": "t4-phoenix",
@@ -1954,7 +1954,7 @@
       "maxStack": 1,
       "sellPrice": 0,
       "buyPrice": 0,
-      "flavorText": ""
+      "flavorText": "Woven from phoenix feathers. Who falls, rises again."
     },
     {
       "id": "t4-oracle",
@@ -1979,7 +1979,7 @@
       "maxStack": 1,
       "sellPrice": 0,
       "buyPrice": 0,
-      "flavorText": ""
+      "flavorText": "Sees the future. Sometimes that's a curse."
     }
   ]
 }

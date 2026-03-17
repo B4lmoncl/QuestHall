@@ -1270,11 +1270,14 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-bold" style={{ color: "#f0f0f0" }}>{playerName}</p>
-                  {loggedInUser.classId && (
-                    <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
-                      {loggedInUser.classId}
-                    </span>
-                  )}
+                  {loggedInUser.classId && loggedInUser.classId !== "null" && (() => {
+                    const cls = (classesList || []).find((c: any) => c.id === loggedInUser.classId);
+                    return cls ? (
+                      <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                        {cls.name}
+                      </span>
+                    ) : null;
+                  })()}
                 </div>
                 <p className="text-xs mb-1.5" style={{ color: "#a78bfa" }}>Lv.{playerLevelInfo.level} · {playerLevelInfo.title}</p>
                 {/* XP progress bar */}
@@ -2054,27 +2057,7 @@ export default function Dashboard() {
                       </>
                     )}
 
-                    {/* Locked quests teaser — shown when logged in and level-gated quests exist */}
-                    {playerName && (quests.locked ?? []).length > 0 && (
-                      <>
-                        <div data-feedback-id="quest-board.locked" className="flex items-center gap-2 pt-2 pb-0.5">
-                          <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>Locked</span>
-                          <span className="text-xs px-1 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.15)" }}>{(quests.locked ?? []).length}</span>
-                        </div>
-                        {applySort(quests.locked ?? []).map(q => (
-                          <div key={q.id} className="rounded-lg px-3 py-2.5 flex items-center gap-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", opacity: 0.5 }}>
-                            <span className="text-base">×</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate" style={{ color: "rgba(255,255,255,0.4)" }}>{q.title}</p>
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.2)" }}>Unlocks at Level {q.minLevel ?? 1}</p>
-                            </div>
-                            <span className="text-xs px-1.5 py-0.5 rounded font-mono shrink-0" style={{ background: "rgba(139,92,246,0.08)", color: "rgba(139,92,246,0.35)", border: "1px solid rgba(139,92,246,0.15)" }}>
-                              Lv.{q.minLevel ?? 1}
-                            </span>
-                          </div>
-                        ))}
-                      </>
-                    )}
+                    {/* Locked quests removed — quests below player level simply don't appear */}
                   </div>}
 
                   {/* ── Rituale Tab ── */}

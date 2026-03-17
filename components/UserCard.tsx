@@ -45,8 +45,8 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
   const xpMalus = temp === 0;
   const forgeInfo = getForgeTempInfo(temp);
 
-  // Class info
-  const cls = user.classId ? classes.find(c => c.id === user.classId) : null;
+  // Class info — only show if classId is a non-empty string and class exists
+  const cls = (user.classId && user.classId !== "null") ? classes.find(c => c.id === user.classId) : null;
   const classTier = cls?.tiers ? [...cls.tiers].reverse().find(t => xp >= t.minXp) : null;
 
   // Gear info

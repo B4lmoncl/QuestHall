@@ -336,6 +336,26 @@ const RARITY_LABELS: Record<string, string> = {
 
 const STAT_LABELS: Record<string, string> = { kraft: "Kraft", ausdauer: "Ausdauer", weisheit: "Weisheit", glueck: "Glück" };
 
+const BOND_LEVELS = [
+  { level: 1,  title: "Stranger",       minXp: 0   },
+  { level: 2,  title: "Acquaintance",   minXp: 10  },
+  { level: 3,  title: "Friend",         minXp: 25  },
+  { level: 4,  title: "Close Friend",   minXp: 50  },
+  { level: 5,  title: "Best Friend",    minXp: 80  },
+  { level: 6,  title: "Soulmate",       minXp: 120 },
+  { level: 7,  title: "Legendary I",    minXp: 200 },
+  { level: 8,  title: "Legendary II",   minXp: 300 },
+  { level: 9,  title: "Legendary III",  minXp: 450 },
+  { level: 10, title: "Legendary IV",   minXp: 666 },
+];
+
+const STAT_EFFECTS: Record<string, string> = {
+  "Kraft":    "+1% Quest XP per point",
+  "Weisheit": "+1% Gold per point",
+  "Ausdauer": "-0.5% Forge Decay per point",
+  "Glück":    "+0.5% Drop Chance per point",
+};
+
 const GRID_COLS = 6;
 const GRID_ROWS = 12;
 const GRID_TOTAL = GRID_COLS * GRID_ROWS;
@@ -529,6 +549,54 @@ const EQUIP_SLOT_LABELS: { slot: string; emoji: string; label: string; iconSrc?:
   { slot: "boots", emoji: "", iconSrc: "/images/icons/equip-boots.png", label: "Stiefel" },
 ];
 
+function GearSlotRow({ slot, iconSrc, label, item, onUnequip, unequipping }: {
+  slot: string;
+  iconSrc?: string;
+  label: string;
+  item: InventoryItem | null;
+  onUnequip: (slot: string) => void;
+  unequipping: string | null;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const mousePosRef = useRef({ x: 0, y: 0 });
+  const borderColor = item ? (RARITY_COLORS[item.rarity] || "#9ca3af") : "rgba(255,255,255,0.1)";
+
+  return (
+    <>
+      <div
+        className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
+        style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${borderColor}` }}
+        onMouseEnter={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; if (item) setHovered(true); }}
+        onMouseMove={(e) => { mousePosRef.current = { x: e.clientX, y: e.clientY }; }}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <span className="flex items-center justify-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
+          {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "pixelated" }} /> : null}
+        </span>
+        <div className="flex-1 min-w-0">
+          <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
+            {item
+              ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "pixelated" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
+              : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
+          </p>
+          <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
+        </div>
+        {item && (
+          <button
+            onClick={() => onUnequip(slot)}
+            disabled={unequipping === slot}
+            className="text-xs px-1.5 py-0.5 rounded"
+            style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer" }}
+          >
+            {unequipping === slot ? "…" : "−"}
+          </button>
+        )}
+      </div>
+      {hovered && item && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} />, document.body)}
+    </>
+  );
+}
+
 export default function CharacterView({ playerName, apiKey, users, classesList, addToast }: { playerName: string; apiKey: string; users: User[]; classesList: ClassDef[]; addToast?: (t: ToastInput) => void }) {
   const [charData, setCharData] = useState<CharacterData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -537,6 +605,14 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
   const [rightTab, setRightTab] = useState<"stats" | "ausrustung">("stats");
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ item: CharacterData["inventory"][number]; rect: { x: number; y: number; width: number; height: number } } | null>(null);
+  const [statTooltipOpen, setStatTooltipOpen] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!statTooltipOpen) return;
+    const close = () => setStatTooltipOpen(null);
+    document.addEventListener("click", close);
+    return () => document.removeEventListener("click", close);
+  }, [statTooltipOpen]);
 
   const PETAL_COUNT = 35;
   const petals = useMemo(() => Array.from({ length: PETAL_COUNT }, (_, i) => ({
@@ -625,7 +701,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
 
   const loggedInUser = users.find(u => u.name.toLowerCase() === playerName.toLowerCase());
   void loggedInUser;
-  const cls = charData?.classId ? classesList.find(c => c.id === charData.classId) : null;
+  const cls = (charData?.classId && charData.classId !== "null") ? classesList.find(c => c.id === charData.classId) : null;
 
   return (
     <div>
@@ -642,7 +718,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
         style={{
           backgroundImage: "url('/images/bg-character-spring.png')",
           backgroundSize: "cover",
-          backgroundPosition: "bottom center",
+          backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
           imageRendering: "pixelated" as any,
           filter: "brightness(1.3)",
@@ -766,37 +842,47 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                 const item = equippedItemId
                   ? charData?.inventory.find(i => i.id === equippedItemId) ?? null
                   : null;
-                const borderColor = item ? (RARITY_COLORS[item.rarity] || RARITY_BORDER[item.tier] || "#9ca3af") : "rgba(255,255,255,0.1)";
                 return (
-                  <div
+                  <GearSlotRow
                     key={slot}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
-                    style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${borderColor}` }}
-                  >
-                    <span className="flex items-center justify-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
-                      {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "pixelated" }} /> : null}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
-                        {item
-                          ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "pixelated" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
-                          : <span style={{ color: "rgba(255,255,255,0.2)" }}>Leer</span>}
-                      </p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
-                    </div>
-                    {item && (
-                      <button
-                        onClick={() => handleUnequip(slot)}
-                        disabled={unequipping === slot}
-                        className="text-xs px-1.5 py-0.5 rounded"
-                        style={{ background: "rgba(239,68,68,0.15)", color: "#f87171", border: "1px solid rgba(239,68,68,0.2)", cursor: "pointer" }}
-                      >
-                        {unequipping === slot ? "…" : "−"}
-                      </button>
-                    )}
-                  </div>
+                    slot={slot}
+                    iconSrc={iconSrc}
+                    label={label}
+                    item={item}
+                    onUnequip={handleUnequip}
+                    unequipping={unequipping}
+                  />
                 );
               })}
+
+              {/* Passive Items */}
+              {charData && (() => {
+                const passives = charData.inventory.filter(i => i.type === "passive");
+                if (!passives.length) return null;
+                return (
+                  <div className="mt-3">
+                    <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(255,255,255,0.35)" }}>Active Passives</p>
+                    <div className="space-y-1">
+                      {passives.map(item => (
+                        <div
+                          key={item.id}
+                          className="flex items-center gap-2 px-2 py-1.5 rounded-lg"
+                          style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                        >
+                          {item.icon
+                            ? <img src={item.icon} alt={item.name} width={32} height={32} style={{ imageRendering: "pixelated", flexShrink: 0 }} />
+                            : <span style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: RARITY_COLORS[item.rarity] || "#9ca3af", fontSize: 14 }}>◆</span>
+                          }
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold truncate" style={{ color: "#e0e0e0" }}>{item.name}</p>
+                            {item.desc && <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -816,13 +902,40 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                 <div className="space-y-2 mb-4">
                   {statRows.map(s => {
                     const bonus = s.val - s.base;
+                    const isOpen = statTooltipOpen === s.label;
                     return (
-                      <div key={s.label} className="flex items-center gap-2" title={s.tooltip}>
-                        <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "pixelated" }} className="w-4 h-4" />
-                        <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
-                        <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
-                        {bonus > 0 && (
-                          <span className="text-xs font-mono" style={{ color: "#4ade80" }}>(+{bonus})</span>
+                      <div key={s.label} style={{ position: "relative" }}>
+                        <div
+                          className="flex items-center gap-2"
+                          style={{ cursor: "pointer" }}
+                          onClick={(e) => { e.stopPropagation(); setStatTooltipOpen(isOpen ? null : s.label); }}
+                        >
+                          <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "pixelated" }} className="w-4 h-4" />
+                          <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
+                          <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
+                          {bonus > 0 && (
+                            <span className="text-xs font-mono" style={{ color: "#4ade80" }}>(+{bonus})</span>
+                          )}
+                        </div>
+                        {isOpen && (
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "calc(100% + 4px)",
+                              right: 0,
+                              zIndex: 300,
+                              background: "#141414",
+                              border: `1px solid rgba(255,255,255,0.15)`,
+                              borderRadius: 6,
+                              padding: "6px 10px",
+                              whiteSpace: "nowrap",
+                              boxShadow: "0 4px 16px rgba(0,0,0,0.7)",
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{s.label}</p>
+                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{STAT_EFFECTS[s.label] ?? s.tooltip}</p>
+                          </div>
                         )}
                       </div>
                     );
@@ -984,22 +1097,36 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
           </div>
         </div>
       )}
-      {charData?.companion && (
-        <div className="flex items-center gap-2 shrink-0">
-          {charData.companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(charData.companion.type)
-            ? <img src={`/images/portraits/companion-${charData.companion.type}.png`} alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
-            : charData.companion.type === "cat" && charData.companion.name?.toLowerCase() === "dobbie"
-              ? <img src="/images/portraits/companion-dobbie.png" alt={charData.companion.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
-              : <span className="text-xl">{charData.companion.emoji}</span>
-          }
-          <div>
-            <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>{charData.companion.name}</p>
-            <p className="text-xs" style={{ color: "#f48fb1" }}>
-              {"♥".repeat(Math.min(charData.companion.bondLevel, 5))}
-            </p>
+      {charData?.companion && (() => {
+        const comp = charData.companion;
+        const bondXp = (comp as any).bondXp ?? 0;
+        const bondLvl = [...BOND_LEVELS].reverse().find(b => bondXp >= b.minXp) ?? BOND_LEVELS[0];
+        const nextBond = BOND_LEVELS.find(b => b.level === bondLvl.level + 1);
+        const bondProgress = nextBond
+          ? Math.min(1, (bondXp - bondLvl.minXp) / (nextBond.minXp - bondLvl.minXp))
+          : 1;
+        const xpToNext = nextBond ? nextBond.minXp - bondXp : 0;
+        return (
+          <div className="flex items-center gap-2 shrink-0">
+            {comp.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(comp.type)
+              ? <img src={`/images/portraits/companion-${comp.type}.png`} alt={comp.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
+              : comp.type === "cat" && comp.name?.toLowerCase() === "dobbie"
+                ? <img src="/images/portraits/companion-dobbie.png" alt={comp.name} width={32} height={32} style={{ imageRendering: "pixelated", borderRadius: 4, objectFit: "cover" }} />
+                : <span className="text-xl">{comp.emoji}</span>
+            }
+            <div>
+              <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>{comp.name}</p>
+              <p className="text-xs" style={{ color: "#f48fb1" }}>{bondLvl.title}</p>
+              <div className="rounded-full overflow-hidden mt-0.5" style={{ height: 3, width: 72, background: "rgba(255,255,255,0.07)" }}>
+                <div style={{ width: `${bondProgress * 100}%`, height: "100%", background: "linear-gradient(90deg, #ec4899, #f9a8d4)", borderRadius: 9999 }} />
+              </div>
+              {nextBond && (
+                <p style={{ fontSize: 9, color: "rgba(255,255,255,0.3)", marginTop: 1 }}>{xpToNext} XP → {nextBond.title}</p>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
     </div>
   );

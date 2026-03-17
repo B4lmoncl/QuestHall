@@ -116,7 +116,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
           const meta = agentMetaLb[entry.id?.toLowerCase()] ?? { avatar: entry.avatar ?? entry.id?.slice(0, 2).toUpperCase() ?? "??", color: entry.color ?? "#666" };
           const color = entry.color ?? meta.color;
           const lvl = getLbLevel(entry.xp);
-          const cls = isPlayerMode && entry.classId ? classMap.get(entry.classId) : null;
+          const cls = isPlayerMode && entry.classId && entry.classId !== "null" ? classMap.get(entry.classId) : null;
           return (
             <div key={entry.id} className="flex flex-col items-center gap-2" style={{ minWidth: 100 }}>
               <div className="text-lg"><RankMedal rank={rank} /></div>
@@ -185,7 +185,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", user
                   <div className="flex items-center gap-1.5">
                     <p className="text-xs font-semibold truncate" style={{ color: "#f0f0f0" }}>{entry.name}</p>
                     {isPlayerMode && (() => {
-                      const cls = entry.classId ? classMap.get(entry.classId) : null;
+                      const cls = entry.classId && entry.classId !== "null" ? classMap.get(entry.classId) : null;
                       return cls ? (
                         <span className="text-xs flex-shrink-0" style={{ color: "rgba(167,139,250,0.6)", fontSize: 10 }}>{cls.icon} {cls.fantasy}</span>
                       ) : (
