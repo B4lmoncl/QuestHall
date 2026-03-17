@@ -717,7 +717,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
         className="absolute inset-0"
         style={{
           backgroundImage: "url('/images/bg-character-spring.png')",
-          backgroundSize: "cover",
+          backgroundSize: "100% auto",
           backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
           imageRendering: "pixelated" as any,
@@ -767,7 +767,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
         {/* LEFT: Inventory Panel */}
         <div
           className="flex-shrink-0 rounded-xl p-2 overflow-y-auto"
-          style={{ width: 362, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", minHeight: 0, paddingRight: 12 }}
+          style={{ width: 310, background: "rgba(0,0,0,0.75)", border: "1px solid rgba(255,255,255,0.1)", minHeight: 0, paddingRight: 12 }}
         >
           <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "rgba(255,255,255,0.5)" }}>Inventar</p>
 
