@@ -1697,7 +1697,7 @@
       "description": "Ein überraschend gut gekleideter Besucher. Niemand weiß woher er kommt. Sein Lächeln ist... beständig.",
       "portrait": "/images/npcs/gentleman-detective.png",
       "greeting": "Ah, ein neuer Wanderer. Wunderbar. Ich brauche jemanden mit funktionierenden Händen — und weniger Fragen als Antworten.",
-      "rarity": "epic",
+      "rarity": "legendary",
       "visitDuration": {
         "min": 48,
         "max": 96
@@ -1766,6 +1766,17 @@
           "desc": "Ein perfekt sitzender Mantel. Sieht gut aus. Selbst auf Knochen.",
           "icon": "/images/icons/npc-gentleman-coat.png"
         }
+      },
+      "stats": {
+        "kraft": 5,
+        "weisheit": 7,
+        "ausdauer": 3,
+        "glück": 4
+      },
+      "passiveEffect": {
+        "type": "charisma_boost",
+        "description": "+5% Quest XP für Social Quests",
+        "value": 0.05
       }
     },
     {

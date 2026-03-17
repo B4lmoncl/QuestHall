@@ -586,6 +586,538 @@
       "rarity": "legendary",
       "category": "hidden",
       "hidden": true
+    },
+    {
+      "id": "centurion",
+      "name": "Centurion",
+      "description": "Complete 200 quests",
+      "icon": "?",
+      "condition": {
+        "type": "quests_completed",
+        "count": 200
+      },
+      "rewards": {
+        "xp": 300,
+        "gold": 200
+      },
+      "rarity": "epic",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "master",
+      "name": "Quest Master",
+      "description": "Complete 500 quests",
+      "icon": "?",
+      "condition": {
+        "type": "quests_completed",
+        "count": 500
+      },
+      "rewards": {
+        "xp": 750,
+        "gold": 500
+      },
+      "rarity": "legendary",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "hermit",
+      "name": "The Hermit",
+      "description": "Complete 25 personal quests",
+      "icon": "?",
+      "condition": {
+        "type": "quest_type_count",
+        "questType": "personal",
+        "count": 25
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "variety",
+      "hidden": false
+    },
+    {
+      "id": "boss_hunter",
+      "name": "Boss Hunter",
+      "description": "Complete 5 boss battles",
+      "icon": "?",
+      "condition": {
+        "type": "boss_defeated",
+        "count": 5
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "epic",
+      "category": "boss",
+      "hidden": false
+    },
+    {
+      "id": "boss_legend",
+      "name": "Boss Legend",
+      "description": "Complete 20 boss battles",
+      "icon": "?",
+      "condition": {
+        "type": "boss_defeated",
+        "count": 20
+      },
+      "rewards": {
+        "xp": 500,
+        "gold": 300
+      },
+      "rarity": "legendary",
+      "category": "boss",
+      "hidden": false
+    },
+    {
+      "id": "two_week_warrior",
+      "name": "Fortnight Fighter",
+      "description": "Maintain a 14-day streak",
+      "icon": "?",
+      "condition": {
+        "type": "streak_days",
+        "count": 14
+      },
+      "rewards": {
+        "xp": 40,
+        "gold": 25
+      },
+      "rarity": "uncommon",
+      "category": "streak",
+      "hidden": false
+    },
+    {
+      "id": "quarter_year",
+      "name": "Seasonal Champion",
+      "description": "Maintain a 90-day streak",
+      "icon": "?",
+      "condition": {
+        "type": "streak_days",
+        "count": 90
+      },
+      "rewards": {
+        "xp": 250,
+        "gold": 150
+      },
+      "rarity": "legendary",
+      "category": "streak",
+      "hidden": false
+    },
+    {
+      "id": "gold_hoarder",
+      "name": "Gold Hoarder",
+      "description": "Earn 500 gold total",
+      "icon": "?",
+      "condition": {
+        "type": "gold_threshold",
+        "count": 500
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 0
+      },
+      "rarity": "rare",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "dragon_hoard",
+      "name": "Dragon's Hoard",
+      "description": "Earn 5000 gold total",
+      "icon": "?",
+      "condition": {
+        "type": "gold_threshold",
+        "count": 5000
+      },
+      "rewards": {
+        "xp": 500,
+        "gold": 0
+      },
+      "rarity": "legendary",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "initiate",
+      "name": "Initiate",
+      "description": "Reach level 5 (100 XP)",
+      "icon": "?",
+      "condition": {
+        "type": "xp_threshold",
+        "count": 100
+      },
+      "rewards": {
+        "xp": 15,
+        "gold": 10
+      },
+      "rarity": "common",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "adept",
+      "name": "Adept",
+      "description": "Reach level 10 (500 XP)",
+      "icon": "?",
+      "condition": {
+        "type": "xp_threshold",
+        "count": 500
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "master_rank",
+      "name": "Master",
+      "description": "Reach level 20 (1500 XP)",
+      "icon": "?",
+      "condition": {
+        "type": "xp_threshold",
+        "count": 1500
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "epic",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "grandmaster",
+      "name": "Grandmaster",
+      "description": "Reach level 50 (5000 XP)",
+      "icon": "?",
+      "condition": {
+        "type": "xp_threshold",
+        "count": 5000
+      },
+      "rewards": {
+        "xp": 500,
+        "gold": 300
+      },
+      "rarity": "legendary",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "chain_veteran",
+      "name": "Chain Veteran",
+      "description": "Complete 5 quest chains",
+      "icon": "?",
+      "condition": {
+        "type": "chain_completed",
+        "count": 5
+      },
+      "rewards": {
+        "xp": 100,
+        "gold": 60
+      },
+      "rarity": "epic",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "marathon_runner",
+      "name": "Marathon Runner",
+      "description": "Complete 10 quests in one day",
+      "icon": "?",
+      "condition": {
+        "type": "quests_today",
+        "count": 10
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "speed",
+      "hidden": false
+    },
+    {
+      "id": "social_king",
+      "name": "Social Monarch",
+      "description": "Complete 25 social quests",
+      "icon": "?",
+      "condition": {
+        "type": "quest_type_count",
+        "questType": "social",
+        "count": 25
+      },
+      "rewards": {
+        "xp": 75,
+        "gold": 50
+      },
+      "rarity": "epic",
+      "category": "variety",
+      "hidden": false
+    },
+    {
+      "id": "fitness_fanatic",
+      "name": "Fitness Fanatic",
+      "description": "Complete 50 fitness quests",
+      "icon": "?",
+      "condition": {
+        "type": "quest_type_count",
+        "questType": "fitness",
+        "count": 50
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "legendary",
+      "category": "variety",
+      "hidden": false
+    },
+    {
+      "id": "knowledge_seeker",
+      "name": "Knowledge Seeker",
+      "description": "Complete 50 learning quests",
+      "icon": "?",
+      "condition": {
+        "type": "quest_type_count",
+        "questType": "learning",
+        "count": 50
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "legendary",
+      "category": "variety",
+      "hidden": false
+    },
+    {
+      "id": "dev_legend",
+      "name": "Dev Legend",
+      "description": "Complete 50 development quests",
+      "icon": "?",
+      "condition": {
+        "type": "quest_type_count",
+        "questType": "development",
+        "count": 50
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "legendary",
+      "category": "variety",
+      "hidden": false
+    },
+    {
+      "id": "weekend_warrior",
+      "name": "Weekend Warrior",
+      "description": "Complete 10 quests on weekends",
+      "icon": "?",
+      "condition": {
+        "type": "weekend_completions",
+        "count": 10
+      },
+      "rewards": {
+        "xp": 40,
+        "gold": 25
+      },
+      "rarity": "rare",
+      "category": "speed",
+      "hidden": false
+    },
+    {
+      "id": "coop_legend",
+      "name": "Co-op Legend",
+      "description": "Complete 10 co-op quests",
+      "icon": "?",
+      "condition": {
+        "type": "coop_completed",
+        "count": 10
+      },
+      "rewards": {
+        "xp": 100,
+        "gold": 75
+      },
+      "rarity": "epic",
+      "category": "milestone",
+      "hidden": false
+    },
+    {
+      "id": "hidden_midnight",
+      "name": "Midnight Oil",
+      "description": "Complete 10 quests after midnight",
+      "icon": "?",
+      "condition": {
+        "type": "night_completions",
+        "count": 10,
+        "startHour": 0,
+        "endHour": 5
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_skulduggery",
+      "name": "Pleasant Surprise",
+      "description": "You found something familiar...",
+      "icon": "?",
+      "condition": {
+        "type": "easter_egg",
+        "eggId": "skulduggery"
+      },
+      "rewards": {
+        "xp": 30,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_stormlight",
+      "name": "Journey Before Destination",
+      "description": "Life before death. Strength before weakness.",
+      "icon": "?",
+      "condition": {
+        "type": "easter_egg",
+        "eggId": "stormlight"
+      },
+      "rewards": {
+        "xp": 40,
+        "gold": 40
+      },
+      "rarity": "epic",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_critical_role",
+      "name": "Bidet",
+      "description": "Is it Thursday yet?",
+      "icon": "?",
+      "condition": {
+        "type": "easter_egg",
+        "eggId": "critical_role"
+      },
+      "rewards": {
+        "xp": 30,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_dndads",
+      "name": "Daddy Magic",
+      "description": "For real facts.",
+      "icon": "?",
+      "condition": {
+        "type": "easter_egg",
+        "eggId": "dndads"
+      },
+      "rewards": {
+        "xp": 30,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_perfectionist",
+      "name": "No Quest Left Behind",
+      "description": "Complete every available quest type at least once",
+      "icon": "?",
+      "condition": {
+        "type": "completed_all_types"
+      },
+      "rewards": {
+        "xp": 100,
+        "gold": 75
+      },
+      "rarity": "epic",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_npc_collector",
+      "name": "NPC Collector",
+      "description": "Unlock all NPCs",
+      "icon": "?",
+      "condition": {
+        "type": "all_npcs_unlocked"
+      },
+      "rewards": {
+        "xp": 150,
+        "gold": 100
+      },
+      "rarity": "legendary",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_gacha_addict",
+      "name": "Gacha Addict",
+      "description": "Pull from the gacha 50 times",
+      "icon": "?",
+      "condition": {
+        "type": "gacha_pulls",
+        "count": 50
+      },
+      "rewards": {
+        "xp": 75,
+        "gold": 50
+      },
+      "rarity": "epic",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_full_inventory",
+      "name": "Hoarder's Dream",
+      "description": "Have 50 items in your inventory",
+      "icon": "?",
+      "condition": {
+        "type": "inventory_count",
+        "count": 50
+      },
+      "rewards": {
+        "xp": 50,
+        "gold": 30
+      },
+      "rarity": "rare",
+      "category": "hidden",
+      "hidden": true
+    },
+    {
+      "id": "hidden_legendary_pull",
+      "name": "Legendary Luck",
+      "description": "Pull a legendary item from the gacha",
+      "icon": "?",
+      "condition": {
+        "type": "gacha_rarity_pull",
+        "rarity": "legendary"
+      },
+      "rewards": {
+        "xp": 100,
+        "gold": 75
+      },
+      "rarity": "legendary",
+      "category": "hidden",
+      "hidden": true
     }
   ]
 }
