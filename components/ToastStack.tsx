@@ -10,14 +10,16 @@ export type ToastItem =
   | { type: "achievement"; id: string; achievement: EarnedAchievement }
   | { type: "chain"; id: string; parentTitle: string; template: { title: string; description?: string | null; type?: string; priority?: string }; onAccept: () => void }
   | { type: "purchase"; id: string; message: string }
-  | { type: "item"; id: string; itemName: string; message: string; icon?: string; rarity: string };
+  | { type: "item"; id: string; itemName: string; message: string; icon?: string; rarity: string }
+  | { type: "companionBond"; id: string; companionName: string; companionEmoji: string; bondXpGained: number; newBondXp: number; bondTitle: string; bondLevelUp: boolean };
 
 export type ToastInput =
   | { type: "flavor"; message: string; icon: string; sub?: string }
   | { type: "achievement"; achievement: EarnedAchievement }
   | { type: "chain"; parentTitle: string; template: { title: string; description?: string | null; type?: string; priority?: string }; onAccept: () => void }
   | { type: "purchase"; message: string }
-  | { type: "item"; itemName: string; message: string; icon?: string; rarity: string };
+  | { type: "item"; itemName: string; message: string; icon?: string; rarity: string }
+  | { type: "companionBond"; companionName: string; companionEmoji: string; bondXpGained: number; newBondXp: number; bondTitle: string; bondLevelUp: boolean };
 
 const TOAST_DURATION: Record<ToastItem["type"], number> = {
   flavor: 4000,
@@ -25,6 +27,7 @@ const TOAST_DURATION: Record<ToastItem["type"], number> = {
   chain: 8000,
   purchase: 3000,
   item: 3000,
+  companionBond: 4500,
 };
 
 const MAX_VISIBLE = 4;

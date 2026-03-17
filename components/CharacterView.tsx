@@ -356,7 +356,7 @@ const STAT_EFFECTS: Record<string, string> = {
   "Glück":    "+0.5% Drop Chance per point",
 };
 
-const GRID_COLS = 6;
+const GRID_COLS = 5;
 const GRID_ROWS = 12;
 const GRID_TOTAL = GRID_COLS * GRID_ROWS;
 
@@ -708,8 +708,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     <div
       className="relative overflow-hidden rounded-t-2xl"
       style={{
-        height: 420,
-        maxHeight: "60vh",
+        minHeight: 520,
         backgroundColor: "#fce4ec",
       }}
     >
