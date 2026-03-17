@@ -708,7 +708,8 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     <div
       className="relative overflow-hidden rounded-t-2xl"
       style={{
-        minHeight: 520,
+        height: 420,
+        maxHeight: "60vh",
         backgroundColor: "#fce4ec",
       }}
     >
@@ -873,9 +874,9 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
                             ? <img src={item.icon} alt={item.name} width={32} height={32} style={{ imageRendering: "pixelated", flexShrink: 0 }} />
                             : <span style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: RARITY_COLORS[item.rarity] || "#9ca3af", fontSize: 14 }}>◆</span>
                           }
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-semibold truncate" style={{ color: "#e0e0e0" }}>{item.name}</p>
-                            {item.desc && <p className="text-xs truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>}
+                          <div className="flex-1 min-w-0" title={item.desc || item.name}>
+                            <p className="text-xs font-semibold" style={{ color: "#e0e0e0" }}>{item.name}</p>
+                            {item.desc && <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{item.desc}</p>}
                           </div>
                         </div>
                       ))}
