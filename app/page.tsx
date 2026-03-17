@@ -757,14 +757,19 @@ export default function Dashboard() {
   const playerCompletedTotal = loggedInUser?.questsCompleted ?? playerCompletedQuests.length;
 
   // Level info for logged-in player
-  const LEVEL_XP = [0,50,120,200,300,420,560,720,900,1100,1350,1650,2000,2400,2850,3350,3900,4500,5150,5850,6700,7600,8600,9700,10900,12200,13600,15100,16700,18400];
-  const LEVEL_TITLES = ["Forge Initiate","Anvil Striker","Coal Tender","Iron Apprentice","Flame Keeper","Bronze Shaper","Steel Crafter","Glyph Carver","Rune Binder","Ironclad Journeyman","Forge Adept","Silver Tempered","Ember Warden","Mithral Seeker","Flame Warden","Knight of the Forge","Obsidian Blade","Ashbound Knight","Dawnsteel Sentinel","Ironforged Champion","Void Temperer","Stormhammer","Skyforgeling","Dragon Tempered","Master Artificer","Grandmaster Smith","Forge Sovereign","Mythic Hammerborn","Legendary Smelter","Archmage of the Forge"];
   function getPlayerLevelInfo(xp: number) {
-    let lvl = 0;
-    for (let i = 0; i < LEVEL_XP.length; i++) { if (xp >= LEVEL_XP[i]) lvl = i; else break; }
-    const nextXp = LEVEL_XP[lvl + 1] ?? null;
-    const progress = nextXp ? Math.min(1, (xp - LEVEL_XP[lvl]) / (nextXp - LEVEL_XP[lvl])) : 1;
-    return { level: lvl + 1, title: LEVEL_TITLES[lvl] ?? "Archmage of the Forge", xp, nextXp, progress };
+    const lvl = getUserLevel(xp);
+    const progress = getUserXpProgress(xp);
+    const nextEntry = GUILD_LEVELS[lvl.level]; // 1-based level → next entry
+    return {
+      level: lvl.level,
+      title: lvl.title,
+      xp,
+      nextXp: nextEntry?.xpRequired ?? null,
+      progress,
+      xpInLevel: nextEntry ? xp - lvl.xpRequired : 0,
+      xpForLevel: nextEntry ? nextEntry.xpRequired - lvl.xpRequired : 0,
+    };
   }
   const playerXp = loggedInUser?.xp ?? 0;
   const playerLevelInfo = getPlayerLevelInfo(playerXp);
@@ -1288,7 +1293,7 @@ export default function Dashboard() {
                   />
                 </div>
                 <p className="text-xs mt-1 font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
-                  {playerXp} {playerLevelInfo.nextXp ? `/ ${playerLevelInfo.nextXp} XP` : "(max)"}
+                  {playerLevelInfo.xpInLevel} {playerLevelInfo.xpForLevel ? `/ ${playerLevelInfo.xpForLevel} XP` : "(max)"}
                 </p>
               </div>
 
