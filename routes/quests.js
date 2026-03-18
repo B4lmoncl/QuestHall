@@ -53,6 +53,8 @@ function unlockNextChainQuest(completedQuest) {
 router.post('/api/quest', requireApiKey, (req, res) => {
   const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter, suggest, minLevel, classRequired, requiresRelationship, rarity } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
+  if (typeof title === 'string' && title.length > 500) return res.status(400).json({ error: 'title too long (max 500 chars)' });
+  if (typeof description === 'string' && description.length > 5000) return res.status(400).json({ error: 'description too long (max 5000 chars)' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
   const validProducts = ['Dashboard', 'Companion App', 'Infrastructure', 'Other'];
@@ -313,7 +315,7 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
       companionReward,
       xpEarned,
       goldEarned,
-      chainQuestTemplate: null,
+      chainQuestTemplate: quest.nextQuestTemplate || null,
       levelUp: newLevelInfo.level > prevLevel ? { level: newLevelInfo.level, title: newLevelInfo.title } : null,
     });
   }

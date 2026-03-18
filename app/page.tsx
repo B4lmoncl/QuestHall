@@ -15,8 +15,8 @@ const RitualChamber = lazy(() => import("@/components/RitualChamber"));
 import { GuideModal, GuideContent, TutorialOverlay, TUTORIAL_STEPS } from "@/components/TutorialModal";
 import {
   CreateQuestModal, PersonalQuestPanel, ForgeChallengesPanel, AntiRitualePanel,
-  RelationshipCoopPanel, DobbieQuestPanel, SmartSuggestionsPanel, LearningQuestPanel,
-  HouseholdQuestBoard, ThoughtfulHeroPanel, CategoryBadge, ProductBadge,
+  RelationshipCoopPanel, DobbieQuestPanel, SmartSuggestionsPanel,
+  CategoryBadge, ProductBadge,
   HumanInputBadge, TypeBadge, CreatorBadge, AgentBadge, RecurringBadge,
   CompletedQuestRow, PriorityBadge, ClickablePriorityBadge, EpicQuestCard, QuestCard,
   ChainQuestToast, AchievementToast, FlavorToast, EmptyState, SkeletonCard,
@@ -686,7 +686,7 @@ export default function Dashboard() {
                     { emoji: "", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc", iconSrc: "/images/icons/currency-mondstaub.png" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
-                      {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
+                      {c.iconSrc ? <img src={c.iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
                       <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
                         {c.value}
                       </span>
@@ -852,7 +852,7 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-w35">{CURRENT_SEASON.icon} Season & Battle Pass</span>
             </div>
-            {/* <BattlePassView users={users} quests={quests} /> */}
+
             <div className="rounded-2xl p-8 text-center" style={{ background: `linear-gradient(135deg, #1a1a1a 0%, ${CURRENT_SEASON.color}10 100%)`, border: `1px solid ${CURRENT_SEASON.color}25`, boxShadow: `0 0 40px ${CURRENT_SEASON.color}08` }}>
               <p className="text-4xl mb-3" style={{ opacity: 0.5 }}>{CURRENT_SEASON.icon}</p>
               <h3 className="text-lg font-bold mb-2" style={{ color: `${CURRENT_SEASON.color}90` }}>Coming Soon</h3>
@@ -1747,8 +1747,8 @@ export default function Dashboard() {
           onComplete={async ({ name: newName, apiKey, accessToken: token }) => {
             setOnboardingOpen(false);
             if (token) setAccessToken(token);
-            localStorage.setItem("dash_api_key", apiKey);
-            localStorage.setItem("dash_player_name", newName);
+            try { localStorage.setItem("dash_api_key", apiKey); } catch { /* private browsing */ }
+            try { localStorage.setItem("dash_player_name", newName); } catch { /* private browsing */ }
             setPlayerName(newName);
             setReviewApiKey(apiKey);
             setIsAdmin(false);
