@@ -651,6 +651,15 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
                   <p className="text-sm font-bold text-bright">{playerName}</p>
+                  {(loggedInUser as any).equippedTitle && (() => {
+                    const titleColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a855f7", legendary: "#f97316" };
+                    const tc = titleColors[(loggedInUser as any).equippedTitle.rarity] ?? "#9ca3af";
+                    return (
+                      <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: tc, background: `${tc}15` }}>
+                        {(loggedInUser as any).equippedTitle.name}
+                      </span>
+                    );
+                  })()}
                   {loggedInUser.classId && loggedInUser.classId !== "null" && (() => {
                     const cls = (classesList || []).find((c: any) => c.id === loggedInUser.classId);
                     return cls ? (
