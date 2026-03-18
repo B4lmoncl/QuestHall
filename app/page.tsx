@@ -45,7 +45,7 @@ import type {
 } from "@/app/types";
 import {
   fetchAgents, fetchQuests, fetchUsers, fetchCampaigns, fetchLeaderboard,
-  fetchAchievementCatalogue, fetchRituals, fetchHabits, fetchChangelog,
+  fetchAchievementCatalogue, fetchRituals, fetchHabits, fetchChangelog, fetchDashboard,
   createStarterQuestsIfNew, timeAgo, useCountUp, getSeason, CURRENT_SEASON,
   GUILD_LEVELS, getUserLevel, USER_LEVELS, getUserXpProgress, getForgeTempInfo,
   getQuestRarity, getAntiRitualMood, LB_LEVELS, getLbLevel,
@@ -230,56 +230,54 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handler);
   }, [apiError]);
   const refresh = useCallback(async () => {
-    const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(playerName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
-    // Lyra always first, then online/working agents, then rest
     const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
-    const sorted = [...a].sort((x, y) => {
+    const sortAgents = (a: Agent[]) => [...a].sort((x, y) => {
       if (x.id === "lyra") return -1;
       if (y.id === "lyra") return 1;
-      const sx = statusOrder[x.status] ?? 3;
-      const sy = statusOrder[y.status] ?? 3;
-      if (sx !== sy) return sx - sy;
-      return x.name.localeCompare(y.name);
+      return (statusOrder[x.status] ?? 3) - (statusOrder[y.status] ?? 3) || x.name.localeCompare(y.name);
     });
-    setAgents(sorted);
-    setQuests(q);
-    setUsers(u);
-    if (lb.length > 0) setLeaderboard(lb);
-    if (ac.length > 0) setAchievementCatalogue(ac);
-    setCampaigns(camps);
-    if (playerName) {
-      fetchRituals(playerName).then(setRituals);
-      fetchHabits(playerName).then(setHabits);
-    }
-    try {
-      const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
-      setApiLive(r.ok);
-    } catch { setApiLive(false); }
-    try {
-      const npcUrl = playerName ? `/api/npcs/active?player=${encodeURIComponent(playerName.toLowerCase())}` : `/api/npcs/active`;
-      const r = await fetch(npcUrl, { signal: AbortSignal.timeout(2000) });
-      if (r.ok) { const d = await r.json(); setActiveNpcs(d.npcs || []); }
-    } catch { /* ignore */ }
-    if (playerName) {
+
+    // Try batch endpoint first (1 call instead of 14)
+    const batch = await fetchDashboard(playerName || undefined);
+    if (batch) {
+      setAgents(sortAgents(batch.agents));
+      setQuests(batch.quests);
+      setUsers(batch.users);
+      if (batch.achievements.length > 0) setAchievementCatalogue(batch.achievements);
+      setCampaigns(batch.campaigns);
+      setRituals(batch.rituals);
+      setHabits(batch.habits);
+      setFavorites(batch.favorites);
+      setActiveNpcs(batch.activeNpcs);
+      setApiLive(batch.apiLive);
+    } else {
+      // Fallback: individual fetches if batch endpoint not available
+      const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(playerName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
+      setAgents(sortAgents(a));
+      setQuests(q);
+      setUsers(u);
+      if (lb.length > 0) setLeaderboard(lb);
+      if (ac.length > 0) setAchievementCatalogue(ac);
+      setCampaigns(camps);
+      if (playerName) {
+        fetchRituals(playerName).then(setRituals);
+        fetchHabits(playerName).then(setHabits);
+      }
+      try { const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) }); setApiLive(r.ok); } catch { setApiLive(false); }
       try {
-        const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/favorites`, { signal: AbortSignal.timeout(2000) });
-        if (r.ok) { const d = await r.json(); setFavorites(d.favorites || []); }
+        const npcUrl = playerName ? `/api/npcs/active?player=${encodeURIComponent(playerName.toLowerCase())}` : `/api/npcs/active`;
+        const r = await fetch(npcUrl, { signal: AbortSignal.timeout(2000) });
+        if (r.ok) { const d = await r.json(); setActiveNpcs(d.npcs || []); }
       } catch { /* ignore */ }
+      if (playerName) {
+        try { const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/favorites`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); setFavorites(d.favorites || []); } } catch { /* ignore */ }
+      }
     }
-    // Fetch game version + changelog
-    try {
-      const r = await fetch(`/api/game-version`, { signal: AbortSignal.timeout(1500) });
-      if (r.ok) { const d = await r.json(); setGameVersion(d.version || "1.5.1"); }
-    } catch { /* ignore */ }
-    try {
-      const r = await fetch(`/api/changelog-data`, { signal: AbortSignal.timeout(2000) });
-      if (r.ok) { const d = await r.json(); if (Array.isArray(d)) setChangelogData(d); }
-    } catch { /* ignore */ }
+    // These lightweight calls remain separate (rarely change, small payloads)
+    try { const r = await fetch(`/api/game-version`, { signal: AbortSignal.timeout(1500) }); if (r.ok) { const d = await r.json(); setGameVersion(d.version || "1.5.1"); } } catch { /* ignore */ }
+    try { const r = await fetch(`/api/changelog-data`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); if (Array.isArray(d)) setChangelogData(d); } } catch { /* ignore */ }
     if (playerName) {
-      try {
-        const r = await fetch(`/api/quests/pool?player=${encodeURIComponent(playerName)}`, { signal: AbortSignal.timeout(2000) });
-        if (r.ok) { const d = await r.json(); if (d.lastRefresh) setLastPoolRefresh(new Date(d.lastRefresh)); }
-      } catch { /* ignore */ }
+      try { const r = await fetch(`/api/quests/pool?player=${encodeURIComponent(playerName)}`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); if (d.lastRefresh) setLastPoolRefresh(new Date(d.lastRefresh)); } } catch { /* ignore */ }
     }
     setLoading(false);
     setLastRefresh(new Date());
