@@ -24,7 +24,7 @@ interface CompanionData {
 }
 
 interface OnboardingWizardProps {
-  onComplete: (data: { name: string; apiKey: string; userId: string }) => void;
+  onComplete: (data: { name: string; apiKey: string; accessToken?: string; userId: string }) => void;
   onClose: () => void;
 }
 
@@ -91,6 +91,7 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
+  const [generatedAccessToken, setGeneratedAccessToken] = useState("");
 
   useEffect(() => {
     fetch("/api/classes")
@@ -189,6 +190,7 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
         return;
       }
       setGeneratedKey(data.apiKey);
+      if (data.accessToken) setGeneratedAccessToken(data.accessToken);
       setStep(5);
     } catch {
       setError("Verbindungsfehler. Bitte versuche es erneut.");
@@ -201,6 +203,7 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
     onComplete({
       name: name.trim(),
       apiKey: generatedKey,
+      accessToken: generatedAccessToken,
       userId: name.trim().toLowerCase().replace(/\s+/g, "_"),
     });
   };

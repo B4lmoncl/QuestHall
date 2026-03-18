@@ -2,10 +2,10 @@
 const router = require('express').Router();
 const { state, NPC_META, saveUsers, savePlayerProgress } = require('../lib/state');
 const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel } = require('../lib/helpers');
-const { requireApiKey } = require('../lib/middleware');
+const { requireAuth, requireSelf } = require('../lib/middleware');
 
-// PATCH /api/player/:name/profile — update profile settings [auth]
-router.patch('/api/player/:name/profile', requireApiKey, (req, res) => {
+// PATCH /api/player/:name/profile — update profile settings [auth + self]
+router.patch('/api/player/:name/profile', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
@@ -97,7 +97,7 @@ router.get('/api/player/:name', (req, res) => {
 });
 
 // GET /api/player/:name/notifications — check for pending class-activation notifications
-router.get('/api/player/:name/notifications', requireApiKey, (req, res) => {
+router.get('/api/player/:name/notifications', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const userRecord = state.users[uid];
   if (!userRecord) return res.status(404).json({ error: 'Player not found' });
@@ -145,7 +145,7 @@ router.get('/api/player/:name/companion', (req, res) => {
 });
 
 // POST /api/player/:name/companion/pet — pet the companion (bond XP for first 2x/day, unlimited petting)
-router.post('/api/player/:name/companion/pet', requireApiKey, (req, res) => {
+router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
@@ -206,7 +206,7 @@ router.get('/api/cv-export', (req, res) => {
 });
 
 // POST /api/player/:name/favorites — toggle a quest template as favorite
-router.post('/api/player/:name/favorites', requireApiKey, (req, res) => {
+router.post('/api/player/:name/favorites', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   if (!state.users[uid]) return res.status(404).json({ error: 'Player not found' });
   const pp = getPlayerProgress(uid);
@@ -253,7 +253,7 @@ router.get('/api/changelog-data', (req, res) => {
 });
 
 // POST /api/player/:name/seen-version — update last seen version
-router.post('/api/player/:name/seen-version', requireApiKey, (req, res) => {
+router.post('/api/player/:name/seen-version', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   if (!state.users[uid]) return res.status(404).json({ error: 'Player not found' });
   const pp = getPlayerProgress(uid);

@@ -6,6 +6,7 @@ import { InfoTooltip } from "@/components/InfoTooltip";
 import { RARITY_COLORS } from "@/components/QuestBoard";
 import { getQuestRarity } from "@/app/utils";
 import { SFX } from "@/lib/sounds";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Companions Widget (always visible on Quest Board) ───────────────────────
 
@@ -128,7 +129,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
     try {
       const r = await fetch(`/api/quest/${questId}/complete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(apiKey) },
         body: JSON.stringify({ agentId: playerName }),
       });
       if (r.ok) {
@@ -221,7 +222,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
     try {
       const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/companion/pet`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { ...getAuthHeaders(apiKey) },
       });
       const d = await r.json();
       if (r.ok) {

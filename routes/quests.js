@@ -1,8 +1,8 @@
 // ─── Quest API ──────────────────────────────────────────────────────────────────
 const router = require('express').Router();
-const { state, PLAYER_QUEST_TYPES, NPC_NAMES, ADMIN_KEY, XP_BY_PRIORITY, saveQuests, saveData, savePlayerProgress, saveQuestCatalog } = require('../lib/state');
+const { state, PLAYER_QUEST_TYPES, NPC_NAMES, XP_BY_PRIORITY, saveQuests, saveData, savePlayerProgress, saveQuestCatalog } = require('../lib/state');
 const { now, getPlayerProgress, getLevelInfo, onQuestCompletedByUser, awardXP, awardAgentGold, updateAgentStreak, randGold } = require('../lib/helpers');
-const { requireApiKey, getMasterKey } = require('../lib/middleware');
+const { requireApiKey } = require('../lib/middleware');
 const { rebuildCatalogMeta } = require('../lib/quest-catalog');
 
 // ─── Quest Pool (used by GET /api/quests and exported for config-admin) ──────
@@ -100,9 +100,7 @@ router.post('/api/quest', requireApiKey, (req, res) => {
   const isAgentCreated = !HUMAN_CREATORS.includes(resolvedCreatedBy.toLowerCase());
   const resolvedType = type || 'development';
   const isPlayerQuestType = PLAYER_QUEST_TYPES.includes(resolvedType);
-  const incomingKey = req.headers['x-api-key'];
-  const masterKey = getMasterKey();
-  const isAdminKey = (incomingKey === masterKey) || (incomingKey === ADMIN_KEY);
+  const isAdminKey = !!(req.auth && req.auth.isAdmin);
   // If suggest=true or non-admin creates a development quest, set to suggested
   const forceSuggested = suggest === true;
   const questStatus = forceSuggested ? 'suggested' : ((isPlayerQuestType || !isAgentCreated) ? 'open' : 'suggested');

@@ -1,12 +1,19 @@
 /**
- * User System Routes — player registration, auth, XP, streaks, achievements.
+ * User System Routes — player registration, auth (JWT), XP, streaks, achievements.
  */
 const crypto = require('crypto');
-const { state, ADMIN_KEY, LEVELS, QUEST_FLAVOR, CAMPAIGN_NPCS, DEFAULT_CURRENCIES, ensureUserCurrencies, saveUsers, saveClasses, saveManagedKeys } = require('../lib/state');
+const { state, LEVELS, QUEST_FLAVOR, CAMPAIGN_NPCS, DEFAULT_CURRENCIES, ensureUserCurrencies, saveUsers, saveClasses, saveManagedKeys } = require('../lib/state');
 const { now, getLevelInfo, calcDynamicForgeTemp, onQuestCompletedByUser, createCompanionQuestsForUser } = require('../lib/helpers');
-const { requireApiKey, getMasterKey } = require('../lib/middleware');
+const { requireAuth, requireMasterKey, getMasterKey } = require('../lib/middleware');
+const { generateTokenPair, setRefreshCookie, clearRefreshCookie, getRefreshTokenFromRequest, verifyRefreshToken, revokeRefreshToken, resolveAuth } = require('../lib/auth');
 
 const router = require('express').Router();
+
+// ─── Helper: determine admin status for a user ─────────────────────────────
+function isUserAdmin(user) {
+  const master = getMasterKey();
+  return !!(user.apiKey && user.apiKey === master);
+}
 
 // GET /api/users
 router.get('/api/users', (req, res) => {
@@ -48,7 +55,7 @@ router.get('/api/users/:id', (req, res) => {
 });
 
 // POST /api/users/:id/register — create or update user
-router.post('/api/users/:id/register', requireApiKey, (req, res) => {
+router.post('/api/users/:id/register', requireAuth, (req, res) => {
   const id = req.params.id.toLowerCase();
   const { name, avatar, color } = req.body;
   if (!state.users[id]) {
@@ -64,7 +71,7 @@ router.post('/api/users/:id/register', requireApiKey, (req, res) => {
 });
 
 // POST /api/users/:id/award-xp — award XP to a user
-router.post('/api/users/:id/award-xp', requireApiKey, (req, res) => {
+router.post('/api/users/:id/award-xp', requireAuth, (req, res) => {
   const id = req.params.id.toLowerCase();
   if (!state.users[id]) return res.status(404).json({ error: 'User not found' });
   const { amount = 10, reason } = req.body;
@@ -110,20 +117,18 @@ router.get('/api/campaign/npcs', (req, res) => {
   res.json(CAMPAIGN_NPCS);
 });
 
-// GET /api/auth/check — check API key validity and admin status
+// ─── Auth endpoints ─────────────────────────────────────────────────────────
+
+// GET /api/auth/check — check token/key validity and admin status
 router.get('/api/auth/check', (req, res) => {
-  const key = req.headers['x-api-key'];
-  if (!key || !state.validApiKeys.has(key)) {
+  const auth = resolveAuth(req);
+  if (!auth) {
     return res.json({ isAdmin: false, name: null, valid: false });
   }
-  const master = getMasterKey();
-  const isAdmin = (key === master) || (key === ADMIN_KEY);
-  // Find user with this API key
-  const user = Object.values(state.users).find(u => u.apiKey === key);
-  return res.json({ isAdmin, name: user ? user.name : null, userId: user ? user.id : null, valid: true });
+  return res.json({ isAdmin: auth.isAdmin, name: auth.userName, userId: auth.userId, valid: true });
 });
 
-// POST /api/auth/login — validate name + password (returns apiKey for internal use)
+// POST /api/auth/login — validate name + password, return JWT tokens
 router.post('/api/auth/login', async (req, res) => {
   const { name, password } = req.body;
   if (!name || !password) return res.status(400).json({ success: false, error: 'Name and password required' });
@@ -143,25 +148,60 @@ router.post('/api/auth/login', async (req, res) => {
     if (password !== user.apiKey) return res.json({ success: false, error: 'Invalid name or password' });
   }
 
-  const master = getMasterKey();
-  const isAdmin = (user.apiKey === master) || (user.apiKey === ADMIN_KEY);
+  const admin = isUserAdmin(user);
+  // Tag admin status for token generation
+  user._isAdmin = admin;
+
+  const { accessToken, refreshToken } = generateTokenPair(user);
+  setRefreshCookie(res, refreshToken);
 
   return res.json({
     success: true,
+    accessToken,
+    // Keep apiKey in response for backward compat (agents, Electron app)
     apiKey: user.apiKey,
     userId: user.id,
     name: user.name,
-    isAdmin,
+    isAdmin: admin,
   });
+});
+
+// POST /api/auth/refresh — exchange refresh token for new access token
+router.post('/api/auth/refresh', (req, res) => {
+  const token = getRefreshTokenFromRequest(req);
+  if (!token) return res.status(401).json({ error: 'No refresh token' });
+
+  const decoded = verifyRefreshToken(token);
+  if (!decoded) return res.status(401).json({ error: 'Invalid or expired refresh token' });
+
+  const user = state.users[decoded.sub];
+  if (!user) return res.status(401).json({ error: 'User not found' });
+
+  user._isAdmin = isUserAdmin(user);
+
+  // Rotate: revoke old refresh token, issue new pair
+  revokeRefreshToken(token);
+  const { accessToken, refreshToken: newRefresh } = generateTokenPair(user);
+  setRefreshCookie(res, newRefresh);
+
+  return res.json({ accessToken, userId: user.id, name: user.name, isAdmin: user._isAdmin });
+});
+
+// POST /api/auth/logout — revoke refresh token
+router.post('/api/auth/logout', (req, res) => {
+  const token = getRefreshTokenFromRequest(req);
+  if (token) revokeRefreshToken(token);
+  clearRefreshCookie(res);
+  return res.json({ success: true });
 });
 
 // POST /api/auth/set-password — migration: set password for existing user
 router.post('/api/auth/set-password', async (req, res) => {
-  const key = req.headers['x-api-key'];
-  if (!key) return res.status(401).json({ error: 'Unauthorized' });
+  const auth = resolveAuth(req);
+  if (!auth || !auth.userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const user = Object.values(state.users).find(u => u.apiKey === key);
-  if (!user) return res.status(401).json({ error: 'Invalid key' });
+  const user = state.users[auth.userId];
+  if (!user) return res.status(401).json({ error: 'User not found' });
 
   const { password } = req.body;
   if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
@@ -173,7 +213,7 @@ router.post('/api/auth/set-password', async (req, res) => {
   return res.json({ success: true, message: 'Password set' });
 });
 
-// POST /api/register — register a new player
+// POST /api/register — register a new player (returns JWT tokens)
 router.post('/api/register', async (req, res) => {
   const { name, password, age, goals, pronouns, classId, companion, relationshipStatus, partnerName } = req.body;
   if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
@@ -184,7 +224,7 @@ router.post('/api/register', async (req, res) => {
   // Check if name already taken
   const existing = Object.values(state.users).find(u => u.name.toLowerCase() === nameLower);
   if (existing) return res.status(409).json({ error: 'Name already taken' });
-  // Generate API key + hash password
+  // Generate API key (legacy compat) + hash password
   const bcrypt = require('bcryptjs');
   const apiKey = crypto.randomBytes(16).toString('hex');
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -241,7 +281,7 @@ router.post('/api/register', async (req, res) => {
     } : null,
   };
   ensureUserCurrencies(state.users[finalId]);
-  // Add to managed keys
+  // Add to managed keys (legacy compat for agents)
   const entry = { key: apiKey, label: `Player: ${trimmedName}`, created: now() };
   state.managedKeys.push(entry);
   state.validApiKeys.add(apiKey);
@@ -252,7 +292,14 @@ router.post('/api/register', async (req, res) => {
     createCompanionQuestsForUser(finalId);
   }
   console.log(`[register] new player: ${trimmedName} (${finalId}) class=${resolvedClassId || 'none'} companion=${companion ? companion.name : 'none'}`);
-  res.json({ name: trimmedName, apiKey, userId: finalId });
+
+  // Generate JWT tokens for the new user
+  const newUser = state.users[finalId];
+  newUser._isAdmin = false;
+  const { accessToken, refreshToken } = generateTokenPair(newUser);
+  setRefreshCookie(res, refreshToken);
+
+  res.json({ name: trimmedName, accessToken, apiKey, userId: finalId });
 });
 
 module.exports = router;

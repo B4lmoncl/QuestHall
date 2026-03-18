@@ -6,6 +6,7 @@ import type {
 } from "@/app/types";
 import { timeAgo } from "@/app/utils";
 import { RecurringBadge } from "./QuestBadges";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Create Quest Modal ──────────────────────────────────────────────────────
 export function CreateQuestModal({ quests, users, reviewApiKey, onRefresh, onClose }: {
@@ -91,7 +92,7 @@ export function PersonalQuestPanel({ reviewApiKey, onRefresh }: {
     try {
       const r = await fetch("/api/personal-templates/spawn", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ templateId, createdBy: "leon" }),
       });
       if (r.ok) {
@@ -215,7 +216,7 @@ export function ForgeChallengesPanel({ users, reviewApiKey, onRefresh }: {
     try {
       await fetch("/api/challenges/join", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ userId: joinUserId, challengeId }),
       });
       const updated = await fetch("/api/challenges").then(r => r.ok ? r.json() : challenges);
@@ -322,7 +323,7 @@ export function RelationshipCoopPanel({ users, reviewApiKey, onRefresh }: {
     try {
       const res = await fetch("/api/quest", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: template.title,
           description: template.description,
@@ -449,7 +450,7 @@ export function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
     try {
       const res = await fetch("/api/quest", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: template.name,
           description: `Learning quest chain: ${template.name}`,
@@ -463,7 +464,7 @@ export function LearningQuestPanel({ quests, reviewApiKey, onRefresh }: {
       for (const step of template.steps) {
         await fetch("/api/quest", {
           method: "POST",
-          headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
           body: JSON.stringify({
             title: step,
             priority: "low",
@@ -578,7 +579,7 @@ export function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: 
     try {
       await fetch("/api/quests/household-rotate", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ assignees: users.map(u => u.id) }),
       });
       onRefresh();
@@ -593,7 +594,7 @@ export function HouseholdQuestBoard({ quests, users, reviewApiKey, onRefresh }: 
     try {
       await fetch("/api/quest", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: chore.title,
           type: "personal",
@@ -701,7 +702,7 @@ export function ThoughtfulHeroPanel({ quests, reviewApiKey, onRefresh }: {
     try {
       await fetch("/api/quest", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: prompt.title,
           description: prompt.desc,

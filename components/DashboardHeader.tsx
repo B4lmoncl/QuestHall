@@ -4,6 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import type { User, Quest, QuestsData } from "@/app/types";
 import { createStarterQuestsIfNew, CURRENT_SEASON } from "@/app/utils";
 import { SFX } from "@/lib/sounds";
+import { setAccessToken, clearAuth } from "@/lib/auth-client";
 
 interface DashboardHeaderProps {
   dashView: string;
@@ -87,6 +88,8 @@ export default function DashboardHeader({
     });
     const data = await r.json();
     if (data.success) {
+      // Store JWT access token in memory, API key in localStorage as fallback
+      setAccessToken(data.accessToken || null);
       localStorage.setItem("dash_api_key", data.apiKey);
       localStorage.setItem("dash_player_name", data.name);
       setPlayerName(data.name);
@@ -112,6 +115,7 @@ export default function DashboardHeader({
     const data = await r.json();
     if (r.ok) {
       setRegisterSuccess(true);
+      setAccessToken(data.accessToken || null);
       localStorage.setItem("dash_api_key", data.apiKey);
       localStorage.setItem("dash_player_name", data.name);
       setPlayerName(data.name);
@@ -128,8 +132,9 @@ export default function DashboardHeader({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("dash_api_key");
-    localStorage.removeItem("dash_player_name");
+    // Revoke refresh token on server + clear local state
+    fetch("/api/auth/logout", { method: "POST", credentials: "include" }).catch(() => {});
+    clearAuth();
     setReviewApiKey("");
     setPlayerName("");
     setIsAdmin(false);

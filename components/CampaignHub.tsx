@@ -5,6 +5,7 @@ import { Campaign, CampaignQuest, Quest, QuestsData } from "@/app/types";
 import { timeAgo } from "@/app/utils";
 import { priorityConfig } from "@/app/config";
 import { useModalBehavior } from "@/components/ModalPortal";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Campaign Hub ──────────────────────────────────────────────────────────────
 const CAMPAIGN_ICONS = ["●","◆","★","◇","■","▲","◉","▣","✦","⬡","◈","▶","◎","△","□","⬢"];
@@ -82,7 +83,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
     try {
       const r = await fetch("/api/campaigns", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: form.title.trim(),
           description: form.description.trim(),
@@ -106,7 +107,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
   const handleDelete = async (id: string) => {
     if (!reviewApiKey) return;
     try {
-      await fetch(`/api/campaigns/${id}`, { method: "DELETE", headers: { "X-API-Key": reviewApiKey } });
+      await fetch(`/api/campaigns/${id}`, { method: "DELETE", headers: { ...getAuthHeaders(reviewApiKey) } });
       setDeleteConfirm(null);
       if (expandedId === id) setExpandedId(null);
       onRefresh();
