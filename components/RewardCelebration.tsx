@@ -129,16 +129,20 @@ export function RewardCelebration({ data, onClose, onCollect }: RewardCelebratio
     else SFX.questComplete();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Lock body scroll while mounted
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
+
   // ESC to collect & close
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") { if (onCollect) onCollect(data); onClose(); }
     };
     document.addEventListener("keydown", handler);
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", handler);
-      document.body.style.overflow = "";
     };
   }, [onClose, onCollect, data]);
 
