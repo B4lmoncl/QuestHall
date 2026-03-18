@@ -6,6 +6,8 @@ const {
 } = require('../lib/state');
 const {
   now, todayStr, getStreakXpBonus, getLevelInfo,
+  getXpMultiplier, getGoldMultiplier, getUserGear, getQuestHoardingMalus,
+  hasPassiveEffect, consumePassiveEffect, awardUserGold,
   getUserDropBonus, rollLoot, addLootToInventory, resetLootPity,
   checkAndAwardAchievements,
 } = require('../lib/helpers');
@@ -222,10 +224,30 @@ router.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
   let milestoneDrop = null;
 
   if (u) {
+    // Apply full multiplier chain (same as quest completion)
+    const xpBase = ritual.rewards.xp || 15;
     const streakBonus = getStreakXpBonus(ritual.streak);
-    const xpAmount = Math.round((ritual.rewards.xp || 15) * (1 + streakBonus));
+    const xpMulti = getXpMultiplier(uid);
+    const gear = getUserGear(uid);
+    const gearBonus = 1 + (gear.xpBonus || 0) / 100;
+    const companionIds = ['ember_sprite', 'lore_owl', 'gear_golem'];
+    const earnedIds = new Set((u.earnedAchievements || []).map(a => a.id));
+    const companionBonus = 1 + 0.02 * companionIds.filter(id => earnedIds.has(id)).length;
+    const bondBonus = 1 + 0.01 * Math.max(0, (u.companion?.bondLevel ?? 1) - 1);
+    const hoardingMalus = getQuestHoardingMalus(uid).multiplier;
+    let passiveXpBonus = 1;
+    if (hasPassiveEffect(uid, 'xp_boost_10')) passiveXpBonus += 0.10;
+    if (hasPassiveEffect(uid, 'xp_boost_5')) passiveXpBonus += 0.05;
+    const xpAmount = Math.round(xpBase * (1 + streakBonus) * xpMulti * gearBonus * companionBonus * bondBonus * hoardingMalus * passiveXpBonus);
     u.xp = (u.xp || 0) + xpAmount;
-    u.gold = (u.gold || 0) + (ritual.rewards.gold || 5);
+
+    // Gold with full multiplier chain
+    const goldBase = ritual.rewards.gold || 5;
+    const goldMulti = getGoldMultiplier(uid);
+    const streakGoldMulti = Math.min(1 + (u.streakDays || 0) * 0.015, 1.45);
+    let goldEarned = Math.round(goldBase * goldMulti * streakGoldMulti);
+    if (consumePassiveEffect(uid, 'gold_boost_next')) goldEarned *= 2;
+    u.gold = (u.gold || 0) + goldEarned;
 
     // Milestone check
     const prevStreak = ritual.streak - 1;
