@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { RoadmapItem } from "@/app/types";
+import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
 
 const ROADMAP_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
@@ -10,7 +11,8 @@ const ROADMAP_STATUS_CONFIG: Record<string, { label: string; color: string; bg: 
   planned:     { label: "Planned",     color: "#9ca3af", bg: "rgba(156,163,175,0.08)", border: "rgba(156,163,175,0.2)", dot: "○" },
 };
 
-export function RoadmapView({ isAdmin, reviewApiKey }: { isAdmin: boolean; reviewApiKey: string }) {
+export function RoadmapView() {
+  const { isAdmin, reviewApiKey } = useDashboard();
   const [items, setItems] = useState<RoadmapItem[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);

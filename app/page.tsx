@@ -33,6 +33,7 @@ import { ModalPortal, useModalBehavior, ModalOverlay } from "@/components/ModalP
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardModals from "@/components/DashboardModals";
 import RitualChamber from "@/components/RitualChamber";
+import { DashboardProvider } from "@/app/DashboardContext";
 import QuestDetailModal from "@/components/QuestDetailModal";
 import { SFX } from "@/lib/sounds";
 import type {
@@ -537,7 +538,13 @@ export default function Dashboard() {
     return map;
   }, [quests.inProgress]);
 
+  const ctxValue = useMemo(() => ({
+    playerName, reviewApiKey, isAdmin, loggedInUser: loggedInUser ?? null,
+    users, quests, classesList, refresh,
+  }), [playerName, reviewApiKey, isAdmin, loggedInUser, users, quests, classesList, refresh]);
+
   return (
+    <DashboardProvider value={ctxValue}>
     <div className="min-h-screen text-primary" style={{ background: "transparent", position: "relative" }}>
       <GuildHallBackground />
       <DashboardHeader
@@ -816,13 +823,13 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <LeaderboardView entries={leaderboard} agents={agents} mode="players" users={users} classes={classesList} />
+            <LeaderboardView entries={leaderboard} agents={agents} mode="players" />
           </div>
         )}
 
         {/* Honors View — Player-specific */}
         {dashView === "honors" && (
-          <HonorsView catalogue={achievementCatalogue} users={users} playerName={playerName} quests={quests} reviewApiKey={reviewApiKey} />
+          <HonorsView catalogue={achievementCatalogue} />
         )}
 
         {/* Campaign View */}
@@ -861,9 +868,6 @@ export default function Dashboard() {
         {/* ── SHOP TAB ── */}
         {dashView === "shop" && (
           <ShopView
-            users={users}
-            playerName={playerName}
-            reviewApiKey={reviewApiKey}
             onBuy={handleShopBuy}
             onGearBuy={handleGearBuy}
           />
@@ -872,9 +876,6 @@ export default function Dashboard() {
         {/* ── VAULT OF FATE (GACHA) TAB ── */}
         {dashView === "gacha" && (
           <GachaView
-            users={users}
-            playerName={playerName}
-            reviewApiKey={reviewApiKey}
             onRefresh={refresh}
             onPullComplete={(items) => { items.forEach((item: any, i: number) => { setTimeout(() => addToast({ type: "flavor", message: `${item.item?.name || "Item"} collected!`, icon: item.item?.icon || "/images/icons/vault-of-fate.png", sub: item.item?.rarity || "common" }), i * 50); }); }}
           />
@@ -882,7 +883,7 @@ export default function Dashboard() {
 
         {/* ── ROADMAP TAB ── */}
         {dashView === "roadmap" && (
-          <RoadmapView isAdmin={isAdmin} reviewApiKey={reviewApiKey} />
+          <RoadmapView />
         )}
 
         {/* ── CHANGELOG TAB ── */}
@@ -1205,13 +1206,13 @@ export default function Dashboard() {
 
                   {/* ── Rituale Tab ── */}
                   {questBoardTab === "rituale" && (
-                    <RitualChamber rituals={rituals} playerName={playerName} reviewApiKey={reviewApiKey} setRituals={setRituals} refresh={refresh} setRewardCelebration={setRewardCelebration} />
+                    <RitualChamber rituals={rituals} setRituals={setRituals} setRewardCelebration={setRewardCelebration} />
                   )}
 
                   {/* ── Anti-Rituale Tab ── */}
                   {questBoardTab === "anti-rituale" && (
                     <div data-feedback-id="vow-shrine">
-                    <AntiRitualePanel playerName={playerName} reviewApiKey={reviewApiKey} onRewardCelebration={setRewardCelebration} />
+                    <AntiRitualePanel onRewardCelebration={setRewardCelebration} />
                     </div>
                   )}
 
@@ -1240,7 +1241,7 @@ export default function Dashboard() {
 
         {/* ── CHARACTER TAB ── */}
         {dashView === "character" && playerName && (
-          <CharacterView playerName={playerName} apiKey={reviewApiKey} users={users} classesList={classesList} addToast={addToast} />
+          <CharacterView addToast={addToast} />
         )}
 
         {/* ── THE WANDERER'S REST (NPC Tab) ── */}
@@ -1257,8 +1258,6 @@ export default function Dashboard() {
               activeNpcs={activeNpcs}
               selectedNpc={selectedNpc}
               setSelectedNpc={setSelectedNpc}
-              isAdmin={isAdmin}
-              reviewApiKey={reviewApiKey}
               selectedIds={selectedIds}
               toggleSelect={toggleSelect}
               sortMode={sortMode}
@@ -1277,10 +1276,7 @@ export default function Dashboard() {
               dobbieOpen={dobbieOpen}
               setDobbieOpen={setDobbieOpen}
               loading={loading}
-              quests={quests}
-              playerName={playerName}
               petName={loggedInUser?.companion?.name}
-              refresh={refresh}
               devVisibleOpen={devVisibleOpen}
               devVisibleInProgress={devVisibleInProgress}
               lyraQuestsOpen={lyraQuestsOpen}
@@ -1671,7 +1667,7 @@ export default function Dashboard() {
             </div>
             {/* Content */}
             <div style={{ overflowY: "auto", flex: 1, padding: "1.25rem" }}>
-              {infoOverlayTab === "roadmap" && <RoadmapView isAdmin={isAdmin} reviewApiKey={reviewApiKey} />}
+              {infoOverlayTab === "roadmap" && <RoadmapView />}
               {infoOverlayTab === "changelog" && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 pb-1">
@@ -1850,6 +1846,7 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+    </DashboardProvider>
   );
 }
 

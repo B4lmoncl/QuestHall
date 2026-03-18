@@ -5,6 +5,7 @@ import { ModalPortal, useModalBehavior } from "@/components/ModalPortal";
 import { fetchRituals } from "@/app/utils";
 import { getAuthHeaders } from "@/lib/auth-client";
 import { STREAK_MILESTONES_CLIENT } from "@/app/config";
+import { useDashboard } from "@/app/DashboardContext";
 import type { Ritual } from "@/app/types";
 import type { RewardCelebrationData } from "@/components/RewardCelebration";
 
@@ -38,14 +39,12 @@ function getSeraineSpeech(commitment: string, bloodPact: boolean): string {
 
 interface RitualChamberProps {
   rituals: Ritual[];
-  playerName: string;
-  reviewApiKey: string;
   setRituals: (rituals: Ritual[]) => void;
-  refresh: () => Promise<void>;
   setRewardCelebration: (data: RewardCelebrationData | null) => void;
 }
 
-export default function RitualChamber({ rituals, playerName, reviewApiKey, setRituals, refresh, setRewardCelebration }: RitualChamberProps) {
+export default function RitualChamber({ rituals, setRituals, setRewardCelebration }: RitualChamberProps) {
+  const { playerName, reviewApiKey, refresh } = useDashboard();
   const [createRitualOpen, setCreateRitualOpen] = useState(false);
   const [newRitualTitle, setNewRitualTitle] = useState("");
   const [ritualNameError, setRitualNameError] = useState(false);

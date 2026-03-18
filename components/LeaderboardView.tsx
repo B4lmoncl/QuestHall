@@ -1,6 +1,7 @@
 "use client";
 
 import type { LeaderboardEntry, Agent, User } from "@/app/types";
+import { useDashboard } from "@/app/DashboardContext";
 import { getLbLevel } from "@/app/utils";
 
 const agentMetaLb: Record<string, { avatar: string; color: string }> = {
@@ -48,13 +49,12 @@ type PlayerEntry = LeaderboardEntry & {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
-export default function LeaderboardView({ entries, agents, mode = "agents", users = [], classes = [] }: {
+export default function LeaderboardView({ entries, agents, mode = "agents" }: {
   entries: LeaderboardEntry[];
   agents: Agent[];
   mode?: "agents" | "players";
-  users?: User[];
-  classes?: { id: string; fantasy: string; icon: string }[];
 }) {
+  const { users, classesList: classes } = useDashboard();
   const classMap = new Map(classes.map(c => [c.id, c]));
   const agentIdSet = new Set(agents.map(a => a.id));
 

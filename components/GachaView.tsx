@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, useId, useMemo } from "react";
 import type { User, GachaPullResult, GachaBanner, GachaPityInfo } from "@/app/types";
+import { useDashboard } from "@/app/DashboardContext";
 import GachaPull, { RARITY_CONFIG } from "./GachaPull";
 import { ModalOverlay } from "./ModalPortal";
 import { getAuthHeaders } from "@/lib/auth-client";
@@ -650,13 +651,11 @@ function BannerPullModal({
 }
 
 // ─── Main GachaView ──────────────────────────────────────────────────────────
-export default function GachaView({ users, playerName, reviewApiKey, onRefresh, onPullComplete }: {
-  users: User[];
-  playerName: string;
-  reviewApiKey: string;
+export default function GachaView({ onRefresh, onPullComplete }: {
   onRefresh?: () => void;
   onPullComplete?: (items: any[]) => void;
 }) {
+  const { users, playerName, reviewApiKey } = useDashboard();
   const [banners, setBanners] = useState<GachaBanner[]>([]);
   const [pity, setPity] = useState<GachaPityInfo | null>(null);
   const [pulling, setPulling] = useState(false);

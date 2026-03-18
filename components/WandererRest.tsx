@@ -8,6 +8,7 @@ import {
   ClickablePriorityBadge, CategoryBadge, ProductBadge, PriorityBadge,
 } from "@/components/QuestBoard";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { useDashboard } from "@/app/DashboardContext";
 import { getCompanionColor as getCC, getCompanionPortrait as getCompanionPortraitWR } from "@/lib/companion-config";
 interface WandererRestProps {
   npcBoardFilter: string | null;
@@ -15,8 +16,6 @@ interface WandererRestProps {
   activeNpcs: ActiveNpc[];
   selectedNpc: ActiveNpc | null;
   setSelectedNpc: (npc: ActiveNpc | null) => void;
-  isAdmin: boolean;
-  reviewApiKey: string;
   selectedIds: Set<string>;
   toggleSelect: (id: string) => void;
   sortMode: "rarity" | "newest";
@@ -35,10 +34,7 @@ interface WandererRestProps {
   dobbieOpen: boolean;
   setDobbieOpen: (fn: (v: boolean) => boolean) => void;
   loading: boolean;
-  quests: QuestsData;
-  playerName: string;
   petName?: string;
-  refresh: () => void;
   devVisibleOpen: Quest[];
   devVisibleInProgress: Quest[];
   lyraQuestsOpen: Quest[];
@@ -106,7 +102,6 @@ const rarityStars: Record<string, string> = { common: "★", uncommon: "★★",
 export function WandererRest({
   npcBoardFilter, setNpcBoardFilter,
   activeNpcs, selectedNpc, setSelectedNpc,
-  isAdmin, reviewApiKey,
   selectedIds, toggleSelect,
   sortMode, setSortMode,
   searchFilter, setSearchFilter,
@@ -115,12 +110,13 @@ export function WandererRest({
   handleApprove, handleReject, handleChangePriority,
   reviewComments, setReviewComments,
   dobbieOpen, setDobbieOpen,
-  loading, quests, playerName, petName, refresh,
+  loading, petName,
   devVisibleOpen, devVisibleInProgress,
   lyraQuestsOpen, lyraQuestsInProgress, lyraAllQuests,
   handleClaim, handleUnclaim, handleComplete,
   streak, user,
 }: WandererRestProps) {
+  const { isAdmin, reviewApiKey, quests, playerName, refresh } = useDashboard();
   // Sync selectedNpc with fresh data when activeNpcs updates (e.g. after claim/complete)
   useEffect(() => {
     if (!selectedNpc) return;

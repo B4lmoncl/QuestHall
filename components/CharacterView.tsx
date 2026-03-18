@@ -6,6 +6,7 @@ import { useModalBehavior } from "@/components/ModalPortal";
 import ItemActionPopup from "@/components/ItemActionPopup";
 import type { User, CharacterData, ClassDef, PixelCharacterProps } from "@/app/types";
 import type { ToastInput } from "@/components/ToastStack";
+import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── PixelCharacter Canvas Component ─────────────────────────────────────────
@@ -598,7 +599,8 @@ function GearSlotRow({ slot, iconSrc, label, item, onUnequip, unequipping }: {
   );
 }
 
-export default function CharacterView({ playerName, apiKey, users, classesList, addToast }: { playerName: string; apiKey: string; users: User[]; classesList: ClassDef[]; addToast?: (t: ToastInput) => void }) {
+export default function CharacterView({ addToast }: { addToast?: (t: ToastInput) => void }) {
+  const { playerName, reviewApiKey: apiKey, users, classesList } = useDashboard();
   const [charData, setCharData] = useState<CharacterData | null>(null);
   const [loading, setLoading] = useState(true);
   const [equipping, setEquipping] = useState<string | null>(null);
