@@ -943,11 +943,11 @@ export default function Dashboard() {
               {/* Name + level + XP bar */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-0.5">
-                  <p className="text-sm font-bold" style={{ color: "#f0f0f0" }}>{playerName}</p>
+                  <p className="text-sm font-bold text-bright">{playerName}</p>
                   {loggedInUser.classId && loggedInUser.classId !== "null" && (() => {
                     const cls = (classesList || []).find((c: any) => c.id === loggedInUser.classId);
                     return cls ? (
-                      <span className="text-xs px-1.5 py-0.5 rounded font-medium" style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-medium text-w40 bg-w6 border-w10">
                         {cls.name}
                       </span>
                     ) : null;
@@ -961,7 +961,7 @@ export default function Dashboard() {
                     style={{ width: `${(playerLevelInfo.progress * 100).toFixed(1)}%`, background: "linear-gradient(90deg, #7c3aed, #a78bfa)" }}
                   />
                 </div>
-                <p className="text-xs mt-1 font-mono" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <p className="text-xs mt-1 font-mono text-w20">
                   {playerLevelInfo.xpInLevel} {playerLevelInfo.xpForLevel ? `/ ${playerLevelInfo.xpForLevel} XP` : "(max)"}
                 </p>
               </div>
@@ -969,7 +969,7 @@ export default function Dashboard() {
               {/* Right side: Currencies + Forge */}
               <div className="flex flex-col items-end gap-2 flex-shrink-0">
                 {/* Currency bar — prominent like HSR/Genshin */}
-                <div className="flex items-center gap-3 rounded-xl px-3 py-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="flex items-center gap-3 rounded-xl px-3 py-2 bg-w4 border-w8">
                   {[
                     { emoji: "", key: "gold" as const, value: Number(loggedInUser?.currencies?.gold ?? animGold), color: "#f59e0b", iconSrc: "/images/icons/currency-gold.png" },
                     { emoji: "", key: "stardust" as const, value: Number(loggedInUser?.currencies?.stardust ?? 0), color: "#a78bfa", iconSrc: "/images/icons/currency-stardust.png" },
@@ -997,7 +997,7 @@ export default function Dashboard() {
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
                   </div>
                   {/* Forge bar */}
-                  <div className="mt-1 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.06)", width: 120 }}>
+                  <div className="mt-1 rounded-full overflow-hidden bg-w6" style={{ height: 3, width: 120 }}>
                     <div
                       className="h-full rounded-full transition-all duration-700"
                       style={{ width: `${forgeTemp}%`, background: `linear-gradient(90deg, ${forgeTempColor}80, ${forgeTempColor})`, boxShadow: forgeTemp > 60 ? `0 0 6px ${forgeTempColor}80` : "none" }}
@@ -1005,14 +1005,14 @@ export default function Dashboard() {
                   </div>
                   {/* Tooltip */}
                   <div
-                    className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", minWidth: 380, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
+                    className="absolute right-0 top-full mt-1 rounded-xl p-3 text-xs leading-relaxed pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity bg-surface border-w12"
+                    style={{ minWidth: 380, boxShadow: "0 8px 32px rgba(0,0,0,0.6)", zIndex: 100 }}
                   >
-                    <p className="font-semibold mb-1" style={{ color: "#f0f0f0", fontSize: 14 }}>The Deepforge</p>
+                    <p className="font-semibold mb-1 text-bright" style={{ fontSize: 14 }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
                       Dein Aktivitäts-Level. Steigt mit jeder Quest, sinkt wenn du pausierst.
                     </p>
-                    <p className="mb-1.5 font-semibold" style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>Was bringt&apos;s?</p>
+                    <p className="mb-1.5 font-semibold text-w60" style={{ fontSize: 12 }}>Was bringt&apos;s?</p>
                     <div className="space-y-1.5 mb-3">
                       {[
                         { t: "0%", label: "Cold", bonus: "XP ×0.5 (Malus!)", color: "#4b5563" },
@@ -1094,7 +1094,7 @@ export default function Dashboard() {
               }}
               {...(v.tutorialKey ? { "data-tutorial": v.tutorialKey } : {})}
             >
-              {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={24} height={24} className={v.key === "gacha" ? "vault-nav-glow" : ""} style={{ imageRendering: "auto", opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
+              {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={24} height={24} className={`${v.key === "gacha" ? "vault-nav-glow" : ""} img-render-auto`} style={{ opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
               {v.label}
             </button>
             )
@@ -1105,13 +1105,13 @@ export default function Dashboard() {
         {dashView === "leaderboard" && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Proving Grounds</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-w35">The Proving Grounds</span>
               <InfoTooltip text="Rankings based on XP earned. Compete with other players to claim glory!" />
             </div>
             {/* Player cards */}
             {users.filter(u => !agents.some(a => a.id === u.id)).length > 0 && (
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>Adventurers</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-widest mb-3 text-w25">Adventurers</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
                   {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} />)}
                 </div>
@@ -1130,10 +1130,10 @@ export default function Dashboard() {
         {dashView === "campaign" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>The Observatory</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-w35">The Observatory</span>
             </div>
-            <div className="rounded-xl px-6 py-16 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <p className="text-lg font-bold mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Coming Soon</p>
+            <div className="rounded-xl px-6 py-16 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
+              <p className="text-lg font-bold mb-2 text-w25">Coming Soon</p>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>Das Observatory wird bald eröffnet. Halte Ausschau nach den Sternen.</p>
             </div>
           </div>
@@ -1143,13 +1143,13 @@ export default function Dashboard() {
         {dashView === "season" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{CURRENT_SEASON.icon} Season & Battle Pass</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-w35">{CURRENT_SEASON.icon} Season & Battle Pass</span>
             </div>
             {/* <BattlePassView users={users} quests={quests} /> */}
             <div className="rounded-2xl p-8 text-center" style={{ background: `linear-gradient(135deg, #1a1a1a 0%, ${CURRENT_SEASON.color}10 100%)`, border: `1px solid ${CURRENT_SEASON.color}25`, boxShadow: `0 0 40px ${CURRENT_SEASON.color}08` }}>
               <p className="text-4xl mb-3" style={{ opacity: 0.5 }}>{CURRENT_SEASON.icon}</p>
               <h3 className="text-lg font-bold mb-2" style={{ color: `${CURRENT_SEASON.color}90` }}>Coming Soon</h3>
-              <p className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.3)", maxWidth: 340, margin: "0 auto" }}>
+              <p className="text-xs mb-4 text-w30" style={{ maxWidth: 340, margin: "0 auto" }}>
                 The Season Pass is being forged anew. New rewards, tiers, and seasonal challenges are on the way.
               </p>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: `${CURRENT_SEASON.color}12`, border: `1px solid ${CURRENT_SEASON.color}30`, color: `${CURRENT_SEASON.color}` }}>
@@ -1190,20 +1190,20 @@ export default function Dashboard() {
         {dashView === "changelog" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Changelog</span>
-              <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>— recent commits from GitHub</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-w35">Changelog</span>
+              <span className="text-xs text-w20">— recent commits from GitHub</span>
             </div>
             {changelogLoading && (
-              <div className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>Loading commits…</div>
+              <div className="text-sm text-w30">Loading commits…</div>
             )}
             {!changelogLoading && changelog.length === 0 && (
-              <div className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No changelog data available.</div>
+              <div className="text-sm text-w25">No changelog data available.</div>
             )}
             {changelog.map(entry => (
               <div key={entry.date} className="space-y-1.5">
                 <div
-                  className="text-xs font-semibold uppercase tracking-widest pt-2 pb-1"
-                  style={{ color: "rgba(255,255,255,0.35)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+                  className="text-xs font-semibold uppercase tracking-widest pt-2 pb-1 text-w35"
+                  style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
                 >
                   {entry.date}
                 </div>
@@ -1228,7 +1228,7 @@ export default function Dashboard() {
                       >
                         {ts.badge}
                       </span>
-                      <span className="text-sm flex-1 leading-snug" style={{ color: "rgba(255,255,255,0.7)" }}>
+                      <span className="text-sm flex-1 leading-snug text-w70">
                         {c.message}
                       </span>
                       {c.sha && (
@@ -1237,14 +1237,14 @@ export default function Dashboard() {
                             href={c.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-xs font-mono shrink-0"
-                            style={{ color: "rgba(255,255,255,0.2)", textDecoration: "none" }}
+                            className="text-xs font-mono shrink-0 text-w20"
+                            style={{ textDecoration: "none" }}
                             title={`View commit ${c.sha}`}
                           >
                             {c.sha}
                           </a>
                         ) : (
-                          <span className="text-xs font-mono shrink-0" style={{ color: "rgba(255,255,255,0.2)" }}>{c.sha}</span>
+                          <span className="text-xs font-mono shrink-0 text-w20">{c.sha}</span>
                         )
                       )}
                     </div>
@@ -1291,7 +1291,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Quest Board</h2>
+                          <h2 className="text-xs font-semibold uppercase tracking-widest text-w40">Quest Board</h2>
                           <InfoTooltip text="Your personal quest board. Claim quests to start them, complete them to earn XP and Gold. Filter by type to find what interests you." />
                           <button
                             onClick={() => setXpInfoOpen(true)}
@@ -1299,7 +1299,7 @@ export default function Dashboard() {
                             style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", borderRadius: "50%", width: 16, height: 16, fontSize: 9, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}
                           >XP</button>
                         </div>
-                        <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
+                        <p className="text-xs mt-0.5 text-w25">
                           {playerName
                             ? `${boardOpen.length + playerVisibleInProgress.length} aktive Quests`
                             : "Logge dich ein · 0 verfügbar"}
