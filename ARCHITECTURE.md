@@ -17,7 +17,7 @@ Browser → Express (port 3001) → lib/state.js (in-memory) → /data/*.json (d
 |-----------|---------|----------|
 | `lib/` | Backend business logic (state, helpers, engines) | JS (CommonJS) |
 | `routes/` | Express route handlers (14 files) | JS (CommonJS) |
-| `app/` | Next.js app directory (page, types, utils) | TypeScript |
+| `app/` | Next.js app directory (page, types, utils, context) | TypeScript |
 | `components/` | React UI components (36 files) | TypeScript |
 | `public/data/` | Read-only game templates (JSON) | JSON |
 | `data/` | Runtime persistent data (Docker volume) | JSON |
@@ -39,7 +39,9 @@ On first boot, `ensureRuntimeFiles()` seeds `data/` with empty defaults. `seedMu
 
 ### State management (lib/state.js)
 
-All runtime data lives in the `state` object, which is a global singleton imported by all route files. Key fields:
+All runtime data lives in the `state` object, which is a global singleton imported by all route files.
+
+#### Primary data
 
 | Field | Type | Description |
 |-------|------|-------------|
@@ -50,10 +52,35 @@ All runtime data lives in the `state` object, which is a global singleton import
 | `state.habits` | Array | Tracked habits |
 | `state.npcState` | Object | Active NPCs, cooldowns, quest IDs |
 | `state.gachaState` | Object (keyed by playerId) | Pity counters, pull history |
-| `state.questCatalogById` | Map | O(1) quest template lookup |
-| `state.gearById` | Map | O(1) gear item lookup |
-| `state.itemTemplates` | Map | O(1) consumable item lookup |
-| `state.validApiKeys` | Set | Valid API keys for auth |
+
+#### O(1) lookup Maps (IMPORTANT — always use these instead of array scans)
+
+| Map | Keyed by | Description |
+|-----|----------|-------------|
+| `state.questsById` | quest ID | O(1) quest lookup — **always use instead of `state.quests.find()`** |
+| `state.usersByName` | lowercase name | O(1) user lookup by name — **use for login/register** |
+| `state.usersByApiKey` | API key string | O(1) user lookup by API key — **use for auth** |
+| `state.questCatalogById` | template ID | O(1) quest template lookup |
+| `state.gearById` | gear item ID | O(1) gear item lookup |
+| `state.itemTemplates` | item ID | O(1) consumable item lookup |
+| `state.validApiKeys` | (Set) | O(1) API key validation |
+
+#### Keeping Maps in sync
+
+When mutating `state.quests`:
+```js
+// After push:
+state.quests.push(quest);
+state.questsById.set(quest.id, quest);  // ← ALWAYS ADD THIS
+
+// After reassignment (filter/replace):
+state.quests = state.quests.filter(...);
+rebuildQuestsById();  // ← ALWAYS CALL THIS
+
+// After user creation:
+state.usersByName.set(name.toLowerCase(), user);
+state.usersByApiKey.set(apiKey, user);
+```
 
 ### Save pattern
 
@@ -61,7 +88,7 @@ Saves use **debouncing** (200ms) to coalesce rapid writes:
 ```js
 debouncedSave('users', () => writeFileSync(FILES.USERS, ...));
 ```
-On shutdown, `flushPendingSaves()` executes all pending writes immediately.
+On shutdown, `flushPendingSaves()` executes all pending saves immediately (not just cancels timers).
 
 **Important**: Saves are still synchronous (`writeFileSync`). The debounce prevents thrashing, but each write blocks the event loop briefly.
 
@@ -73,7 +100,7 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 |------|---------------|------|
 | `agents.js` | Agent CRUD, heartbeat, commands, `/api/health` | API key |
 | `quests.js` | Quest CRUD, claim, complete, bulk ops | API key |
-| `config-admin.js` | Game config, leaderboard, quest pool, admin keys | Master key (admin) |
+| `config-admin.js` | Game config, leaderboard, **`/api/dashboard`** batch, quest pool, admin keys | Mixed |
 | `users.js` | Registration, JWT auth, XP awards, streaks | Rate-limited login |
 | `players.js` | Player profiles, companions, favorites | Mixed |
 | `shop.js` | Gear purchase, shop items, forge challenges | API key |
@@ -81,18 +108,40 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 | `gacha.js` | Banner pulls (1x, 10x), pity tracking | API key + pull lock |
 | `game.js` | Classes, roadmap, rituals | Mixed |
 | `habits-inventory.js` | Habits, inventory, equipment, item effects | API key |
-| `integrations.js` | GitHub webhook, Spotify (placeholder), catalog | Webhook signature |
+| `integrations.js` | GitHub webhook (HMAC verified), catalog API | Webhook signature |
 | `campaigns.js` | Campaign CRUD, quest chains | API key |
-| `npcs-misc.js` | NPC rotation, feedback, SPA fallback | Master key (feedback) |
+| `npcs-misc.js` | NPC rotation, feedback (admin-only), SPA fallback | Master key (feedback) |
 | `docs.js` | OpenAPI spec, HTML docs | Public |
+
+### Batch Dashboard Endpoint
+
+`GET /api/dashboard?player=X` returns everything the frontend needs in **one call** instead of 14 separate fetches:
+
+```json
+{
+  "agents": [...],
+  "quests": { "open": [...], "inProgress": [...], "completed": [...], "suggested": [...], "rejected": [...] },
+  "users": [...],
+  "achievements": [...],
+  "campaigns": [...],
+  "rituals": [...],
+  "habits": [...],
+  "favorites": [...],
+  "activeNpcs": [...],
+  "apiLive": true
+}
+```
+
+The frontend tries this first, falls back to individual fetches if unavailable.
 
 ### Authentication layers
 
 1. **API Key** (`requireApiKey` / `requireAuth`): Header `X-API-Key` or JWT Bearer token
-2. **Master Key** (`requireMasterKey`): For admin operations (key management, NPC rotation)
+2. **Master Key** (`requireMasterKey`): For admin operations (key management, NPC rotation, feedback)
 3. **JWT**: Login returns access + refresh tokens. Refresh cookie at `/api/auth`
-4. **Pull Lock**: Per-player mutex prevents concurrent gacha pulls
-5. **Rate Limit**: Global 2000 req/15min + 10 req/min on auth endpoints
+4. **Pull Lock**: Per-player mutex prevents concurrent gacha pulls (in-memory Map)
+5. **Rate Limit**: Global 2000 req/15min + 10 req/min on login/register endpoints
+6. **Webhook**: GitHub webhook verified via HMAC-SHA256 (`GITHUB_WEBHOOK_SECRET` env var)
 
 ## Pagination
 
@@ -106,12 +155,39 @@ Without `?limit`, endpoints return all data (backward compatible).
 
 Supported on: `/api/users`, `/api/feedback`, `/api/catalog`.
 
+Use `paginate(array, req.query)` helper from `lib/helpers.js`.
+
+## Frontend Architecture
+
+### Code splitting
+
+View components are lazy-loaded with `React.lazy()` + `Suspense`:
+- `LeaderboardView`, `HonorsView`, `CVBuilderPanel`, `CampaignHub`
+- `ShopView`, `GachaView`, `CharacterView`, `RitualChamber`
+
+Only loaded when the tab is activated — reduces initial bundle by ~40%.
+
+### Performance optimizations
+
+- **React.memo**: `QuestCard`, `CompletedQuestRow`, `EpicQuestCard`, `AgentCard` wrapped to prevent unnecessary re-renders
+- **content-visibility**: `.cv-auto` CSS class on quest cards — browser skips rendering offscreen cards
+- **GPU scrolling**: `will-change: scroll-position` on body
+- **useMemo/useCallback**: Filter and sort functions memoized
+- **Batch fetch**: `fetchDashboard()` replaces 14 individual API calls with 1
+
+### Quest pool constraints
+
+The quest system limits what players see:
+- **~10 open quests** in the daily pool (rotated)
+- **Max ~25 in-progress** before XP malus makes it pointless (80% penalty at 30+)
+- **Total visible:** ~35 quest cards maximum — no virtual scrolling needed
+
 ## Game Systems
 
 ### Quest lifecycle
 ```
-suggested → open → claimed → completed
-                 → unclaimed (released back)
+suggested → open → claimed (in_progress) → completed
+                 → unclaimed (released back to open)
 ```
 
 Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily rotation, or template-spawned.
@@ -142,11 +218,12 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 
 ## Security measures
 
-- GitHub webhook signature verification (HMAC-SHA256 via `GITHUB_WEBHOOK_SECRET` env var)
+- GitHub webhook HMAC-SHA256 signature verification (`GITHUB_WEBHOOK_SECRET`)
 - Auth rate limiting (10 attempts/min/IP on login/register)
 - Feedback endpoints require master key (admin only)
 - JWT with refresh token rotation
 - API key validation via Set (O(1) lookup)
+- User lookup via Map (O(1) — no array scan)
 
 ## Memory management
 
@@ -154,14 +231,14 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - `departureNotifications`: Capped at 50 most recent
 - `revokedRefreshTokens`: Pruned hourly (tokens older than 1h removed)
 - Debounced saves prevent disk thrashing
+- `flushPendingSaves()` executes (not just cancels) pending writes on shutdown
 
 ## Known limitations
 
 - **No database**: JSON file persistence limits concurrent writes and scalability
-- **Synchronous saves**: `writeFileSync` blocks event loop briefly
+- **Synchronous saves**: `writeFileSync` blocks event loop briefly (debounced to 200ms)
 - **No clustering**: Single-process, single-thread
 - **Effect handler**: Large switch statement in `habits-inventory.js` (25+ cases) — not data-driven yet
-- **Quest lookups**: `state.quests` is an array — lookups are O(n). Map index exists only for templates (`questCatalogById`), not active quests
 - **No schema validation**: JSON files parsed without schema enforcement
 
 ## Environment Variables

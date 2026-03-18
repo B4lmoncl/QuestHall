@@ -44,69 +44,74 @@ cd electron-quest-app && npm install && npm start
 ## Project Structure
 
 ```
-app/                  # Next.js app directory (7 files, ~4400 lines)
-  page.tsx            # Main dashboard component (~2750 lines)
+app/                  # Next.js app directory
+  page.tsx            # Main dashboard component (~1850 lines)
   types.ts            # Shared TypeScript interfaces (~420 lines)
-  utils.ts            # Fetch helpers & utilities (~290 lines)
+  utils.ts            # Fetch helpers, fetchDashboard batch, level utils (~320 lines)
   config.ts           # UI configuration constants
-  globals.css         # Tailwind + CSS utility classes + animations (~700 lines)
+  globals.css         # Tailwind + CSS utilities + animations (~720 lines)
   layout.tsx          # Root layout wrapper
-components/           # React UI components (33 files, ~12k lines)
-  DashboardHeader.tsx # Extracted top navigation bar
-  DashboardModals.tsx # Extracted modal system
-  CharacterView.tsx   # Character screen + equipment (largest component)
-  GachaView.tsx       # Gacha system UI + banners
-  QuestPanels.tsx     # Quest display panels
-  QuestModals.tsx     # Quest interaction modals
-  QuestCards.tsx      # Quest card rendering
-  OnboardingWizard.tsx # First-time user tutorial
+  DashboardContext.tsx # React context for shared state
+components/           # React UI components (36 files, ~12k lines)
+  DashboardHeader.tsx # Top navigation bar
+  DashboardModals.tsx # Modal system (currencies, modifiers, info)
+  CharacterView.tsx   # Character screen + equipment (lazy-loaded)
+  GachaView.tsx       # Gacha system UI + banners (lazy-loaded)
+  QuestCards.tsx      # Quest card rendering (React.memo wrapped)
+  AgentCard.tsx       # Agent status card (React.memo wrapped)
+  GuildHallBackground.tsx # Dynamic sky canvas + layered foreground
+  QuestBoard.tsx      # Quest board barrel export
   CompanionsWidget.tsx # Companion management
-  WandererRest.tsx    # Companion rest/bond UI
-  AgentCard.tsx       # Agent status card
-  ...                 # 22 more components
-lib/                  # Backend business logic (8 files, ~2900 lines)
-  state.js            # Central state & JSON persistence (~1020 lines)
-  helpers.js          # Utility functions (~900 lines)
-  quest-catalog.js    # Quest templates
-  npc-engine.js       # NPC rotation
-  rotation.js         # Daily rotation logic
-  gacha-engine.js     # Gacha mechanics
-  middleware.js       # Express middleware (API key validation)
-  quest-templates.js  # Quest template definitions
-routes/               # Express API routes (14 files, ~4800 lines)
-  quests.js           # Quest management (~780 lines)
-  habits-inventory.js # Rituals, gear, inventory (~800 lines)
+  WandererRest.tsx    # NPC board / Wanderer's Rest
+  OnboardingWizard.tsx # First-time user tutorial
+  ...                 # 25 more components
+lib/                  # Backend business logic (8 files, ~3000 lines)
+  state.js            # Central state, Maps, JSON persistence (~1060 lines)
+  helpers.js          # Utility functions, paginate() (~920 lines)
+  auth.js             # JWT, refresh tokens, API key auth
+  quest-catalog.js    # Quest template seeding
+  npc-engine.js       # NPC rotation & spawning
+  rotation.js         # Daily quest rotation logic
+  middleware.js       # Express middleware (auth, master key)
+  quest-templates.js  # Quest template interpolation
+routes/               # Express API routes (14 files, ~5200 lines)
+  quests.js           # Quest CRUD, claim, complete (~780 lines)
+  habits-inventory.js # Rituals, gear, inventory, effects (~830 lines)
+  config-admin.js     # Game config, leaderboard, /api/dashboard batch (~430 lines)
   docs.js             # OpenAPI/Swagger documentation (~650 lines)
-  config-admin.js     # Admin key management
   agents.js           # Agent CRUD & status
-  gacha.js            # Banner pulls, gacha state
-  game.js             # Game state, config
-  shop.js             # Shop items, purchases
+  gacha.js            # Banner pulls with pull lock, pity tracking
+  game.js             # Classes, roadmap, rituals
+  shop.js             # Shop items, forge challenges
   players.js          # Player profiles
-  users.js            # User management
+  users.js            # User management, JWT auth, rate-limited login
   campaigns.js        # Campaign quest chains
   currency.js         # Multi-currency system
-  integrations.js     # Third-party hooks
-  npcs-misc.js        # NPC endpoints + SPA catch-all
+  integrations.js     # GitHub webhook (HMAC verified), catalog API
+  npcs-misc.js        # NPC endpoints, feedback (admin-only), SPA fallback
 public/
-  data/               # Game template data (32 JSON files)
-  images/             # Pixel art assets (~247 files)
+  data/               # Game template data (34 JSON files)
+  images/             # Pixel art assets (~250 files)
     portraits/        # NPC and character portraits
     companions/       # Companion icons
+    npcs/             # NPC portraits
 electron-quest-app/   # Electron desktop companion app (10 files)
 scripts/              # Asset generation & data validation (5 files)
-server.js             # Express entry point (~166 lines)
+server.js             # Express entry point, boot sequence (~195 lines)
 ```
 
 ## Architecture
 
 - **Monolithic single-process:** Next.js static export served by Express
-- **State management:** Backend uses centralized `lib/state.js` global object; frontend uses React hooks with `useMemo`/`useCallback` optimizations
-- **Data flow:** React components → `/api/*` endpoints → `state` object → `saveData()` writes JSON to `/data`
-- **API:** RESTful routes with `requireApiKey` middleware, grouped by domain (`/api/agents/*`, `/api/quests/*`, etc.)
-- **Rate limiting:** 2000 requests per 15 minutes via `express-rate-limit`
+- **State management:** Backend uses centralized `lib/state.js` with O(1) Maps (`questsById`, `usersByName`, `usersByApiKey`, `questCatalogById`, `gearById`, `itemTemplates`); frontend uses React hooks with `useMemo`/`useCallback`
+- **Data flow:** React components → `/api/*` endpoints → `state` object → debounced `saveData()` writes JSON to `/data`
+- **Batch endpoint:** `GET /api/dashboard?player=X` returns agents, quests, users, achievements, campaigns, rituals, habits, favorites, NPCs in one call (replaces 14 separate fetches)
+- **API:** RESTful routes with `requireApiKey`/`requireAuth` middleware, grouped by domain
+- **Rate limiting:** Global 2000 req/15min + 10 req/min on auth endpoints
+- **Code splitting:** View components (CharacterView, GachaView, ShopView, etc.) lazy-loaded via `React.lazy()` + `Suspense`
+- **Performance:** Quest cards wrapped with `React.memo`, `content-visibility: auto` for offscreen cards, GPU-accelerated scrolling
 - **No ORM/DB:** All persistence is JSON files in the `/data` volume
-- **Static serving:** Express serves Next.js `/out` build with cache headers (1 year for `/_next/static/`, 1 hour for images and data)
+- **Static serving:** Express serves Next.js `/out` build with cache headers
 
 ## Code Style & Conventions
 
@@ -117,8 +122,12 @@ server.js             # Express entry point (~166 lines)
 - **Styling:** Tailwind utility classes + custom CSS utility classes in `globals.css`
 - **Theme:** Dark theme (`#0b0d11` bg, `#e8e8e8` text, `#ff4444` accents)
 - **Image rendering:** `image-rendering: smooth` (no pixelated rendering)
-- **CSS utilities:** Custom classes for opacity text (`text-w20`–`text-w70`), backgrounds (`bg-surface`, `bg-card`, `bg-w3`–`bg-w8`), borders (`border-w6`–`border-w15`), modals (`modal-backdrop`), inputs (`input-dark`)
+- **CSS utilities:** Custom classes for opacity text (`text-w20`–`text-w70`), backgrounds (`bg-surface`, `bg-card`, `bg-w3`–`bg-w8`), borders (`border-w6`–`border-w15`), modals (`modal-backdrop`), inputs (`input-dark`), performance (`cv-auto`)
 - **Comments:** Section headers with `// ─── Section ───` pattern in backend
+- **Quest lookups:** Always use `state.questsById.get(id)` — never `state.quests.find()`
+- **User lookups:** Use `state.usersByName.get(name)` or `state.usersByApiKey.get(key)` — never `Object.values(state.users).find()`
+- **After state.quests.push(q):** Always add `state.questsById.set(q.id, q)`
+- **After state.quests reassignment:** Always call `rebuildQuestsById()`
 
 ## Environment Variables
 
@@ -128,34 +137,37 @@ server.js             # Express entry point (~166 lines)
 | `MASTER_KEY` | Admin operations key |
 | `PORT` | Server port (default: 3001) |
 | `NODE_ENV` | `production` or `development` |
+| `GITHUB_WEBHOOK_SECRET` | Webhook HMAC-SHA256 verification |
 
 Template: `.env.example`
 
 ## Key Game Systems
 
-Quest system, XP/leveling, gear/inventory with set bonuses, companions with bond levels, gacha banners with pity, daily rituals/streaks, campaign quest chains, multi-currency economy (gold, stardust, essenz).
+Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (30 levels), gear/inventory with set bonuses, companions with bond levels, gacha banners with pity (soft 35, hard 50), daily rituals/streaks, campaign quest chains, multi-currency economy (gold, stardust, essenz, runensplitter).
 
 ## Important Files
 
 | File | Role |
 |------|------|
-| `app/page.tsx` | Main dashboard UI (~2750 lines, largest file) |
+| `app/page.tsx` | Main dashboard UI (~1850 lines) |
 | `app/types.ts` | All TypeScript interfaces (~420 lines) |
-| `app/globals.css` | CSS utility classes + animations (~700 lines) |
-| `lib/state.js` | State management & persistence (~1020 lines) |
-| `lib/helpers.js` | Shared utility functions (~900 lines) |
-| `server.js` | Express server entry point |
+| `app/utils.ts` | Fetch helpers, `fetchDashboard()` batch, level system |
+| `app/globals.css` | CSS utility classes + animations (~720 lines) |
+| `lib/state.js` | State management, Maps, persistence (~1060 lines) |
+| `lib/helpers.js` | Shared utilities, `paginate()` (~920 lines) |
+| `lib/auth.js` | JWT auth, refresh tokens, API key resolution |
+| `server.js` | Express entry, boot sequence, memory pruning |
 | `routes/quests.js` | Core quest API (~780 lines) |
-| `routes/habits-inventory.js` | Rituals, gear, inventory (~800 lines) |
-| `public/data/*.json` | Game data templates (32 files) |
+| `routes/config-admin.js` | Game config, leaderboard, `/api/dashboard` batch |
+| `routes/habits-inventory.js` | Rituals, gear, inventory (~830 lines) |
+| `public/data/*.json` | Game data templates (34 files) |
 
 ## Documentation
 
 - `README.md` — API endpoints, deployment, agents
+- `ARCHITECTURE.md` — System architecture for LLMs and developers
+- `LYRA-PLAYBOOK.md` — Content creation guide (NPCs, items, quests, gear, gacha)
 - `BACKLOG.md` — Bugs, features, tech debt
-- `BUGFIX-TASK.md` — Recent bug fix tracking
 - `ITEM-SYSTEM-SPEC.md` — Gear & equipment design
-- `GACHA-REBUILD-TASK.md` — Gacha redesign tasks
-- `REFACTOR-TASK.md` — Code cleanup priorities
 - `SCALABILITY-AUDIT.md` — Performance analysis
 - `TEMPLATES.md` — Quest template formats

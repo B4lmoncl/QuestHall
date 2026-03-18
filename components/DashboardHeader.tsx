@@ -147,9 +147,9 @@ export default function DashboardHeader({
       style={{
         position: "relative",
         zIndex: 40,
-        background: "rgba(26,26,26,0.75)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
+        background: "rgba(11,13,17,0.35)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,68,68,0.15)",
         overflow: "visible",
       }}
