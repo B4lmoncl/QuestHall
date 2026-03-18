@@ -135,7 +135,6 @@ router.post('/api/player/:name/inventory/use/:itemId', requireApiKey, (req, res)
     case 'gold': {
       const amt = effect.amount || 0;
       u.gold = (u.gold || 0) + amt;
-      if (u.currencies) u.currencies.gold = u.gold;
       updatedValues.gold = u.gold;
       message = `+${amt} Gold erhalten!`;
       break;
