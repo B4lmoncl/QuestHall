@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import type { Quest } from "@/app/types";
 import { timeAgo, getQuestRarity } from "@/app/utils";
 import { typeConfig } from "@/app/config";
@@ -40,7 +40,7 @@ function ChainDots({ chainIndex, chainTotal, color }: { chainIndex: number; chai
   );
 }
 
-export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean }) {
+export const CompletedQuestRow = memo(function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boolean }) {
   const [expanded, setExpanded] = useState(false);
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
   return (
@@ -100,9 +100,9 @@ export function CompletedQuestRow({ quest, isLast }: { quest: Quest; isLast: boo
       )}
     </div>
   );
-}
+});
 
-export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, playerLevel, gridMode, onDetails, isFavorite, onToggleFavorite }: {
+export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onComplete, onCoopClaim, onCoopComplete, playerName, playerLevel, gridMode, onDetails, isFavorite, onToggleFavorite }: {
   quest: Quest;
   selected?: boolean;
   onToggle?: (id: string) => void;
@@ -146,7 +146,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
     return (
       <div
         data-feedback-id={`quest-board.quest-card.${quest.id}`}
-        className="rounded-xl flex flex-col cursor-pointer relative overflow-hidden"
+        className="cv-auto rounded-xl flex flex-col cursor-pointer relative overflow-hidden"
         style={{
           background: "linear-gradient(160deg, #2c2318 0%, #1e1912 55%, #241e16 100%)",
           border: `2px solid ${rarityColor}88`,
@@ -234,7 +234,7 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
   return (
     <div
       data-feedback-id={`quest-board.quest-card.${quest.id}`}
-      className="rounded-lg p-3 cursor-pointer relative overflow-hidden"
+      className="cv-auto rounded-lg p-3 cursor-pointer relative overflow-hidden"
       style={{
         background: selected ? "linear-gradient(160deg, #2e2010 0%, #1e1a10 100%)" : "linear-gradient(160deg, #2a2016 0%, #1c1810 60%, #221d14 100%)",
         border: `1px solid ${selected ? "rgba(255,102,51,0.6)" : isInProgress ? `${rarityColor}55` : `${rarityColor}44`}`,
@@ -411,9 +411,9 @@ export function QuestCard({ quest, selected, onToggle, onClaim, onUnclaim, onCom
       </div>
     </div>
   );
-}
+});
 
-export function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boolean; onToggle?: (id: string) => void }) {
+export const EpicQuestCard = memo(function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; selected?: boolean; onToggle?: (id: string) => void }) {
   const [expanded, setExpanded] = useState(false);
   const isInProgress = quest.status === "in_progress";
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
@@ -552,4 +552,5 @@ export function EpicQuestCard({ quest, selected, onToggle }: { quest: Quest; sel
         </div>
       )}
     </div>
-  );}
+  );
+});

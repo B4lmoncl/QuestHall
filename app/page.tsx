@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 import StatBar from "@/components/StatBar";
 import OnboardingWizard from "@/components/OnboardingWizard";
-import LeaderboardView from "@/components/LeaderboardView";
-import HonorsView from "@/components/HonorsView";
-import CVBuilderPanel from "@/components/CVBuilderPanel";
-// import BattlePassView from "@/components/BattlePassView"; // Season Pass disabled — Coming Soon
-import CampaignHub from "@/components/CampaignHub";
-import ShopView from "@/components/ShopView";
-import GachaView from "@/components/GachaView";
-import CharacterView from "@/components/CharacterView";
+// Lazy-loaded views — only loaded when the tab is active (code splitting)
+const LeaderboardView = lazy(() => import("@/components/LeaderboardView"));
+const HonorsView = lazy(() => import("@/components/HonorsView"));
+const CVBuilderPanel = lazy(() => import("@/components/CVBuilderPanel"));
+const CampaignHub = lazy(() => import("@/components/CampaignHub"));
+const ShopView = lazy(() => import("@/components/ShopView"));
+const GachaView = lazy(() => import("@/components/GachaView"));
+const CharacterView = lazy(() => import("@/components/CharacterView"));
+const RitualChamber = lazy(() => import("@/components/RitualChamber"));
 import { GuideModal, GuideContent, TutorialOverlay, TUTORIAL_STEPS } from "@/components/TutorialModal";
 import {
   CreateQuestModal, PersonalQuestPanel, ForgeChallengesPanel, AntiRitualePanel,
@@ -32,7 +33,6 @@ import FeedbackOverlay from "@/components/FeedbackOverlay";
 import { ModalPortal, useModalBehavior, ModalOverlay } from "@/components/ModalPortal";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardModals from "@/components/DashboardModals";
-import RitualChamber from "@/components/RitualChamber";
 import { DashboardProvider } from "@/app/DashboardContext";
 import QuestDetailModal from "@/components/QuestDetailModal";
 import { SFX } from "@/lib/sounds";
@@ -45,7 +45,7 @@ import type {
 } from "@/app/types";
 import {
   fetchAgents, fetchQuests, fetchUsers, fetchCampaigns, fetchLeaderboard,
-  fetchAchievementCatalogue, fetchRituals, fetchHabits, fetchChangelog,
+  fetchAchievementCatalogue, fetchRituals, fetchHabits, fetchChangelog, fetchDashboard,
   createStarterQuestsIfNew, timeAgo, useCountUp, getSeason, CURRENT_SEASON,
   GUILD_LEVELS, getUserLevel, USER_LEVELS, getUserXpProgress, getForgeTempInfo,
   getQuestRarity, getAntiRitualMood, LB_LEVELS, getLbLevel,
@@ -57,6 +57,9 @@ import { getAuthHeaders, setAccessToken } from "@/lib/auth-client";
 import { useQuestActions } from "@/hooks/useQuestActions";
 
 const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4, companion: 1 };
+
+// Suspense fallback for lazy-loaded views
+const ViewFallback = () => <div className="flex items-center justify-center py-20 text-w30 text-sm font-mono">Loading...</div>;
 
 export default function Dashboard() {
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -226,56 +229,54 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handler);
   }, [apiError]);
   const refresh = useCallback(async () => {
-    const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(playerName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
-    // Lyra always first, then online/working agents, then rest
     const statusOrder: Record<string, number> = { working: 0, online: 1, idle: 2, offline: 3 };
-    const sorted = [...a].sort((x, y) => {
+    const sortAgents = (a: Agent[]) => [...a].sort((x, y) => {
       if (x.id === "lyra") return -1;
       if (y.id === "lyra") return 1;
-      const sx = statusOrder[x.status] ?? 3;
-      const sy = statusOrder[y.status] ?? 3;
-      if (sx !== sy) return sx - sy;
-      return x.name.localeCompare(y.name);
+      return (statusOrder[x.status] ?? 3) - (statusOrder[y.status] ?? 3) || x.name.localeCompare(y.name);
     });
-    setAgents(sorted);
-    setQuests(q);
-    setUsers(u);
-    if (lb.length > 0) setLeaderboard(lb);
-    if (ac.length > 0) setAchievementCatalogue(ac);
-    setCampaigns(camps);
-    if (playerName) {
-      fetchRituals(playerName).then(setRituals);
-      fetchHabits(playerName).then(setHabits);
-    }
-    try {
-      const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) });
-      setApiLive(r.ok);
-    } catch { setApiLive(false); }
-    try {
-      const npcUrl = playerName ? `/api/npcs/active?player=${encodeURIComponent(playerName.toLowerCase())}` : `/api/npcs/active`;
-      const r = await fetch(npcUrl, { signal: AbortSignal.timeout(2000) });
-      if (r.ok) { const d = await r.json(); setActiveNpcs(d.npcs || []); }
-    } catch { /* ignore */ }
-    if (playerName) {
+
+    // Try batch endpoint first (1 call instead of 14)
+    const batch = await fetchDashboard(playerName || undefined);
+    if (batch) {
+      setAgents(sortAgents(batch.agents));
+      setQuests(batch.quests);
+      setUsers(batch.users);
+      if (batch.achievements.length > 0) setAchievementCatalogue(batch.achievements);
+      setCampaigns(batch.campaigns);
+      setRituals(batch.rituals);
+      setHabits(batch.habits);
+      setFavorites(batch.favorites);
+      setActiveNpcs(batch.activeNpcs);
+      setApiLive(batch.apiLive);
+    } else {
+      // Fallback: individual fetches if batch endpoint not available
+      const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(playerName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
+      setAgents(sortAgents(a));
+      setQuests(q);
+      setUsers(u);
+      if (lb.length > 0) setLeaderboard(lb);
+      if (ac.length > 0) setAchievementCatalogue(ac);
+      setCampaigns(camps);
+      if (playerName) {
+        fetchRituals(playerName).then(setRituals);
+        fetchHabits(playerName).then(setHabits);
+      }
+      try { const r = await fetch(`/api/health`, { signal: AbortSignal.timeout(1500) }); setApiLive(r.ok); } catch { setApiLive(false); }
       try {
-        const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/favorites`, { signal: AbortSignal.timeout(2000) });
-        if (r.ok) { const d = await r.json(); setFavorites(d.favorites || []); }
+        const npcUrl = playerName ? `/api/npcs/active?player=${encodeURIComponent(playerName.toLowerCase())}` : `/api/npcs/active`;
+        const r = await fetch(npcUrl, { signal: AbortSignal.timeout(2000) });
+        if (r.ok) { const d = await r.json(); setActiveNpcs(d.npcs || []); }
       } catch { /* ignore */ }
+      if (playerName) {
+        try { const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/favorites`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); setFavorites(d.favorites || []); } } catch { /* ignore */ }
+      }
     }
-    // Fetch game version + changelog
-    try {
-      const r = await fetch(`/api/game-version`, { signal: AbortSignal.timeout(1500) });
-      if (r.ok) { const d = await r.json(); setGameVersion(d.version || "1.5.1"); }
-    } catch { /* ignore */ }
-    try {
-      const r = await fetch(`/api/changelog-data`, { signal: AbortSignal.timeout(2000) });
-      if (r.ok) { const d = await r.json(); if (Array.isArray(d)) setChangelogData(d); }
-    } catch { /* ignore */ }
+    // These lightweight calls remain separate (rarely change, small payloads)
+    try { const r = await fetch(`/api/game-version`, { signal: AbortSignal.timeout(1500) }); if (r.ok) { const d = await r.json(); setGameVersion(d.version || "1.5.1"); } } catch { /* ignore */ }
+    try { const r = await fetch(`/api/changelog-data`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); if (Array.isArray(d)) setChangelogData(d); } } catch { /* ignore */ }
     if (playerName) {
-      try {
-        const r = await fetch(`/api/quests/pool?player=${encodeURIComponent(playerName)}`, { signal: AbortSignal.timeout(2000) });
-        if (r.ok) { const d = await r.json(); if (d.lastRefresh) setLastPoolRefresh(new Date(d.lastRefresh)); }
-      } catch { /* ignore */ }
+      try { const r = await fetch(`/api/quests/pool?player=${encodeURIComponent(playerName)}`, { signal: AbortSignal.timeout(2000) }); if (r.ok) { const d = await r.json(); if (d.lastRefresh) setLastPoolRefresh(new Date(d.lastRefresh)); } } catch { /* ignore */ }
     }
     setLoading(false);
     setLastRefresh(new Date());
@@ -823,13 +824,13 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
-            <LeaderboardView entries={leaderboard} agents={agents} mode="players" />
+            <Suspense fallback={<ViewFallback />}><LeaderboardView entries={leaderboard} agents={agents} mode="players" /></Suspense>
           </div>
         )}
 
         {/* Honors View — Player-specific */}
         {dashView === "honors" && (
-          <HonorsView catalogue={achievementCatalogue} />
+          <Suspense fallback={<ViewFallback />}><HonorsView catalogue={achievementCatalogue} /></Suspense>
         )}
 
         {/* Campaign View */}
@@ -867,18 +868,18 @@ export default function Dashboard() {
 
         {/* ── SHOP TAB ── */}
         {dashView === "shop" && (
-          <ShopView
+          <Suspense fallback={<ViewFallback />}><ShopView
             onBuy={handleShopBuy}
             onGearBuy={handleGearBuy}
-          />
+          /></Suspense>
         )}
 
         {/* ── VAULT OF FATE (GACHA) TAB ── */}
         {dashView === "gacha" && (
-          <GachaView
+          <Suspense fallback={<ViewFallback />}><GachaView
             onRefresh={refresh}
             onPullComplete={(items) => { items.forEach((item: any, i: number) => { setTimeout(() => addToast({ type: "flavor", message: `${item.item?.name || "Item"} collected!`, icon: item.item?.icon || "/images/icons/vault-of-fate.png", sub: item.item?.rarity || "common" }), i * 50); }); }}
-          />
+          /></Suspense>
         )}
 
         {/* ── ROADMAP TAB ── */}
@@ -972,7 +973,6 @@ export default function Dashboard() {
             if (q.minLevel > playerLevelInfo.level + 3) return false;
             return true;
           });
-          // Show all quests from daily rotation (no frontend cap)
           const boardOpen = applySort(levelFiltered);
           return (
             <div>
@@ -1201,12 +1201,11 @@ export default function Dashboard() {
                       </>
                     )}
 
-                    {/* Locked quests removed — quests below player level simply don't appear */}
                   </div>}
 
                   {/* ── Rituale Tab ── */}
                   {questBoardTab === "rituale" && (
-                    <RitualChamber rituals={rituals} setRituals={setRituals} setRewardCelebration={setRewardCelebration} />
+                    <Suspense fallback={<ViewFallback />}><RitualChamber rituals={rituals} setRituals={setRituals} setRewardCelebration={setRewardCelebration} /></Suspense>
                   )}
 
                   {/* ── Anti-Rituale Tab ── */}
@@ -1241,7 +1240,7 @@ export default function Dashboard() {
 
         {/* ── CHARACTER TAB ── */}
         {dashView === "character" && playerName && (
-          <CharacterView addToast={addToast} />
+          <Suspense fallback={<ViewFallback />}><CharacterView addToast={addToast} /></Suspense>
         )}
 
         {/* ── THE WANDERER'S REST (NPC Tab) ── */}

@@ -9,6 +9,8 @@
 3. **Bilder unter `public/images/`** ablegen, Pfad als `/images/...` referenzieren
 4. **Nach Änderungen**: Server-Neustart nötig (Templates werden beim Boot geladen)
 5. **Validierung**: `node scripts/verify-items.js` prüft Item-Referenzen
+6. **Quest-Lookup im Code**: Immer `state.questsById.get(id)` statt `state.quests.find()` — und nach `state.quests.push(q)` immer `state.questsById.set(q.id, q)` aufrufen
+7. **User-Lookup im Code**: Immer `state.usersByName.get(name)` statt `Object.values(state.users).find()`
 
 ---
 

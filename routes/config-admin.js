@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const crypto = require('crypto');
-const { state, XP_BY_PRIORITY, GOLD_BY_PRIORITY, TEMP_BY_PRIORITY, STREAK_MILESTONES, RARITY_WEIGHTS, RARITY_COLORS, RARITY_ORDER, EQUIPMENT_SLOTS, LEVELS, PLAYER_QUEST_TYPES, saveQuests, savePlayerProgress, saveManagedKeys } = require('../lib/state');
+const { state, XP_BY_PRIORITY, GOLD_BY_PRIORITY, TEMP_BY_PRIORITY, STREAK_MILESTONES, RARITY_WEIGHTS, RARITY_COLORS, RARITY_ORDER, EQUIPMENT_SLOTS, LEVELS, PLAYER_QUEST_TYPES, saveQuests, savePlayerProgress, saveManagedKeys, rebuildQuestsById } = require('../lib/state');
 const { now, getLevelInfo, getPlayerProgress, awardXP, getTodayBerlin } = require('../lib/helpers');
 const { requireApiKey, requireMasterKey, getMasterKey } = require('../lib/middleware');
 const { assignRarity, selectDailyQuests } = require('../lib/rotation');
@@ -24,6 +24,102 @@ router.get('/api/config', (req, res) => {
 
 // GET /api/leaderboard — returns combined leaderboard
 // mode=agents: agents only; mode=players: registered users only (default: agents for backward compat)
+// GET /api/dashboard?player=X — batch endpoint: returns agents, quests, users,
+// leaderboard, achievements, campaigns, rituals, habits, npcs, favorites in one call.
+// Reduces 14 separate API calls to 1.
+router.get('/api/dashboard', (req, res) => {
+  const playerName = req.query.player || null;
+  const playerNameLower = playerName ? playerName.toLowerCase() : null;
+
+  // Agents
+  const STALE_MS = 30 * 60 * 1000;
+  const agents = Object.values(state.store.agents).map(a => {
+    const stale = !a.lastSeen || (Date.now() - new Date(a.lastSeen).getTime() > STALE_MS);
+    return { ...a, health: stale ? 'stale' : (a.health || 'healthy') };
+  });
+
+  // Quests (same logic as GET /api/quests)
+  const questsRoute = require('./quests');
+  const quests = { open: [], inProgress: [], completed: [], suggested: [], rejected: [] };
+  for (const q of state.quests) {
+    const key = q.status === 'in_progress' ? 'inProgress' : q.status;
+    if (quests[key]) quests[key].push(q);
+  }
+
+  // Users with modifiers
+  const { getXpMultiplier, getGoldMultiplier, getForgeXpBase, getForgeGoldBase, getKraftBonus, getWeisheitBonus, getUserGear, getQuestHoardingMalus, calcDynamicForgeTemp } = require('../lib/helpers');
+  const companionIds = ['ember_sprite', 'lore_owl', 'gear_golem'];
+  const users = Object.values(state.users).map(u => {
+    const ft = calcDynamicForgeTemp(u.id);
+    const forgeXp = getXpMultiplier(u.id);
+    const forgeGold = getGoldMultiplier(u.id);
+    const gear = getUserGear(u.id);
+    const gearBonus = 1 + (gear.xpBonus || 0) / 100;
+    const earnedIds = new Set((u.earnedAchievements || []).map(a => a.id));
+    const compBonus = 1 + 0.02 * companionIds.filter(id => earnedIds.has(id)).length;
+    const bondBonus = 1 + 0.01 * Math.max(0, (u.companion?.bondLevel ?? 1) - 1);
+    const streakGold = Math.min(1 + (u.streakDays || 0) * 0.015, 1.45);
+    const hoarding = getQuestHoardingMalus(u.id);
+    return {
+      ...u,
+      forgeTemp: ft,
+      modifiers: {
+        xp: { forge: getForgeXpBase(u.id), kraft: getKraftBonus(u.id), gear: gearBonus, companions: compBonus, bond: bondBonus, hoarding: hoarding.multiplier, total: +(forgeXp * gearBonus * compBonus * bondBonus * hoarding.multiplier).toFixed(2) },
+        gold: { forge: getForgeGoldBase(u.id), weisheit: getWeisheitBonus(u.id), streak: streakGold, total: +(forgeGold * streakGold).toFixed(2) },
+      },
+    };
+  });
+
+  // Campaigns
+  const campaigns = state.campaigns.map(c => {
+    const questDetails = c.questIds.map(id => {
+      const q = state.questsById.get(id);
+      if (!q) return { id, title: '(deleted)', status: 'deleted' };
+      return { id: q.id, title: q.title, status: q.status, completedAt: q.completedAt || null };
+    });
+    const done = questDetails.filter(q => q.status === 'completed').length;
+    return { ...c, quests: questDetails, progress: { done, total: questDetails.length } };
+  });
+
+  // Achievements
+  const achievements = state.ACHIEVEMENT_CATALOGUE || [];
+
+  // Player-specific data (only if player param provided)
+  let rituals = [];
+  let habits = [];
+  let favorites = [];
+  let activeNpcs = [];
+
+  if (playerNameLower) {
+    rituals = (state.rituals?.active || []).filter(r => r.playerId === playerNameLower && !r.isAntiRitual);
+    habits = state.habits.filter(h => h.playerId === playerNameLower);
+    const u = state.users[playerNameLower];
+    favorites = u?.favorites || [];
+  }
+
+  // Active NPCs
+  const { NPC_META } = require('../lib/state');
+  activeNpcs = (state.npcState.activeNpcs || []).map(npc => ({
+    ...npc,
+    ...(NPC_META[npc.giverId] || {}),
+    giverId: npc.giverId,
+  }));
+
+  res.json({
+    agents,
+    quests,
+    users,
+    leaderboard: null, // Computed on demand via /api/leaderboard
+    achievements,
+    campaigns,
+    rituals,
+    habits,
+    favorites,
+    activeNpcs,
+    apiLive: true,
+  });
+});
+
 router.get('/api/leaderboard', (req, res) => {
   const agentIds = new Set(Object.keys(state.store.agents));
 
@@ -89,7 +185,7 @@ function buildVisiblePool(playerName, playerLevel) {
 
   // Pick from this player's generated quest pool (pp.generatedQuests)
   const generated = (pp.generatedQuests || [])
-    .map(id => state.quests.find(q => q.id === id))
+    .map(id => state.questsById.get(id))
     .filter(q => q && q.status === 'open' && !claimedIds.has(q.id) && (!q.minLevel || q.minLevel <= playerLevel));
 
   for (const type of POOL_TYPES) {
@@ -128,7 +224,7 @@ function generatePlayerQuests(playerName, playerLevel) {
   }
   // Also exclude templateIds of current generated pool (if any still open)
   for (const qid of (pp.generatedQuests || [])) {
-    const q = state.quests.find(x => x.id === qid);
+    const q = state.questsById.get(qid);
     if (q && q.templateId) excludeTemplateIds.add(q.templateId);
   }
 
@@ -192,9 +288,11 @@ function generatePlayerQuests(playerName, playerLevel) {
   // Remove old generated quests that are still 'open' (not claimed)
   const oldGenIds = new Set(pp.generatedQuests || []);
   state.quests = state.quests.filter(q => !oldGenIds.has(q.id) || q.status !== 'open');
+  rebuildQuestsById();
 
   // Add new quests
   state.quests.push(...newQuests);
+  for (const q of newQuests) state.questsById.set(q.id, q);
   saveQuests();
 
   // Track generated IDs and previous template IDs
@@ -234,7 +332,7 @@ router.get('/api/quests/pool', (req, res) => {
   }
 
   const poolQuests = pp.activeQuestPool
-    .map(id => state.quests.find(q => q.id === id))
+    .map(id => state.questsById.get(id))
     .filter(Boolean);
 
   res.json({ pool: poolQuests, lastRefresh: pp.lastPoolRefresh || null });
@@ -269,7 +367,7 @@ router.post('/api/quests/pool/refresh', requireApiKey, (req, res) => {
   savePlayerProgress();
 
   const poolQuests = pp.activeQuestPool
-    .map(id => state.quests.find(q => q.id === id))
+    .map(id => state.questsById.get(id))
     .filter(Boolean);
 
   res.json({ ok: true, pool: poolQuests, generated: pp.generatedQuests.length, lastRefresh: pp.lastPoolRefresh });

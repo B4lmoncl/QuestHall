@@ -103,6 +103,29 @@ export async function fetchChangelog(): Promise<ChangelogEntry[]> {
   return [];
 }
 
+// ─── Batch dashboard fetch (reduces 14 API calls to 1) ─────────────────────
+export async function fetchDashboard(playerName?: string): Promise<{
+  agents: Agent[];
+  quests: QuestsData;
+  users: User[];
+  achievements: AchievementDef[];
+  campaigns: Campaign[];
+  rituals: Ritual[];
+  habits: Habit[];
+  favorites: string[];
+  activeNpcs: any[];
+  apiLive: boolean;
+} | null> {
+  try {
+    const url = playerName
+      ? `/api/dashboard?player=${encodeURIComponent(playerName)}`
+      : `/api/dashboard`;
+    const r = await fetch(url, { signal: AbortSignal.timeout(3000) });
+    if (r.ok) return r.json();
+  } catch { /* API not running */ }
+  return null;
+}
+
 export async function createStarterQuestsIfNew(playerName: string, apiKey: string) {
   try {
     const { getAuthHeaders } = await import("@/lib/auth-client");
