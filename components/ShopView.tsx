@@ -2,19 +2,18 @@
 
 import { useState } from "react";
 import type { User, ShopItem } from "@/app/types";
+import { useDashboard } from "@/app/DashboardContext";
 import shopData from "../public/data/shopItems.json";
 
 const GEAR_TIERS_CLIENT = shopData.gearTiers;
 const SHOP_ITEMS_LIST: ShopItem[] = shopData.items as ShopItem[];
 
 // ─── Main ShopView (no Gacha — moved to GachaView) ─────────────────────────
-export default function ShopView({ users, playerName, reviewApiKey, onBuy, onGearBuy }: {
-  users: User[];
-  playerName: string;
-  reviewApiKey: string;
+export default function ShopView({ onBuy, onGearBuy }: {
   onBuy: (userId: string, itemId: string) => void;
   onGearBuy: (userId: string, gearId: string) => void;
 }) {
+  const { users, playerName, reviewApiKey } = useDashboard();
   const loggedIn = playerName && reviewApiKey;
   const user = loggedIn ? users.find(u => u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase()) : null;
   const gold = user?.gold ?? 0;

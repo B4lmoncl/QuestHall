@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import type { AchievementDef, User, QuestsData } from "@/app/types";
+import type { AchievementDef } from "@/app/types";
+import { useDashboard } from "@/app/DashboardContext";
 
 function conditionToText(cond: Record<string, unknown> | undefined): string {
   if (!cond) return "";
@@ -29,7 +30,9 @@ function conditionToText(cond: Record<string, unknown> | undefined): string {
   }
 }
 
-export default function HonorsView({ catalogue, users, playerName = "" }: { catalogue: AchievementDef[]; users: User[]; playerName?: string; quests?: QuestsData; reviewApiKey?: string }) {
+export default function HonorsView({ catalogue }: { catalogue: AchievementDef[] }) {
+  const { users, playerName: ctxPlayerName } = useDashboard();
+  const playerName = ctxPlayerName || "";
   const categories = Array.from(new Set(catalogue.map(a => a.category)));
   const loggedInUser = playerName ? users.find(u => u.id.toLowerCase() === playerName.toLowerCase() || u.name.toLowerCase() === playerName.toLowerCase()) : null;
   const playerEarnedIds = new Set((loggedInUser?.earnedAchievements ?? []).map(a => a.id));

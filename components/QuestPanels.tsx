@@ -7,6 +7,7 @@ import type {
 } from "@/app/types";
 import { typeConfig } from "@/app/config";
 import { getAntiRitualMood } from "@/app/utils";
+import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Anti-Rituale Panel ───────────────────────────────────────────────────────
@@ -47,7 +48,8 @@ const ANTI_RITUAL_MILESTONES = [
   { days: 90,  badge: "Legend",  label: "90 Tage — Unerschütterlich!" },
 ];
 
-export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration }: { playerName: string; reviewApiKey: string; onRewardCelebration?: (data: { type: "vow"; title: string; xpEarned: number; goldEarned: number; loot?: { name: string; emoji: string; rarity: string; rarityColor?: string } | null; streak?: number; pactBonus?: { xp: number; gold: number } | null }) => void }) {
+export function AntiRitualePanel({ onRewardCelebration }: { onRewardCelebration?: (data: { type: "vow"; title: string; xpEarned: number; goldEarned: number; loot?: { name: string; emoji: string; rarity: string; rarityColor?: string } | null; streak?: number; pactBonus?: { xp: number; gold: number } | null }) => void }) {
+  const { playerName, reviewApiKey } = useDashboard();
   const [antiRituals, setAntiRituals] = useState<AntiRitual[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
   const [newTitle, setNewTitle] = useState("");
