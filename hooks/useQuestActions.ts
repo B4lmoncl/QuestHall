@@ -3,6 +3,7 @@
 import { useCallback, useState } from "react";
 import type { Quest, ActiveNpc, Ritual } from "@/app/types";
 import type { RewardCelebrationData } from "@/components/RewardCelebration";
+import type { ToastInput } from "@/components/ToastStack";
 import { getAuthHeaders } from "@/lib/auth-client";
 
 
@@ -16,7 +17,7 @@ interface UseQuestActionsParams {
   setRewardCelebration: (v: RewardCelebrationData | null) => void;
   pendingLevelUpRef: React.MutableRefObject<{ level: number; title: string } | null>;
   setRituals: React.Dispatch<React.SetStateAction<Ritual[]>>;
-  addToast: (t: { type: string; message?: string; icon?: string; sub?: string }) => void;
+  addToast: (t: ToastInput) => void;
   setApiErrorWithAutoClose: (msg: string | null) => void;
   lastPoolRefresh: Date | null;
   setLastPoolRefresh: React.Dispatch<React.SetStateAction<Date | null>>;
