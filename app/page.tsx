@@ -76,6 +76,10 @@ export default function Dashboard() {
   });
   // selectedIds, bulkLoading, reviewComments moved to useQuestActions hook
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [questPageSize, setQuestPageSize] = useState(50); // Client-side pagination — show N quests at a time
+  // Reset page size when filters change
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { setQuestPageSize(50); }, [searchFilter, typeFilter, sortMode]);
   const [dashView, setDashView] = useState<"questBoard" | "npcBoard" | "klassenquests" | "character" | "campaign" | "leaderboard" | "honors" | "season" | "shop" | "gacha" | "roadmap" | "changelog">("questBoard");
   const [createQuestOpen, setCreateQuestOpen] = useState(false);
   const [questBoardAgentOpen, setQuestBoardAgentOpen] = useState(false);
@@ -972,8 +976,10 @@ export default function Dashboard() {
             if (q.minLevel > playerLevelInfo.level + 3) return false;
             return true;
           });
-          // Show all quests from daily rotation (no frontend cap)
-          const boardOpen = applySort(levelFiltered);
+          // Paginate open quests for DOM performance (show first N, "Show More" for rest)
+          const boardOpenAll = applySort(levelFiltered);
+          const boardOpen = boardOpenAll.slice(0, questPageSize);
+          const hasMoreQuests = boardOpenAll.length > questPageSize;
           return (
             <div>
 
@@ -1201,7 +1207,16 @@ export default function Dashboard() {
                       </>
                     )}
 
-                    {/* Locked quests removed — quests below player level simply don't appear */}
+                    {/* Show More button for paginated quests */}
+                    {hasMoreQuests && (
+                      <button
+                        onClick={() => setQuestPageSize(prev => prev + 50)}
+                        className="w-full mt-3 py-2 rounded-lg text-sm font-mono"
+                        style={{ background: "rgba(148,163,184,0.1)", color: "#94a3b8", border: "1px solid rgba(148,163,184,0.15)" }}
+                      >
+                        Show more ({boardOpenAll.length - questPageSize} remaining)
+                      </button>
+                    )}
                   </div>}
 
                   {/* ── Rituale Tab ── */}
