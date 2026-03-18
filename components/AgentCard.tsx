@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { LB_LEVELS, getLbLevel, getLbXpProgress } from "@/app/utils";
 
 interface Agent {
@@ -98,7 +98,7 @@ const agentMeta: Record<string, { avatar: string; color: string; role: string; d
   forge: { avatar: "FG", color: "#f59e0b", role: "Idea Smith", description: "Feature ideation. Hammers out quest suggestions." },
 };
 
-export default function AgentCard({ agent, activeQuests = [], isWide = false }: { agent: Agent; activeQuests?: Quest[]; isWide?: boolean }) {
+const AgentCard = memo(function AgentCard({ agent, activeQuests = [], isWide = false }: { agent: Agent; activeQuests?: Quest[]; isWide?: boolean }) {
   const st = statusConfig[agent.status] ?? statusConfig.offline;
   const hc = healthConfig[agent.health] ?? healthConfig.ok;
   const meta = agentMeta[agent.id?.toLowerCase()] ?? {
@@ -309,7 +309,9 @@ export default function AgentCard({ agent, activeQuests = [], isWide = false }: 
       )}
     </div>
   );
-}
+});
+
+export default AgentCard;
 
 function MetricRow({
   label,
