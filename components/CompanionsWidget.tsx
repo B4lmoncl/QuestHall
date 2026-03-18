@@ -5,6 +5,7 @@ import type { User, Quest } from "@/app/types";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import { RARITY_COLORS } from "@/components/QuestBoard";
 import { getQuestRarity } from "@/app/utils";
+import { SFX } from "@/lib/sounds";
 
 // ─── Companions Widget (always visible on Quest Board) ───────────────────────
 
@@ -213,6 +214,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
     if (!playerName || !apiKey || petting) return;
     setPetting(true);
     setPetError("");
+    SFX.companionPet();
     // Always play heart animation
     setHeartAnim(true);
     setTimeout(() => setHeartAnim(false), 1200);

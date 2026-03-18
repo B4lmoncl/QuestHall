@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import type { User, Quest, QuestsData } from "@/app/types";
 import { createStarterQuestsIfNew, CURRENT_SEASON } from "@/app/utils";
+import { SFX } from "@/lib/sounds";
 
 interface DashboardHeaderProps {
   dashView: string;
@@ -49,6 +50,21 @@ export default function DashboardHeader({
   const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [soundMuted, setSoundMuted] = useState(() => {
+    try { return localStorage.getItem("qh_sound_muted") === "1"; } catch { return false; }
+  });
+
+  // Init sound system from stored preference
+  useEffect(() => {
+    SFX.initFromStorage();
+  }, []);
+
+  const toggleMute = () => {
+    const next = !soundMuted;
+    setSoundMuted(next);
+    SFX.setMuted(next);
+    if (!next) SFX.click(); // play a click to confirm unmute
+  };
 
   // Settings popup — click-outside to close
   useEffect(() => {
@@ -161,6 +177,15 @@ export default function DashboardHeader({
         </div>
 
         <div className="flex items-center gap-4">
+          <button
+            data-feedback-id="header.sound-toggle"
+            onClick={toggleMute}
+            className="btn-interactive text-xs px-2 py-0.5 rounded text-w40 bg-w5 border-w10"
+            title={soundMuted ? "Sound einschalten" : "Sound ausschalten"}
+            style={{ minWidth: 28, textAlign: "center" }}
+          >
+            {soundMuted ? "🔇" : "🔊"}
+          </button>
           <button
             data-feedback-id="header.info-button"
             onClick={() => { setInfoOverlayTab("guide"); setInfoOverlayOpen(true); }}
