@@ -839,7 +839,7 @@ export default function Dashboard() {
   }, [quests.inProgress]);
 
   return (
-    <div className="min-h-screen" style={{ background: "transparent", color: "#e8e8e8", position: "relative" }}>
+    <div className="min-h-screen text-primary" style={{ background: "transparent", position: "relative" }}>
       <GuildHallBackground />
       <DashboardHeader
         dashView={dashView}
@@ -867,7 +867,7 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">
           {!playerName && !loading && (
             <div className="col-span-1 sm:col-span-4 rounded-xl p-3 text-center" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.2)" }}>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <p className="text-xs text-w35">
                 <button onClick={() => setOnboardingOpen(true)} className="underline" style={{ color: "#a78bfa" }}>Log in</button> to see your personal stats
               </p>
             </div>
@@ -923,8 +923,8 @@ export default function Dashboard() {
                 <img
                   src="/images/portraits/hero-male.png"
                   alt={playerName}
-                  className="w-28 h-28 rounded-xl object-cover"
-                  style={{ imageRendering: "auto", border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
+                  className="w-28 h-28 rounded-xl object-cover img-render-auto"
+                  style={{ border: `2px solid ${loggedInUser.color ?? "#a78bfa"}50` }}
                   onError={e => {
                     const img = e.currentTarget as HTMLImageElement;
                     img.style.display = "none";
@@ -979,7 +979,7 @@ export default function Dashboard() {
                     { emoji: "", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc", iconSrc: "/images/icons/currency-mondstaub.png" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
-                      {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={16} height={16} className={c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} style={{ imageRendering: "auto" }} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
+                      {(c as any).iconSrc ? <img src={(c as any).iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
                       <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
                         {c.value}
                       </span>
@@ -990,7 +990,7 @@ export default function Dashboard() {
                 {/* Forge Temperature */}
                 <div data-feedback-id="player-card.forge-tooltip" className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
-                    <img src="/images/icons/ach-forge-novice.png" alt="forge" width={35} height={35} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
+                    <img src="/images/icons/ach-forge-novice.png" alt="forge" width={35} height={35} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} />
                     <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
                       {forgeTemp}%
                     </span>
@@ -1328,7 +1328,7 @@ export default function Dashboard() {
                             {poolRefreshing ? (
                               <span className="text-sm">—</span>
                             ) : (
-                              <img src="/images/icons/ui-quest-scroll.png" alt="" width={24} height={24} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
+                              <img src="/images/icons/ui-quest-scroll.png" alt="" width={24} height={24} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} />
                             )}
                           </button>
                         )}
@@ -1356,7 +1356,7 @@ export default function Dashboard() {
                         {...("tutorialKey" in tab && tab.tutorialKey ? { "data-tutorial": tab.tutorialKey } : {})}
                       >
                         <img src={tab.iconSrc} alt="" width={42} height={42}
-                          style={{ imageRendering: "auto" }}
+                          className="img-render-auto"
                           onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }} />
                         <span style={{ display: "none" }}>{tab.fallback}</span>
                         {tab.label}
@@ -1379,14 +1379,14 @@ export default function Dashboard() {
                             {t === "all" ? "All" : t === "favorites" ? (<><span style={{ fontSize: 14 }}>&#9733;</span> Favorites</>) : t === "npc" ? (
                               <>
                                 <img src="/images/icons/cat-npc.png" alt="" width={28} height={28}
-                                  style={{ imageRendering: "auto" }}
+                                  className="img-render-auto"
                                   onError={(e) => { e.currentTarget.style.display = "none"; }} />
                                 NPC
                               </>
                             ) : (
                               <>
                                 <img src={`/images/icons/cat-${iconFile}.png`} alt="" width={28} height={28}
-                                  style={{ imageRendering: "auto" }}
+                                  className="img-render-auto"
                                   onError={(e) => { e.currentTarget.style.display = "none"; const next = e.currentTarget.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }} />
                                 <span style={{ display: "none" }}>{cfg!.icon?.startsWith("/") ? cfg!.label : cfg!.icon}</span>
                                 {cfg!.label}
@@ -1436,7 +1436,7 @@ export default function Dashboard() {
                     boardOpen.length === 0 && playerVisibleInProgress.length === 0 ? (
                       <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{searchFilter ? "No quests match your search" : "No player quests open"}</p>
-                        {!searchFilter && playerName && reviewApiKey && <button onClick={handlePoolRefresh} className="btn-interactive mt-2 px-3 py-1 rounded inline-flex items-center gap-1.5" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)" }}><img src="/images/icons/ui-quest-scroll.png" alt="" width={20} height={20} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} /><span className="text-xs font-semibold">Load Quests</span></button>}
+                        {!searchFilter && playerName && reviewApiKey && <button onClick={handlePoolRefresh} className="btn-interactive mt-2 px-3 py-1 rounded inline-flex items-center gap-1.5" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)" }}><img src="/images/icons/ui-quest-scroll.png" alt="" width={20} height={20} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} /><span className="text-xs font-semibold">Load Quests</span></button>}
                       </div>
                     ) : (
                       <>
@@ -1539,7 +1539,7 @@ export default function Dashboard() {
                                   {ritual.streak}
                                 </span>
                                 <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
-                                {milestone && ((milestone as any).icon ? <img src={(milestone as any).icon} alt={milestone.badge} width={20} height={20} style={{ imageRendering: "auto" }} /> : <span className="text-xs">{milestone.badge}</span>)}
+                                {milestone && ((milestone as any).icon ? <img src={(milestone as any).icon} alt={milestone.badge} width={20} height={20} className="img-render-auto" /> : <span className="text-xs">{milestone.badge}</span>)}
                               </div>
                               <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: "rgba(255,255,255,0.35)" }}>
                                 <span style={{ color: ritual.streak >= 21 ? "#818cf8" : ritual.streak >= 7 ? "#f97316" : "rgba(255,255,255,0.35)" }}>
@@ -1709,7 +1709,7 @@ export default function Dashboard() {
                               <div style={{ maxWidth: 1000, width: "100%", borderRadius: "1rem", background: newRitualBloodPact ? "linear-gradient(160deg, #2c1a1a 0%, #1e1010 100%)" : "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: `1px solid ${newRitualBloodPact ? "rgba(239,68,68,0.45)" : "rgba(245,158,11,0.3)"}`, boxShadow: newRitualBloodPact ? "0 0 60px rgba(239,68,68,0.12)" : "0 0 40px rgba(167,139,250,0.08)", transition: "all 0.4s ease" }}>
                                 {/* Header */}
                                 <div className="flex items-center gap-3 px-5 pt-4 pb-3 border-b" style={{ borderColor: "rgba(245,158,11,0.12)" }}>
-                                  <img src="/images/icons/ui-ritual-rune.png" alt="" width={28} height={28} style={{ imageRendering: "auto" }} onError={e => (e.currentTarget.style.display = "none")} />
+                                  <img src="/images/icons/ui-ritual-rune.png" alt="" width={28} height={28} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} />
                                   <div>
                                     <h3 className="text-sm font-bold" style={{ color: "#e8d5a3" }}>Forge a New Rite</h3>
                                     <p className="text-xs" style={{ color: "rgba(200,170,100,0.4)" }}>Seraine Ashwell — Ritual Chamber</p>
@@ -1769,8 +1769,8 @@ export default function Dashboard() {
                                   </div>
                                   <div className="rounded-lg p-3" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(245,158,11,0.1)" }}>
                                     <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(200,170,100,0.45)" }}>Reward Preview</p>
-                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Daily: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>5 <img src="/images/icons/reward-gold.png" width={20} height={20} style={{ imageRendering: "auto" }} /></span> <span style={{ color: "#a78bfa" }}>10 XP</span></p>
-                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Bond Bonus: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={20} height={20} style={{ imageRendering: "auto" }} /></span> <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
+                                    <p className="text-xs" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Daily: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>5 <img src="/images/icons/reward-gold.png" width={20} height={20} className="img-render-auto" /></span> <span style={{ color: "#a78bfa" }}>10 XP</span></p>
+                                    {tierData.id !== "none" && <p className="text-xs mt-0.5" style={{ color: "rgba(200,170,100,0.65)", display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}>Bond Bonus: <span style={{ color: "#f59e0b", display: "inline-flex", alignItems: "center", gap: 2 }}>+{bonusGold} <img src="/images/icons/reward-gold.png" width={20} height={20} className="img-render-auto" /></span> <span style={{ color: "#a78bfa" }}>+{bonusXp} XP</span>{newRitualBloodPact && <span style={{ color: "#ef4444", fontWeight: "bold" }}> ×3</span>}</p>}
                                   </div>
                                   <div className="flex gap-2 pt-1">
                                     <button onClick={closeRitualModal} className="action-btn text-sm py-2.5 px-5 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(200,170,100,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
@@ -2231,7 +2231,7 @@ export default function Dashboard() {
               {/* Header */}
               <div className="px-5 pt-4 pb-3 flex items-start justify-between gap-3" style={{ borderBottom: `1px solid rgba(255,255,255,0.07)` }}>
                 <div className="flex items-start gap-3 flex-1 min-w-0">
-                  <span className="text-2xl flex-shrink-0">{typeCfg.icon?.startsWith("/") ? <img src={typeCfg.icon} alt="" width={28} height={28} style={{ imageRendering: "auto" }} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : typeCfg.icon}</span>
+                  <span className="text-2xl flex-shrink-0">{typeCfg.icon?.startsWith("/") ? <img src={typeCfg.icon} alt="" width={28} height={28} className="img-render-auto" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : typeCfg.icon}</span>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-base font-bold leading-snug" style={{ color: "#f0f0f0" }}>{q.title}</h3>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">

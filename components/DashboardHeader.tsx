@@ -145,7 +145,7 @@ export default function DashboardHeader({
             title="Home — Quest Hall"
           >
             <img src="/guild-gate.png" alt="Quest Hall" className="h-20 w-20" style={{ imageRendering: "auto", display: "block", marginBottom: "-8px", marginTop: "4px" }} />
-            <span className="font-semibold text-sm tracking-tight" style={{ color: "#e8e8e8" }}>
+            <span className="font-semibold text-sm tracking-tight text-primary">
               Quest Hall
             </span>
           </button>
@@ -164,8 +164,7 @@ export default function DashboardHeader({
           <button
             data-feedback-id="header.info-button"
             onClick={() => { setInfoOverlayTab("guide"); setInfoOverlayOpen(true); }}
-            className="btn-interactive text-xs px-2 py-0.5 rounded"
-            style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+            className="btn-interactive text-xs px-2 py-0.5 rounded text-w40 bg-w5 border-w10"
             title="Info, Guide & Tutorial"
           >
             Info
@@ -191,25 +190,25 @@ export default function DashboardHeader({
                   <div style={{ display: "none", width: "100%", height: "100%", alignItems: "center", justifyContent: "center", background: `linear-gradient(135deg, ${loggedInUser?.color ?? "#a78bfa"}, ${loggedInUser?.color ?? "#a78bfa"}88)`, color: "#fff", fontSize: 13, fontWeight: "bold" }}>{playerName.slice(0, 1).toUpperCase()}</div>
                 </button>
                 {settingsPopupOpen && (
-                  <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl flex flex-col" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)", minWidth: 200, overflow: "hidden" }}>
+                  <div className="absolute right-0 top-9 z-50 rounded-xl shadow-xl flex flex-col bg-surface-alt border-w10" style={{ minWidth: 200, overflow: "hidden" }}>
                     <div className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
                       <div className="flex items-center gap-2 mb-0.5">
                         <div className="w-7 h-7 rounded-full flex items-center justify-center font-bold text-xs flex-shrink-0" style={{ background: `linear-gradient(135deg, ${loggedInUser?.color ?? "#a78bfa"}, ${loggedInUser?.color ?? "#a78bfa"}88)`, color: "#fff" }}>
                           {playerName.slice(0, 1).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{playerName}</p>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>Lv.{playerLevelInfo.level} · {playerLevelInfo.title}</p>
+                          <p className="text-xs font-semibold text-primary">{playerName}</p>
+                          <p className="text-xs text-w35">Lv.{playerLevelInfo.level} · {playerLevelInfo.title}</p>
                         </div>
                       </div>
                     </div>
                     <button
-                      className="flex items-center gap-2 px-4 py-2.5 text-xs text-left"
-                      style={{ color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "not-allowed", opacity: 0.5 }}
+                      className="flex items-center gap-2 px-4 py-2.5 text-xs text-left text-w50"
+                      style={{ background: "none", border: "none", cursor: "not-allowed", opacity: 0.5 }}
                     >
-                      Einstellungen <span style={{ fontSize: 10, color: "rgba(255,255,255,0.25)" }}>(bald)</span>
+                      Einstellungen <span className="text-w25" style={{ fontSize: 10 }}>(bald)</span>
                     </button>
-                    <div style={{ height: 1, background: "rgba(255,255,255,0.07)", margin: "0 12px" }} />
+                    <div className="bg-w7" style={{ height: 1, margin: "0 12px" }} />
                     <button
                       className="flex items-center gap-2 px-4 py-2.5 text-xs text-left"
                       style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer" }}
@@ -226,13 +225,12 @@ export default function DashboardHeader({
               <>
                 <button
                   onClick={() => setLoginOpen(v => !v)}
-                  className="btn-interactive text-xs px-2 py-0.5 rounded"
-                  style={{ color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}
+                  className="btn-interactive text-xs px-2 py-0.5 rounded text-w40 bg-w5 border-w10"
                 >
                   Login
                 </button>
                 {loginOpen && (
-                  <div className="absolute right-0 top-7 z-50 rounded-xl p-3 shadow-xl flex flex-col gap-2" style={{ background: "#1e1e1e", border: "1px solid rgba(139,92,246,0.3)", minWidth: "220px" }}>
+                  <div className="absolute right-0 top-7 z-50 rounded-xl p-3 shadow-xl flex flex-col gap-2 bg-surface-alt" style={{ border: "1px solid rgba(139,92,246,0.3)", minWidth: "220px" }}>
                     {!registerOpen ? (
                       <>
                         <input
@@ -240,16 +238,14 @@ export default function DashboardHeader({
                           value={playerNameInput}
                           onChange={e => setPlayerNameInput(e.target.value)}
                           placeholder="Your name"
-                          className="text-xs px-2 py-1 rounded"
-                          style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                          className="text-xs px-2 py-1 rounded input-dark"
                         />
                         <input
                           type="password"
                           value={reviewKeyInput}
                           onChange={e => setReviewKeyInput(e.target.value)}
                           placeholder="Password"
-                          className="text-xs px-2 py-1 rounded"
-                          style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }}
+                          className="text-xs px-2 py-1 rounded input-dark"
                           onKeyDown={e => { if (e.key === "Enter") handleLogin(); }}
                         />
                         {loginError && <p className="text-xs" style={{ color: "#ef4444" }}>{loginError}</p>}
@@ -273,7 +269,7 @@ export default function DashboardHeader({
                     ) : registerSuccess ? (
                       <div className="flex flex-col gap-2">
                         <p className="text-xs font-semibold" style={{ color: "#22c55e" }}>Account Created!</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>You are now logged in.</p>
+                        <p className="text-xs text-w50">You are now logged in.</p>
                         <button
                           onClick={() => { setRegisterOpen(false); setRegisterSuccess(false); setLoginOpen(false); }}
                           className="text-xs px-3 py-1 rounded font-medium"
@@ -285,13 +281,13 @@ export default function DashboardHeader({
                     ) : (
                       <div className="flex flex-col gap-2">
                         <p className="text-xs font-semibold" style={{ color: "#22c55e" }}>Create Account</p>
-                        <input type="text" value={registerName} onChange={e => setRegisterName(e.target.value)} placeholder="Choose a name" className="text-xs px-2 py-1 rounded" style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }} />
-                        <input type="password" value={registerPassword} onChange={e => setRegisterPassword(e.target.value)} placeholder="Password (min 6 chars)" className="text-xs px-2 py-1 rounded" style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }} />
-                        <input type="password" value={registerPasswordConfirm} onChange={e => setRegisterPasswordConfirm(e.target.value)} placeholder="Confirm password" className="text-xs px-2 py-1 rounded" style={{ background: "#141414", border: "1px solid rgba(255,255,255,0.1)", color: "#fff", outline: "none" }} />
+                        <input type="text" value={registerName} onChange={e => setRegisterName(e.target.value)} placeholder="Choose a name" className="text-xs px-2 py-1 rounded input-dark" />
+                        <input type="password" value={registerPassword} onChange={e => setRegisterPassword(e.target.value)} placeholder="Password (min 6 chars)" className="text-xs px-2 py-1 rounded input-dark" />
+                        <input type="password" value={registerPasswordConfirm} onChange={e => setRegisterPasswordConfirm(e.target.value)} placeholder="Confirm password" className="text-xs px-2 py-1 rounded input-dark" />
                         {registerError && <p className="text-xs" style={{ color: "#ef4444" }}>{registerError}</p>}
                         <div className="flex gap-1">
                           <button onClick={handleRegister} className="flex-1 text-xs px-3 py-1 rounded font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>Create</button>
-                          <button onClick={() => { setRegisterOpen(false); setRegisterError(""); setRegisterPassword(""); setRegisterPasswordConfirm(""); }} className="text-xs px-2 py-1 rounded" style={{ color: "rgba(255,255,255,0.3)", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}>Back</button>
+                          <button onClick={() => { setRegisterOpen(false); setRegisterError(""); setRegisterPassword(""); setRegisterPasswordConfirm(""); }} className="text-xs px-2 py-1 rounded text-w30 bg-w4 border-w8">Back</button>
                         </div>
                       </div>
                     )}
@@ -310,11 +306,11 @@ export default function DashboardHeader({
               {suggestedCount} to review
             </div>
           )}
-          <div className="flex items-center gap-2 text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+          <div className="flex items-center gap-2 text-xs text-w30">
             <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: apiLive ? "#22c55e" : "rgba(255,255,255,0.15)", animation: apiLive ? "pulse-online 2s ease-in-out infinite" : "none" }} />
             {apiLive ? "API Live" : "Static"}
           </div>
-          <div className="text-xs font-mono flex items-center gap-1.5" style={{ color: "rgba(255,255,255,0.25)" }}>
+          <div className="text-xs font-mono flex items-center gap-1.5 text-w25">
             <span className="w-1.5 h-1.5 rounded-full inline-block animate-pulse" style={{ background: "rgba(255,102,51,0.5)" }} />
             Updated <span style={{ display: "inline-block", minWidth: "4rem" }}>{lastUpdatedStr}</span>
           </div>
