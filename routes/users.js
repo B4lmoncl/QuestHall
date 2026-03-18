@@ -2,7 +2,7 @@
  * User System Routes — player registration, auth (JWT), XP, streaks, achievements.
  */
 const crypto = require('crypto');
-const { state, LEVELS, QUEST_FLAVOR, CAMPAIGN_NPCS, DEFAULT_CURRENCIES, ensureUserCurrencies, saveUsers, saveClasses, saveManagedKeys } = require('../lib/state');
+const { state, LEVELS, QUEST_FLAVOR, CAMPAIGN_NPCS, DEFAULT_CURRENCIES, ensureUserCurrencies, saveUsers, saveClasses, saveManagedKeys, rebuildUserIndexes } = require('../lib/state');
 const { now, getLevelInfo, calcDynamicForgeTemp, onQuestCompletedByUser, createCompanionQuestsForUser, paginate } = require('../lib/helpers');
 const { requireAuth, requireMasterKey, getMasterKey } = require('../lib/middleware');
 const { generateTokenPair, setRefreshCookie, clearRefreshCookie, getRefreshTokenFromRequest, verifyRefreshToken, revokeRefreshToken, resolveAuth } = require('../lib/auth');
@@ -150,7 +150,7 @@ router.post('/api/auth/login', authLimiter, async (req, res) => {
 
   const bcrypt = require('bcryptjs');
   const nameLower = name.toLowerCase();
-  const user = Object.values(state.users).find(u => u.name.toLowerCase() === nameLower);
+  const user = state.usersByName.get(nameLower);
 
   if (!user) return res.json({ success: false, error: 'Invalid name or password' });
 
@@ -237,7 +237,7 @@ router.post('/api/register', authLimiter, async (req, res) => {
   const trimmedName = String(name).trim();
   const nameLower = trimmedName.toLowerCase();
   // Check if name already taken
-  const existing = Object.values(state.users).find(u => u.name.toLowerCase() === nameLower);
+  const existing = state.usersByName.get(nameLower);
   if (existing) return res.status(409).json({ error: 'Name already taken' });
   // Generate API key (legacy compat) + hash password
   const bcrypt = require('bcryptjs');
@@ -296,6 +296,9 @@ router.post('/api/register', authLimiter, async (req, res) => {
     } : null,
   };
   ensureUserCurrencies(state.users[finalId]);
+  // Update user lookup indexes
+  state.usersByName.set(trimmedName.toLowerCase(), state.users[finalId]);
+  state.usersByApiKey.set(apiKey, state.users[finalId]);
   // Add to managed keys (legacy compat for agents)
   const entry = { key: apiKey, label: `Player: ${trimmedName}`, created: now() };
   state.managedKeys.push(entry);
