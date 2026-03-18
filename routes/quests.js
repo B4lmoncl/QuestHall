@@ -487,10 +487,19 @@ router.get('/api/quests', (req, res) => {
   const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
   const allCampaignQuestIds = new Set(state.campaigns.flatMap(c => c.questIds));
 
+  // Pre-build parent→children index once per request (O(n) instead of O(n²))
+  const _childrenByParent = new Map();
+  for (const q of state.quests) {
+    if (q.parentQuestId) {
+      let arr = _childrenByParent.get(q.parentQuestId);
+      if (!arr) { arr = []; _childrenByParent.set(q.parentQuestId, arr); }
+      arr.push(q);
+    }
+  }
   function enrichEpics(list) {
     return list.map(q => {
-      const children = state.quests.filter(c => c.parentQuestId === q.id);
-      if (children.length === 0) return q;
+      const children = _childrenByParent.get(q.id);
+      if (!children || children.length === 0) return q;
       const completedCount = children.filter(c => c.status === 'completed').length;
       return { ...q, children, progress: { completed: completedCount, total: children.length } };
     });

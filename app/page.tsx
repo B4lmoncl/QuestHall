@@ -652,7 +652,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     refresh();
-    const interval = setInterval(refresh, 8_000);
+    const interval = setInterval(refresh, 30_000);
     return () => clearInterval(interval);
   }, [refresh]);
 
