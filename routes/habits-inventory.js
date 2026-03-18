@@ -135,7 +135,6 @@ router.post('/api/player/:name/inventory/use/:itemId', requireApiKey, (req, res)
     case 'gold': {
       const amt = effect.amount || 0;
       u.gold = (u.gold || 0) + amt;
-      if (u.currencies) u.currencies.gold = u.gold;
       updatedValues.gold = u.gold;
       message = `+${amt} Gold erhalten!`;
       break;
@@ -420,7 +419,7 @@ router.get('/api/shop/equipment', (req, res) => {
 });
 
 router.get('/api/gear/:id', (req, res) => {
-  const item = state.FULL_GEAR_ITEMS.find(g => g.id === req.params.id);
+  const item = state.gearById.get(req.params.id);
   if (!item) return res.status(404).json({ error: 'Item not found' });
   res.json(item);
 });
@@ -438,7 +437,7 @@ router.post('/api/player/:name/equip/:itemId', requireApiKey, (req, res) => {
   const { level } = getLevelInfo(u.xp || 0);
 
   // 1. Check FULL_GEAR_ITEMS (shop buy+equip flow — costs gold)
-  const shopItem = state.FULL_GEAR_ITEMS.find(g => g.id === req.params.itemId);
+  const shopItem = state.gearById.get(req.params.itemId);
   if (shopItem) {
     if (level < shopItem.minLevel) return res.status(400).json({ error: `Requires level ${shopItem.minLevel}` });
     if ((u.gold || 0) < shopItem.cost) return res.status(400).json({ error: `Insufficient gold. Need ${shopItem.cost}, have ${u.gold || 0}` });
@@ -615,7 +614,7 @@ router.get('/api/player/:name/character', (req, res) => {
   let baseStats = { kraft: 0, ausdauer: 0, weisheit: 0, glueck: 0 };
   const equippedItems = [];
   for (const itemId of equippedIds) {
-    let item = state.FULL_GEAR_ITEMS.find(g => g.id === itemId);
+    let item = state.gearById.get(itemId);
     if (!item) {
       // Check item templates for gacha/loot equipment
       const tmpl = resolveItem(itemId);
@@ -681,7 +680,7 @@ router.get('/api/player/:name/character', (req, res) => {
   const inventoryItems = rawInventory.map(entry => {
     // Entry can be a string ID (gear from FULL_GEAR_ITEMS) or a full loot object
     if (typeof entry === 'string') {
-      const item = state.FULL_GEAR_ITEMS.find(g => g.id === entry);
+      const item = state.gearById.get(entry);
       if (!item) return null;
       return { id: item.id, slot: item.slot, name: item.name, icon: item.icon || gachaIconMap[item.id] || gachaIconMap[item.name] || undefined, tier: item.tier, minLevel: item.minLevel, stats: item.stats || {}, rarity: item.rarity || 'common', desc: item.desc || undefined, type: item.type || item.slot || undefined };
     }
@@ -694,8 +693,8 @@ router.get('/api/player/:name/character', (req, res) => {
       // Check if it has resolvedGear referencing a FULL_GEAR_ITEMS entry
       const gearRef = entry.resolvedGear;
       let gearItem = null;
-      if (gearRef?.id) gearItem = state.FULL_GEAR_ITEMS.find(g => g.id === gearRef.id);
-      if (!gearItem && entry.itemId) gearItem = state.FULL_GEAR_ITEMS.find(g => g.id === entry.itemId);
+      if (gearRef?.id) gearItem = state.gearById.get(gearRef.id);
+      if (!gearItem && entry.itemId) gearItem = state.gearById.get(entry.itemId);
       if (gearItem) {
         if (!icon) icon = gearItem.icon || gachaIconMap[gearItem.id] || gachaIconMap[gearItem.name];
         return { id: entry.id, slot: gearItem.slot, name: gearItem.name, icon: icon || undefined, tier: gearItem.tier, minLevel: gearItem.minLevel, stats: gearItem.stats || {}, rarity: entry.rarity || gearItem.rarity || 'common', desc: gearItem.desc || entry.desc || undefined, type: gearItem.type || gearItem.slot || undefined };
