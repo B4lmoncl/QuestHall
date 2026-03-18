@@ -1398,7 +1398,7 @@ export default function Dashboard() {
                     </div>
                     {/* Search + Sort row */}
                     <div className="flex gap-1 mb-2">
-                      <input data-feedback-id="quest-board.search" type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search quests…" className="flex-1 text-xs px-2 py-1.5 rounded" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.08)", color: "#e8e8e8", outline: "none" }} />
+                      <input data-feedback-id="quest-board.search" type="text" value={searchFilter} onChange={e => setSearchFilter(e.target.value)} placeholder="Search quests…" className="flex-1 text-xs px-2 py-1.5 rounded input-dark border-w8" />
                       <button
                         data-feedback-id="quest-board.sort"
                         onClick={() => setSortMode(s => s === "rarity" ? "newest" : "rarity")}
@@ -1415,27 +1415,27 @@ export default function Dashboard() {
                           setInProgressSectionCollapsed(next);
                           try { localStorage.setItem("qb_open_collapsed", String(next)); localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ }
                         }}
-                        className="text-xs px-2 py-1.5 rounded shrink-0"
-                        style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.07)" }}
+                        className="text-xs px-2 py-1.5 rounded shrink-0 bg-w4 text-w25 border-w7"
+
                         title="Collapse / Expand All"
                       >
                         {openSectionCollapsed && inProgressSectionCollapsed ? "⊞" : "⊟"}
                       </button>
                     </div>
                     {!playerName && !loading ? (
-                      <div className="rounded-xl p-8 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div className="rounded-xl p-8 text-center bg-card border-w6">
                         <p className="text-base mb-2">×</p>
-                        <p className="text-sm font-semibold mb-1" style={{ color: "rgba(255,255,255,0.5)" }}>Logge dich ein um deine Quests zu sehen</p>
-                        <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.25)" }}>Dein persönlicher Quest-Pool wartet auf dich!</p>
+                        <p className="text-sm font-semibold mb-1 text-w50">Logge dich ein um deine Quests zu sehen</p>
+                        <p className="text-xs mb-3 text-w25">Dein persönlicher Quest-Pool wartet auf dich!</p>
                         <button onClick={() => setOnboardingOpen(true)} className="text-xs px-4 py-1.5 rounded font-semibold" style={{ background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)" }}>
                           Login
                         </button>
                       </div>
                     ) :
-                    loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.05)" }} />) :
+                    loading ? [1,2,3].map(i => <div key={i} className="h-20 rounded-lg animate-pulse bg-card" style={{ border: "1px solid rgba(255,255,255,0.05)" }} />) :
                     boardOpen.length === 0 && playerVisibleInProgress.length === 0 ? (
-                      <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>{searchFilter ? "No quests match your search" : "No player quests open"}</p>
+                      <div className="rounded-xl p-5 text-center bg-card border-w6">
+                        <p className="text-xs text-w20">{searchFilter ? "No quests match your search" : "No player quests open"}</p>
                         {!searchFilter && playerName && reviewApiKey && <button onClick={handlePoolRefresh} className="btn-interactive mt-2 px-3 py-1 rounded inline-flex items-center gap-1.5" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa", border: "1px solid rgba(59,130,246,0.3)" }}><img src="/images/icons/ui-quest-scroll.png" alt="" width={20} height={20} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} /><span className="text-xs font-semibold">Load Quests</span></button>}
                       </div>
                     ) : (
@@ -1445,7 +1445,7 @@ export default function Dashboard() {
                             <button data-feedback-id="quest-board.in-progress" onClick={() => { const next = !inProgressSectionCollapsed; setInProgressSectionCollapsed(next); try { localStorage.setItem("qb_inprogress_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
                               <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#a78bfa", background: "linear-gradient(90deg, rgba(139,92,246,0.18), rgba(139,92,246,0.1) 60%, transparent 100%)", minWidth: 180 }}>In Progress</span>
                               <span className="text-xs px-2 py-0.5 rounded-md font-mono font-bold relative group" style={{ background: playerVisibleInProgress.length >= 20 ? "rgba(239,68,68,0.18)" : "rgba(139,92,246,0.18)", color: playerVisibleInProgress.length >= 20 ? "#ef4444" : "#a78bfa", border: playerVisibleInProgress.length >= 20 ? "1px solid rgba(239,68,68,0.3)" : "1px solid rgba(139,92,246,0.3)" }}>{playerVisibleInProgress.length}{playerVisibleInProgress.length > 20 && <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity z-50" style={{ background: "#1c1c1c", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)", boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }}>Too many quests in progress! XP malus: -{playerVisibleInProgress.length >= 30 ? 80 : Math.min(50, (playerVisibleInProgress.length - 20) * 10)}%</span>}</span>
-                              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{inProgressSectionCollapsed ? "▼" : "▲"}</span>
+                              <span className="ml-auto text-xs text-w25">{inProgressSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
                             {!inProgressSectionCollapsed && (
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, marginTop: 4 }}>
@@ -1477,7 +1477,7 @@ export default function Dashboard() {
                             )}
                             <button data-feedback-id="quest-board.open" onClick={() => { const next = !openSectionCollapsed; setOpenSectionCollapsed(next); try { localStorage.setItem("qb_open_collapsed", String(next)); } catch { /* ignore */ } }} className="flex items-center gap-2 w-full text-left pt-1 pb-0.5">
                               <span className="text-sm uppercase tracking-widest px-3 py-1 rounded-md" style={{ color: "#94a3b8", background: "linear-gradient(90deg, rgba(148,163,184,0.15), rgba(148,163,184,0.08) 60%, transparent 100%)", minWidth: 180 }}>Open</span>
-                              <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{openSectionCollapsed ? "▼" : "▲"}</span>
+                              <span className="ml-auto text-xs text-w25">{openSectionCollapsed ? "▼" : "▲"}</span>
                             </button>
                             {!openSectionCollapsed && (
                               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12, marginTop: 4 }}>
@@ -1541,7 +1541,7 @@ export default function Dashboard() {
                                 <span className="text-sm font-medium truncate" style={{ color: doneToday ? "rgba(255,255,255,0.4)" : "#e8e8e8", textDecoration: doneToday ? "line-through" : "none" }}>{ritual.title}</span>
                                 {milestone && ((milestone as any).icon ? <img src={(milestone as any).icon} alt={milestone.badge} width={20} height={20} className="img-render-auto" /> : <span className="text-xs">{milestone.badge}</span>)}
                               </div>
-                              <div className="flex items-center gap-3 text-xs flex-wrap" style={{ color: "rgba(255,255,255,0.35)" }}>
+                              <div className="flex items-center gap-3 text-xs flex-wrap" className="text-w35">
                                 <span style={{ color: ritual.streak >= 21 ? "#818cf8" : ritual.streak >= 7 ? "#f97316" : "rgba(255,255,255,0.35)" }}>
                                   {ritual.streak} Tage Streak
                                 </span>
@@ -1551,7 +1551,7 @@ export default function Dashboard() {
                                   </span>
                                 )}
                                 {lastCompletedFormatted && (
-                                  <span title="Last completed" style={{ color: "rgba(255,255,255,0.2)" }}>
+                                  <span title="Last completed" className="text-w20">
                                     {doneToday ? "Heute" : lastCompletedFormatted}
                                   </span>
                                 )}
@@ -1560,7 +1560,7 @@ export default function Dashboard() {
                               </div>
                               {nextMilestone && (
                                 <div className="mt-2">
-                                  <div className="flex items-center justify-between text-xs mb-1" style={{ color: "rgba(255,255,255,0.25)" }}>
+                                  <div className="flex items-center justify-between text-xs mb-1" className="text-w25">
                                     <span>Nächstes Ziel in {nextMilestone.days - ritual.streak}d: <span style={{ color: nextMilestone.label === "Bronze" ? "#cd7f32" : nextMilestone.label === "Silber" ? "#c0c0c0" : nextMilestone.label === "Gold" ? "#ffd700" : nextMilestone.label === "Diamond" ? "#b9f2ff" : "#a78bfa", fontWeight: 700 }}>{nextMilestone.label}</span></span>
                                     <span>{ritual.streak}/{nextMilestone.days}</span>
                                   </div>
@@ -1644,7 +1644,7 @@ export default function Dashboard() {
                         <div className="flex gap-4 mb-4" style={{ alignItems: "flex-start" }}>
                           {/* Portrait column with speech bubble */}
                           <div className="flex-none" style={{ width: 195, overflow: "visible" }}>
-                            <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "auto", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.35))", borderRadius: "4px 4px 0 0", pointerEvents: "none" }} />
+                            <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} className="img-render-auto" style={{ width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.35))", borderRadius: "4px 4px 0 0", pointerEvents: "none" }} />
                             <div style={{ background: "rgba(25,17,5,0.88)", border: "1px solid rgba(245,158,11,0.3)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "8px 10px" }}>
                               <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>„Jedes Feuer beginnt mit einem Funken. Deins auch."</p>
                             </div>
@@ -1665,7 +1665,7 @@ export default function Dashboard() {
                             </div>
                             {playerRituals.length === 0 ? (
                               <div className="rounded-xl p-5 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-                                <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>No rituals. Create your first daily ritual!</p>
+                                <p className="text-xs mb-2" className="text-w25">No rituals. Create your first daily ritual!</p>
                               </div>
                             ) : (
                               <div className="space-y-2">
@@ -1701,7 +1701,7 @@ export default function Dashboard() {
                               <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
                                 {/* NPC Portrait — absolute left of modal, hidden on mobile */}
                                 <div className="hidden md:flex flex-col" style={{ position: "absolute", right: "calc(100% + 16px)", top: "50%", transform: "translateY(-50%)", width: 200, overflow: "visible" }}>
-                                  <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "auto", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
+                                  <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} className="img-render-auto" style={{ width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
                                   <div style={{ background: "rgba(25,17,5,0.92)", border: "1px solid rgba(245,158,11,0.4)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "10px 12px" }}>
                                     <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>{getSeraineSpeech(newRitualCommitment, newRitualBloodPact)}</p>
                                   </div>
@@ -1799,7 +1799,7 @@ export default function Dashboard() {
                 {/* Delete Ritual Confirm Modal */}
                 {deleteRitualConfirmId && (
                   <ModalPortal>
-                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }} onClick={() => setDeleteRitualConfirmId(null)}>
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4" className="modal-backdrop" onClick={() => setDeleteRitualConfirmId(null)}>
                     <div className="w-full max-w-xs rounded-2xl overflow-hidden" style={{ background: "linear-gradient(160deg, #2c2318 0%, #1e1912 100%)", border: "1px solid rgba(239,68,68,0.35)", boxShadow: "0 0 40px rgba(239,68,68,0.1)" }} onClick={e => e.stopPropagation()}>
                       <div className="p-5 text-center">
                         <p className="text-2xl mb-3">×</p>
@@ -1842,7 +1842,7 @@ export default function Dashboard() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={closeExtend}>
                       <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
                         <div className="hidden md:flex flex-col" style={{ position: "absolute", right: "calc(100% + 16px)", top: "50%", transform: "translateY(-50%)", width: 200, overflow: "visible" }}>
-                          <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "auto", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
+                          <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} className="img-render-auto" style={{ width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
                           <div style={{ background: "rgba(25,17,5,0.92)", border: "1px solid rgba(245,158,11,0.4)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "10px 12px" }}>
                             <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>&ldquo;Das Feuer wächst. Gut. Nähre es.&rdquo;</p>
                           </div>
@@ -1906,7 +1906,7 @@ export default function Dashboard() {
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.88)" }} onClick={() => setRecommitRitualId(null)}>
                       <div style={{ position: "relative" }} onClick={e => e.stopPropagation()}>
                         <div className="hidden md:flex flex-col" style={{ position: "absolute", right: "calc(100% + 16px)", top: "50%", transform: "translateY(-50%)", width: 200, overflow: "visible" }}>
-                          <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} style={{ imageRendering: "auto", width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
+                          <img src="/images/portraits/npc-seraine.png?v=3" alt="Seraine Ashwell" width={256} height={384} className="img-render-auto" style={{ width: "100%", height: "auto", display: "block", filter: "drop-shadow(0 0 14px rgba(245,158,11,0.4))", borderRadius: "8px 8px 0 0", pointerEvents: "none" }} />
                           <div style={{ background: "rgba(25,17,5,0.92)", border: "1px solid rgba(245,158,11,0.4)", borderTop: "none", borderRadius: "0 0 8px 8px", padding: "10px 12px" }}>
                             <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>&ldquo;The flame went out. But the ember remembers. Do you?&rdquo;</p>
                           </div>
@@ -1921,7 +1921,7 @@ export default function Dashboard() {
                             <p style={{ fontSize: "0.8rem", fontStyle: "italic", color: "#c9a46a", lineHeight: 1.5, margin: 0 }}>&ldquo;The flame went out. But the ember remembers. Do you?&rdquo;</p>
                           </div>
                           <div className="p-5 space-y-4">
-                            <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+                            <p className="text-sm leading-relaxed" className="text-w50">
                               Your streak was broken, but the rite endures. Recommit and begin anew — your longest streak of <span style={{ color: "#f59e0b", fontWeight: 600 }}>{ritualToRecommit.longestStreak ?? 0} days</span> is etched in the records.
                             </p>
                             <p className="text-xs italic" style={{ color: "rgba(200,170,100,0.35)" }}>
@@ -1969,7 +1969,7 @@ export default function Dashboard() {
               <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#60a5fa" }}>The Arcanum</h2>
             </div>
             <div className="rounded-xl px-6 py-16 text-center" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-              <p className="text-lg font-bold mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Coming Soon</p>
+              <p className="text-lg font-bold mb-2" className="text-w25">Coming Soon</p>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>Das Arcanum sammelt seine Schriftrollen. Klassenquests und Skill Trees folgen bald.</p>
             </div>
           </div>
@@ -2039,7 +2039,7 @@ export default function Dashboard() {
               onClick={() => setRejectedOpen(v => !v)}
               className="flex items-center gap-2 mb-3 w-full text-left"
             >
-              <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.2)" }}>
+              <h2 className="text-xs font-semibold uppercase tracking-widest" className="text-w20">
                 Rejected
               </h2>
               <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.2)" }}>
@@ -2094,13 +2094,13 @@ export default function Dashboard() {
                 onClick={() => setCompletedOpen(v => !v)}
                 className="flex items-center gap-2 mb-3 w-full text-left"
               >
-                <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <h2 className="text-xs font-semibold uppercase tracking-widest" className="text-w40">
                   {dashView === "npcBoard" ? "NPC Quest Log" : "Quest Journal"}
                 </h2>
                 <span className="text-xs px-1.5 py-0.5 rounded font-mono" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }}>
                   {journalQuests.length}
                 </span>
-                <span className="ml-auto text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
+                <span className="ml-auto text-xs" className="text-w20">
                   {completedOpen ? "▲" : "▼"}
                 </span>
               </button>
@@ -2117,7 +2117,7 @@ export default function Dashboard() {
                   />
                   <div className="rounded-xl overflow-hidden" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.06)" }}>
                     {journalQuests.length === 0 ? (
-                      <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
+                      <p className="text-xs p-4 text-center" className="text-w20">
                         {dashView === "questBoard" && !playerName ? "Login to see your completed quests" : "No completed quests yet"}
                       </p>
                     ) : (() => {
@@ -2129,7 +2129,7 @@ export default function Dashboard() {
                           )
                         : journalQuests;
                       if (filtered.length === 0) return (
-                        <p className="text-xs p-4 text-center" style={{ color: "rgba(255,255,255,0.2)" }}>No quests match &ldquo;{completedSearch}&rdquo;</p>
+                        <p className="text-xs p-4 text-center" className="text-w20">No quests match &ldquo;{completedSearch}&rdquo;</p>
                       );
                       return (
                         <div>
@@ -2162,7 +2162,7 @@ export default function Dashboard() {
             boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 20px rgba(255,102,51,0.1)",
           }}
         >
-          <span className="text-xs font-medium mr-1" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <span className="text-xs font-medium mr-1" className="text-w50">
             {selectedIds.size} selected
           </span>
           {(["open", "completed", "rejected"] as Quest["status"][]).map(s => (
@@ -2211,7 +2211,7 @@ export default function Dashboard() {
           <div
             data-feedback-id="quest-board.quest-modal"
             className="fixed inset-0 z-[90] flex items-center justify-center p-4"
-            style={{ background: "rgba(0,0,0,0.75)" }}
+            className="modal-backdrop"
             onClick={() => setQuestDetailModal(null)}
           >
             <div
@@ -2233,13 +2233,13 @@ export default function Dashboard() {
                 <div className="flex items-start gap-3 flex-1 min-w-0">
                   <span className="text-2xl flex-shrink-0">{typeCfg.icon?.startsWith("/") ? <img src={typeCfg.icon} alt="" width={28} height={28} className="img-render-auto" onError={(e) => { e.currentTarget.style.display = "none"; }} /> : typeCfg.icon}</span>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-base font-bold leading-snug" style={{ color: "#f0f0f0" }}>{q.title}</h3>
+                    <h3 className="text-base font-bold leading-snug" className="text-bright">{q.title}</h3>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-xs font-mono px-1.5 py-0.5 rounded" style={{ color: rarityColor, background: `${rarityColor}18`, border: `1px solid ${rarityColor}40` }}>{rarity}</span>
                       {q.difficulty && q.difficulty !== "none" && (
                         <span className="text-xs font-mono px-1.5 py-0.5 rounded capitalize" style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)" }}>{q.difficulty}</span>
                       )}
-                      <span className="text-xs capitalize" style={{ color: "rgba(255,255,255,0.35)" }}>{q.type ?? "personal"}</span>
+                      <span className="text-xs capitalize" className="text-w35">{q.type ?? "personal"}</span>
                       {/* priority hidden from modal header */}
                       {q.minLevel != null && q.minLevel > 0 && (() => {
                         const meets = playerLevelInfo.level >= q.minLevel;
@@ -2325,14 +2325,14 @@ export default function Dashboard() {
                   const displayGold = (q.rewards?.gold != null && q.rewards.gold > 0) ? q.rewards.gold : (q.rarity ? (GOLD_BY_RARITY[q.rarity] ?? GOLD_FALLBACK[q.priority] ?? 9) : (GOLD_FALLBACK[q.priority] ?? 9));
                   return (
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Belohnung</p>
+                      <p className="text-xs font-semibold uppercase tracking-widest mb-2" className="text-w25">Belohnung</p>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
-                          <img src="/images/icons/reward-gold.png" width={16} height={16} style={{ imageRendering: "auto", verticalAlign: "middle" }} />
+                          <img src="/images/icons/reward-gold.png" width={16} height={16} className="img-render-auto" style={{ verticalAlign: "middle" }} />
                           <span className="text-sm font-mono font-bold" style={{ color: "#fbbf24" }}>{displayGold} Gold</span>
                         </div>
                         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: "rgba(167,139,250,0.08)", border: "1px solid rgba(167,139,250,0.2)" }}>
-                          <img src="/images/icons/reward-xp.png" width={16} height={16} style={{ imageRendering: "auto", verticalAlign: "middle" }} />
+                          <img src="/images/icons/reward-xp.png" width={16} height={16} className="img-render-auto" style={{ verticalAlign: "middle" }} />
                           <span className="text-sm font-mono font-bold" style={{ color: "#a78bfa" }}>{displayXp} XP</span>
                         </div>
                       </div>
@@ -2386,9 +2386,9 @@ export default function Dashboard() {
             onClick={e => e.stopPropagation()}>
             <div className="text-5xl mb-3" style={{ filter: `drop-shadow(0 0 12px ${lootDrop.rarityColor})` }}>{lootDrop.emoji}</div>
             <div className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: lootDrop.rarityColor }}>{lootDrop.rarity}</div>
-            <div className="text-base font-bold mb-2" style={{ color: "#e8e8e8" }}>{lootDrop.name}</div>
+            <div className="text-base font-bold mb-2" className="text-primary">{lootDrop.name}</div>
             {lootDrop.effect?.amount && (
-              <div className="text-xs mb-4" style={{ color: "rgba(255,255,255,0.5)" }}>
+              <div className="text-xs mb-4" className="text-w50">
                 {lootDrop.effect.type === 'gold' && `＋${lootDrop.effect.amount} Gold`}
                 {lootDrop.effect.type === 'xp' && `＋${lootDrop.effect.amount} XP`}
                 {lootDrop.effect.type === 'streak_shield' && `＋${lootDrop.effect.amount} Streak-Schutzschild`}
@@ -2432,7 +2432,7 @@ export default function Dashboard() {
             <div className="text-xs font-bold uppercase tracking-[0.3em] mb-2" style={{ color: "rgba(255,215,0,0.6)" }}>Level Up!</div>
             <div className="levelup-title text-3xl font-black mb-1" style={{ color: "#FFD700" }}>Level {levelUpCelebration.level}</div>
             <div className="text-sm font-semibold mb-5" style={{ color: "rgba(255,215,0,0.7)" }}>{levelUpCelebration.title}</div>
-            <div className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>The Forge recognizes your dedication, adventurer.</div>
+            <div className="text-xs mb-6" className="text-w35">The Forge recognizes your dedication, adventurer.</div>
             <button
               onClick={() => setLevelUpCelebration(null)}
               className="action-btn w-full py-2.5 rounded-xl text-sm font-bold"
@@ -2576,10 +2576,10 @@ export default function Dashboard() {
               {infoOverlayTab === "changelog" && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 pb-1">
-                    <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Changelog</span>
+                    <span className="text-xs font-semibold uppercase tracking-widest" className="text-w35">Changelog</span>
                   </div>
                   {changelogData.length === 0 && (
-                    <div className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>No changelog data available.</div>
+                    <div className="text-sm" className="text-w25">No changelog data available.</div>
                   )}
                   {changelogData.map(entry => (
                     <div key={entry.version} className="rounded-lg overflow-hidden" style={{ border: "1px solid rgba(255,255,255,0.07)" }}>
@@ -2594,7 +2594,7 @@ export default function Dashboard() {
                         <span className="flex-1 text-sm font-medium" style={{ color: "rgba(255,255,255,0.75)" }}>
                           {entry.title}
                         </span>
-                        <span className="text-xs shrink-0" style={{ color: "rgba(255,255,255,0.25)" }}>
+                        <span className="text-xs shrink-0" className="text-w25">
                           {entry.date}
                         </span>
                         <span className="shrink-0" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>
@@ -2604,7 +2604,7 @@ export default function Dashboard() {
                       {changelogExpanded === entry.version && (
                         <ul className="px-4 py-3 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.2)" }}>
                           {entry.changes.map((change, i) => (
-                            <li key={i} className="flex items-start gap-2 text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+                            <li key={i} className="flex items-start gap-2 text-sm" className="text-w60">
                               <span className="shrink-0" style={{ color: "rgba(255,68,68,0.6)", marginTop: 2 }}>•</span>
                               {change}
                             </li>
@@ -2665,7 +2665,7 @@ export default function Dashboard() {
       {classActivatedNotif && (
         <div
           className="fixed inset-0 z-[90] flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.75)" }}
+          className="modal-backdrop"
           onClick={() => setClassActivatedNotif(null)}
         >
           <div
@@ -2675,14 +2675,14 @@ export default function Dashboard() {
           >
             <div className="text-center space-y-1">
               <div className="text-4xl">×</div>
-              <h2 className="text-base font-bold" style={{ color: "#f0f0f0" }}>
+              <h2 className="text-base font-bold" className="text-bright">
                 Dein Klassenpfad steht bereit!
               </h2>
               <p className="text-sm font-semibold" style={{ color: "#a78bfa" }}>
                 {classActivatedNotif.classIcon} Willkommen auf dem {classActivatedNotif.className}!
               </p>
             </div>
-            <p className="text-xs text-center" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="text-xs text-center" className="text-w50">
               {classActivatedNotif.classDescription}
             </p>
             <button
@@ -2708,11 +2708,11 @@ export default function Dashboard() {
             }}
           >
             <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold" style={{ color: "#f0f0f0" }}>
+              <h2 className="text-lg font-bold" className="text-bright">
                 Version {gameVersion} is live! ✨
               </h2>
               {changelogData[0] && (
-                <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-sm" className="text-w50">
                   {changelogData[0].title}
                 </p>
               )}
