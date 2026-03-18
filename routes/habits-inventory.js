@@ -11,7 +11,7 @@ const {
   rollLoot, resetLootPity, addLootToInventory, calcDynamicForgeTemp,
   getBondLevel,
 } = require('../lib/helpers');
-const { requireApiKey } = require('../lib/middleware');
+const { requireAuth, requireSelf } = require('../lib/middleware');
 const { rebuildCatalogMeta } = require('../lib/quest-catalog');
 
 let changelogCache = null;
@@ -26,7 +26,7 @@ router.get('/api/habits', (req, res) => {
   res.json(state.habits);
 });
 
-router.post('/api/habits', requireApiKey, (req, res) => {
+router.post('/api/habits', requireAuth, (req, res) => {
   const { title, positive, negative, playerId } = req.body;
   if (!title) return res.status(400).json({ error: 'title is required' });
   if (!playerId) return res.status(400).json({ error: 'playerId is required' });
@@ -45,7 +45,7 @@ router.post('/api/habits', requireApiKey, (req, res) => {
   res.json({ ok: true, habit });
 });
 
-router.post('/api/habits/:id/score', requireApiKey, (req, res) => {
+router.post('/api/habits/:id/score', requireAuth, (req, res) => {
   const { direction, playerId } = req.body;
   const habit = state.habits.find(h => h.id === req.params.id);
   if (!habit) return res.status(404).json({ error: 'Habit not found' });
@@ -78,7 +78,7 @@ router.post('/api/habits/:id/score', requireApiKey, (req, res) => {
   res.json({ ok: true, habit, lootDrop });
 });
 
-router.delete('/api/habits/:id', requireApiKey, (req, res) => {
+router.delete('/api/habits/:id', requireAuth, (req, res) => {
   const idx = state.habits.findIndex(h => h.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Habit not found' });
   state.habits.splice(idx, 1);
@@ -93,7 +93,7 @@ router.get('/api/player/:name/inventory', (req, res) => {
   res.json({ inventory: u.inventory || [], streakShields: u.streakShields || 0 });
 });
 
-router.post('/api/player/:name/inventory/use/:itemId', requireApiKey, (req, res) => {
+router.post('/api/player/:name/inventory/use/:itemId', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
@@ -387,7 +387,7 @@ router.post('/api/player/:name/inventory/use/:itemId', requireApiKey, (req, res)
 });
 
 // ─── Discard endpoint ──────────────────────────────────────────────────────
-router.post('/api/player/:name/inventory/discard/:itemId', requireApiKey, (req, res) => {
+router.post('/api/player/:name/inventory/discard/:itemId', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
@@ -428,7 +428,7 @@ router.get('/api/gear-templates', (req, res) => {
   res.json({ tiers: state.gearTemplates.tiers, setBonus: state.gearTemplates.setBonus });
 });
 
-router.post('/api/player/:name/equip/:itemId', requireApiKey, (req, res) => {
+router.post('/api/player/:name/equip/:itemId', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
@@ -759,7 +759,7 @@ router.get('/api/player/:name/character', (req, res) => {
   });
 });
 
-router.post('/api/player/:name/unequip/:slot', requireApiKey, (req, res) => {
+router.post('/api/player/:name/unequip/:slot', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import type { RoadmapItem } from "@/app/types";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 const ROADMAP_STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; border: string; dot: string }> = {
   done:        { label: "Done",        color: "#22c55e", bg: "rgba(34,197,94,0.12)",   border: "rgba(34,197,94,0.3)",   dot: "●" },
@@ -31,7 +32,7 @@ export function RoadmapView({ isAdmin, reviewApiKey }: { isAdmin: boolean; revie
     if (!newTitle.trim()) return;
     const r = await fetch("/api/roadmap", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
       body: JSON.stringify({ title: newTitle, desc: newDesc, status: newStatus, eta: newEta, category: newCategory }),
     });
     if (r.ok) {
@@ -45,7 +46,7 @@ export function RoadmapView({ isAdmin, reviewApiKey }: { isAdmin: boolean; revie
   const handleStatusChange = async (id: string, status: string) => {
     const r = await fetch(`/api/roadmap/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+      headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
       body: JSON.stringify({ status }),
     });
     if (r.ok) {

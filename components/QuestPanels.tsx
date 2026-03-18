@@ -7,6 +7,7 @@ import type {
 } from "@/app/types";
 import { typeConfig } from "@/app/config";
 import { getAntiRitualMood } from "@/app/utils";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Anti-Rituale Panel ───────────────────────────────────────────────────────
 
@@ -108,7 +109,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
     try {
       await fetch(`/api/rituals/${id}/violate`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ playerId: playerName }),
       });
       loadAntiRituals();
@@ -124,7 +125,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
       const diff = DIFFICULTY_TIERS_VOW.find(d => d.id === newVowDifficulty)!;
       await fetch("/api/rituals", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: newTitle.trim(),
           schedule: { type: "daily" },
@@ -229,7 +230,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
                     try {
                       const r = await fetch(`/api/rituals/${ar.id}/complete`, {
                         method: "POST",
-                        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
                         body: JSON.stringify({ playerId: playerName }),
                       });
                       const data = await r.json();
@@ -489,7 +490,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
                     const id = deleteConfirmId;
                     setDeleteConfirmId(null);
                     try {
-                      await fetch(`/api/rituals/${id}`, { method: "DELETE", headers: { "x-api-key": reviewApiKey } });
+                      await fetch(`/api/rituals/${id}`, { method: "DELETE", headers: { ...getAuthHeaders(reviewApiKey) } });
                       loadAntiRituals();
                     } catch { /* ignore */ }
                   }}
@@ -553,7 +554,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
                         try {
                           await fetch(`/api/rituals/${extendId}/extend`, {
                             method: "PATCH",
-                            headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                            headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
                             body: JSON.stringify({ newCommitment: selectedTier.id, newCommitmentDays: selectedTier.days }),
                           });
                           closeExtend();
@@ -613,7 +614,7 @@ export function AntiRitualePanel({ playerName, reviewApiKey, onRewardCelebration
                         try {
                           await fetch(`/api/rituals/${recommitId}/recommit`, {
                             method: "POST",
-                            headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                            headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
                             body: JSON.stringify({ playerId: playerName }),
                           });
                           setRecommitId(null);
@@ -823,7 +824,7 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName,
     try {
       const res = await fetch("/api/quest", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({
           title: q.title,
           description: q.description,
@@ -840,7 +841,7 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName,
         if (questId && playerName) {
           await fetch(`/api/quest/${questId}/claim`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+            headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
             body: JSON.stringify({ agentId: playerName }),
           });
         }
@@ -857,7 +858,7 @@ export function DobbieQuestPanel({ reviewApiKey, onRefresh, playerName, petName,
     try {
       const r = await fetch(`/api/quest/${questId}/complete`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ agentId: playerName }),
       });
       if (r.ok) {

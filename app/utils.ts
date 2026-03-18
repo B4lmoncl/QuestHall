@@ -105,10 +105,11 @@ export async function fetchChangelog(): Promise<ChangelogEntry[]> {
 
 export async function createStarterQuestsIfNew(playerName: string, apiKey: string) {
   try {
+    const { getAuthHeaders } = await import("@/lib/auth-client");
     const key = `starter_quests_${playerName.toLowerCase()}`;
     if (localStorage.getItem(key) === "true") return;
     localStorage.setItem(key, "true");
-    const headers = { "Content-Type": "application/json", "x-api-key": apiKey };
+    const headers = { "Content-Type": "application/json", ...getAuthHeaders(apiKey) };
     const starterQuests = [
       { title: "x Welcome to the Guild!", description: "Complete this quest to earn your first companion — Dobbie the Cat! Just click 'Complete' to claim your reward. This teaches you the claim → complete flow.", type: "personal", priority: "high", createdBy: "system" },
       { title: "x Organize Your Desk", description: "Tidy up your workspace. A clear desk leads to a clear mind!", type: "personal", priority: "low", createdBy: "system" },

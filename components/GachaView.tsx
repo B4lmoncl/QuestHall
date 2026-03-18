@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef, useId, useMemo } from "react"
 import type { User, GachaPullResult, GachaBanner, GachaPityInfo } from "@/app/types";
 import GachaPull, { RARITY_CONFIG } from "./GachaPull";
 import { ModalOverlay } from "./ModalPortal";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Currency helpers ────────────────────────────────────────────────────────
 const CURRENCY_META: Record<string, { emoji: string; label: string; color: string; iconSrc?: string }> = {
@@ -702,7 +703,7 @@ export default function GachaView({ users, playerName, reviewApiKey, onRefresh, 
       const endpoint = count === 1 ? "/api/gacha/pull" : "/api/gacha/pull10";
       const r = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-API-Key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ playerId: user.id, bannerId }),
       });
       const data = await r.json();

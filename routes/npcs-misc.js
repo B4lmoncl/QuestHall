@@ -2,8 +2,8 @@
 const router = require('express').Router();
 const fs = require('fs');
 const path = require('path');
-const { state, ADMIN_KEY, saveNpcState, saveFeedback } = require('../lib/state');
-const { getMasterKey, requireApiKey } = require('../lib/middleware');
+const { state, saveNpcState, saveFeedback } = require('../lib/state');
+const { getMasterKey, requireMasterKey } = require('../lib/middleware');
 const { rotateNpcs } = require('../lib/npc-engine');
 const { getPlayerProgress } = require('../lib/helpers');
 
@@ -99,12 +99,7 @@ router.get('/api/npcs/departures', (req, res) => {
 });
 
 // POST /api/npcs/rotate [admin]
-router.post('/api/npcs/rotate', requireApiKey, (req, res) => {
-  const incomingKey = req.headers['x-api-key'];
-  const masterKey = getMasterKey();
-  if (incomingKey !== masterKey && incomingKey !== ADMIN_KEY) {
-    return res.status(403).json({ error: 'Admin only' });
-  }
+router.post('/api/npcs/rotate', requireMasterKey, (req, res) => {
   rotateNpcs();
   res.json({ ok: true, activeNpcs: state.npcState.activeNpcs });
 });

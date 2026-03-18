@@ -6,6 +6,7 @@ import { useModalBehavior } from "@/components/ModalPortal";
 import ItemActionPopup from "@/components/ItemActionPopup";
 import type { User, CharacterData, ClassDef, PixelCharacterProps } from "@/app/types";
 import type { ToastInput } from "@/components/ToastStack";
+import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── PixelCharacter Canvas Component ─────────────────────────────────────────
 
@@ -235,7 +236,7 @@ function ProfileSettingsModal({ playerName, apiKey, initialStatus, initialPartne
     try {
       await fetch(`/api/player/${encodeURIComponent(playerName)}/profile`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(apiKey) },
         body: JSON.stringify({ relationshipStatus: status, partnerName: partner.trim() || null }),
       });
       await onSaved();
@@ -643,7 +644,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     try {
       const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/equip/${itemId}`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { ...getAuthHeaders(apiKey) },
       });
       if (r.ok) {
         const item = charData?.inventory.find(i => i.id === itemId);
@@ -662,7 +663,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     try {
       await fetch(`/api/player/${encodeURIComponent(playerName)}/unequip/${slot}`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { ...getAuthHeaders(apiKey) },
       });
       await fetchChar();
     } finally { setUnequipping(null); }
@@ -674,7 +675,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     try {
       const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/inventory/use/${itemId}`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { ...getAuthHeaders(apiKey) },
       });
       if (r.ok) {
         const data = await r.json();
@@ -693,7 +694,7 @@ export default function CharacterView({ playerName, apiKey, users, classesList, 
     try {
       await fetch(`/api/player/${encodeURIComponent(playerName)}/inventory/discard/${itemId}`, {
         method: "POST",
-        headers: { "x-api-key": apiKey },
+        headers: { ...getAuthHeaders(apiKey) },
       });
       await fetchChar();
     } catch { /* ignore */ }

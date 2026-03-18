@@ -50,6 +50,7 @@ import {
 import {
   priorityConfig, categoryConfig, productConfig, typeConfig, STREAK_MILESTONES_CLIENT,
 } from "@/app/config";
+import { getAuthHeaders, setAccessToken } from "@/lib/auth-client";
 
 const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4, companion: 1 };
 
@@ -258,7 +259,7 @@ export default function Dashboard() {
       try {
         await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/seen-version`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+          headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
           body: JSON.stringify({ version: gameVersion }),
         });
       } catch { /* ignore */ }
@@ -451,7 +452,7 @@ export default function Dashboard() {
     try {
       await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/favorites`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ questId, action }),
       });
     } catch { /* ignore */ }
@@ -594,7 +595,7 @@ export default function Dashboard() {
     try {
       const r = await fetch(`/api/quests/pool/refresh?player=${encodeURIComponent(playerName)}`, {
         method: "POST",
-        headers: { "x-api-key": reviewApiKey },
+        headers: { ...getAuthHeaders(reviewApiKey) },
       });
       if (r.ok) {
         setLastPoolRefresh(new Date());
@@ -728,7 +729,7 @@ export default function Dashboard() {
     const check = async () => {
       try {
         const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/notifications`, {
-          headers: { "x-api-key": reviewApiKey },
+          headers: { ...getAuthHeaders(reviewApiKey) },
         });
         if (!r.ok) return;
         const data = await r.json();
@@ -1929,7 +1930,7 @@ export default function Dashboard() {
                                   try {
                                     await fetch(`/api/rituals/${extendRitualId}/extend`, {
                                       method: "PATCH",
-                                      headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                                      headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
                                       body: JSON.stringify({ newCommitment: selectedTier.id, newCommitmentDays: selectedTier.days }),
                                     });
                                     closeExtend();
@@ -1987,7 +1988,7 @@ export default function Dashboard() {
                                   try {
                                     await fetch(`/api/rituals/${recommitRitualId}/recommit`, {
                                       method: "POST",
-                                      headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+                                      headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
                                       body: JSON.stringify({ playerId: playerName }),
                                     });
                                     setRecommitRitualId(null);
@@ -2702,8 +2703,9 @@ export default function Dashboard() {
       {onboardingOpen && (
         <OnboardingWizard
           onClose={() => setOnboardingOpen(false)}
-          onComplete={async ({ name: newName, apiKey }) => {
+          onComplete={async ({ name: newName, apiKey, accessToken: token }) => {
             setOnboardingOpen(false);
+            if (token) setAccessToken(token);
             localStorage.setItem("dash_api_key", apiKey);
             localStorage.setItem("dash_player_name", newName);
             setPlayerName(newName);
