@@ -10,10 +10,10 @@ import { getQuestRarity } from "@/app/utils";
 
 
 const COMPANION_IDS_ALL = ["ember_sprite", "lore_owl", "gear_golem"];
-const COMPANION_META_ALL: Record<string, { name: string; quote: string }> = {
-  ember_sprite: { name: "Ember Sprite", quote: "The forge burns because YOU keep it lit!" },
-  lore_owl:     { name: "Lore Owl",     quote: "Knowledge is power, adventurer." },
-  gear_golem:   { name: "Gear Golem",   quote: "Efficiency is the path to glory." },
+const COMPANION_META_ALL: Record<string, { name: string; quote: string; icon: string }> = {
+  ember_sprite: { name: "Ember Sprite", quote: "The forge burns because YOU keep it lit!", icon: "/images/icons/mini-ember-sprite.png" },
+  lore_owl:     { name: "Lore Owl",     quote: "Knowledge is power, adventurer.",         icon: "/images/icons/mini-lore-owl.png" },
+  gear_golem:   { name: "Gear Golem",   quote: "Efficiency is the path to glory.",        icon: "/images/icons/mini-gear-golem.png" },
 };
 // Companion quotes by type category
 const COMPANION_QUOTES: Record<string, string[]> = {
@@ -461,6 +461,9 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
                   borderTop: "1px solid rgba(167,139,250,0.25)",
                   borderRadius: 2,
                 }}>
+                  {meta?.icon && (
+                    <img src={meta.icon} alt={meta.name} style={{ width: 24, height: 24, imageRendering: "smooth", flexShrink: 0 }} />
+                  )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{meta?.name ?? c.name}</span>
