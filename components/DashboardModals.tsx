@@ -59,13 +59,13 @@ export default function DashboardModals({
       {currenciesOpen && (() => {
         return (
           <ModalPortal>
-            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.75)" }}
+            <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 modal-backdrop"
               onClick={() => { setCurrenciesOpen(false); setCurrencyExpanded(null); }}>
-              <div className="w-full max-w-xs rounded-2xl p-5" style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.1)", maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }}
+              <div className="w-full max-w-xs rounded-2xl p-5 bg-surface-alt border-w10" style={{ maxHeight: "80vh", overflow: "hidden", display: "flex", flexDirection: "column" }}
                 onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold" style={{ color: "#e8e8e8" }}>Currencies</h3>
-                  <button onClick={() => { setCurrenciesOpen(false); setCurrencyExpanded(null); }} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                  <h3 className="text-sm font-semibold text-primary">Currencies</h3>
+                  <button onClick={() => { setCurrenciesOpen(false); setCurrencyExpanded(null); }} className="btn-close">×</button>
                 </div>
                 <div className="space-y-2 overflow-y-auto flex-1">
                   {[
@@ -85,7 +85,7 @@ export default function DashboardModals({
                         <img src={c.iconSrc} alt="" width={24} height={24} className={c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} style={{ imageRendering: "auto" }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-semibold" style={{ color: c.color }}>{c.name}</p>
-                          <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{c.desc}</p>
+                          <p className="text-xs text-w30">{c.desc}</p>
                         </div>
                         <span className="text-sm font-mono font-bold" style={{ color: c.value === 0 && c.key !== "gold" ? "rgba(255,255,255,0.2)" : c.color }}>
                           {c.value === 0 && c.key !== "gold" ? "—" : c.value}
@@ -94,7 +94,7 @@ export default function DashboardModals({
                       {currencyExpanded === c.key && (
                         <div className="rounded-b-xl px-4 py-3 -mt-1" style={{ background: `${c.color}08`, borderLeft: `1px solid ${c.color}30`, borderRight: `1px solid ${c.color}30`, borderBottom: `1px solid ${c.color}30` }}>
                           <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: `${c.color}99` }}>Wie erhältst du {c.name}?</p>
-                          <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.55)" }}>{CURRENCY_HOW[c.key]}</p>
+                          <p className="text-xs leading-relaxed text-w55">{CURRENCY_HOW[c.key]}</p>
                         </div>
                       )}
                     </div>
@@ -111,12 +111,12 @@ export default function DashboardModals({
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }}
             onClick={() => setModifierOpen(false)}>
-            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
-            <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }}
+            <div className="absolute inset-0 modal-backdrop-blur" />
+            <div className="relative rounded-2xl p-5 bg-surface border-w12" style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }}
               onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-sm font-bold" style={{ color: "#f0f0f0" }}>Modifier Breakdown</h3>
-                <button onClick={() => setModifierOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <h3 className="text-sm font-bold text-bright">Modifier Breakdown</h3>
+                <button onClick={() => setModifierOpen(false)} className="btn-close">×</button>
               </div>
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
@@ -135,7 +135,7 @@ export default function DashboardModals({
                     <div key={r.label} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: r.val !== 1 ? "rgba(255,255,255,0.03)" : "transparent" }}>
                       <div>
                         <span className="text-xs font-medium" style={{ color: r.val !== 1 ? "#f0f0f0" : "rgba(255,255,255,0.3)" }}>{r.label}</span>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{r.desc}</p>
+                        <p className="text-xs text-w30" style={{ fontSize: 10 }}>{r.desc}</p>
                       </div>
                       <span className="font-mono font-bold text-sm" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.2)" }}>×{r.val}</span>
                     </div>
@@ -156,7 +156,7 @@ export default function DashboardModals({
                     <div key={r.label} className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: r.val !== 1 ? "rgba(255,255,255,0.03)" : "transparent" }}>
                       <div>
                         <span className="text-xs font-medium" style={{ color: r.val !== 1 ? "#f0f0f0" : "rgba(255,255,255,0.3)" }}>{r.label}</span>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>{r.desc}</p>
+                        <p className="text-xs text-w30" style={{ fontSize: 10 }}>{r.desc}</p>
                       </div>
                       <span className="font-mono font-bold text-sm" style={{ color: r.val !== 1 ? r.color : "rgba(255,255,255,0.2)" }}>×{r.val}</span>
                     </div>
@@ -172,22 +172,22 @@ export default function DashboardModals({
       {streakInfoOpen && (
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setStreakInfoOpen(false)}>
-            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
-            <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 modal-backdrop-blur" />
+            <div className="relative rounded-2xl p-5 bg-surface border-w12" style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold" style={{ color: "#f97316" }}>Forge Streak</h3>
-                <button onClick={() => setStreakInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <button onClick={() => setStreakInfoOpen(false)} className="btn-close">×</button>
               </div>
-              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <p className="text-xs leading-relaxed mb-3 text-w60">
                 Your consecutive days of quest completion. Keep the streak alive to earn bonus XP and keep companions happy!
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Current Streak</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Current Streak</span>
                   <span className="font-mono font-bold text-sm" style={{ color: "#f97316" }}>{loggedInUser?.streakDays ?? 0}d</span>
                 </div>
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Gold Bonus</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Gold Bonus</span>
                   <span className="font-mono font-bold text-sm" style={{ color: "#fbbf24" }}>+{Math.min((loggedInUser?.streakDays ?? 0) * 10, 200)}%</span>
                 </div>
               </div>
@@ -200,23 +200,23 @@ export default function DashboardModals({
       {activeQuestsInfoOpen && (
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setActiveQuestsInfoOpen(false)}>
-            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
-            <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 modal-backdrop-blur" />
+            <div className="relative rounded-2xl p-5 bg-surface border-w12" style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold" style={{ color: "#ef4444" }}>Active Quests</h3>
-                <button onClick={() => setActiveQuestsInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <button onClick={() => setActiveQuestsInfoOpen(false)} className="btn-close">×</button>
               </div>
-              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <p className="text-xs leading-relaxed mb-3 text-w60">
                 Quests you&apos;ve claimed and are currently working on. Claiming too many quests at once (&gt;20) will apply an XP hoarding penalty.
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>In Progress</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">In Progress</span>
                   <span className="font-mono font-bold text-sm" style={{ color: "#ef4444" }}>{inProgressCount}</span>
                 </div>
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Open on Board</span>
-                  <span className="font-mono font-bold text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>{openQuestsCount}</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Open on Board</span>
+                  <span className="font-mono font-bold text-sm text-w50">{openQuestsCount}</span>
                 </div>
               </div>
             </div>
@@ -228,22 +228,22 @@ export default function DashboardModals({
       {completedInfoOpen && (
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setCompletedInfoOpen(false)}>
-            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
-            <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(255,255,255,0.12)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 modal-backdrop-blur" />
+            <div className="relative rounded-2xl p-5 bg-surface border-w12" style={{ boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 300, maxWidth: 380 }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold" style={{ color: "#22c55e" }}>Quests Completed</h3>
-                <button onClick={() => setCompletedInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <button onClick={() => setCompletedInfoOpen(false)} className="btn-close">×</button>
               </div>
-              <p className="text-xs leading-relaxed mb-3" style={{ color: "rgba(255,255,255,0.6)" }}>
+              <p className="text-xs leading-relaxed mb-3 text-w60">
                 Total quests you&apos;ve finished. Each one earns XP toward your next level.
               </p>
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Total Completed</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Total Completed</span>
                   <span className="font-mono font-bold text-sm" style={{ color: "#22c55e" }}>{loggedInUser?.questsCompleted ?? 0}</span>
                 </div>
-                <div className="flex items-center justify-between px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.03)" }}>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>Total XP Earned</span>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Total XP Earned</span>
                   <span className="font-mono font-bold text-sm" style={{ color: "#a855f7" }}>{loggedInUser?.xp ?? 0}</span>
                 </div>
               </div>
@@ -256,13 +256,13 @@ export default function DashboardModals({
       {xpInfoOpen && (
         <ModalPortal>
           <div className="fixed inset-0 flex items-center justify-center" style={{ zIndex: 9999 }} onClick={() => setXpInfoOpen(false)}>
-            <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }} />
-            <div className="relative rounded-2xl p-5" style={{ background: "#1a1a1a", border: "1px solid rgba(167,139,250,0.25)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }} onClick={e => e.stopPropagation()}>
+            <div className="absolute inset-0 modal-backdrop-blur" />
+            <div className="relative rounded-2xl p-5 bg-surface" style={{ border: "1px solid rgba(167,139,250,0.25)", boxShadow: "0 12px 48px rgba(0,0,0,0.7)", minWidth: 320, maxWidth: 400 }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-bold" style={{ color: "#a78bfa" }}>How XP Works</h3>
-                <button onClick={() => setXpInfoOpen(false)} style={{ color: "rgba(255,255,255,0.4)", background: "none", border: "none", cursor: "pointer", fontSize: 18 }}>×</button>
+                <button onClick={() => setXpInfoOpen(false)} className="btn-close">×</button>
               </div>
-              <p className="text-xs leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>
+              <p className="text-xs leading-relaxed mb-4 text-w55">
                 XP scales with quest rarity. Higher rarity quests reward significantly more experience.
               </p>
               <div className="space-y-1.5 mb-4">
@@ -273,18 +273,18 @@ export default function DashboardModals({
                   { rarity: "Epic",      color: "#a855f7", xp: 50 },
                   { rarity: "Legendary", color: "#FFD700", xp: 80 },
                 ] as { rarity: string; color: string; xp: number }[]).map(({ rarity, color, xp }) => (
-                  <div key={rarity} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.03)", border: `1px solid ${color}22` }}>
+                  <div key={rarity} className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-w3" style={{ border: `1px solid ${color}22` }}>
                     <span className="text-xs font-semibold" style={{ color }}>{rarity}</span>
                     <span className="font-mono font-bold text-sm" style={{ color: "#a78bfa" }}>{xp} XP</span>
                   </div>
                 ))}
               </div>
               <div className="rounded-lg px-3 py-2.5 mb-3" style={{ background: "rgba(167,139,250,0.06)", border: "1px solid rgba(167,139,250,0.15)" }}>
-                <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
+                <p className="text-xs leading-relaxed text-w50">
                   Your <span style={{ color: "#a78bfa" }}>Forge</span>, <span style={{ color: "#fbbf24" }}>Gear</span>, and <span style={{ color: "#f43f5e" }}>Companion</span> bonuses multiply all earned XP — stack them for maximum gains.
                 </p>
               </div>
-              <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <p className="text-xs leading-relaxed text-w30">
                 Higher levels require exponentially more XP. Every level up is an achievement.
               </p>
             </div>

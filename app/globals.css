@@ -651,3 +651,62 @@ img[src*="/icons/"] {
 .companion-heart-particle {
   animation: companion-heart-float 1.2s ease-out forwards;
 }
+
+/* ─── Quest Hall Design System — Utility Classes ─────────────────────────── */
+/* Text colors — white at various opacities (replaces inline rgba styles)    */
+.text-w20 { color: rgba(255,255,255,0.2); }
+.text-w25 { color: rgba(255,255,255,0.25); }
+.text-w30 { color: rgba(255,255,255,0.3); }
+.text-w35 { color: rgba(255,255,255,0.35); }
+.text-w40 { color: rgba(255,255,255,0.4); }
+.text-w50 { color: rgba(255,255,255,0.5); }
+.text-w60 { color: rgba(255,255,255,0.6); }
+.text-w70 { color: rgba(255,255,255,0.7); }
+.text-primary { color: #e8e8e8; }
+.text-bright  { color: #f0f0f0; }
+
+/* Backgrounds — subtle white overlays                                       */
+.bg-w3  { background: rgba(255,255,255,0.03); }
+.bg-w4  { background: rgba(255,255,255,0.04); }
+.bg-w5  { background: rgba(255,255,255,0.05); }
+.bg-w6  { background: rgba(255,255,255,0.06); }
+.bg-w7  { background: rgba(255,255,255,0.07); }
+.bg-w8  { background: rgba(255,255,255,0.08); }
+
+/* Dark surface backgrounds                                                  */
+.bg-surface      { background: #1a1a1a; }
+.bg-surface-alt  { background: #1e1e1e; }
+.bg-card         { background: #252525; }
+.bg-input        { background: #141414; }
+
+/* Borders — white at various opacities                                      */
+.border-w6  { border: 1px solid rgba(255,255,255,0.06); }
+.border-w7  { border: 1px solid rgba(255,255,255,0.07); }
+.border-w8  { border: 1px solid rgba(255,255,255,0.08); }
+.border-w10 { border: 1px solid rgba(255,255,255,0.1); }
+.border-w12 { border: 1px solid rgba(255,255,255,0.12); }
+.border-w15 { border: 1px solid rgba(255,255,255,0.15); }
+
+/* Modal / Overlay backdrops                                                 */
+.modal-backdrop      { background: rgba(0,0,0,0.75); }
+.modal-backdrop-blur { background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
+
+/* Image rendering — auto (non-pixel-art images like portraits)              */
+.img-render-auto { image-rendering: auto; }
+
+/* Common input field styling                                                */
+.input-dark {
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: #fff;
+  outline: none;
+}
+
+/* Close button (modal X)                                                    */
+.btn-close {
+  color: rgba(255,255,255,0.4);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 18px;
+}
