@@ -32,6 +32,7 @@ import FeedbackOverlay from "@/components/FeedbackOverlay";
 import { ModalPortal, useModalBehavior, ModalOverlay } from "@/components/ModalPortal";
 import DashboardHeader from "@/components/DashboardHeader";
 import DashboardModals from "@/components/DashboardModals";
+import { SFX } from "@/lib/sounds";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
@@ -167,7 +168,7 @@ export default function Dashboard() {
     if (pendingLevelUpRef.current) {
       const lu = pendingLevelUpRef.current;
       pendingLevelUpRef.current = null;
-      setTimeout(() => setLevelUpCelebration(lu), 200);
+      setTimeout(() => { setLevelUpCelebration(lu); SFX.levelUp(); }, 200);
     }
   }, []);
   useModalBehavior(!!rewardCelebration, closeRewardCelebration);

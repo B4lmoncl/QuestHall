@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import type { GachaPullResult, GachaItem } from "@/app/types";
 import { ModalPortal } from "./ModalPortal";
+import { SFX } from "@/lib/sounds";
 
 // ─── Rarity config ────────────────────────────────────────────────────────────
 const RARITY_CONFIG: Record<string, { color: string; glow: string; bg: string; label: string; border: string }> = {
@@ -221,10 +222,11 @@ function SinglePullReveal({ result, onDone }: { result: GachaPullResult; onDone:
   useScreenShake(phase === "flash" && isLegendary);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("flash"), 5500);
+    SFX.gachaPull();
+    const t1 = setTimeout(() => { setPhase("flash"); SFX.gachaReveal(rarity); }, 5500);
     const t2 = setTimeout(() => setPhase("reveal"), 5800);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC or click-outside during reveal → collect and close
   useEffect(() => {
@@ -324,10 +326,11 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
   useScreenShake(phase === "flash" && isLegendaryBest);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase("flash"), 8000);
+    SFX.gachaPull();
+    const t1 = setTimeout(() => { setPhase("flash"); SFX.gachaReveal(bestRarity); }, 8000);
     const t2 = setTimeout(() => setPhase("sequential"), 8300);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC = skip to summary (sequential), or close (summary)
   useEffect(() => {
@@ -344,12 +347,13 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
   const handleNehmen = useCallback(() => {
     const nextIdx = currentIdx + 1;
     if (nextIdx < shuffledResults.length) {
+      SFX.gachaReveal(shuffledResults[nextIdx].item.rarity);
       setCurrentIdx(nextIdx);
     } else {
       setPhase("black");
       setTimeout(() => setPhase("summary"), 500);
     }
-  }, [currentIdx, shuffledResults.length]);
+  }, [currentIdx, shuffledResults]);
 
   const currentResult = shuffledResults[currentIdx];
 

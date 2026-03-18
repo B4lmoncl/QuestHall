@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { SFX } from "@/lib/sounds";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -120,6 +121,13 @@ interface RewardCelebrationProps {
 
 export function RewardCelebration({ data, onClose, onCollect }: RewardCelebrationProps) {
   const [flavorIdx] = useState(() => Math.floor(Math.random() * 5));
+
+  // Play reward sound on mount
+  useEffect(() => {
+    if (data.type === "ritual") SFX.ritualComplete();
+    else if (data.type === "vow") SFX.ritualComplete();
+    else SFX.questComplete();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ESC to collect & close
   useEffect(() => {
