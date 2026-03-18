@@ -18,7 +18,7 @@ const DIFFICULTY_TIERS_VOW = [
 ];
 
 const BLOOD_PACT_MULTIPLIER_VOW: Record<string, number> = {
-  none: 1, spark: 3, flame: 3, ember: 5, crucible: 8, eternity: 15,
+  none: 1, spark: 3, flame: 3, ember: 7, crucible: 16, eternity: 30,
 };
 
 const COMMITMENT_TIERS_VOW = [
