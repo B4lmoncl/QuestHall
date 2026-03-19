@@ -260,16 +260,26 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - Frames equipped via `POST /api/player/:name/frame`
 - Frame renders as colored border + optional glow on UserCard
 
-### Crafting Professions System
-- **3 Professions**: Schmied (stat rerolling), Alchemist (buff potions), Verzauberer (gear enchanting)
-- **Materials**: Drop from quest completion based on quest rarity (10 material types, common→legendary)
-- **Material drop rates**: Defined in `professions.json → materialDropRates` — rarer quests drop rarer materials
-- **Recipes**: Each has gold cost + material cost + profession level requirement + cooldown
-- **Profession leveling**: 10 levels per profession, XP gained per craft
-- **Unlock conditions**: Schmied/Alchemist at player level 5, Verzauberer at level 8
-- **Frontend**: "Deepforge" tab with NPC popout modals (same createPortal pattern as WandererRest)
-- **Endpoints**: `GET /api/professions?player=X`, `POST /api/professions/craft`
-- **Data**: `public/data/professions.json` (professions, materials, recipes)
+### Artisan's Quarter (Crafting System)
+- **4 Professions** (2-limit per player): Blacksmith/Grimvar (gear rerolling, rarity upgrade, reinforcing), Alchemist/Ysolde (buff potions, flasks), Enchanter/Eldric (temp+permanent enchants, arcane infusions), Cook/Bruna (meals, streak shields, champion's feast)
+- **18 recipes** across 4 professions with recipe-specific XP (8-50 XP per craft)
+- **Recipe discovery**: High-level recipes hidden until `discovery.profLevel` reached (e.g. Rarity Upgrade unlocks at Lv.7)
+- **Batch crafting**: Buff/meal recipes support `count` param (1-10), costs multiplied accordingly
+- **Daily crafting bonus**: First craft each day grants 2x profession XP, tracked via `u.lastCraftDate`
+- **Profession ranks** (WoW-style): Novice→Apprentice→Journeyman→Expert→Artisan→Master, mapped to levels 0-10
+- **Skill-up colors** (WoW-style): Orange (guaranteed XP), Yellow (likely), Green (rare), Gray (no XP) based on diff between profLevel and reqProfLevel
+- **Per-recipe cooldowns**: Tracked in `u.professions[id].recipeCooldowns[recipeId]` (60min-48h), independent per recipe
+- **13 materials** (common→legendary): Drop from quest completion, rates defined in `professions.json → materialDropRates`
+- **Schmiedekunst** (Blacksmith tab): Dismantle items → essenz + material drops; D3-style Salvage All per rarity (legendary excluded); Transmute 3 same-slot epics + 500g → random legendary
+- **Workshop Tools**: 4-tier permanent XP upgrades (Sturdy 2% → Mythic 10%), sequential unlock via gold/essenz
+- **Synergy hints**: Blacksmith+Enchanter = "Gear Mastery", Alchemist+Cook = "Sustenance"
+- **Cross-navigation**: Character ↔ Artisan's Quarter links via `onNavigate` prop
+- **NPC evolution**: Card border glow/opacity intensifies with rank; portrait border evolves with level
+- **Pre-validation**: Reroll template/stats checks run BEFORE cost deduction to prevent resource loss on failure
+- **Unlock conditions**: Cook at level 3, Blacksmith/Alchemist at level 5, Enchanter at level 8
+- **Frontend**: `ForgeView.tsx` — Artisan's Quarter tab with NPC grid, Workshop Tools, NPC popout modals (createPortal)
+- **Endpoints**: `GET /api/professions?player=X` (with dailyBonus), `POST /api/professions/craft` (with count), `POST /api/professions/choose`, `POST /api/professions/switch`, `POST /api/schmiedekunst/dismantle`, `POST /api/schmiedekunst/dismantle-all`, `POST /api/schmiedekunst/transmute`
+- **Data**: `public/data/professions.json` (4 professions, 13 materials, 18 recipes, drop rates)
 
 ## Security measures
 
