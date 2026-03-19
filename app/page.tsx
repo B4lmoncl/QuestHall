@@ -687,7 +687,7 @@ export default function Dashboard() {
             label="Forge Streak"
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
             sub={playerName ? (playerStreak > 0 ? `+${Math.min((playerStreak * 1.5), 45).toFixed(1)}% gold` : "your streak") : "login to view"}
-            subColor={playerName ? "#fbbf24" : undefined}
+            subColor={playerName && playerStreak > 0 ? "#fbbf24" : undefined}
             accent="#f97316"
             onClick={playerName ? () => setStreakInfoOpen(true) : undefined}
           />
