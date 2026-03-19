@@ -352,7 +352,7 @@ export interface CVData {
   totalLearningQuests: number;
 }
 
-export interface ShopItem { id: string; name: string; cost: number; icon: string; desc: string; }
+export interface ShopItem { id: string; name: string; cost: number; icon: string; desc: string; category?: "self-care" | "boost"; effect?: { type: string; questsRemaining?: number; amount?: number }; }
 
 export interface GachaItem {
   id: string;

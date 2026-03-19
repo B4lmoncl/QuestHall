@@ -41,11 +41,48 @@ export default function ShopView({ onBuy, onGearBuy }: {
         </div>
       </div>
 
-      {/* Rewards */}
+      {/* Boosts & Buffs */}
+      {SHOP_ITEMS_LIST.filter(i => i.category === "boost").length > 0 && (
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(139,92,246,0.6)" }}>Boosts &amp; Buffs</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+            {SHOP_ITEMS_LIST.filter(i => i.category === "boost").map(item => {
+              const canAfford = gold >= item.cost;
+              return (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-3 p-3 rounded-xl"
+                  style={{ background: "rgba(139,92,246,0.06)", border: "1px solid rgba(139,92,246,0.15)" }}
+                >
+                  {item.icon && item.icon.startsWith("/") ? <img src={item.icon} alt="" style={{ width: 40, height: 40, imageRendering: "smooth" }} onError={e => { e.currentTarget.style.display = "none"; }} /> : <span className="text-2xl flex-shrink-0">{item.icon}</span>}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{item.name}</p>
+                    <p className="text-xs" style={{ color: "rgba(196,181,253,0.5)" }}>{item.desc}</p>
+                  </div>
+                  <button
+                    onClick={() => canAfford && onBuy(user.id, item.id)}
+                    disabled={!canAfford}
+                    className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
+                    style={{
+                      background: canAfford ? "rgba(139,92,246,0.2)" : "rgba(255,255,255,0.04)",
+                      color: canAfford ? "#a78bfa" : "rgba(255,255,255,0.2)",
+                      border: `1px solid ${canAfford ? "rgba(139,92,246,0.4)" : "rgba(255,255,255,0.08)"}`,
+                    }}
+                  >
+                    <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {item.cost}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Self-Care Rewards */}
       <div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>Rewards</p>
+        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.3)" }}>Self-Care Rewards</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {SHOP_ITEMS_LIST.map(item => {
+          {SHOP_ITEMS_LIST.filter(i => !i.category || i.category === "self-care").map(item => {
             const canAfford = gold >= item.cost;
             return (
               <div
@@ -53,7 +90,7 @@ export default function ShopView({ onBuy, onGearBuy }: {
                 className="flex items-center gap-3 p-3 rounded-xl"
                 style={{ background: "#1e1e1e", border: "1px solid rgba(255,255,255,0.07)" }}
               >
-                {item.icon && item.icon.startsWith("/") ? <img src={item.icon} alt="" style={{ width: 40, height: 40, imageRendering: "smooth" }} /> : <span className="text-2xl flex-shrink-0">{item.icon}</span>}
+                {item.icon && item.icon.startsWith("/") ? <img src={item.icon} alt="" style={{ width: 40, height: 40, imageRendering: "smooth" }} onError={e => { e.currentTarget.style.display = "none"; }} /> : <span className="text-2xl flex-shrink-0">{item.icon}</span>}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold" style={{ color: "#f0f0f0" }}>{item.name}</p>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{item.desc}</p>

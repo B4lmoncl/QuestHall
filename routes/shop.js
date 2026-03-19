@@ -6,6 +6,36 @@ const { state, saveUsers, saveQuests, SHOP_ITEMS, GEAR_TIERS } = require('../lib
 const { now, getUserGear, getLevelInfo } = require('../lib/helpers');
 const { requireApiKey } = require('../lib/middleware');
 
+// ─── Apply shop item effects (buffs, instant currency) ──────────────────────
+function applyShopEffect(u, item) {
+  if (!item.effect) return null;
+  const { type, questsRemaining, amount } = item.effect;
+
+  // Instant currency grants
+  if (type === 'instant_stardust') {
+    u.currencies = u.currencies || {};
+    u.currencies.stardust = (u.currencies.stardust || 0) + amount;
+    return `+${amount} Stardust erhalten!`;
+  }
+  if (type === 'instant_essenz') {
+    u.currencies = u.currencies || {};
+    u.currencies.essenz = (u.currencies.essenz || 0) + amount;
+    return `+${amount} Essenz erhalten!`;
+  }
+
+  // Buff-based effects
+  u.activeBuffs = u.activeBuffs || [];
+  u.activeBuffs.push({ type, questsRemaining, activatedAt: now() });
+  const buffNames = {
+    xp_boost_10: `+10% XP für ${questsRemaining} Quests`,
+    gold_boost_10: `+10% Gold für ${questsRemaining} Quests`,
+    luck_boost_20: `Erhöhte Loot-Chance für ${questsRemaining} Quests`,
+    streak_shield: 'Streak-Schild aktiviert!',
+    material_double: `Doppelte Material-Drops für ${questsRemaining} Quests`,
+  };
+  return buffNames[type] || 'Effekt aktiviert!';
+}
+
 // ─── Personal Life Quest Templates ───────────────────────────────────────────
 const PERSONAL_QUEST_TEMPLATES = [
   {
@@ -220,9 +250,10 @@ router.post('/api/shop/buy', requireApiKey, (req, res) => {
   u.gold -= item.cost;
   u.purchases = u.purchases || [];
   u.purchases.push({ itemId: item.id, name: item.name, cost: item.cost, at: now() });
+  const effectMsg = applyShopEffect(u, item);
   saveUsers();
-  console.log(`[shop] ${uid} bought "${item.name}" for ${item.cost} gold`);
-  res.json({ ok: true, item, remainingGold: u.gold });
+  console.log(`[shop] ${uid} bought "${item.name}" for ${item.cost} gold${effectMsg ? ` — ${effectMsg}` : ''}`);
+  res.json({ ok: true, item, remainingGold: u.gold, effectApplied: effectMsg });
 });
 
 // GET /api/personal-templates — list personal life quest templates
