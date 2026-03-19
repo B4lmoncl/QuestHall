@@ -518,11 +518,11 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.82)" }}
-          onClick={e => { if (e.target === e.currentTarget) { setSelectedNpc(null); setCraftResult(null); } }}
+          onClick={e => { if (e.target === e.currentTarget) { setSelectedNpc(null); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); } }}
         >
           <div className="relative w-full max-w-xl rounded-xl" style={{ background: "#141418", border: `1px solid ${selectedNpc.color}30`, maxHeight: "85vh", overflowY: "auto", overflowX: "hidden" }}>
             {/* Close */}
-            <button onClick={() => { setSelectedNpc(null); setCraftResult(null); }} className="forge-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <button onClick={() => { setSelectedNpc(null); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); }} className="forge-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
               <span className="text-white text-sm">&#10005;</span>
             </button>
 
@@ -560,7 +560,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 return (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {mats.map(m => (
-                      <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: materials[m.id] ? `${RARITY_COLORS[m.rarity]}` : "rgba(255,255,255,0.15)", fontSize: 10 }}>
+                      <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: materials[m.id] ? RARITY_COLORS[m.rarity] : "rgba(255,255,255,0.15)", fontSize: 10 }}>
                         <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={hideOnError} />
                         {m.name} <strong className="font-mono">x{materials[m.id] || 0}</strong>
                       </span>

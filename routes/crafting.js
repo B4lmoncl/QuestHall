@@ -8,7 +8,20 @@ const { state, saveUsers, ensureUserCurrencies } = require('../lib/state');
 const { now, getLevelInfo, PRIMARY_STATS, MINOR_STATS, createGearInstance } = require('../lib/helpers');
 
 const VALID_SLOTS = ['weapon', 'shield', 'helm', 'armor', 'amulet', 'boots'];
+const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+const SLOT_RECIPES = ['reroll_stat', 'reroll_minor', 'upgrade_rarity', 'enchant_gear', 'permanent_enchant'];
 const { requireAuth } = require('../lib/middleware');
+
+// ─── Helper: collect equipped item instanceIds ──────────────────────────────
+function getEquippedIds(u) {
+  const ids = new Set();
+  if (u.equipment) {
+    for (const v of Object.values(u.equipment)) {
+      if (v && typeof v === 'object' && v.instanceId) ids.add(v.instanceId);
+    }
+  }
+  return ids;
+}
 
 // ─── Load professions data at boot ──────────────────────────────────────────
 let PROFESSIONS_DATA = { professions: [], materials: [], materialDropRates: {}, recipes: [] };
@@ -160,13 +173,11 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   }
 
   // Validate slot-requiring recipes have a targetSlot and valid gear
-  const SLOT_RECIPES = ['reroll_stat', 'reroll_minor', 'upgrade_rarity', 'enchant_gear', 'permanent_enchant'];
   if (SLOT_RECIPES.includes(recipeId)) {
     if (!targetSlot) return res.status(400).json({ error: 'targetSlot required' });
     const eq = u.equipment?.[targetSlot];
     if (!eq || typeof eq === 'string') return res.status(400).json({ error: 'No gear instance in slot' });
     if (recipeId === 'upgrade_rarity') {
-      const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
       if (RARITY_ORDER.indexOf(eq.rarity || 'common') >= RARITY_ORDER.length - 1) {
         return res.status(400).json({ error: 'Item is already legendary!' });
       }
@@ -272,7 +283,6 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
 
     case 'upgrade_rarity': {
       const eq = u.equipment[targetSlot];
-      const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
       const currentIdx = RARITY_ORDER.indexOf(eq.rarity || 'common');
       if (Math.random() < 0.50) {
         eq.rarity = RARITY_ORDER[currentIdx + 1];
@@ -479,12 +489,8 @@ router.post('/api/schmiedekunst/dismantle', requireAuth, (req, res) => {
   const item = u.inventory[idx];
 
   // Cannot dismantle currently equipped items
-  if (u.equipment) {
-    for (const slotVal of Object.values(u.equipment)) {
-      if (slotVal && typeof slotVal === 'object' && slotVal.instanceId === inventoryItemId) {
-        return res.status(400).json({ error: 'Cannot dismantle equipped items' });
-      }
-    }
+  if (getEquippedIds(u).has(inventoryItemId)) {
+    return res.status(400).json({ error: 'Cannot dismantle equipped items' });
   }
 
   const rarity = item.rarity || 'common';
@@ -534,12 +540,7 @@ router.post('/api/schmiedekunst/dismantle-all', requireAuth, (req, res) => {
   }
 
   u.inventory = u.inventory || [];
-  const equippedIds = new Set();
-  if (u.equipment) {
-    for (const slotVal of Object.values(u.equipment)) {
-      if (slotVal && typeof slotVal === 'object' && slotVal.instanceId) equippedIds.add(slotVal.instanceId);
-    }
-  }
+  const equippedIds = getEquippedIds(u);
 
   const toDismantle = u.inventory.filter(i =>
     (i.rarity || 'common') === rarity && i.name && !equippedIds.has(i.instanceId || i.id)
@@ -604,12 +605,10 @@ router.post('/api/schmiedekunst/transmute', requireAuth, (req, res) => {
   }
 
   // Validate: none can be equipped
-  if (u.equipment) {
-    const equippedIds = new Set(Object.values(u.equipment).filter(v => v && typeof v === 'object').map(v => v.instanceId));
-    for (const item of items) {
-      if (equippedIds.has(item.instanceId || item.id)) {
-        return res.status(400).json({ error: `"${item.name}" is equipped — unequip first` });
-      }
+  const equippedIds = getEquippedIds(u);
+  for (const item of items) {
+    if (equippedIds.has(item.instanceId || item.id)) {
+      return res.status(400).json({ error: `"${item.name}" is equipped — unequip first` });
     }
   }
 
