@@ -104,6 +104,7 @@
       "reqProfLevel": 1,
       "cost": { "gold": 150 },
       "materials": { "eisenerz": 3 },
+      "result": { "type": "reroll", "target": "primary_stat" },
       "cooldownMinutes": 60
     },
     {
@@ -114,6 +115,7 @@
       "reqProfLevel": 3,
       "cost": { "gold": 200 },
       "materials": { "eisenerz": 2, "kristallsplitter": 1 },
+      "result": { "type": "reroll", "target": "minor_stat" },
       "cooldownMinutes": 120
     },
     {
@@ -124,6 +126,7 @@
       "reqProfLevel": 7,
       "cost": { "gold": 500 },
       "materials": { "drachenschuppe": 2, "aetherkern": 1 },
+      "result": { "type": "upgrade_rarity", "successChance": 0.5 },
       "cooldownMinutes": 1440
     },
     {
@@ -178,6 +181,7 @@
       "reqProfLevel": 1,
       "cost": { "gold": 100 },
       "materials": { "magiestaub": 3, "runenstein": 1 },
+      "result": { "type": "temp_enchant", "statBonus": [2, 4], "durationHours": 24 },
       "cooldownMinutes": 360
     },
     {
@@ -188,6 +192,7 @@
       "reqProfLevel": 5,
       "cost": { "gold": 300 },
       "materials": { "runenstein": 3, "aetherkern": 1, "seelensplitter": 1 },
+      "result": { "type": "perm_enchant", "statBonus": [1, 2], "target": "minor_stat" },
       "cooldownMinutes": 1440
     },
     {

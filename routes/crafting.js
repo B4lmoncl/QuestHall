@@ -355,7 +355,7 @@ router.post('/api/professions/switch', requireAuth, (req, res) => {
   u.chosenProfessions = u.chosenProfessions.filter(p => p !== dropProfession);
   // Reset profession XP
   if (u.professions?.[dropProfession]) {
-    u.professions[dropProfession] = { level: 0, xp: 0 };
+    u.professions[dropProfession] = { level: 0, xp: 0, lastCraftAt: null };
   }
 
   saveUsers();
@@ -466,11 +466,18 @@ router.post('/api/schmiedekunst/transmute', requireAuth, (req, res) => {
   const allEpic = items.every(i => (i.rarity || 'common') === 'epic');
   if (!allEpic) return res.status(400).json({ error: 'Alle 3 Items müssen episch sein' });
 
-  // Validate: all must be same slot
-  const slots = items.map(i => i.slot || i.resolvedGear?.slot);
+  // Validate: all must be same slot (look up from template if not on instance)
+  const slots = items.map(i => {
+    if (i.slot) return i.slot;
+    if (i.resolvedGear?.slot) return i.resolvedGear.slot;
+    // Fallback: look up template
+    const tmpl = state.gearById.get(i.templateId) || state.itemTemplates?.get(i.templateId || i.itemId);
+    return tmpl?.slot || null;
+  });
   const slot = slots[0];
-  if (!slot || !slots.every(s => s === slot)) {
-    return res.status(400).json({ error: 'Alle 3 Items müssen denselben Slot haben' });
+  if (!slot) return res.status(400).json({ error: 'Slot konnte nicht ermittelt werden — Items ungültig' });
+  if (!slots.every(s => s === slot)) {
+    return res.status(400).json({ error: `Alle Items müssen denselben Slot haben (${slots.filter(Boolean).join(', ')})` });
   }
 
   // Gold cost

@@ -113,7 +113,7 @@ router.get('/api/weekly-challenge', (req, res) => {
       templateId: challenge.templateId,
       name: challenge.template.name,
       icon: challenge.template.icon,
-      stages: challenge.template.stages.map((s, i) => ({
+      stages: (challenge.template.stages || []).map((s, i) => ({
         ...s,
         completed: challenge.completedStages.includes(i + 1),
         current: i === challenge.currentStage,
