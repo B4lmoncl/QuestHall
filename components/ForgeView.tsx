@@ -34,12 +34,14 @@ interface Recipe {
   name: string;
   desc: string;
   reqProfLevel: number;
+  xpGain?: number;
   cost: { gold?: number };
   materials: Record<string, number>;
   cooldownMinutes: number;
   canCraft: boolean;
   skillUpColor?: string;
   cooldownRemaining?: number;
+  result?: { type?: string };
 }
 
 interface MaterialDef {
@@ -133,6 +135,8 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [npcModalTab, setNpcModalTab] = useState<"recipes" | "schmiedekunst" | "transmutation">("recipes");
   const [infoOpen, setInfoOpen] = useState(false);
   const [choosingProf, setChoosingProf] = useState(false);
+  const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
+  const [craftCount, setCraftCount] = useState(1);
 
   const loggedIn = playerName && reviewApiKey;
 
@@ -147,13 +151,14 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
         setMaterials(data.materials || {});
         setMaterialDefs(data.materialDefs || []);
         if (data.currencies) setCurrencies(data.currencies);
+        if (data.dailyBonus) setDailyBonusAvailable(data.dailyBonus.dailyBonusAvailable ?? false);
       }
     } catch { /* ignore */ }
   }, [playerName]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleCraft = async (recipeId: string) => {
+  const handleCraft = async (recipeId: string, count = 1) => {
     if (crafting || !reviewApiKey) return;
     setCrafting(true);
     setCraftResult(null);
@@ -161,12 +166,15 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
       const r = await fetch("/api/professions/craft", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
-        body: JSON.stringify({ recipeId, targetSlot: selectedSlot }),
+        body: JSON.stringify({ recipeId, targetSlot: selectedSlot, count }),
       });
       const data = await r.json();
       if (r.ok) {
-        setCraftResult(data.message || "Success!");
-        if (data.profLevelUp) setCraftResult(prev => `${prev} LEVEL UP!`);
+        let msg = data.message || "Success!";
+        if (data.xpGained) msg += ` (+${data.xpGained} XP${data.dailyBonusUsed ? " \u2606 Daily Bonus!" : ""})`;
+        if (data.profLevelUp) msg += " LEVEL UP!";
+        setCraftResult(msg);
+        setCraftCount(1);
         fetchData();
         onRefresh?.();
       } else {
@@ -288,6 +296,11 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
         </button>
         <div className="flex items-center gap-3 ml-auto text-xs">
           <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/2 Professions</span>
+          {dailyBonusAvailable && (
+            <span className="px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)", fontSize: 9 }}>
+              2x XP
+            </span>
+          )}
           <span className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
             <img src="/images/icons/currency-gold.png" alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
             <span className="font-mono font-bold">{currencies.gold ?? loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0}</span>
@@ -316,6 +329,9 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             <li>&bull; Ranks: <span style={{ color: "#22c55e" }}>Apprentice</span> &rarr; <span style={{ color: "#3b82f6" }}>Journeyman</span> &rarr; <span style={{ color: "#a855f7" }}>Expert</span> &rarr; <span style={{ color: "#f59e0b" }}>Artisan</span> &rarr; <span style={{ color: "#ef4444" }}>Master</span></li>
             <li>&bull; Recipes show <span style={{ color: "#f97316" }}>orange</span>/<span style={{ color: "#eab308" }}>yellow</span>/<span style={{ color: "#22c55e" }}>green</span>/<span style={{ color: "#6b7280" }}>gray</span> skill-up chance (like WoW)</li>
             <li>&bull; Switching professions costs <strong style={{ color: "#f44" }}>200 Essenz</strong> and resets progress</li>
+            <li>&bull; <span style={{ color: "#facc15" }}>Daily Bonus</span>: First craft each day gives <strong style={{ color: "#facc15" }}>2x profession XP</strong></li>
+            <li>&bull; Buff recipes can be <strong style={{ color: "#e8e8e8" }}>batch crafted</strong> (x1-x10) for efficiency</li>
+            <li>&bull; New recipes are <strong style={{ color: "#e8e8e8" }}>discovered</strong> as your profession rank increases</li>
           </ul>
           {/* Synergy hints */}
           <div className="pt-2 mt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
@@ -624,18 +640,20 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p>
                   {recipes.filter(r => r.profession === selectedNpc.id).map(recipe => {
+                    const meetsLevel = recipe.canCraft;
+                    const onCooldown = (recipe.cooldownRemaining ?? 0) > 0;
+                    const skillUp = SKILL_UP_COLORS[recipe.skillUpColor || "orange"];
+                    const isBatchable = recipe.result?.type === "buff" || recipe.result?.type === "streak_shield" || recipe.result?.type === "forge_temp";
+                    const effectiveCount = isBatchable ? craftCount : 1;
                     const canAfford = (() => {
                       const gold = currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0;
-                      if (recipe.cost?.gold && gold < recipe.cost.gold) return false;
+                      if (recipe.cost?.gold && gold < recipe.cost.gold * effectiveCount) return false;
                       for (const [matId, amt] of Object.entries(recipe.materials || {})) {
-                        if ((materials[matId] || 0) < amt) return false;
+                        if ((materials[matId] || 0) < (amt as number) * effectiveCount) return false;
                       }
                       return true;
                     })();
-                    const meetsLevel = recipe.canCraft;
-                    const onCooldown = (recipe.cooldownRemaining ?? 0) > 0;
                     const canDo = canAfford && meetsLevel && !onCooldown;
-                    const skillUp = SKILL_UP_COLORS[recipe.skillUpColor || "orange"];
 
                     return (
                       <div key={recipe.id} className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderLeft: `3px solid ${skillUp?.color || "rgba(255,255,255,0.06)"}` }}>
@@ -647,6 +665,12 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                               <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: skillUp?.color || "#6b7280" }} title={skillUp?.label || ""} />
                             </div>
                             <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{recipe.desc}</p>
+                            {/* D3-style reroll preview: show what stats CAN be rolled */}
+                            {meetsLevel && (recipe.id === "reroll_stat" || recipe.id === "reroll_minor" || recipe.id === "reinforce_armor" || recipe.id === "enchant_socket") && equippedSlots[selectedSlot] && typeof equippedSlots[selectedSlot] === "object" && (
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)", fontSize: 9 }}>
+                                Current: {Object.entries((equippedSlots[selectedSlot] as Record<string, unknown>).stats as Record<string, number> || {}).map(([k, v]) => `${k} ${v}`).join(", ") || "none"}
+                              </p>
+                            )}
                             {!meetsLevel && (
                               <p className="text-xs mt-1" style={{ color: "#f44" }}>Requires {selectedNpc.name} Lv.{recipe.reqProfLevel}</p>
                             )}
@@ -656,39 +680,57 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                               </p>
                             )}
                           </div>
-                          <button
-                            onClick={() => canDo && handleCraft(recipe.id)}
-                            disabled={!canDo || crafting}
-                            className="forge-btn text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0"
-                            style={{
-                              background: canDo ? `${selectedNpc.color}20` : "rgba(255,255,255,0.03)",
-                              color: canDo ? selectedNpc.color : "rgba(255,255,255,0.2)",
-                              border: `1px solid ${canDo ? `${selectedNpc.color}40` : "rgba(255,255,255,0.06)"}`,
-                            }}
-                          >
-                            {crafting ? "..." : onCooldown ? "On CD" : "Craft"}
-                          </button>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {isBatchable && canDo && (
+                              <select
+                                value={craftCount}
+                                onChange={e => setCraftCount(parseInt(e.target.value))}
+                                className="text-xs rounded-lg px-1 py-1 font-mono"
+                                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)", width: 38 }}
+                              >
+                                {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>x{n}</option>)}
+                              </select>
+                            )}
+                            <button
+                              onClick={() => canDo && handleCraft(recipe.id, effectiveCount)}
+                              disabled={!canDo || crafting}
+                              className="forge-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
+                              style={{
+                                background: canDo ? `${selectedNpc.color}20` : "rgba(255,255,255,0.03)",
+                                color: canDo ? selectedNpc.color : "rgba(255,255,255,0.2)",
+                                border: `1px solid ${canDo ? `${selectedNpc.color}40` : "rgba(255,255,255,0.06)"}`,
+                              }}
+                            >
+                              {crafting ? "..." : onCooldown ? "On CD" : "Craft"}
+                            </button>
+                          </div>
                         </div>
                         {/* Cost display */}
                         <div className="flex flex-wrap gap-2 mt-2">
                           {recipe.cost?.gold && (
-                            <span className="text-xs flex items-center gap-1" style={{ color: (currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0) >= recipe.cost.gold ? "#f59e0b" : "#f44" }}>
+                            <span className="text-xs flex items-center gap-1" style={{ color: (currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0) >= recipe.cost.gold * effectiveCount ? "#f59e0b" : "#f44" }}>
                               <img src="/images/icons/currency-gold.png" alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={hideOnError} />
-                              {recipe.cost.gold}
+                              {recipe.cost.gold * effectiveCount}{effectiveCount > 1 ? ` (${recipe.cost.gold}x${effectiveCount})` : ""}
                             </span>
                           )}
                           {Object.entries(recipe.materials || {}).map(([matId, amt]) => {
                             const mat = materialDefs.find(m => m.id === matId);
-                            const has = (materials[matId] || 0) >= (amt as number);
+                            const needed = (amt as number) * effectiveCount;
+                            const has = (materials[matId] || 0) >= needed;
                             return (
                               <span key={matId} className="text-xs flex items-center gap-1" style={{ color: has ? RARITY_COLORS[mat?.rarity || "common"] : "#f44" }}>
                                 <img src={mat?.icon || ""} alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={hideOnError} />
-                                {materials[matId] || 0}/{amt as number} {mat?.name || matId}
+                                {materials[matId] || 0}/{needed} {mat?.name || matId}
                               </span>
                             );
                           })}
                           {recipe.cooldownMinutes > 0 && (
                             <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>CD: {recipe.cooldownMinutes >= 60 ? `${Math.floor(recipe.cooldownMinutes / 60)}h` : `${recipe.cooldownMinutes}m`}</span>
+                          )}
+                          {recipe.xpGain && (
+                            <span className="text-xs font-mono" style={{ color: dailyBonusAvailable ? "#facc15" : "rgba(255,255,255,0.2)" }}>
+                              +{recipe.xpGain * (isBatchable ? craftCount : 1)}{dailyBonusAvailable ? "x2" : ""} XP
+                            </span>
                           )}
                         </div>
                       </div>

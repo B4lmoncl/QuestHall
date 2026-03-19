@@ -76,6 +76,21 @@ function getProfLevel(u, profId) {
   return { level: Math.min(level, 10), xp: prof.xp || 0 };
 }
 
+// ─── Helper: check if recipe is discovered for this player ──────────────────
+function isRecipeDiscovered(recipe, profProgress) {
+  if (!recipe.discovery) return true; // no discovery gate = always visible
+  if (recipe.discovery.type === 'profLevel') return profProgress.level >= recipe.discovery.value;
+  return true;
+}
+
+// ─── Helper: check if player gets daily crafting bonus ───────────────────────
+function getDailyBonusInfo(u) {
+  const today = new Date().toISOString().slice(0, 10);
+  const lastCraftDate = u?.lastCraftDate || null;
+  const hasCraftedToday = lastCraftDate === today;
+  return { dailyBonusAvailable: !hasCraftedToday, lastCraftDate };
+}
+
 // ─── GET /api/professions — list all professions + player progress ──────────
 router.get('/api/professions', (req, res) => {
   const playerName = (req.query.player || '').toLowerCase();
@@ -101,30 +116,37 @@ router.get('/api/professions', (req, res) => {
       rankColor: rank.color,
     };
   });
-  const recipes = PROFESSIONS_DATA.recipes.map(r => {
-    const profProgress = u ? getProfLevel(u, r.profession) : { level: 0 };
-    const lastCraft = (u?.professions || {})[r.profession]?.lastCraftAt || null;
-    // Cooldown remaining (in seconds)
-    let cooldownRemaining = 0;
-    if (r.cooldownMinutes > 0 && lastCraft) {
-      const elapsed = (Date.now() - new Date(lastCraft).getTime()) / 1000;
-      cooldownRemaining = Math.max(0, Math.ceil(r.cooldownMinutes * 60 - elapsed));
-    }
-    return {
-      ...r,
-      canCraft: profProgress.level >= r.reqProfLevel,
-      skillUpColor: getSkillUpColor(profProgress.level, r.reqProfLevel),
-      cooldownRemaining,
-    };
-  });
+  // Filter out undiscovered recipes — they should not appear in the UI at all
+  const recipes = PROFESSIONS_DATA.recipes
+    .filter(r => {
+      const profProgress = u ? getProfLevel(u, r.profession) : { level: 0, xp: 0 };
+      return isRecipeDiscovered(r, profProgress);
+    })
+    .map(r => {
+      const profProgress = u ? getProfLevel(u, r.profession) : { level: 0 };
+      const lastCraft = (u?.professions || {})[r.profession]?.lastCraftAt || null;
+      let cooldownRemaining = 0;
+      if (r.cooldownMinutes > 0 && lastCraft) {
+        const elapsed = (Date.now() - new Date(lastCraft).getTime()) / 1000;
+        cooldownRemaining = Math.max(0, Math.ceil(r.cooldownMinutes * 60 - elapsed));
+      }
+      return {
+        ...r,
+        canCraft: profProgress.level >= r.reqProfLevel,
+        skillUpColor: getSkillUpColor(profProgress.level, r.reqProfLevel),
+        cooldownRemaining,
+      };
+    });
   const materials = u?.craftingMaterials || {};
   const currencies = u ? { essenz: u.currencies?.essenz ?? 0, gold: u.currencies?.gold ?? u.gold ?? 0, stardust: u.currencies?.stardust ?? 0 } : {};
-  res.json({ professions, recipes, materials, materialDefs: PROFESSIONS_DATA.materials, proficiencyRanks: PROFICIENCY_RANKS, currencies });
+  const dailyBonus = u ? getDailyBonusInfo(u) : { dailyBonusAvailable: false };
+  res.json({ professions, recipes, materials, materialDefs: PROFESSIONS_DATA.materials, proficiencyRanks: PROFICIENCY_RANKS, currencies, dailyBonus });
 });
 
 // ─── POST /api/professions/craft — execute a recipe ─────────────────────────
 router.post('/api/professions/craft', requireAuth, (req, res) => {
-  const { recipeId, targetSlot, targetStatIndex } = req.body;
+  const { recipeId, targetSlot, targetStatIndex, count: rawCount } = req.body;
+  const count = Math.max(1, Math.min(10, parseInt(rawCount) || 1)); // batch: 1-10
   if (!recipeId) return res.status(400).json({ error: 'recipeId required' });
 
   const uid = req.auth?.userId;
@@ -172,8 +194,11 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     return res.status(400).json({ error: `Invalid slot: ${targetSlot}` });
   }
 
+  // Slot-requiring recipes can't batch (they target specific gear)
+  const effectiveCount = SLOT_RECIPES.includes(recipeId) || recipeId === 'reinforce_armor' || recipeId === 'enchant_socket' ? 1 : count;
+
   // Validate slot-requiring recipes have a targetSlot and valid gear
-  if (SLOT_RECIPES.includes(recipeId)) {
+  if (SLOT_RECIPES.includes(recipeId) || recipeId === 'reinforce_armor' || recipeId === 'enchant_socket') {
     if (!targetSlot) return res.status(400).json({ error: 'targetSlot required' });
     const eq = u.equipment?.[targetSlot];
     if (!eq || typeof eq === 'string') return res.status(400).json({ error: 'No gear instance in slot' });
@@ -184,40 +209,49 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     }
   }
 
-  // Check gold cost
-  if (recipe.cost?.gold) {
+  // Check gold cost (×count for batch)
+  const totalGoldCost = (recipe.cost?.gold || 0) * effectiveCount;
+  if (totalGoldCost > 0) {
     const userGold = u.currencies?.gold ?? u.gold ?? 0;
-    if (userGold < recipe.cost.gold) {
-      return res.status(400).json({ error: `Not enough gold (${userGold}/${recipe.cost.gold})` });
+    if (userGold < totalGoldCost) {
+      return res.status(400).json({ error: `Not enough gold (${userGold}/${totalGoldCost})` });
     }
   }
 
-  // Check materials
+  // Check materials (×count for batch)
   u.craftingMaterials = u.craftingMaterials || {};
   for (const [matId, amount] of Object.entries(recipe.materials || {})) {
-    if ((u.craftingMaterials[matId] || 0) < amount) {
+    const needed = amount * effectiveCount;
+    if ((u.craftingMaterials[matId] || 0) < needed) {
       const matDef = PROFESSIONS_DATA.materials.find(m => m.id === matId);
-      return res.status(400).json({ error: `Not enough ${matDef?.name || matId} (${u.craftingMaterials[matId] || 0}/${amount})` });
+      return res.status(400).json({ error: `Not enough ${matDef?.name || matId} (${u.craftingMaterials[matId] || 0}/${needed})` });
     }
   }
 
   // ─── All validation passed — enroll profession + deduct costs ──────────────
   if (needsEnrollment) u.chosenProfessions.push(recipe.profession);
 
-  if (recipe.cost?.gold) {
-    if (u.currencies) u.currencies.gold -= recipe.cost.gold;
-    else u.gold = (u.gold || 0) - recipe.cost.gold;
+  // Deduct gold (×count)
+  if (totalGoldCost > 0) {
+    if (u.currencies) u.currencies.gold -= totalGoldCost;
+    else u.gold = (u.gold || 0) - totalGoldCost;
   }
+  // Deduct materials (×count)
   for (const [matId, amount] of Object.entries(recipe.materials || {})) {
-    u.craftingMaterials[matId] -= amount;
+    u.craftingMaterials[matId] -= amount * effectiveCount;
     if (u.craftingMaterials[matId] <= 0) delete u.craftingMaterials[matId];
   }
 
-  // Update profession XP & timestamp
+  // Update profession XP & timestamp — use recipe-specific xpGain with daily bonus
   u.professions = u.professions || {};
   u.professions[recipe.profession] = u.professions[recipe.profession] || { level: 0, xp: 0 };
-  u.professions[recipe.profession].xp += profDef.xpPerCraft || 10;
+  const baseXp = (recipe.xpGain || profDef.xpPerCraft || 10) * effectiveCount;
+  const { dailyBonusAvailable } = getDailyBonusInfo(u);
+  const xpMultiplier = dailyBonusAvailable ? 2 : 1;
+  const totalXpGained = baseXp * xpMultiplier;
+  u.professions[recipe.profession].xp += totalXpGained;
   u.professions[recipe.profession].lastCraftAt = now();
+  u.lastCraftDate = new Date().toISOString().slice(0, 10); // track daily bonus
   const newProfLevel = getProfLevel(u, recipe.profession);
   u.professions[recipe.profession].level = newProfLevel.level;
 
@@ -316,8 +350,18 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     }
 
     case 'potion_streak': {
-      u.streakShields = Math.min(10, (u.streakShields || 0) + 1);
+      u.streakShields = Math.min(10, (u.streakShields || 0) + effectiveCount);
       result.message = `Streak Shield received! (Total: ${u.streakShields})`;
+      break;
+    }
+
+    case 'potion_doubledown': {
+      u.activeBuffs = u.activeBuffs || [];
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({ type: 'xp_boost_25', questsRemaining: 5, activatedAt: now() });
+        u.activeBuffs.push({ type: 'gold_boost_20', questsRemaining: 5, activatedAt: now() });
+      }
+      result.message = `Flask of Ambition activated! +25% XP + 20% Gold for 5 quests${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}`;
       break;
     }
 
@@ -348,31 +392,68 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       break;
     }
 
+    case 'enchant_socket': {
+      const eq = u.equipment[targetSlot];
+      const stat = PRIMARY_STATS[Math.floor(Math.random() * PRIMARY_STATS.length)];
+      const value = 3 + Math.floor(Math.random() * 3); // 3-5
+      eq.stats = eq.stats || {};
+      eq.stats[stat] = (eq.stats[stat] || 0) + value;
+      result.message = `Arcane Infusion: +${value} ${stat} permanently!`;
+      result.updatedGear = eq;
+      break;
+    }
+
+    case 'reinforce_armor': {
+      const eq = u.equipment[targetSlot];
+      const stat = PRIMARY_STATS[Math.floor(Math.random() * PRIMARY_STATS.length)];
+      const value = 3 + Math.floor(Math.random() * 4); // 3-6
+      eq.stats = eq.stats || {};
+      eq.stats[stat] = (eq.stats[stat] || 0) + value;
+      result.message = `Reinforced! +${value} ${stat} permanently!`;
+      result.updatedGear = eq;
+      break;
+    }
+
     // ─── Koch recipes ──────────────────────────────────────────────────────
     case 'meal_hearty':
     case 'meal_golden': {
       u.activeBuffs = u.activeBuffs || [];
       const buffType = recipe.result.buffType;
-      u.activeBuffs.push({ type: buffType, questsRemaining: 5, activatedAt: now() });
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({ type: buffType, questsRemaining: 5, activatedAt: now() });
+      }
       const mealNames = { meal_hearty: 'Hearty Stew', meal_golden: 'Golden Soup' };
-      result.message = `${mealNames[recipeId] || 'Meal'} consumed! Buff active for 5 quests.`;
+      result.message = `${mealNames[recipeId] || 'Meal'} consumed! Buff active for 5 quests${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}.`;
       break;
     }
     case 'meal_feast': {
       u.activeBuffs = u.activeBuffs || [];
-      u.activeBuffs.push({ type: 'xp_boost_15', questsRemaining: 3, activatedAt: now() });
-      u.activeBuffs.push({ type: 'gold_boost_10', questsRemaining: 3, activatedAt: now() });
-      result.message = 'Star Banquet! +15% XP + 10% Gold for 3 quests!';
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({ type: 'xp_boost_15', questsRemaining: 3, activatedAt: now() });
+        u.activeBuffs.push({ type: 'gold_boost_10', questsRemaining: 3, activatedAt: now() });
+      }
+      result.message = `Star Banquet! +15% XP + 10% Gold for 3 quests${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}!`;
       break;
     }
     case 'meal_forge': {
-      u.forgeTemp = Math.min(100, (u.forgeTemp || 0) + (recipe.result.amount || 15));
-      result.message = `Forge temperature raised by ${recipe.result.amount || 15}! (${u.forgeTemp}%)`;
+      const totalAmount = (recipe.result.amount || 15) * effectiveCount;
+      u.forgeTemp = Math.min(100, (u.forgeTemp || 0) + totalAmount);
+      result.message = `Forge temperature raised by ${totalAmount}! (${u.forgeTemp}%)`;
       break;
     }
     case 'meal_endurance': {
-      u.streakShields = Math.min(10, (u.streakShields || 0) + 1);
+      u.streakShields = Math.min(10, (u.streakShields || 0) + effectiveCount);
       result.message = `Endurance Ration! Streak Shield received (Total: ${u.streakShields})`;
+      break;
+    }
+    case 'meal_champions': {
+      u.activeBuffs = u.activeBuffs || [];
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({ type: 'xp_boost_20', questsRemaining: 5, activatedAt: now() });
+        u.activeBuffs.push({ type: 'gold_boost_15', questsRemaining: 5, activatedAt: now() });
+        u.activeBuffs.push({ type: 'luck_boost_10', questsRemaining: 5, activatedAt: now() });
+      }
+      result.message = `Champion's Feast! +20% XP + 15% Gold + 10% Luck for 5 quests${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}!`;
       break;
     }
 
@@ -388,6 +469,9 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     gold: u.currencies?.gold ?? u.gold ?? 0,
     newProfLevel: newProfLevel.level,
     profLevelUp: newProfLevel.level > profProgress.level,
+    xpGained: totalXpGained,
+    dailyBonusUsed: dailyBonusAvailable,
+    craftCount: effectiveCount,
   });
 });
 
