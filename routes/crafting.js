@@ -6,6 +6,8 @@ const path = require('path');
 const router = require('express').Router();
 const { state, saveUsers } = require('../lib/state');
 const { now, getLevelInfo, rollAffixStats, PRIMARY_STATS, MINOR_STATS } = require('../lib/helpers');
+
+const VALID_SLOTS = ['weapon', 'shield', 'helm', 'armor', 'amulet', 'boots'];
 const { requireAuth } = require('../lib/middleware');
 
 // ─── Load professions data at boot ──────────────────────────────────────────
@@ -44,9 +46,13 @@ router.get('/api/professions', (req, res) => {
     const unlocked = u ? (p.unlockCondition?.type === 'level' ? playerLevel >= p.unlockCondition.value : true) : false;
     const profProgress = u ? getProfLevel(u, p.id) : { level: 0, xp: 0 };
     const lastCraft = (u?.professions || {})[p.id]?.lastCraftAt || null;
+    const chosen = (u?.chosenProfessions || []).includes(p.id);
+    const canChoose = chosen || (u?.chosenProfessions || []).length < 2;
     return {
       ...p,
       unlocked,
+      chosen,
+      canChoose,
       playerLevel: profProgress.level,
       playerXp: profProgress.xp,
       nextLevelXp: p.levelThresholds[profProgress.level] || null,
@@ -80,6 +86,15 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   const playerLevel = getLevelInfo(u.xp || 0).level;
   if (profDef.unlockCondition?.type === 'level' && playerLevel < profDef.unlockCondition.value) {
     return res.status(400).json({ error: `Requires player level ${profDef.unlockCondition.value}` });
+  }
+
+  // Check 2-profession limit: player can only have 2 active professions
+  u.chosenProfessions = u.chosenProfessions || [];
+  if (!u.chosenProfessions.includes(recipe.profession)) {
+    if (u.chosenProfessions.length >= 2) {
+      return res.status(400).json({ error: `Du hast bereits 2 Berufe gewählt (${u.chosenProfessions.join(', ')}). Wechsel erst einen ab.` });
+    }
+    u.chosenProfessions.push(recipe.profession);
   }
 
   // Check profession level
@@ -134,6 +149,11 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   u.professions[recipe.profession].level = newProfLevel.level;
 
   // ─── Execute recipe effect ──────────────────────────────────────────────
+  // Validate targetSlot if provided
+  if (targetSlot && !VALID_SLOTS.includes(targetSlot)) {
+    return res.status(400).json({ error: `Invalid slot: ${targetSlot}` });
+  }
+
   let result = { success: true, message: '' };
 
   switch (recipeId) {
@@ -266,6 +286,34 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       break;
     }
 
+    // ─── Koch recipes ──────────────────────────────────────────────────────
+    case 'meal_hearty':
+    case 'meal_golden': {
+      u.activeBuffs = u.activeBuffs || [];
+      const buffType = recipe.result.buffType;
+      u.activeBuffs.push({ type: buffType, questsRemaining: 5, activatedAt: now() });
+      const mealNames = { meal_hearty: 'Herzhafter Eintopf', meal_golden: 'Goldene Suppe' };
+      result.message = `${mealNames[recipeId] || 'Mahlzeit'} genossen! Buff aktiv für 5 Quests.`;
+      break;
+    }
+    case 'meal_feast': {
+      u.activeBuffs = u.activeBuffs || [];
+      u.activeBuffs.push({ type: 'xp_boost_15', questsRemaining: 3, activatedAt: now() });
+      u.activeBuffs.push({ type: 'gold_boost_10', questsRemaining: 3, activatedAt: now() });
+      result.message = 'Sternenbankett! +15% XP + 10% Gold für 3 Quests!';
+      break;
+    }
+    case 'meal_forge': {
+      u.forgeTemp = Math.min(100, (u.forgeTemp || 0) + (recipe.result.amount || 15));
+      result.message = `Forge-Temperatur um ${recipe.result.amount || 15} erhöht! (${u.forgeTemp}%)`;
+      break;
+    }
+    case 'meal_endurance': {
+      u.streakShields = (u.streakShields || 0) + 1;
+      result.message = `Ausdauer-Ration! Streak-Shield erhalten (Gesamt: ${u.streakShields})`;
+      break;
+    }
+
     default:
       return res.status(400).json({ error: `Unknown recipe: ${recipeId}` });
   }
@@ -278,6 +326,198 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     gold: u.currencies?.gold ?? u.gold ?? 0,
     newProfLevel: newProfLevel.level,
     profLevelUp: newProfLevel.level > profProgress.level,
+  });
+});
+
+// ─── POST /api/professions/switch — drop a profession to choose another ─────
+router.post('/api/professions/switch', requireAuth, (req, res) => {
+  const uid = req.resolvedPlayerId;
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const { dropProfession } = req.body;
+  if (!dropProfession) return res.status(400).json({ error: 'dropProfession required' });
+
+  u.chosenProfessions = u.chosenProfessions || [];
+  if (!u.chosenProfessions.includes(dropProfession)) {
+    return res.status(400).json({ error: `${dropProfession} ist kein aktiver Beruf` });
+  }
+
+  // Cost: 200 essenz to switch (lose all profession XP)
+  const { ensureUserCurrencies } = require('../lib/state');
+  ensureUserCurrencies(u);
+  const switchCost = 200;
+  if ((u.currencies.essenz || 0) < switchCost) {
+    return res.status(400).json({ error: `Berufswechsel kostet ${switchCost} Essenz (du hast ${u.currencies.essenz || 0})` });
+  }
+  u.currencies.essenz -= switchCost;
+
+  // Remove profession
+  u.chosenProfessions = u.chosenProfessions.filter(p => p !== dropProfession);
+  // Reset profession XP
+  if (u.professions?.[dropProfession]) {
+    u.professions[dropProfession] = { level: 0, xp: 0, lastCraftAt: null };
+  }
+
+  saveUsers();
+  res.json({
+    message: `${dropProfession} abgelegt. Du kannst jetzt einen neuen Beruf wählen.`,
+    chosenProfessions: u.chosenProfessions,
+    essenz: u.currencies.essenz,
+  });
+});
+
+// ─── Schmiedekunst (Kanai's Cube) ────────────────────────────────────────────
+// Dismantle items into Essenz, transmute 3 epics of same slot → 1 legendary
+
+const DISMANTLE_ESSENZ = { common: 2, uncommon: 5, rare: 15, epic: 40, legendary: 100 };
+const DISMANTLE_MATERIALS = {
+  common: [{ id: 'eisenerz', chance: 0.5 }, { id: 'magiestaub', chance: 0.3 }],
+  uncommon: [{ id: 'eisenerz', chance: 0.6 }, { id: 'kristallsplitter', chance: 0.3 }, { id: 'magiestaub', chance: 0.4 }],
+  rare: [{ id: 'kristallsplitter', chance: 0.5 }, { id: 'drachenschuppe', chance: 0.2 }, { id: 'runenstein', chance: 0.4 }],
+  epic: [{ id: 'drachenschuppe', chance: 0.5 }, { id: 'aetherkern', chance: 0.15 }, { id: 'runenstein', chance: 0.4 }],
+  legendary: [{ id: 'aetherkern', chance: 0.6 }, { id: 'seelensplitter', chance: 0.1 }, { id: 'phoenixfeder', chance: 0.3 }],
+};
+
+// POST /api/schmiedekunst/dismantle — dismantle an inventory item into essenz + materials
+router.post('/api/schmiedekunst/dismantle', requireAuth, (req, res) => {
+  const uid = req.resolvedPlayerId;
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const { inventoryItemId } = req.body;
+  if (!inventoryItemId) return res.status(400).json({ error: 'inventoryItemId required' });
+
+  u.inventory = u.inventory || [];
+  const idx = u.inventory.findIndex(i => (i.instanceId || i.id) === inventoryItemId);
+  if (idx === -1) return res.status(404).json({ error: 'Item not in inventory' });
+  const item = u.inventory[idx];
+
+  // Cannot dismantle currently equipped items
+  if (u.equipment) {
+    for (const slotVal of Object.values(u.equipment)) {
+      if (slotVal && typeof slotVal === 'object' && slotVal.instanceId === inventoryItemId) {
+        return res.status(400).json({ error: 'Kann ausgerüstete Items nicht zerlegen' });
+      }
+    }
+  }
+
+  const rarity = item.rarity || 'common';
+  const essenzGained = DISMANTLE_ESSENZ[rarity] || 2;
+  const matDrops = DISMANTLE_MATERIALS[rarity] || DISMANTLE_MATERIALS.common;
+
+  // Remove from inventory
+  u.inventory.splice(idx, 1);
+
+  // Award essenz
+  const { ensureUserCurrencies } = require('../lib/state');
+  ensureUserCurrencies(u);
+  u.currencies.essenz = (u.currencies.essenz || 0) + essenzGained;
+
+  // Roll material drops
+  u.craftingMaterials = u.craftingMaterials || {};
+  const materialsGained = [];
+  for (const mat of matDrops) {
+    if (Math.random() < mat.chance) {
+      u.craftingMaterials[mat.id] = (u.craftingMaterials[mat.id] || 0) + 1;
+      const matDef = PROFESSIONS_DATA.materials?.find(m => m.id === mat.id);
+      materialsGained.push({ id: mat.id, name: matDef?.name || mat.id, amount: 1 });
+    }
+  }
+
+  saveUsers();
+  res.json({
+    message: `${item.name} zerlegt! +${essenzGained} Essenz${materialsGained.length > 0 ? ' + Materialien' : ''}`,
+    dismantled: { name: item.name, rarity },
+    essenzGained,
+    materialsGained,
+    currencies: u.currencies,
+    craftingMaterials: u.craftingMaterials,
+  });
+});
+
+// POST /api/schmiedekunst/transmute — combine 3 epics of same slot → 1 legendary
+router.post('/api/schmiedekunst/transmute', requireAuth, (req, res) => {
+  const uid = req.resolvedPlayerId;
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const { itemIds } = req.body; // array of 3 inventory instanceIds
+  if (!itemIds || !Array.isArray(itemIds) || itemIds.length !== 3) {
+    return res.status(400).json({ error: '3 itemIds required' });
+  }
+
+  u.inventory = u.inventory || [];
+  const items = [];
+  for (const id of itemIds) {
+    const item = u.inventory.find(i => (i.instanceId || i.id) === id);
+    if (!item) return res.status(404).json({ error: `Item ${id} not found in inventory` });
+    items.push(item);
+  }
+
+  // Validate: none can be equipped
+  if (u.equipment) {
+    const equippedIds = new Set(Object.values(u.equipment).filter(v => v && typeof v === 'object').map(v => v.instanceId));
+    for (const item of items) {
+      if (equippedIds.has(item.instanceId || item.id)) {
+        return res.status(400).json({ error: `"${item.name}" ist ausgerüstet — erst ablegen` });
+      }
+    }
+  }
+
+  // Validate: all must be epic rarity
+  const allEpic = items.every(i => (i.rarity || 'common') === 'epic');
+  if (!allEpic) return res.status(400).json({ error: 'Alle 3 Items müssen episch sein' });
+
+  // Validate: all must be same slot (look up from template if not on instance)
+  const slots = items.map(i => {
+    if (i.slot) return i.slot;
+    if (i.resolvedGear?.slot) return i.resolvedGear.slot;
+    // Fallback: look up template
+    const tmpl = state.gearById.get(i.templateId) || state.itemTemplates?.get(i.templateId || i.itemId);
+    return tmpl?.slot || null;
+  });
+  const slot = slots[0];
+  if (!slot) return res.status(400).json({ error: 'Slot konnte nicht ermittelt werden — Items ungültig' });
+  if (!slots.every(s => s === slot)) {
+    return res.status(400).json({ error: `Alle Items müssen denselben Slot haben (${slots.filter(Boolean).join(', ')})` });
+  }
+
+  // Gold cost
+  const transmuteCost = 500;
+  const userGold = u.currencies?.gold ?? u.gold ?? 0;
+  if (userGold < transmuteCost) {
+    return res.status(400).json({ error: `Nicht genug Gold (${userGold}/${transmuteCost})` });
+  }
+
+  // Find legendary items in same slot
+  const { createGearInstance } = require('../lib/helpers');
+  const legendaryPool = state.FULL_GEAR_ITEMS.filter(g =>
+    g.slot === slot && g.rarity === 'legendary' && g.tier === 4
+  );
+  if (legendaryPool.length === 0) {
+    return res.status(400).json({ error: `Kein Legendär für Slot "${slot}" verfügbar` });
+  }
+
+  // Deduct gold
+  if (u.currencies) u.currencies.gold -= transmuteCost;
+  else u.gold = (u.gold || 0) - transmuteCost;
+
+  // Remove the 3 epic items from inventory
+  for (const item of items) {
+    const removeIdx = u.inventory.findIndex(i => (i.instanceId || i.id) === (item.instanceId || item.id));
+    if (removeIdx !== -1) u.inventory.splice(removeIdx, 1);
+  }
+
+  // Create legendary
+  const template = legendaryPool[Math.floor(Math.random() * legendaryPool.length)];
+  const legendary = createGearInstance(template);
+  u.inventory.push(legendary);
+
+  saveUsers();
+  res.json({
+    message: `Schmiedekunst erfolgreich! ${legendary.name} wurde geschmiedet!`,
+    consumed: items.map(i => ({ name: i.name, rarity: i.rarity })),
+    created: legendary,
+    goldSpent: transmuteCost,
+    gold: u.currencies?.gold ?? u.gold ?? 0,
   });
 });
 

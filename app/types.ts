@@ -135,6 +135,7 @@ export interface User {
     runensplitter: number;
     gildentaler: number;
     mondstaub: number;
+    sternentaler: number;
   };
   gear?: string;
   createdAt?: string;
@@ -167,6 +168,7 @@ export interface User {
     schmied?: { level: number; xp: number; lastCraftAt?: string };
     alchemist?: { level: number; xp: number; lastCraftAt?: string };
     verzauberer?: { level: number; xp: number; lastCraftAt?: string };
+    koch?: { level: number; xp: number; lastCraftAt?: string };
   };
   craftingMaterials?: Record<string, number>;
 }
@@ -351,7 +353,7 @@ export interface CVData {
   totalLearningQuests: number;
 }
 
-export interface ShopItem { id: string; name: string; cost: number; icon: string; desc: string; }
+export interface ShopItem { id: string; name: string; cost: number; icon: string; desc: string; category?: "self-care" | "boost"; effect?: { type: string; questsRemaining?: number; amount?: number }; }
 
 export interface GachaItem {
   id: string;

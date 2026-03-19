@@ -243,7 +243,9 @@ export default function Dashboard() {
       setAgents(sortAgents(batch.agents || []));
       setQuests(batch.quests);
       setUsers(batch.users || []);
-      if (Array.isArray(batch.achievements) && batch.achievements.length > 0) setAchievementCatalogue(batch.achievements);
+      const rawAchs = batch.achievements as any;
+      const batchAchs = Array.isArray(rawAchs) ? rawAchs : rawAchs?.achievements;
+      if (Array.isArray(batchAchs) && batchAchs.length > 0) setAchievementCatalogue(batchAchs);
       setCampaigns(batch.campaigns || []);
       setRituals(batch.rituals || []);
       setHabits(batch.habits || []);
@@ -795,8 +797,15 @@ export default function Dashboard() {
             { key: "leaderboard", label: "The Proving Grounds", tutorialKey: "leaderboard-tab", iconSrc: "/images/icons/nav-proving.png" },
             { key: "honors",      label: "Hall of Honors",  tutorialKey: "honors-tab", iconSrc: "/images/icons/nav-honors.png" },
             { key: "season",      label: `${CURRENT_SEASON.name} Season`, tutorialKey: "season-tab", iconSrc: "" },
-          ].map(v => (
-            "isDivider" in v && v.isDivider ? (
+          ].map(v => {
+            // Notification dots — show colored dot for tabs with new/active content
+            const notifDot = (() => {
+              if (dashView === v.key) return null; // no dot on active tab
+              if (v.key === "questBoard" && quests.open.length > 0) return "#4ade80";
+              if (v.key === "npcBoard" && activeNpcs.length > 0) return "#f59e0b";
+              return null;
+            })();
+            return "isDivider" in v && v.isDivider ? (
               <span key={v.key} className="text-xs font-semibold uppercase tracking-widest px-2 py-1.5 flex items-center" style={{ color: "rgba(255,215,0,0.5)", letterSpacing: "0.1em", pointerEvents: "none" }}>
                 x {v.label}
               </span>
@@ -805,7 +814,7 @@ export default function Dashboard() {
               key={v.key}
               data-feedback-id={`nav.tab.${v.key}`}
               onClick={() => setDashView(v.key as typeof dashView)}
-              className="btn-interactive text-sm font-semibold px-3 py-1.5 rounded transition-all inline-flex items-center gap-1.5"
+              className="btn-interactive text-sm font-semibold px-3 py-1.5 rounded transition-all inline-flex items-center gap-1.5 relative"
               style={{
                 background: dashView === v.key ? "#252525" : "transparent",
                 color: dashView === v.key ? "#f0f0f0" : "rgba(255,255,255,0.3)",
@@ -814,9 +823,10 @@ export default function Dashboard() {
             >
               {"iconSrc" in v && v.iconSrc && <img src={v.iconSrc} alt="" width={24} height={24} className={`${v.key === "gacha" ? "vault-nav-glow" : ""} img-render-auto`} style={{ opacity: dashView === v.key ? 1 : 0.5 }} onError={e => (e.currentTarget.style.display = "none")} />}
               {v.label}
+              {notifDot && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full" style={{ background: notifDot, boxShadow: `0 0 4px ${notifDot}` }} />}
             </button>
-            )
-          ))}
+            );
+          })}
         </div>
 
         {/* The Proving Grounds — Leaderboard + Player Cards */}

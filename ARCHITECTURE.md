@@ -103,13 +103,15 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 | `config-admin.js` | Game config, leaderboard, **`/api/dashboard`** batch, quest pool, admin keys | Mixed |
 | `users.js` | Registration, JWT auth, XP awards, streaks | Rate-limited login |
 | `players.js` | Player profiles, companions, favorites | Mixed |
-| `shop.js` | Gear purchase, shop items, forge challenges | API key |
+| `shop.js` | Gear purchase, shop items (self-care + boosts), forge challenges | API key |
 | `currency.js` | Currency earn/spend/convert | API key |
 | `gacha.js` | Banner pulls (1x, 10x), pity tracking | API key + pull lock |
 | `game.js` | Classes, roadmap, rituals | Mixed |
 | `habits-inventory.js` | Habits, inventory, equipment, item effects | API key |
 | `integrations.js` | GitHub webhook (HMAC verified), catalog API | Webhook signature |
 | `campaigns.js` | Campaign CRUD, quest chains | API key |
+| `crafting.js` | Crafting professions, Schmiedekunst (dismantle/transmute) | API key |
+| `challenges-weekly.js` | Weekly 3-stage challenges (sternentaler rewards) | API key |
 | `npcs-misc.js` | NPC rotation, feedback (admin-only), SPA fallback | Master key (feedback) |
 | `docs.js` | OpenAPI spec, HTML docs | Public |
 
@@ -233,6 +235,14 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - **Essenz**: Crafting currency
 - **Runensplitter**: Gacha currency
 - Conversion between currencies with 20% tax
+
+### Bazaar Shop System
+- **Two categories**: Self-care rewards (real-world treats) + Boosts (temporary gameplay buffs)
+- **Boosts**: Items with an `effect` field in `shopItems.json` — applied server-side via `applyShopEffect()` in `routes/shop.js`
+- **Buff types**: `xp_boost_10`, `gold_boost_10`, `luck_boost_20`, `streak_shield`, `material_double` (quest-counted buffs added to `user.activeBuffs[]`)
+- **Instant effects**: `instant_stardust`, `instant_essenz` (directly modify `user.currencies`)
+- **Buff consumption**: Handled in `lib/helpers.js → onQuestCompletedByUser()` — `questsRemaining` decremented per quest, removed when 0
+- **Frontend**: `ShopView.tsx` renders boosts (purple accent) above self-care (amber accent)
 
 ### Companion Ultimates
 - **Unlock**: Bond Level 5 ("Best Friend")

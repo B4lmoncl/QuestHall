@@ -605,16 +605,74 @@ Neue Ultimates können in `companions.json → ultimates.abilities[]` hinzugefü
 
 ---
 
-## 11. Crafting-Rezepte & Materialien erstellen
+## 11. Bazaar Shop-Items erstellen
+
+**Datei**: `public/data/shopItems.json`
+**Array**: `items[]`
+
+### Zwei Kategorien
+
+| Kategorie | `category` | Beschreibung |
+|-----------|-----------|-------------|
+| Self-Care | `"self-care"` | Reale Belohnungen (Gaming, Essen, Freizeit) — kein Gameplay-Effekt |
+| Boosts | `"boost"` | Temporäre Gameplay-Buffs (XP, Gold, Luck etc.) — mit `effect`-Feld |
+
+### Self-Care Reward Schema
+
+```json
+{
+  "id": "neuer-reward",
+  "name": "Reward Name",
+  "cost": 100,
+  "category": "self-care",
+  "icon": "/images/icons/shop-neuer.png",
+  "desc": "Beschreibung der Belohnung."
+}
+```
+
+### Boost Item Schema (mit temporärem Effekt)
+
+```json
+{
+  "id": "neuer-boost",
+  "name": "Boost Name",
+  "cost": 200,
+  "category": "boost",
+  "icon": "/images/icons/shop-neuer-boost.png",
+  "desc": "+10% XP für 5 Quests.",
+  "effect": { "type": "xp_boost_10", "questsRemaining": 5 }
+}
+```
+
+### Verfügbare Effekt-Typen
+
+| Type | Felder | Wirkung |
+|------|--------|---------|
+| `xp_boost_10` | `questsRemaining` | +10% XP für N Quests |
+| `gold_boost_10` | `questsRemaining` | +10% Gold für N Quests |
+| `luck_boost_20` | `questsRemaining` | Erhöhte Loot-Chance für N Quests |
+| `streak_shield` | `questsRemaining: 1` | Schützt einmalig einen Streak |
+| `material_double` | `questsRemaining` | Doppelte Material-Drops für N Quests |
+| `instant_stardust` | `amount` | Gibt sofort X Stardust (kein Buff) |
+| `instant_essenz` | `amount` | Gibt sofort X Essenz (kein Buff) |
+
+**Buff-basierte** Effekte (mit `questsRemaining`) werden als `activeBuffs`-Eintrag beim User gespeichert und in `lib/helpers.js → onQuestCompletedByUser()` abgebaut. **Instant-Effekte** modifizieren `user.currencies` direkt.
+
+Kein Code nötig für bestehende Effekt-Typen. Neue Effekt-Typen brauchen Anpassung in `routes/shop.js → applyShopEffect()`.
+
+---
+
+## 12. Crafting-Rezepte & Materialien erstellen
 
 **Datei**: `public/data/professions.json`
 
 ### Profession-NPCs
 
-3 Berufe mit je eigenem NPC:
-- **Schmied** (Thorin): Gear-Stats rerolln, Rarität upgraden
-- **Alchemist** (Mirael): Buff-Tränke brauen (XP, Gold, Glück, Streak-Shield)
+4 Berufe mit je eigenem NPC:
+- **Schmied** (Grimvar): Gear-Stats rerolln, Rarität upgraden
+- **Alchemist** (Ysolde): Buff-Tränke brauen (XP, Gold, Glück, Streak-Shield)
 - **Verzauberer** (Eldric): Gear-Enchants (temporär + permanent)
+- **Koch** (Bruna): Mahlzeiten & Buffs (XP, Gold, Forge-Temp, Streak-Shield)
 
 ### Neues Material hinzufügen
 
@@ -672,6 +730,123 @@ Jede Profession hat 10 Level mit steigenden XP-Schwellen (definiert in `levelThr
 - [ ] `node scripts/verify-items.js` läuft ohne Fehler
 - [ ] Server startet ohne Fehler nach der Änderung
 
+## Fehlende Assets & Content (Stand: 2026-03-19)
+
+Folgende Bilder, Portraits und Icons werden im Code referenziert, existieren aber noch nicht. Müssen als PNG erstellt werden (empfohlen: 64×64 oder 128×128, transparenter Hintergrund).
+
+### Shop-Icons (14 fehlend)
+
+| Item | Pfad |
+|------|------|
+| Spa-Tag | `public/images/icons/shop-spa.png` |
+| Neues Buch | `public/images/icons/shop-book.png` |
+| Essen gehen | `public/images/icons/shop-meal.png` |
+| Hobby-Zeit | `public/images/icons/shop-hobby.png` |
+| Social Outing | `public/images/icons/shop-social.png` |
+| Natur-Spaziergang | `public/images/icons/shop-nature.png` |
+| Digital Detox | `public/images/icons/shop-detox.png` |
+| XP-Schriftrolle | `public/images/icons/shop-xp-scroll.png` |
+| Goldweihrauch | `public/images/icons/shop-gold-incense.png` |
+| Glücksmünze | `public/images/icons/shop-lucky-coin.png` |
+| Streak-Schild | `public/images/icons/shop-streak-shield.png` |
+| Doppel-Beute | `public/images/icons/shop-double-drop.png` |
+| Sternenstaub-Phiole | `public/images/icons/shop-stardust.png` |
+| Essenz-Kristall | `public/images/icons/shop-essenz.png` |
+
+### Material-Icons (13 fehlend)
+
+| Material | Pfad |
+|----------|------|
+| Eisenerz | `public/images/icons/mat-eisenerz.png` |
+| Magiestaub | `public/images/icons/mat-magiestaub.png` |
+| Kristallsplitter | `public/images/icons/mat-kristallsplitter.png` |
+| Drachenschuppe | `public/images/icons/mat-drachenschuppe.png` |
+| Ätherkern | `public/images/icons/mat-aetherkern.png` |
+| Kräuterbündel | `public/images/icons/mat-kraeuter.png` |
+| Mondblume | `public/images/icons/mat-mondblume.png` |
+| Phoenixfeder | `public/images/icons/mat-phoenixfeder.png` |
+| Runenstein | `public/images/icons/mat-runenstein.png` |
+| Seelensplitter | `public/images/icons/mat-seelensplitter.png` |
+| Wildfleisch | `public/images/icons/mat-wildfleisch.png` |
+| Feuerwurz | `public/images/icons/mat-feuerwurz.png` |
+| Sternenfrucht | `public/images/icons/mat-sternenfrucht.png` |
+
+### Item-Template-Icons (50 fehlend)
+
+Icons aus `itemTemplates.json` unter `public/images/items/icons/` — betrifft Gear-Items die als Loot/Inventar-Items referenziert werden:
+- **T1 (14 Items):** `t1-sword`, `t1-dagger`, `t1-staff`, `t1-axe`, `t1-shield`, `t1-buckler`, `t1-helm`, `t1-hood`, `t1-armor`, `t1-tunic`, `t1-amulet`, `t1-charm`, `t1-boots`, `t1-sandals`
+- **T2 (13 Items):** `t2-sword`, `t2-katana`, `t2-hammer`, `t2-shield`, `t2-tower`, `t2-helm`, `t2-circlet`, `t2-armor`, `t2-brigandine`, `t2-amulet`, `t2-pendant`, `t2-boots`, `t2-strider`
+- **T3 (12 Items):** `t3-sword`, `t3-lance`, `t3-wand`, `t3-shield`, `t3-barrier`, `t3-helm`, `t3-crown`, `t3-armor`, `t3-plate`, `t3-amulet`, `t3-eye`, `t3-boots`, `t3-shadow`
+- **T4 (10 Items):** `t4-dawn`, `t4-void`, `t4-aegis`, `t4-crown`, `t4-armor`, `t4-heart`, `t4-boots`, `t4-excalibur`, `t4-phoenix`, `t4-oracle`
+
+Pfad-Format: `public/images/items/icons/{id}.png`
+
+**Hinweis:** `gearTemplates.json` (Affix-Definitions) hat kein `icon`-Feld — nur `itemTemplates.json` (Inventar-Items) referenziert diese Icons.
+
+### Achievement-Icons (31 mit Platzhalter "?")
+
+Folgende Achievements nutzen `"?"` als Icon statt echtem Bild. Empfohlener Pfad: `public/images/icons/ach-{id}.png`
+
+| Achievement | Name |
+|-------------|------|
+| centurion | Centurion |
+| master | Quest Master |
+| hermit | The Hermit |
+| boss_hunter | Boss Hunter |
+| boss_legend | Boss Legend |
+| two_week_warrior | Fortnight Fighter |
+| quarter_year | Seasonal Champion |
+| gold_hoarder | Gold Hoarder |
+| dragon_hoard | Dragon's Hoard |
+| initiate | Initiate |
+| adept | Adept |
+| master_rank | Master |
+| grandmaster | Grandmaster |
+| chain_veteran | Chain Veteran |
+| marathon_runner | Marathon Runner |
+| social_king | Social Monarch |
+| fitness_fanatic | Fitness Fanatic |
+| knowledge_seeker | Knowledge Seeker |
+| dev_legend | Dev Legend |
+| weekend_warrior | Weekend Warrior |
+| coop_legend | Co-op Legend |
+| hidden_midnight | Midnight Oil |
+| hidden_skulduggery | Pleasant Surprise |
+| hidden_stormlight | Journey Before Destination |
+| hidden_critical_role | Bidet |
+| hidden_dndads | Daddy Magic |
+| hidden_perfectionist | No Quest Left Behind |
+| hidden_npc_collector | NPC Collector |
+| hidden_gacha_addict | Gacha Addict |
+| hidden_full_inventory | Hoarder's Dream |
+| hidden_legendary_pull | Legendary Luck |
+
+### Klassen-Assets (1 Klasse)
+
+| Fehlend | Klasse |
+|---------|--------|
+| Klassen-Icon | `network-sage` |
+| Skill-Icons | `switching`, `firewalls`, `vpn` |
+| Achievement-Icons | `first-firewall`, `nse-completionist` |
+
+### Flavor-Text / Beschreibungen
+
+- Alle Klassen-Skills und -Achievements haben keine ausführlichen Beschreibungen (nur Namen)
+### Profession-NPC-Portraits (4 fehlend)
+
+Die Berufs-NPCs aus `professions.json` referenzieren Portraits die nicht existieren:
+
+| NPC | Pfad |
+|-----|------|
+| Grimvar der Schmied | `public/images/npcs/grimvar-schmied.png` |
+| Ysolde die Alchemistin | `public/images/npcs/ysolde-alchemist.png` |
+| Eldric der Verzauberer | `public/images/npcs/eldric-verzauberer.png` |
+| Bruna die Köchin | `public/images/npcs/bruna-koch.png` |
+
+**Hinweis:** Quest-Giver-NPC-Portraits (aus `npcQuestGivers.json`) sind alle vorhanden — nur die Crafting-NPCs fehlen
+
+---
+
 ## Dateien-Übersicht
 
 | Was | Datei | Braucht Code-Änderung? |
@@ -682,6 +857,7 @@ Jede Profession hat 10 Level mit steigenden XP-Schwellen (definiert in `levelThr
 | Titel | `public/data/titles.json` | Nein |
 | Gacha-Items | `public/data/gachaPool.json` | Nein |
 | Gacha-Banner | `public/data/bannerTemplates.json` | Nein |
+| Shop/Bazaar | `public/data/shopItems.json` | Nur für neue Effekt-Typen (shop.js) |
 | Consumables | `public/data/itemTemplates.json` | Ja (Effekt in habits-inventory.js) |
 | Loot-Tables | `public/data/lootTables.json` | Nein |
 | Achievements | `public/data/achievementTemplates.json` | Ggf. Trigger in state.js |
