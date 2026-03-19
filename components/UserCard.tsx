@@ -23,7 +23,7 @@ function SmartIcon({ src, alt, size = 16, style }: { src: string; alt?: string; 
   return <span style={{ fontSize: size, lineHeight: 1, ...style }}>{src}</span>;
 }
 
-export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDef[] }) {
+export function UserCard({ user, classes = [], dailyBonusAvailable, onClaimDailyBonus, claimingDailyBonus }: { user: User; classes?: ClassDef[]; dailyBonusAvailable?: boolean; onClaimDailyBonus?: () => void; claimingDailyBonus?: boolean }) {
   const xp = user.xp ?? 0;
   const lvl = getUserLevel(xp);
   const progress = getUserXpProgress(xp);
@@ -182,6 +182,25 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
             style={{ width: `${Math.round(progress * 100)}%`, background: `linear-gradient(90deg, ${lvl.color}99, ${lvl.color})`, boxShadow: `0 0 6px ${lvl.color}60` }}
           />
         </div>
+
+        {/* Daily Bonus Claim */}
+        {dailyBonusAvailable && onClaimDailyBonus && (
+          <button
+            onClick={onClaimDailyBonus}
+            disabled={claimingDailyBonus}
+            className="w-full mb-2 py-1.5 rounded-lg text-xs font-bold transition-all"
+            style={{
+              background: claimingDailyBonus ? "rgba(250,204,21,0.05)" : "linear-gradient(90deg, rgba(250,204,21,0.12), rgba(245,158,11,0.12))",
+              color: "#facc15",
+              border: "1px solid rgba(250,204,21,0.2)",
+              cursor: claimingDailyBonus ? "wait" : "pointer",
+              opacity: claimingDailyBonus ? 0.5 : 1,
+            }}
+            title="Claim your daily login reward (Essenz + Runensplitter)"
+          >
+            {claimingDailyBonus ? "Claiming..." : "☀ Claim Daily Bonus"}
+          </button>
+        )}
 
         {/* Quests + Forge — compact row */}
         <div className="flex items-center justify-between">
