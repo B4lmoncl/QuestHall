@@ -737,11 +737,17 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                           {recipe.cooldownMinutes > 0 && (
                             <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>CD: {recipe.cooldownMinutes >= 60 ? `${Math.floor(recipe.cooldownMinutes / 60)}h` : `${recipe.cooldownMinutes}m`}</span>
                           )}
-                          {recipe.xpGain && (
-                            <span className="text-xs font-mono" style={{ color: dailyBonusAvailable ? "#facc15" : "rgba(255,255,255,0.2)" }}>
-                              +{recipe.xpGain * (isBatchable ? craftCount : 1)}{dailyBonusAvailable ? "x2" : ""} XP
-                            </span>
-                          )}
+                          {recipe.xpGain != null && (() => {
+                            const skillUp = SKILL_UP_COLORS[recipe.skillUpColor || "orange"];
+                            const multiplier = recipe.skillUpColor === "gray" ? 0 : recipe.skillUpColor === "green" ? 0.25 : recipe.skillUpColor === "yellow" ? 0.75 : 1;
+                            const effectiveXp = Math.floor(recipe.xpGain * (isBatchable ? craftCount : 1) * multiplier);
+                            const xpColor = recipe.skillUpColor === "gray" ? "#6b7280" : dailyBonusAvailable ? "#facc15" : "rgba(255,255,255,0.2)";
+                            return (
+                              <span className="text-xs font-mono" style={{ color: xpColor }} title={skillUp?.label}>
+                                {recipe.skillUpColor === "gray" ? "0" : `+${effectiveXp}${dailyBonusAvailable ? "x2" : ""}`} XP
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     );

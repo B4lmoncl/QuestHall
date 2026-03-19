@@ -112,6 +112,18 @@
       "cooldownMinutes": 120
     },
     {
+      "id": "sharpen_blade",
+      "profession": "schmied",
+      "name": "Sharpen Blade",
+      "desc": "Hones a weapon to razor sharpness, adding +1-3 to its primary stat.",
+      "reqProfLevel": 5,
+      "xpGain": 12,
+      "cost": { "gold": 250 },
+      "materials": { "eisenerz": 3, "kristallsplitter": 2 },
+      "result": { "type": "reinforce", "statBonus": [1, 3], "target": "primary_stat" },
+      "cooldownMinutes": 180
+    },
+    {
       "id": "upgrade_rarity",
       "profession": "schmied",
       "name": "Rarity Upgrade",
@@ -210,6 +222,31 @@
       "materials": { "magiestaub": 3, "runenstein": 1 },
       "result": { "type": "temp_enchant", "statBonus": [2, 4], "durationHours": 24 },
       "cooldownMinutes": 360
+    },
+    {
+      "id": "runic_polish",
+      "profession": "verzauberer",
+      "name": "Runic Polish",
+      "desc": "Cleanses an item with rune energy, adding +1-2 to a random minor stat for 48 hours.",
+      "reqProfLevel": 3,
+      "xpGain": 12,
+      "cost": { "gold": 120 },
+      "materials": { "magiestaub": 2, "runenstein": 2 },
+      "result": { "type": "temp_enchant", "statBonus": [1, 2], "durationHours": 48 },
+      "cooldownMinutes": 240
+    },
+    {
+      "id": "glyph_of_warding",
+      "profession": "verzauberer",
+      "name": "Glyph of Warding",
+      "desc": "Inscribes a protective glyph granting +8% damage reduction for 3 quests.",
+      "reqProfLevel": 6,
+      "xpGain": 16,
+      "cost": { "gold": 200 },
+      "materials": { "runenstein": 3, "kristallsplitter": 2 },
+      "result": { "type": "buff", "buffType": "warding_8", "duration": "3_quests" },
+      "cooldownMinutes": 0,
+      "discovery": { "type": "profLevel", "value": 6 }
     },
     {
       "id": "permanent_enchant",

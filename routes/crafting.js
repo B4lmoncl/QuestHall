@@ -9,7 +9,7 @@ const { now, getLevelInfo, PRIMARY_STATS, MINOR_STATS, createGearInstance } = re
 
 const VALID_SLOTS = ['weapon', 'shield', 'helm', 'armor', 'amulet', 'boots'];
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-const SLOT_RECIPES = ['reroll_stat', 'reroll_minor', 'upgrade_rarity', 'permanent_enchant', 'reinforce_armor', 'enchant_socket'];
+const SLOT_RECIPES = ['reroll_stat', 'reroll_minor', 'upgrade_rarity', 'permanent_enchant', 'reinforce_armor', 'enchant_socket', 'sharpen_blade'];
 const { requireAuth } = require('../lib/middleware');
 
 // ─── Helper: collect equipped item instanceIds ──────────────────────────────
@@ -213,7 +213,9 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
 
   // Slot-requiring recipes can't batch (they target specific gear)
   const isSlotRecipe = SLOT_RECIPES.includes(recipeId);
-  const effectiveCount = isSlotRecipe ? 1 : count;
+  // Block batch crafting on gray recipes (0 XP — prevents wasting materials)
+  const isGrayRecipe = getSkillUpColor(profProgress.level, recipe.reqProfLevel) === 'gray';
+  const effectiveCount = isSlotRecipe ? 1 : (isGrayRecipe ? Math.min(count, 1) : count);
 
   // Validate slot-requiring recipes have a targetSlot and valid gear
   if (isSlotRecipe) {
@@ -371,13 +373,15 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
         result.success = false;
         break;
       }
-      u.activeBuffs.push({
-        type: recipe.result.buffType,
-        questsRemaining: 3,
-        activatedAt: now(),
-      });
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({
+          type: recipe.result.buffType,
+          questsRemaining: 3,
+          activatedAt: now(),
+        });
+      }
       const buffNames = { potion_xp: 'Experience', potion_gold: 'Wealth', potion_luck: 'Luck' };
-      result.message = `Elixir of ${buffNames[recipeId] || 'Power'} activated! (3 Quests)`;
+      result.message = `Elixir of ${buffNames[recipeId] || 'Power'} activated! (3 Quests)${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}`;
       break;
     }
 
@@ -413,6 +417,30 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       break;
     }
 
+    case 'runic_polish': {
+      const stat = MINOR_STATS[Math.floor(Math.random() * MINOR_STATS.length)];
+      const value = 1 + Math.floor(Math.random() * 2); // 1-2
+      u.activeBuffs = u.activeBuffs || [];
+      u.activeBuffs.push({
+        type: `enchant_${stat}`,
+        stat,
+        value,
+        expiresAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+        activatedAt: now(),
+      });
+      result.message = `Runic Polish: +${value} ${stat} for 48h`;
+      break;
+    }
+
+    case 'glyph_of_warding': {
+      u.activeBuffs = u.activeBuffs || [];
+      for (let i = 0; i < effectiveCount; i++) {
+        u.activeBuffs.push({ type: 'warding_8', questsRemaining: 3, activatedAt: now() });
+      }
+      result.message = `Glyph of Warding! +8% damage reduction for 3 quests${effectiveCount > 1 ? ` (x${effectiveCount})` : ''}`;
+      break;
+    }
+
     case 'permanent_enchant': {
       const eq = u.equipment[targetSlot];
       const stat = MINOR_STATS[Math.floor(Math.random() * MINOR_STATS.length)];
@@ -442,6 +470,17 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       eq.stats = eq.stats || {};
       eq.stats[stat] = (eq.stats[stat] || 0) + value;
       result.message = `Reinforced! +${value} ${stat} permanently!`;
+      result.updatedGear = eq;
+      break;
+    }
+
+    case 'sharpen_blade': {
+      const eq = u.equipment[targetSlot];
+      const stat = PRIMARY_STATS[Math.floor(Math.random() * PRIMARY_STATS.length)];
+      const value = 1 + Math.floor(Math.random() * 3); // 1-3
+      eq.stats = eq.stats || {};
+      eq.stats[stat] = (eq.stats[stat] || 0) + value;
+      result.message = `Blade sharpened! +${value} ${stat} permanently!`;
       result.updatedGear = eq;
       break;
     }
