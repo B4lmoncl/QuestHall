@@ -137,6 +137,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [npcModalTab, setNpcModalTab] = useState<"recipes" | "schmiedekunst" | "transmutation">("recipes");
   const [infoOpen, setInfoOpen] = useState(false);
   const [choosingProf, setChoosingProf] = useState(false);
+  const [confirmProf, setConfirmProf] = useState<ProfessionDef | null>(null);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [craftCount, setCraftCount] = useState(1);
 
@@ -473,7 +474,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {canChoose && (
               <div className="px-4 pb-3">
                 <button
-                  onClick={(e) => { e.stopPropagation(); handleChooseProfession(prof.id); }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmProf(prof); }}
                   disabled={choosingProf}
                   className="forge-btn w-full text-xs font-semibold py-2 rounded-lg"
                   style={{ background: `${prof.color}15`, color: prof.color, border: `1px solid ${prof.color}35` }}
@@ -1009,6 +1010,82 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 </div>
               );
             })()}
+          </div>
+        </div>,
+        document.body
+      )}
+      {/* ─── Confirm Profession Modal ─────────────────────────────────── */}
+      {confirmProf && createPortal(
+        <div className="modal-backdrop" onClick={() => setConfirmProf(null)} style={{ zIndex: 10000 }}>
+          <div
+            className="rounded-2xl p-6 w-full max-w-md space-y-4"
+            onClick={e => e.stopPropagation()}
+            style={{ background: "#14161c", border: `1px solid ${confirmProf.color}30`, boxShadow: `0 0 40px ${confirmProf.color}10` }}
+          >
+            <div className="flex items-center gap-3">
+              {confirmProf.npcPortrait && (
+                <img src={confirmProf.npcPortrait} alt="" width={40} height={40} className="rounded-lg" style={{ imageRendering: "smooth", border: `1px solid ${confirmProf.color}30` }} />
+              )}
+              <div>
+                <h3 className="text-sm font-bold" style={{ color: confirmProf.color }}>{confirmProf.name} wählen</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{confirmProf.npcName ? `Ausbilder: ${confirmProf.npcName}` : ""}</p>
+              </div>
+            </div>
+
+            <div className="space-y-2 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
+              <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div className="flex justify-between">
+                  <span>Belegte Slots</span>
+                  <span className="font-mono font-semibold" style={{ color: chosenCount >= maxProfSlots ? "#f44" : "#e8e8e8" }}>{chosenCount} / {maxProfSlots}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Freie Slots</span>
+                  <span className="font-mono font-semibold" style={{ color: "#22c55e" }}>{maxProfSlots - chosenCount}</span>
+                </div>
+              </div>
+
+              <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>Das passiert:</p>
+                <ul className="space-y-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Du erlernst <strong style={{ color: confirmProf.color }}>{confirmProf.name}</strong> auf Stufe 1</li>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Zugang zu allen Rezepten des Berufes</li>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Täglicher Bonus: Erstes Crafting gibt 2x XP</li>
+                </ul>
+              </div>
+
+              <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,68,68,0.03)", border: "1px solid rgba(255,68,68,0.08)" }}>
+                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>Berufswechsel später:</p>
+                <ul className="space-y-1" style={{ color: "rgba(255,255,255,0.45)" }}>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Kostet <strong style={{ color: "#ff8c00" }}>200 Essenz</strong></li>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> <strong>Gesamter Fortschritt</strong> des abgelegten Berufs geht verloren</li>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Level und XP werden auf 0 zurückgesetzt</li>
+                </ul>
+              </div>
+
+              {maxProfSlots < 4 && (
+                <p className="text-center pt-1" style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>
+                  Weitere Slots werden durch Levelaufstieg freigeschaltet (Lv5, Lv15, Lv20, Lv25)
+                </p>
+              )}
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => setConfirmProf(null)}
+                className="forge-btn flex-1 text-xs font-semibold py-2.5 rounded-lg"
+                style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => { const id = confirmProf.id; setConfirmProf(null); handleChooseProfession(id); }}
+                disabled={choosingProf}
+                className="forge-btn flex-1 text-xs font-bold py-2.5 rounded-lg"
+                style={{ background: `${confirmProf.color}18`, color: confirmProf.color, border: `1px solid ${confirmProf.color}40` }}
+              >
+                {choosingProf ? "..." : "Beruf erlernen"}
+              </button>
+            </div>
           </div>
         </div>,
         document.body
