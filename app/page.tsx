@@ -649,19 +649,21 @@ export default function Dashboard() {
           <button
             onClick={handleClaimDailyBonus}
             disabled={claimingDailyBonus}
-            className="w-full rounded-xl p-3 flex items-center justify-center gap-3 transition-all"
+            className="w-full rounded-xl p-4 flex items-center justify-center gap-3 transition-all"
             style={{
-              background: "linear-gradient(90deg, rgba(250,204,21,0.08), rgba(245,158,11,0.08))",
-              border: "1px solid rgba(250,204,21,0.2)",
+              background: "linear-gradient(90deg, rgba(250,204,21,0.12), rgba(245,158,11,0.15), rgba(250,204,21,0.12))",
+              border: "1px solid rgba(250,204,21,0.35)",
               cursor: claimingDailyBonus ? "wait" : "pointer",
               opacity: claimingDailyBonus ? 0.6 : 1,
+              boxShadow: "0 0 20px rgba(250,204,21,0.08), inset 0 1px 0 rgba(250,204,21,0.1)",
+              animation: "pulse-online 2s ease-in-out infinite",
             }}
           >
-            <span style={{ fontSize: 20 }}>☀</span>
+            <span style={{ fontSize: 22 }}>☀</span>
             <span className="text-sm font-bold" style={{ color: "#facc15" }}>
               {claimingDailyBonus ? "Claiming..." : "Daily Bonus available — click to claim!"}
             </span>
-            <span className="text-xs" style={{ color: "rgba(250,204,21,0.5)" }}>Essenz + Runensplitter</span>
+            <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "rgba(250,204,21,0.1)", color: "rgba(250,204,21,0.7)" }}>Essenz + Runensplitter</span>
           </button>
         )}
 
@@ -933,7 +935,7 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-widest mb-3 text-w25">Adventurers</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} dailyBonusAvailable={u.name?.toLowerCase() === playerName?.toLowerCase() ? dailyBonusAvailable : false} onClaimDailyBonus={u.name?.toLowerCase() === playerName?.toLowerCase() ? handleClaimDailyBonus : undefined} claimingDailyBonus={claimingDailyBonus} />)}
+                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} />)}
                 </div>
               </div>
             )}
