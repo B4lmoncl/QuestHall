@@ -63,9 +63,19 @@
 - `hidden_npc_collector` (all_npcs_unlocked) — `_npcsUnlocked` was never set
 - **Fix:** Added `_nightCompletions` tracking (22:00-05:00) and `_weekendCompletions` tracking (Sat/Sun) in `onQuestCompletedByUser()`. Added `_npcsUnlocked` tracking in NPC chain completion handler in `routes/quests.js`.
 
+#### M-08: Workshop Tool Costs — Wrong Currency & Amount ✅
+- **Was:** ForgeView.tsx showed Legendary Tools as `150 essenz` and Mythic Forge as `500 essenz`
+- **Backend:** `shopItems.json` defines Legendary as `2000 gold` and Mythic as `5000 gold`
+- **Fix:** Updated ForgeView.tsx WORKSHOP_TIERS to use correct gold costs (2000/5000)
+
+#### M-09: Quest Gold Display — Fixed Values vs Backend Ranges ✅
+- **Was:** QuestDetailModal.tsx showed fixed gold amounts (common=8, uncommon=14, rare=24, epic=40, legendary=65)
+- **Backend:** `lib/state.js` uses [min, max] ranges ([5,10], [10,18], [18,30], [30,50], [50,80])
+- **Fix:** Updated GOLD_BY_RARITY to use ranges and display as "5–10" format
+
 ### MEDIUM (deferred — informational only)
 
-#### M-08: XP Modifier Modal — Missing Factors
+#### M-10: XP Modifier Modal — Missing Factors
 - Frontend modal shows: forge, kraft, gear, companions, bond, hoarding, legendary
 - Backend also applies: passiveXpBonus, activeXpBuf, nthBonus, varietyBonus, fokus stat
 - **Impact:** Users don't see temporary buff modifiers (low impact, these are transient)
@@ -124,6 +134,8 @@
 | F-11 | — | Dead code: remove unused completedInfoOpen state+modal | DashboardModals.tsx | ✅ Done |
 | F-12 | — | Streak subColor: neutral color at streak=0 | page.tsx | ✅ Done |
 | F-13 | — | Artisan stat card: add inline prop for consistency | page.tsx | ✅ Done |
+| F-14 | M-08 | Workshop tool costs: 150/500 essenz → 2000/5000 gold | ForgeView.tsx | ✅ Done |
+| F-15 | M-09 | Quest gold display: fixed values → backend ranges | QuestDetailModal.tsx | ✅ Done |
 
 ### Verification
 
