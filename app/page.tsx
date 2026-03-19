@@ -57,12 +57,11 @@ import {
 } from "@/app/config";
 import { getAuthHeaders, setAccessToken } from "@/lib/auth-client";
 import { useQuestActions } from "@/hooks/useQuestActions";
+import professionsData from "@/public/data/professions.json";
 
 const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4, companion: 1 };
 
 // ─── Profession helpers ──────────────────────────────────────────────────────
-import professionsData from "@/public/data/professions.json";
-
 const PROF_RANK_THRESHOLDS = [0, 100, 250, 450, 720, 1100, 1600, 2200, 3000, 4000];
 const PROF_RANKS: { name: string; color: string }[] = [
   { name: "Novice", color: "#6b7280" },
@@ -73,12 +72,12 @@ const PROF_RANKS: { name: string; color: string }[] = [
   { name: "Master", color: "#ef4444" },
 ];
 function getProfRank(level: number) {
-  if (level >= 10) return PROF_RANKS[5];
-  if (level >= 8) return PROF_RANKS[4];
-  if (level >= 6) return PROF_RANKS[3];
-  if (level >= 4) return PROF_RANKS[2];
-  if (level >= 2) return PROF_RANKS[1];
-  return PROF_RANKS[0];
+  if (level >= 9) return PROF_RANKS[5];  // Master
+  if (level >= 7) return PROF_RANKS[4];  // Artisan
+  if (level >= 5) return PROF_RANKS[3];  // Expert
+  if (level >= 3) return PROF_RANKS[2];  // Journeyman
+  if (level >= 1) return PROF_RANKS[1];  // Apprentice
+  return PROF_RANKS[0];                  // Novice
 }
 const PROF_META: Record<string, { name: string; icon: string; color: string }> = {
   schmied: { name: "Blacksmith", icon: "/images/icons/prof-schmied.png", color: "#f59e0b" },
@@ -188,7 +187,6 @@ export default function Dashboard() {
   const [modifierOpen, setModifierOpen] = useState(false);
   const [streakInfoOpen, setStreakInfoOpen] = useState(false);
   const [activeQuestsInfoOpen, setActiveQuestsInfoOpen] = useState(false);
-  const [completedInfoOpen, setCompletedInfoOpen] = useState(false);
   const [xpInfoOpen, setXpInfoOpen] = useState(false);
   const [professionsInfoOpen, setProfessionsInfoOpen] = useState(false);
   const [currencyExpanded, setCurrencyExpanded] = useState<string | null>(null);
@@ -202,13 +200,11 @@ export default function Dashboard() {
   // Stat card info popups — ESC to close + scroll lock
   const closeStreakInfo = useCallback(() => setStreakInfoOpen(false), []);
   const closeActiveQuestsInfo = useCallback(() => setActiveQuestsInfoOpen(false), []);
-  const closeCompletedInfo = useCallback(() => setCompletedInfoOpen(false), []);
   const closeXpInfo = useCallback(() => setXpInfoOpen(false), []);
   const closeModifier = useCallback(() => setModifierOpen(false), []);
   const closeProfessionsInfo = useCallback(() => setProfessionsInfoOpen(false), []);
   useModalBehavior(streakInfoOpen, closeStreakInfo);
   useModalBehavior(activeQuestsInfoOpen, closeActiveQuestsInfo);
-  useModalBehavior(completedInfoOpen, closeCompletedInfo);
   useModalBehavior(xpInfoOpen, closeXpInfo);
   useModalBehavior(modifierOpen, closeModifier);
   useModalBehavior(professionsInfoOpen, closeProfessionsInfo);
@@ -690,7 +686,7 @@ export default function Dashboard() {
           <StatBar
             label="Forge Streak"
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
-            sub={playerName ? `+${Math.min((playerStreak * 1.5), 45).toFixed(1)}% gold` : "login to view"}
+            sub={playerName ? (playerStreak > 0 ? `+${Math.min((playerStreak * 1.5), 45).toFixed(1)}% gold` : "your streak") : "login to view"}
             subColor={playerName ? "#fbbf24" : undefined}
             accent="#f97316"
             onClick={playerName ? () => setStreakInfoOpen(true) : undefined}
@@ -927,8 +923,6 @@ export default function Dashboard() {
           setStreakInfoOpen={setStreakInfoOpen}
           activeQuestsInfoOpen={activeQuestsInfoOpen}
           setActiveQuestsInfoOpen={setActiveQuestsInfoOpen}
-          completedInfoOpen={completedInfoOpen}
-          setCompletedInfoOpen={setCompletedInfoOpen}
           xpInfoOpen={xpInfoOpen}
           setXpInfoOpen={setXpInfoOpen}
           inProgressCount={quests.inProgress.length}
@@ -959,7 +953,10 @@ export default function Dashboard() {
                         const level = p?.level ?? 0;
                         const xp = p?.xp ?? 0;
                         const rank = getProfRank(level);
-                        const nextXp = PROF_RANK_THRESHOLDS[level] ?? null;
+                        const currentThreshold = PROF_RANK_THRESHOLDS[level] ?? 0;
+                        const nextThreshold = level < 10 ? (PROF_RANK_THRESHOLDS[level + 1] ?? null) : null;
+                        const xpInLevel = xp - currentThreshold;
+                        const xpForLevel = nextThreshold != null ? nextThreshold - currentThreshold : 0;
                         return (
                           <div key={pid} className="rounded-xl px-3 py-2.5" style={{ background: `${meta?.color ?? "#888"}08`, border: `1px solid ${meta?.color ?? "#888"}25` }}>
                             <div className="flex items-center gap-2.5">
@@ -971,14 +968,18 @@ export default function Dashboard() {
                                 </div>
                                 <div className="flex items-center gap-2 mt-0.5">
                                   <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.5)" }}>Lv.{level}/10</span>
-                                  {nextXp && <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>{xp}/{nextXp} XP</span>}
+                                  {nextThreshold != null ? (
+                                    <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>{xpInLevel}/{xpForLevel} XP</span>
+                                  ) : (
+                                    <span className="text-xs font-mono" style={{ color: "#f59e0b" }}>MAX</span>
+                                  )}
                                 </div>
                               </div>
                             </div>
                             {/* XP progress bar */}
-                            {nextXp && (
+                            {nextThreshold != null && xpForLevel > 0 && (
                               <div className="mt-1.5 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.06)" }}>
-                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((xp / nextXp) * 100, 100)}%`, background: meta?.color ?? "#888" }} />
+                                <div className="h-full rounded-full transition-all duration-500" style={{ width: `${Math.min((xpInLevel / xpForLevel) * 100, 100)}%`, background: meta?.color ?? "#888" }} />
                               </div>
                             )}
                           </div>
