@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const crypto = require('crypto');
-const { state, XP_BY_PRIORITY, GOLD_BY_PRIORITY, TEMP_BY_PRIORITY, STREAK_MILESTONES, RARITY_WEIGHTS, RARITY_COLORS, RARITY_ORDER, EQUIPMENT_SLOTS, LEVELS, PLAYER_QUEST_TYPES, saveQuests, savePlayerProgress, saveManagedKeys, rebuildQuestsById } = require('../lib/state');
-const { now, getLevelInfo, getPlayerProgress, awardXP, getTodayBerlin } = require('../lib/helpers');
+const { state, XP_BY_PRIORITY, GOLD_BY_PRIORITY, TEMP_BY_PRIORITY, XP_BY_RARITY, GOLD_BY_RARITY, RUNENSPLITTER_BY_RARITY, STREAK_MILESTONES, RARITY_WEIGHTS, RARITY_COLORS, RARITY_ORDER, EQUIPMENT_SLOTS, LEVELS, PLAYER_QUEST_TYPES, saveQuests, savePlayerProgress, saveManagedKeys, rebuildQuestsById } = require('../lib/state');
+const { now, getLevelInfo, getPlayerProgress, getTodayBerlin } = require('../lib/helpers');
 const { requireApiKey, requireMasterKey, getMasterKey } = require('../lib/middleware');
 const { assignRarity, selectDailyQuests } = require('../lib/rotation');
 const { resolveQuest } = require('../lib/quest-templates');
@@ -13,6 +13,10 @@ router.get('/api/config', (req, res) => {
     xpByPriority:    XP_BY_PRIORITY,
     goldByPriority:  GOLD_BY_PRIORITY,
     tempByPriority:  TEMP_BY_PRIORITY,
+    xpByRarity:      XP_BY_RARITY,
+    goldByRarity:    GOLD_BY_RARITY,
+    forgeTempPerQuest: 10,
+    runensplitterByRarity: RUNENSPLITTER_BY_RARITY,
     streakMilestones: STREAK_MILESTONES,
     rarityWeights:   RARITY_WEIGHTS,
     rarityColors:    RARITY_COLORS,
@@ -72,7 +76,7 @@ router.get('/api/dashboard', async (req, res) => {
   let habits = [];
   let favorites = [];
   if (playerLower) {
-    rituals = (state.rituals?.active || []).filter(r => r.playerId === playerLower && !r.isAntiRitual);
+    rituals = (state.rituals || []).filter(r => r.playerId === playerLower && !r.isAntiRitual);
     habits = state.habits.filter(h => h.playerId === playerLower);
     const u = state.users[playerLower];
     favorites = u?.favorites || [];

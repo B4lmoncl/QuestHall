@@ -1,7 +1,7 @@
 // ─── Quest API ──────────────────────────────────────────────────────────────────
 const router = require('express').Router();
-const { state, PLAYER_QUEST_TYPES, NPC_NAMES, XP_BY_PRIORITY, saveQuests, saveData, savePlayerProgress, saveQuestCatalog, rebuildQuestsById } = require('../lib/state');
-const { now, getPlayerProgress, getLevelInfo, onQuestCompletedByUser, awardXP, awardAgentGold, updateAgentStreak, randGold, addLootToInventory } = require('../lib/helpers');
+const { state, PLAYER_QUEST_TYPES, NPC_NAMES, XP_BY_PRIORITY, XP_BY_RARITY, saveQuests, saveData, savePlayerProgress, saveQuestCatalog, rebuildQuestsById } = require('../lib/state');
+const { now, getPlayerProgress, getLevelInfo, onQuestCompletedByUser, randGold, addLootToInventory } = require('../lib/helpers');
 const { requireApiKey } = require('../lib/middleware');
 const { rebuildCatalogMeta } = require('../lib/quest-catalog');
 
@@ -152,8 +152,8 @@ router.post('/api/quest', requireApiKey, (req, res) => {
     minLevel: (typeof minLevel === 'number' && minLevel >= 1) ? Math.floor(minLevel) : 1,
     classRequired: classRequired || null,
     requiresRelationship: requiresRelationship === true || requiresRelationship === 'true',
-    rewards: { xp: XP_BY_PRIORITY[priority || 'medium'] || 10, gold: randGold(priority || 'medium') },
-    rarity: resolvedRarity,
+    rewards: resolvedRarity ? { xp: XP_BY_RARITY[resolvedRarity] || 10, gold: randGold(resolvedRarity) } : { xp: 10, gold: randGold('common') },
+    rarity: resolvedRarity || 'common',
   };
   state.quests.push(quest);
   state.questsById.set(quest.id, quest);
@@ -170,9 +170,9 @@ router.post('/api/quest', requireApiKey, (req, res) => {
       minLevel: quest.minLevel || 1,
       chainId: quest.parentQuestId || null,
       chainOrder: null,
-      difficulty: quest.priority === 'high' ? 'advanced' : quest.priority === 'medium' ? 'intermediate' : 'starter',
+      difficulty: quest.difficulty || (quest.priority === 'high' ? 'advanced' : quest.priority === 'medium' ? 'intermediate' : 'starter'),
       estimatedTime: null,
-      rewards: { xp: XP_BY_PRIORITY[quest.priority] || 10, gold: 0 },
+      rewards: { xp: XP_BY_RARITY[quest.rarity] || XP_BY_PRIORITY[quest.priority] || 10, gold: 0 },
       tags: quest.skills || [],
       createdBy: quest.createdBy,
       createdAt: quest.createdAt,
@@ -387,12 +387,6 @@ router.post('/api/quest/:id/complete', requireApiKey, (req, res) => {
   const prevLevel3 = getLevelInfo(state.users[agentKey]?.xp ?? 0).level;
   if (state.users[agentKey]) {
     newAchievements = onQuestCompletedByUser(agentKey, quest);
-  } else if (state.store.agents[agentKey]) {
-    state.store.agents[agentKey].questsCompleted = (state.store.agents[agentKey].questsCompleted || 0) + 1;
-    awardXP(agentKey, quest.priority);
-    awardAgentGold(agentKey, quest.priority, state.store.agents[agentKey].streakDays);
-    updateAgentStreak(agentKey);
-    saveData();
   }
   const u3 = state.users[agentKey];
   const newLevelInfo3 = getLevelInfo(u3?.xp ?? 0);
@@ -514,15 +508,15 @@ router.post('/api/quest/:id/coop-complete', requireApiKey, (req, res) => {
 // ?player=X  → overlays per-player state for player quest types + applies minLevel filtering
 router.get('/api/quests', (req, res) => {
   const RARITY_REWARDS = {
-    legendary: { xp: 50, gold: 35 },
-    epic:      { xp: 35, gold: 25 },
-    rare:      { xp: 25, gold: 18 },
-    uncommon:  { xp: 20, gold: 12 },
-    common:    { xp: 10, gold: 8 },
+    common:    { xp: 10, gold: 8  },
+    uncommon:  { xp: 18, gold: 14 },
+    rare:      { xp: 30, gold: 24 },
+    epic:      { xp: 50, gold: 40 },
+    legendary: { xp: 80, gold: 65 },
   };
   function ensureRewards(q) {
     if (q.rewards && q.rewards.xp > 0) return q;
-    const fallback = RARITY_REWARDS[q.rarity] || RARITY_REWARDS[q.priority] || RARITY_REWARDS.common;
+    const fallback = RARITY_REWARDS[q.rarity] || RARITY_REWARDS.common;
     return { ...q, rewards: fallback };
   }
   const typeFilter  = req.query.type;
@@ -691,7 +685,10 @@ router.patch('/api/quest/:id', requireApiKey, (req, res) => {
     quest.status = status;
     if (status === 'completed' && !wasCompleted) {
       quest.completedAt = quest.completedAt || now();
-      if (quest.claimedBy) awardXP(quest.claimedBy.toLowerCase(), quest.priority);
+      const completerId = (quest.claimedBy || '').toLowerCase();
+      if (completerId && state.users[completerId]) {
+        onQuestCompletedByUser(completerId, quest);
+      }
     }
   }
   saveQuests();
@@ -715,12 +712,6 @@ router.patch('/api/quests/:id/complete', requireApiKey, (req, res) => {
   let newAchievements = [];
   if (state.users[agentKey2]) {
     newAchievements = onQuestCompletedByUser(agentKey2, quest);
-  } else if (state.store.agents[agentKey2]) {
-    state.store.agents[agentKey2].questsCompleted = (state.store.agents[agentKey2].questsCompleted || 0) + 1;
-    awardXP(agentKey2, quest.priority);
-    awardAgentGold(agentKey2, quest.priority, state.store.agents[agentKey2].streakDays);
-    updateAgentStreak(agentKey2);
-    saveData();
   }
   res.json({ success: true, message: 'Quest completed', quest, newAchievements });
 });
@@ -743,9 +734,11 @@ router.post('/api/quests/bulk-update', requireApiKey, (req, res) => {
     quest.status = status;
     if (status === 'completed' && !quest.completedAt) {
       quest.completedAt = now();
-      // Award XP to the agent who claimed it (if any)
       if (wasNotCompleted && quest.claimedBy) {
-        awardXP(quest.claimedBy.toLowerCase(), quest.priority);
+        const completerId = quest.claimedBy.toLowerCase();
+        if (state.users[completerId]) {
+          onQuestCompletedByUser(completerId, quest);
+        }
       }
     }
     updated.push(id);
@@ -812,6 +805,7 @@ router.post('/api/quests/import', requireApiKey, (req, res) => {
       classRequired:      q.classRequired || null,
       proof:              null,
       checklist:          Array.isArray(q.checklist) ? q.checklist : null,
+      rarity:             q.rarity || 'common',
     };
     state.quests.push(importedQuest);
     state.questsById.set(importedQuest.id, importedQuest);
