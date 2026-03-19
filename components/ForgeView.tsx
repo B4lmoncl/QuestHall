@@ -312,11 +312,11 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             </span>
           )}
           <span className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
-            <img src="/images/icons/currency-gold.png" alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+            <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "smooth" }} onError={hideOnError} />
             <span className="font-mono font-bold">{currencies.gold ?? loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0}</span>
           </span>
           <span className="flex items-center gap-1" style={{ color: "#ff8c00" }}>
-            <img src="/images/icons/currency-essenz.png" alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+            <img src="/images/icons/currency-essenz.png" alt="" width={20} height={20} style={{ imageRendering: "smooth" }} onError={hideOnError} />
             <span className="font-mono font-bold">{currencies.essenz ?? loggedInUser.currencies?.essenz ?? 0}</span>
           </span>
           {onNavigate && (
@@ -477,8 +477,8 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
 
         return (
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.6)" }}>Workshop Tools</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Permanent XP upgrades. Each tier must be unlocked sequentially.</p>
+            <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.6)" }}>Workshop Tools</p>
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>Permanent XP upgrades. Each tier must be unlocked sequentially.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {WORKSHOP_TIERS.filter(t => t.tier > 0).map(gear => {
                 const owned = gear.tier <= currentTierNum;
@@ -491,12 +491,12 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                     border: `1px solid ${owned ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.06)"}`,
                     opacity: owned || isNext ? 1 : 0.35,
                   }}>
-                    <img src={gear.icon} alt="" className="w-10 h-10 flex-shrink-0" style={{ imageRendering: "smooth" }} onError={hideOnError} />
+                    <img src={gear.icon} alt="" className="w-12 h-12 flex-shrink-0" style={{ imageRendering: "smooth" }} onError={hideOnError} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold" style={{ color: owned ? "#818cf8" : "#e8e8e8" }}>
-                        {gear.name} {owned && <span style={{ color: "rgba(129,140,248,0.5)" }}>&check;</span>}
+                      <p className="text-sm font-semibold" style={{ color: owned ? "#818cf8" : "#e8e8e8" }}>
+                        {gear.name} {owned && <span style={{ color: "rgba(129,140,248,0.5)" }}>✓</span>}
                       </p>
-                      <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{gear.desc}</p>
+                      <p className="text-sm" style={{ color: "rgba(255,255,255,0.3)" }}>{gear.desc}</p>
                     </div>
                     {!owned && (
                       <button
@@ -519,7 +519,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                           border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.06)"}`,
                         }}
                       >
-                        <img src={gear.currency === "essenz" ? "/images/icons/currency-essenz.png" : "/images/icons/currency-gold.png"} alt="" width={14} height={14} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={hideOnError} />
+                        <img src={gear.currency === "essenz" ? "/images/icons/currency-essenz.png" : "/images/icons/currency-gold.png"} alt="" width={18} height={18} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 3 }} onError={hideOnError} />
                         {gear.cost}
                       </button>
                     )}
@@ -766,7 +766,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {/* ─── Tab: Schmiedekunst (Schmied only) ───────────────────── */}
             {npcModalTab === "schmiedekunst" && selectedNpc.id === "schmied" && (() => {
               const inv = getUserInventory(loggedInUser);
-              const dismantleItems = inv.filter(i => i.rarity && i.name && (i.instanceId || i.id));
+              const dismantleItems = inv.filter(i => i.rarity && i.name && (i.instanceId || i.id) && i.slot);
               const hasItems = dismantleItems.length > 0;
               // Group by rarity
               const grouped: Record<string, InventoryItem[]> = {};
@@ -776,8 +776,8 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
               }
               return (
                 <div className="px-5 py-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Dismantle items into <strong style={{ color: "#ff8c00" }}>Essenz</strong> + <strong style={{ color: "#22c55e" }}>Materials</strong>. Essenz is used for recipes and profession switching.
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Dismantle gear into <strong style={{ color: "#ff8c00" }}>Essenz</strong> + <strong style={{ color: "#22c55e" }}>Materials</strong>. Essenz is used for recipes and profession switching.
                   </p>
 
                   {dismantleResult && (
@@ -792,34 +792,37 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                     <div className="space-y-3">
                       {RARITY_ORDER.filter(r => grouped[r]?.length).map(rarity => (
                         <div key={rarity}>
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-xs font-semibold uppercase" style={{ color: RARITY_COLORS[rarity], fontSize: 10 }}>{rarity}</span>
-                            <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>+{ESSENZ_TABLE[rarity] || 2} Essenz each</span>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-sm font-semibold uppercase" style={{ color: RARITY_COLORS[rarity] }}>{rarity}</span>
+                            <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.25)" }}>+{ESSENZ_TABLE[rarity] || 2} Essenz each</span>
                             {/* Salvage All button (D3-style) */}
                             {grouped[rarity].length >= 2 && rarity !== "legendary" && (
                               <button
                                 onClick={() => handleDismantleAll(rarity)}
-                                className="salvage-all-btn text-xs px-2 py-0.5 rounded font-semibold ml-auto"
-                                style={{ background: "rgba(255,140,0,0.1)", color: "#ff8c00", border: "1px solid rgba(255,140,0,0.25)", fontSize: 9 }}
+                                className="salvage-all-btn text-xs px-2 py-1 rounded font-semibold ml-auto"
+                                style={{ background: "rgba(255,140,0,0.1)", color: "#ff8c00", border: "1px solid rgba(255,140,0,0.25)" }}
                               >
                                 Salvage All ({grouped[rarity].length})
                               </button>
                             )}
                           </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {grouped[rarity].slice(0, 12).map(item => (
+                          <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(52px, 1fr))" }}>
+                            {grouped[rarity].slice(0, 24).map(item => (
                               <button
                                 key={item.instanceId || item.id}
                                 onClick={() => handleDismantle(item.instanceId || item.id)}
-                                className="forge-btn text-xs px-2 py-1 rounded-lg"
-                                style={{ background: `${RARITY_COLORS[rarity]}08`, border: `1px solid ${RARITY_COLORS[rarity]}30`, color: RARITY_COLORS[rarity] }}
-                                title={`Dismantle ${item.name} → +${ESSENZ_TABLE[rarity] || 2} Essenz`}
+                                className="forge-btn relative flex items-center justify-center rounded-lg aspect-square"
+                                style={{ background: `${RARITY_COLORS[rarity]}08`, border: `1px solid ${RARITY_COLORS[rarity]}30` }}
+                                title={`${item.name} — Dismantle → +${ESSENZ_TABLE[rarity] || 2} Essenz`}
                               >
-                                {item.name}
+                                {item.icon
+                                  ? <img src={item.icon} alt={item.name} style={{ width: 40, height: 40, imageRendering: "smooth", objectFit: "contain" }} />
+                                  : <span style={{ fontSize: 18, color: RARITY_COLORS[rarity] }}>◆</span>
+                                }
                               </button>
                             ))}
-                            {grouped[rarity].length > 12 && (
-                              <span className="text-xs self-center" style={{ color: "rgba(255,255,255,0.2)" }}>+{grouped[rarity].length - 12}</span>
+                            {grouped[rarity].length > 24 && (
+                              <span className="text-xs self-center text-center" style={{ color: "rgba(255,255,255,0.2)" }}>+{grouped[rarity].length - 24}</span>
                             )}
                           </div>
                         </div>
@@ -833,7 +836,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {/* ─── Tab: Transmutation (Verzauberer only) ───────────────── */}
             {npcModalTab === "transmutation" && selectedNpc.id === "verzauberer" && (() => {
               const inv = getUserInventory(loggedInUser);
-              const epicItems = inv.filter(i => i.rarity === "epic" && i.name && (i.instanceId || i.id));
+              const epicItems = inv.filter(i => i.rarity === "epic" && i.name && (i.instanceId || i.id) && i.slot);
               // Group epics by slot for proper same-slot validation
               const epicsBySlot: Record<string, InventoryItem[]> = {};
               for (const item of epicItems) {
@@ -848,8 +851,8 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
               const lockedSlot = firstSelected?.slot || null;
               return (
                 <div className="px-5 py-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Combine 3 Epic items from the same slot + 500 Gold to create a Legendary item.
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    Combine 3 Epic gear pieces from the same slot + 500 Gold to create a Legendary item.
                   </p>
 
                   {transmuteResult && (
@@ -874,10 +877,10 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                           const slotLocked = lockedSlot && lockedSlot !== slot;
                           return (
                             <div key={slot}>
-                              <p className="text-xs font-semibold uppercase mb-1" style={{ color: slotLocked ? "rgba(255,255,255,0.1)" : "rgba(168,85,247,0.5)", fontSize: 10 }}>
+                              <p className="text-sm font-semibold uppercase mb-1.5" style={{ color: slotLocked ? "rgba(255,255,255,0.1)" : "rgba(168,85,247,0.5)" }}>
                                 {SLOT_LABELS[slot] || slot} ({items.length})
                               </p>
-                              <div className="flex flex-wrap gap-1.5">
+                              <div className="grid gap-1.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(56px, 1fr))" }}>
                                 {items.map(item => {
                                   const iid = item.instanceId || item.id;
                                   const sel = selectedTransmute.includes(iid);
@@ -886,13 +889,16 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                                     <button key={iid} onClick={() => {
                                       if (disabled) return;
                                       setSelectedTransmute(prev => sel ? prev.filter(x => x !== iid) : prev.length < 3 ? [...prev, iid] : prev);
-                                    }} disabled={disabled} className="forge-btn text-xs px-2.5 py-1.5 rounded-lg" style={{
+                                    }} disabled={disabled} className="forge-btn relative flex items-center justify-center rounded-lg aspect-square" style={{
                                       background: sel ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
-                                      border: `1px solid ${sel ? "rgba(168,85,247,0.5)" : "rgba(168,85,247,0.15)"}`,
-                                      color: sel ? "#c084fc" : disabled ? "rgba(255,255,255,0.15)" : "#a855f7",
-                                      opacity: disabled ? 0.4 : 1,
-                                    }}>
-                                      {sel ? "\u2713 " : ""}{item.name}
+                                      border: `2px solid ${sel ? "rgba(168,85,247,0.6)" : "rgba(168,85,247,0.15)"}`,
+                                      opacity: disabled ? 0.3 : 1,
+                                    }} title={item.name}>
+                                      {item.icon
+                                        ? <img src={item.icon} alt={item.name} style={{ width: 40, height: 40, imageRendering: "smooth", objectFit: "contain" }} />
+                                        : <span style={{ fontSize: 18, color: "#a855f7" }}>◆</span>
+                                      }
+                                      {sel && <span className="absolute top-0.5 right-0.5 text-xs font-bold" style={{ color: "#c084fc", textShadow: "0 0 4px rgba(0,0,0,0.8)" }}>✓</span>}
                                     </button>
                                   );
                                 })}
