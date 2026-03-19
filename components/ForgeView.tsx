@@ -76,11 +76,11 @@ const SLOT_LABELS: Record<string, string> = {
 };
 
 // ─── Synergy hints (WoW-style profession pairing suggestions) ───────────────
-const SYNERGY_HINTS: Record<string, { partner: string; label: string; desc: string }> = {
-  schmied: { partner: "verzauberer", label: "Gear Mastery", desc: "Forge gear, then enchant it for maximum stats" },
-  verzauberer: { partner: "schmied", label: "Gear Mastery", desc: "Enchant gear forged by the Blacksmith" },
-  alchemist: { partner: "koch", label: "Sustenance", desc: "Potions + Meals for maximum buff uptime" },
-  koch: { partner: "alchemist", label: "Sustenance", desc: "Meals + Potions cover all buff types" },
+const SYNERGY_HINTS: Record<string, { partner: string; label: string }> = {
+  schmied: { partner: "verzauberer", label: "Gear Mastery" },
+  verzauberer: { partner: "schmied", label: "Gear Mastery" },
+  alchemist: { partner: "koch", label: "Sustenance" },
+  koch: { partner: "alchemist", label: "Sustenance" },
 };
 
 // ─── Skill-up color labels ──────────────────────────────────────────────────
@@ -347,107 +347,99 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
       {/* ─── NPC Grid ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {professions.map(prof => {
-          const locked = !prof.unlocked;
-          const loc = NPC_LOCATIONS[prof.id] || { label: prof.name, color: prof.color, desc: "" };
-          const isChosen = prof.chosen;
-          const canChoose = prof.canChoose && !isChosen && !locked;
-          // Materials relevant to this profession
-          const profMats = profMaterialIds[prof.id];
-          const relevantMats = profMats ? materialDefs.filter(m => profMats.has(m.id) && materials[m.id]) : [];
+        const locked = !prof.unlocked;
+        const loc = NPC_LOCATIONS[prof.id] || { label: prof.name, color: prof.color, desc: "" };
+        const isChosen = prof.chosen;
+        const canChoose = prof.canChoose && !isChosen && !locked;
+        const profMats = profMaterialIds[prof.id];
+        const relevantMats = profMats ? materialDefs.filter(m => profMats.has(m.id) && materials[m.id]) : [];
+        const rankGlow = prof.rank === "Master" ? `0 0 12px ${prof.color}20` : prof.rank === "Artisan" ? `0 0 8px ${prof.color}15` : prof.rank === "Expert" ? `0 0 6px ${prof.color}10` : "none";
+        const synergy = SYNERGY_HINTS[prof.id];
+        const synergyChosen = synergy ? professions.find(p => p.id === synergy.partner && p.chosen) : null;
 
-          // Visual NPC evolution: border glow intensifies with rank
-          const rankGlow = prof.rank === "Master" ? `0 0 12px ${prof.color}20` : prof.rank === "Artisan" ? `0 0 8px ${prof.color}15` : prof.rank === "Expert" ? `0 0 6px ${prof.color}10` : "none";
-          const synergy = SYNERGY_HINTS[prof.id];
-          const synergyChosen = synergy ? professions.find(p => p.id === synergy.partner && p.chosen) : null;
+        return (
+          <div key={prof.id} className={`rounded-xl overflow-hidden npc-rank-glow ${locked ? "" : "npc-card-hover"}`} data-rank={prof.rank || "Novice"} style={{ background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}06`, border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}25`}`, opacity: locked ? 0.5 : 1, boxShadow: locked ? "none" : rankGlow }}>
+            {/* Location header */}
+            <div className="px-4 pt-3 pb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70`, fontSize: 10 }}>{loc.label}</span>
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{loc.desc}</span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  {isChosen && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color, fontSize: 9 }}>Active</span>}
+                  {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2</span>}
+                </div>
+              </div>
+            </div>
 
-          return (
-            <div key={prof.id} className={`rounded-xl overflow-hidden npc-rank-glow ${locked ? "" : "npc-card-hover"}`} data-rank={prof.rank || "Novice"} style={{ background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}06`, border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}25`}`, opacity: locked ? 0.5 : 1, boxShadow: locked ? "none" : rankGlow }}>
-              {/* Location header */}
-              <div className="px-4 pt-3 pb-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70`, fontSize: 10 }}>{loc.label}</span>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{loc.desc}</span>
-                  <div className="ml-auto flex items-center gap-1.5">
-                    {isChosen && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color, fontSize: 9 }}>Active</span>}
-                    {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2</span>}
+            {/* NPC card — clickable to open modal */}
+            <button
+              onClick={() => { if (!locked) { setSelectedNpc(prof); setNpcModalTab("recipes"); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); } }}
+              disabled={locked}
+              className="w-full p-4 pt-2 text-left"
+              style={{ cursor: locked ? "not-allowed" : "pointer" }}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                {/* NPC portrait — border evolves with rank */}
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}12`, border: `2px solid ${prof.rankColor || prof.color}${prof.playerLevel >= 7 ? "80" : prof.playerLevel >= 3 ? "50" : "30"}` }}>
+                  <img src={prof.npcPortrait} alt={prof.npcName} width={56} height={56} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={hideOnError} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
+                    {prof.rank && prof.rank !== "Novice" && (
+                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.rankColor}15`, color: prof.rankColor, fontSize: 9, border: `1px solid ${prof.rankColor}30` }}>
+                        {prof.rank}
+                      </span>
+                    )}
                   </div>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{prof.description}</p>
+                  {isChosen && synergy && synergyChosen && (
+                    <p className="text-xs mt-0.5" style={{ color: `${prof.color}60`, fontSize: 9 }}>&#9733; {synergy.label} active</p>
+                  )}
                 </div>
               </div>
 
-              {/* NPC card — clickable to open modal */}
-              <button
-                onClick={() => { if (!locked) { setSelectedNpc(prof); setNpcModalTab("recipes"); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); } }}
-                disabled={locked}
-                className="w-full p-4 pt-2 text-left"
-                style={{ cursor: locked ? "not-allowed" : "pointer" }}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  {/* NPC portrait — border evolves with rank */}
-                  <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}12`, border: `2px solid ${prof.rankColor || prof.color}${prof.playerLevel >= 7 ? "80" : prof.playerLevel >= 3 ? "50" : "30"}` }}>
-                    <img src={prof.npcPortrait} alt={prof.npcName} width={56} height={56} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={hideOnError} />
+              {prof.unlocked && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="h-full rounded-full transition-all" style={{ background: `linear-gradient(90deg, ${prof.color}, ${prof.rankColor || prof.color})`, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
-                      {/* Rank badge */}
-                      {prof.rank && prof.rank !== "Novice" && (
-                        <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.rankColor}15`, color: prof.rankColor, fontSize: 9, border: `1px solid ${prof.rankColor}30` }}>
-                          {prof.rank}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{prof.description}</p>
-                    {/* Synergy hint */}
-                    {isChosen && synergy && synergyChosen && (
-                      <p className="text-xs mt-0.5" style={{ color: `${prof.color}60`, fontSize: 9 }}>&#9733; {synergy.label} active</p>
-                    )}
-                  </div>
-                </div>
-
-                {/* XP bar with rank label */}
-                {prof.unlocked && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ background: `linear-gradient(90deg, ${prof.color}, ${prof.rankColor || prof.color})`, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
-                    </div>
-                    <span className="text-xs font-mono" style={{ color: prof.rankColor || prof.color }}>Lv.{prof.playerLevel}</span>
-                  </div>
-                )}
-                {locked && (
-                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                    Requires Player Level {prof.unlockCondition?.value || "?"}
-                  </p>
-                )}
-              </button>
-
-              {/* Choose profession button */}
-              {canChoose && (
-                <div className="px-4 pb-3">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleChooseProfession(prof.id); }}
-                    disabled={choosingProf}
-                    className="forge-btn w-full text-xs font-semibold py-2 rounded-lg"
-                    style={{ background: `${prof.color}15`, color: prof.color, border: `1px solid ${prof.color}35` }}
-                  >
-                    {choosingProf ? "..." : "Choose Profession"}
-                  </button>
+                  <span className="text-xs font-mono" style={{ color: prof.rankColor || prof.color }}>Lv.{prof.playerLevel}</span>
                 </div>
               )}
-
-              {/* Materials relevant to this profession */}
-              {relevantMats.length > 0 && !locked && (
-                <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-                  {relevantMats.slice(0, 6).map(m => (
-                    <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90`, fontSize: 10 }}>
-                      <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={hideOnError} />
-                      x{materials[m.id]}
-                    </span>
-                  ))}
-                </div>
+              {locked && (
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Requires Player Level {prof.unlockCondition?.value || "?"}
+                </p>
               )}
-            </div>
-          );
-        })}
+            </button>
+
+            {canChoose && (
+              <div className="px-4 pb-3">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleChooseProfession(prof.id); }}
+                  disabled={choosingProf}
+                  className="forge-btn w-full text-xs font-semibold py-2 rounded-lg"
+                  style={{ background: `${prof.color}15`, color: prof.color, border: `1px solid ${prof.color}35` }}
+                >
+                  {choosingProf ? "..." : "Choose Profession"}
+                </button>
+              </div>
+            )}
+
+            {relevantMats.length > 0 && !locked && (
+              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                {relevantMats.slice(0, 6).map(m => (
+                  <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90`, fontSize: 10 }}>
+                    <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+                    x{materials[m.id]}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
       </div>
 
       {/* ─── Workshop Tools — permanent upgrades ────────────────────────────── */}
@@ -660,7 +652,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                             )}
                             {onCooldown && (
                               <p className="text-xs mt-1" style={{ color: "#f97316" }}>
-                                Cooldown: {recipe.cooldownRemaining! >= 3600 ? `${Math.floor(recipe.cooldownRemaining! / 3600)}h ${Math.floor((recipe.cooldownRemaining! % 3600) / 60)}m` : `${Math.ceil(recipe.cooldownRemaining! / 60)}m`}
+                                Cooldown: {(recipe.cooldownRemaining ?? 0) >= 3600 ? `${Math.floor((recipe.cooldownRemaining ?? 0) / 3600)}h ${Math.floor(((recipe.cooldownRemaining ?? 0) % 3600) / 60)}m` : `${Math.ceil((recipe.cooldownRemaining ?? 0) / 60)}m`}
                               </p>
                             )}
                           </div>
