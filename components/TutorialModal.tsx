@@ -268,7 +268,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           {tab === "crafting" && (
             <>
               <GuideSection title="Artisan's Quarter">
-                Das Crafting-Hub mit 4 Berufs-NPCs. Erreichbar über den <strong>Artisan&apos;s Quarter</strong>-Tab (ab Level 3).
+                Das Crafting-Hub mit 4 Berufs-NPCs. Erreichbar über den <strong>Artisan&apos;s Quarter</strong>-Tab (nur eingeloggt). Jeder Beruf hat ein eigenes Mindest-Level.
               </GuideSection>
               <GuideSection title="Berufe (4 Stück)">
                 <ul className="space-y-1 mt-1">
@@ -295,11 +295,11 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                   <li><span style={{ color: "#6b7280" }}>●</span> Grau — Keine XP mehr (zu niedrig)</li>
                 </ul>
               </GuideSection>
-              <GuideSection title="Schmiedekunst">
-                Beim Schmied kannst du zusätzlich:
+              <GuideSection title="Schmiedekunst & Transmutation">
+                Neben Rezepten haben Schmied und Verzauberer jeweils ein spezielles Feature:
                 <ul className="space-y-1 mt-1">
-                  <li>• <strong>Zerlegen</strong> — Items in <span style={{ color: "#ff8c00" }}>Essenz</span> + <span style={{ color: "#22c55e" }}>Materialien</span> verwandeln. &quot;Salvage All&quot; für Massenzerlegung (nicht für Legendary).</li>
-                  <li>• <strong>Transmutation</strong> — 3 Epic-Items gleichen Slots + 500 Gold → 1 Legendary-Item</li>
+                  <li>• <strong style={{ color: "#f59e0b" }}>Schmiedekunst</strong> (beim Schmied) — Items <strong>zerlegen</strong> in <span style={{ color: "#ff8c00" }}>Essenz</span> + <span style={{ color: "#22c55e" }}>Materialien</span>. &quot;Salvage All&quot; für Massenzerlegung (nicht für Legendary).</li>
+                  <li>• <strong style={{ color: "#a78bfa" }}>Transmutation</strong> (beim Verzauberer) — 3 Epic-Items gleichen Slots + 500 Gold → 1 Legendary-Item.</li>
                 </ul>
               </GuideSection>
               <GuideSection title="Workshop Tools">
@@ -320,11 +320,13 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                 Je länger dein Streak, desto besser dein Badge und dein XP-Bonus:
                 <ul className="space-y-1 mt-1">
                   <li>• <span style={{ color: "#cd7f32" }}>Bronze</span> (7 Tage, +5% XP)</li>
-                  <li>• <span style={{ color: "#9ca3af" }}>Silber</span> (21 Tage, +10% XP)</li>
+                  <li>• <span style={{ color: "#9ca3af" }}>2 Wochen</span> (14 Tage, Uncommon Loot)</li>
+                  <li>• <span style={{ color: "#c0c0c0" }}>Silber</span> (21 Tage, +10% XP)</li>
+                  <li>• <span style={{ color: "#3b82f6" }}>Monat</span> (30 Tage, Rare Loot)</li>
                   <li>• <span style={{ color: "#f59e0b" }}>Gold</span> (60 Tage, +15% XP)</li>
-                  <li>• <span style={{ color: "#6b7280" }}>Titan</span> (90 Tage)</li>
+                  <li>• <span style={{ color: "#6b7280" }}>Titan</span> (90 Tage, Epic Loot)</li>
                   <li>• <span style={{ color: "#67e8f9" }}>Diamond</span> (180 Tage, +25% XP)</li>
-                  <li>• <span style={{ color: "#a855f7" }}>Legend</span> (365 Tage)</li>
+                  <li>• <span style={{ color: "#a855f7" }}>Legend</span> (365 Tage, Legendary Loot)</li>
                 </ul>
                 <p className="mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>Bei bestimmten Meilensteinen (14, 30, 90, 365 Tage) gibt es zusätzlich Loot-Drops.</p>
               </GuideSection>
