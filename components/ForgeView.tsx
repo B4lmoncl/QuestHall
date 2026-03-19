@@ -125,6 +125,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [materials, setMaterials] = useState<Record<string, number>>({});
   const [materialDefs, setMaterialDefs] = useState<MaterialDef[]>([]);
   const [currencies, setCurrencies] = useState<Record<string, number>>({});
+  const [maxProfSlots, setMaxProfSlots] = useState(2);
   const [selectedNpc, setSelectedNpc] = useState<ProfessionDef | null>(null);
   const [craftResult, setCraftResult] = useState<string | null>(null);
   const [crafting, setCrafting] = useState(false);
@@ -152,6 +153,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
         setMaterialDefs(data.materialDefs || []);
         if (data.currencies) setCurrencies(data.currencies);
         if (data.dailyBonus) setDailyBonusAvailable(data.dailyBonus.dailyBonusAvailable ?? false);
+        if (data.maxProfSlots != null) setMaxProfSlots(data.maxProfSlots);
       }
     } catch { /* ignore */ }
   }, [playerName]);
@@ -305,7 +307,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
           ?
         </button>
         <div className="flex items-center gap-3 ml-auto text-xs">
-          <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/2 Professions</span>
+          <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/{maxProfSlots} Professions</span>
           {dailyBonusAvailable && (
             <span className="px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)", fontSize: 9 }}>
               2x XP
@@ -332,7 +334,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
         <div className="rounded-xl p-4 space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
           <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>How do Professions work?</p>
           <ul className="text-xs space-y-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-            <li>&bull; Choose up to <strong style={{ color: "#e8e8e8" }}>2 Professions</strong> from the 4 available NPCs</li>
+            <li>&bull; Unlock profession slots as you level up (Lv5: 1st, Lv15: 2nd, Lv20: 3rd, Lv25: all 4)</li>
             <li>&bull; Collect <strong style={{ color: "#e8e8e8" }}>Materials</strong> by completing quests</li>
             <li>&bull; Visit your NPC and <strong style={{ color: "#e8e8e8" }}>craft recipes</strong> using Gold + Materials</li>
             <li>&bull; Higher <strong style={{ color: "#e8e8e8" }}>profession ranks</strong> unlock stronger recipes</li>
