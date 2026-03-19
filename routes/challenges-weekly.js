@@ -66,15 +66,15 @@ function getActiveChallenge(userId) {
 }
 
 function evaluateStageProgress(userId, challenge) {
-  if (!challenge || !challenge.template) return 0;
+  if (!challenge || !challenge.template) return false;
   const u = state.users[userId];
-  if (!u) return 0;
+  if (!u) return false;
 
   const nextStage = challenge.currentStage + 1;
-  if (nextStage > (challenge.template.stages?.length || 0)) return challenge.currentStage;
+  if (nextStage > (challenge.template.stages?.length || 0)) return false;
 
   const stageData = challenge.template.stages[challenge.currentStage];
-  if (!stageData) return challenge.currentStage;
+  if (!stageData) return false;
 
   const progress = challenge.progress || {};
   const req = stageData.requirement;

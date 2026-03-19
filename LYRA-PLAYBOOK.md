@@ -668,10 +668,11 @@ Kein Code nötig für bestehende Effekt-Typen. Neue Effekt-Typen brauchen Anpass
 
 ### Profession-NPCs
 
-3 Berufe mit je eigenem NPC:
-- **Schmied** (Thorin): Gear-Stats rerolln, Rarität upgraden
-- **Alchemist** (Mirael): Buff-Tränke brauen (XP, Gold, Glück, Streak-Shield)
+4 Berufe mit je eigenem NPC:
+- **Schmied** (Grimvar): Gear-Stats rerolln, Rarität upgraden
+- **Alchemist** (Ysolde): Buff-Tränke brauen (XP, Gold, Glück, Streak-Shield)
 - **Verzauberer** (Eldric): Gear-Enchants (temporär + permanent)
+- **Koch** (Bruna): Mahlzeiten & Buffs (XP, Gold, Forge-Temp, Streak-Shield)
 
 ### Neues Material hinzufügen
 
@@ -831,7 +832,18 @@ Folgende Achievements nutzen `"?"` als Icon statt echtem Bild. Empfohlener Pfad:
 ### Flavor-Text / Beschreibungen
 
 - Alle Klassen-Skills und -Achievements haben keine ausführlichen Beschreibungen (nur Namen)
-- Crafting-NPC-Portraits (Thorin/Schmied, Mirael/Alchemist, Eldric/Verzauberer) werden inline über die Profession-Daten angezeigt, haben aber keine dedizierten Portrait-Dateien
+### Profession-NPC-Portraits (4 fehlend)
+
+Die Berufs-NPCs aus `professions.json` referenzieren Portraits die nicht existieren:
+
+| NPC | Pfad |
+|-----|------|
+| Grimvar der Schmied | `public/images/npcs/grimvar-schmied.png` |
+| Ysolde die Alchemistin | `public/images/npcs/ysolde-alchemist.png` |
+| Eldric der Verzauberer | `public/images/npcs/eldric-verzauberer.png` |
+| Bruna die Köchin | `public/images/npcs/bruna-koch.png` |
+
+**Hinweis:** Quest-Giver-NPC-Portraits (aus `npcQuestGivers.json`) sind alle vorhanden — nur die Crafting-NPCs fehlen
 
 ---
 

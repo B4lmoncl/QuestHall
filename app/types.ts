@@ -168,6 +168,7 @@ export interface User {
     schmied?: { level: number; xp: number; lastCraftAt?: string };
     alchemist?: { level: number; xp: number; lastCraftAt?: string };
     verzauberer?: { level: number; xp: number; lastCraftAt?: string };
+    koch?: { level: number; xp: number; lastCraftAt?: string };
   };
   craftingMaterials?: Record<string, number>;
 }
