@@ -644,6 +644,27 @@ export default function Dashboard() {
       />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 2, background: "rgba(11,13,17,0.75)", borderRadius: 16, backdropFilter: "blur(8px)", marginTop: 8 }}>
+        {/* Daily Bonus Banner */}
+        {playerName && dailyBonusAvailable && (
+          <button
+            onClick={handleClaimDailyBonus}
+            disabled={claimingDailyBonus}
+            className="w-full rounded-xl p-3 flex items-center justify-center gap-3 transition-all"
+            style={{
+              background: "linear-gradient(90deg, rgba(250,204,21,0.08), rgba(245,158,11,0.08))",
+              border: "1px solid rgba(250,204,21,0.2)",
+              cursor: claimingDailyBonus ? "wait" : "pointer",
+              opacity: claimingDailyBonus ? 0.6 : 1,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>☀</span>
+            <span className="text-sm font-bold" style={{ color: "#facc15" }}>
+              {claimingDailyBonus ? "Claiming..." : "Daily Bonus available — click to claim!"}
+            </span>
+            <span className="text-xs" style={{ color: "rgba(250,204,21,0.5)" }}>Essenz + Runensplitter</span>
+          </button>
+        )}
+
         {/* Stats — Player-specific */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">
           {!playerName && !loading && (
