@@ -24,6 +24,8 @@ interface ProfessionDef {
   nextLevelXp: number | null;
   levelThresholds: number[];
   unlockCondition?: { type: string; value: number };
+  rank?: string;
+  rankColor?: string;
 }
 
 interface Recipe {
@@ -32,10 +34,14 @@ interface Recipe {
   name: string;
   desc: string;
   reqProfLevel: number;
+  xpGain?: number;
   cost: { gold?: number };
   materials: Record<string, number>;
   cooldownMinutes: number;
   canCraft: boolean;
+  skillUpColor?: string;
+  cooldownRemaining?: number;
+  result?: { type?: string };
 }
 
 interface MaterialDef {
@@ -63,21 +69,62 @@ const ESSENZ_TABLE: Record<string, number> = { common: 2, uncommon: 5, rare: 15,
 
 // ─── Slot labels ────────────────────────────────────────────────────────────
 const SLOT_LABELS: Record<string, string> = {
-  weapon: "Waffe",
-  shield: "Schild",
+  weapon: "Weapon",
+  shield: "Shield",
   helm: "Helm",
-  armor: "Rüstung",
-  amulet: "Amulett",
-  boots: "Stiefel",
+  armor: "Armor",
+  amulet: "Amulet",
+  boots: "Boots",
 };
 
+// ─── Synergy hints (WoW-style profession pairing suggestions) ───────────────
+const SYNERGY_HINTS: Record<string, { partner: string; label: string }> = {
+  schmied: { partner: "verzauberer", label: "Gear Mastery" },
+  verzauberer: { partner: "schmied", label: "Gear Mastery" },
+  alchemist: { partner: "koch", label: "Sustenance" },
+  koch: { partner: "alchemist", label: "Sustenance" },
+};
+
+// ─── Skill-up color labels ──────────────────────────────────────────────────
+const SKILL_UP_COLORS: Record<string, { color: string; label: string }> = {
+  orange: { color: "#f97316", label: "Guaranteed XP" },
+  yellow: { color: "#eab308", label: "Likely XP" },
+  green: { color: "#22c55e", label: "Rare XP" },
+  gray: { color: "#6b7280", label: "No XP" },
+};
+
+// ─── NPC location metadata ───────────────────────────────────────────────────
+const NPC_LOCATIONS: Record<string, { label: string; color: string; desc: string }> = {
+  schmied: { label: "Deepforge", color: "#f59e0b", desc: "Reroll stats, upgrade rarity" },
+  alchemist: { label: "Alchemist Lab", color: "#22c55e", desc: "Potions & elixirs" },
+  koch: { label: "Guild Kitchen", color: "#e87b35", desc: "Meals with XP/Gold buffs" },
+  verzauberer: { label: "Arcanum", color: "#a78bfa", desc: "Gear enchantments" },
+};
+
+// ─── Workshop tool tiers ─────────────────────────────────────────────────────
+const WORKSHOP_TIERS = [
+  { id: "worn", name: "Worn Tools", tier: 0, xpBonus: 0, cost: 0, currency: "gold", desc: "No bonus", icon: "/images/icons/tools-worn.png" },
+  { id: "sturdy", name: "Sturdy Tools", tier: 1, xpBonus: 2, cost: 250, currency: "gold", desc: "+2% XP on all quests", icon: "/images/icons/tools-sturdy.png" },
+  { id: "masterwork", name: "Masterwork Tools", tier: 2, xpBonus: 4, cost: 750, currency: "gold", desc: "+4% XP on all quests", icon: "/images/icons/tools-masterwork.png" },
+  { id: "legendary", name: "Legendary Tools", tier: 3, xpBonus: 7, cost: 150, currency: "essenz", desc: "+7% XP on all quests", icon: "/images/icons/tools-legendary.png" },
+  { id: "mythic", name: "Mythic Forge", tier: 4, xpBonus: 10, cost: 500, currency: "essenz", desc: "+10% XP on all quests", icon: "/images/icons/tools-mythic.png" },
+];
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none"; };
+
+function getUserInventory(user: unknown): InventoryItem[] {
+  return ((user as Record<string, unknown>).inventory as InventoryItem[] | undefined) || [];
+}
+
 // ─── ForgeView Component ────────────────────────────────────────────────────
-export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
+export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () => void; onNavigate?: (tab: string) => void }) {
   const { playerName, reviewApiKey, loggedInUser } = useDashboard();
   const [professions, setProfessions] = useState<ProfessionDef[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [materials, setMaterials] = useState<Record<string, number>>({});
   const [materialDefs, setMaterialDefs] = useState<MaterialDef[]>([]);
+  const [currencies, setCurrencies] = useState<Record<string, number>>({});
   const [selectedNpc, setSelectedNpc] = useState<ProfessionDef | null>(null);
   const [craftResult, setCraftResult] = useState<string | null>(null);
   const [crafting, setCrafting] = useState(false);
@@ -88,6 +135,8 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
   const [npcModalTab, setNpcModalTab] = useState<"recipes" | "schmiedekunst" | "transmutation">("recipes");
   const [infoOpen, setInfoOpen] = useState(false);
   const [choosingProf, setChoosingProf] = useState(false);
+  const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
+  const [craftCount, setCraftCount] = useState(1);
 
   const loggedIn = playerName && reviewApiKey;
 
@@ -101,13 +150,25 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
         setRecipes(data.recipes || []);
         setMaterials(data.materials || {});
         setMaterialDefs(data.materialDefs || []);
+        if (data.currencies) setCurrencies(data.currencies);
+        if (data.dailyBonus) setDailyBonusAvailable(data.dailyBonus.dailyBonusAvailable ?? false);
       }
     } catch { /* ignore */ }
   }, [playerName]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleCraft = async (recipeId: string) => {
+  // Keep selectedNpc in sync with refreshed professions data
+  useEffect(() => {
+    if (selectedNpc) {
+      const updated = professions.find(p => p.id === selectedNpc.id);
+      if (updated && (updated.playerXp !== selectedNpc.playerXp || updated.playerLevel !== selectedNpc.playerLevel || updated.rank !== selectedNpc.rank)) {
+        setSelectedNpc(updated);
+      }
+    }
+  }, [professions, selectedNpc]);
+
+  const handleCraft = async (recipeId: string, count = 1) => {
     if (crafting || !reviewApiKey) return;
     setCrafting(true);
     setCraftResult(null);
@@ -115,19 +176,22 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
       const r = await fetch("/api/professions/craft", {
         method: "POST",
         headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
-        body: JSON.stringify({ recipeId, targetSlot: selectedSlot }),
+        body: JSON.stringify({ recipeId, targetSlot: selectedSlot, count }),
       });
       const data = await r.json();
       if (r.ok) {
-        setCraftResult(data.message || "Erfolgreich!");
-        if (data.profLevelUp) setCraftResult(prev => `${prev} LEVEL UP!`);
+        let msg = data.message || "Success!";
+        if (data.xpGained) msg += ` (+${data.xpGained} XP${data.dailyBonusUsed ? " \u2606 Daily Bonus!" : ""})`;
+        if (data.profLevelUp) msg += " LEVEL UP!";
+        setCraftResult(msg);
+        setCraftCount(1);
         fetchData();
         onRefresh?.();
       } else {
-        setCraftResult(data.error || "Fehler beim Craften");
+        setCraftResult(data.error || "Crafting failed");
       }
     } catch {
-      setCraftResult("Netzwerkfehler");
+      setCraftResult("Network error");
     }
     setCrafting(false);
   };
@@ -141,11 +205,27 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
         body: JSON.stringify({ inventoryItemId: itemId }),
       });
       const data = await r.json();
-      setDismantleResult(data.message || data.error || "Fehler");
+      setDismantleResult(data.message || data.error || "Error");
       setTimeout(() => setDismantleResult(null), 4000);
       fetchData();
       onRefresh?.();
-    } catch { setDismantleResult("Netzwerkfehler"); }
+    } catch { setDismantleResult("Network error"); }
+  };
+
+  const handleDismantleAll = async (rarity: string) => {
+    if (!reviewApiKey) return;
+    try {
+      const r = await fetch("/api/schmiedekunst/dismantle-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
+        body: JSON.stringify({ rarity }),
+      });
+      const data = await r.json();
+      setDismantleResult(data.message || data.error || "Error");
+      setTimeout(() => setDismantleResult(null), 5000);
+      fetchData();
+      onRefresh?.();
+    } catch { setDismantleResult("Network error"); }
   };
 
   const handleTransmute = async () => {
@@ -157,12 +237,12 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
         body: JSON.stringify({ itemIds: selectedTransmute }),
       });
       const data = await r.json();
-      setTransmuteResult(data.message || data.error || "Fehler");
+      setTransmuteResult(data.message || data.error || "Error");
       setSelectedTransmute([]);
       setTimeout(() => setTransmuteResult(null), 5000);
       fetchData();
       onRefresh?.();
-    } catch { setTransmuteResult("Netzwerkfehler"); }
+    } catch { setTransmuteResult("Network error"); }
   };
 
   const handleChooseProfession = async (profId: string) => {
@@ -176,13 +256,13 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
       });
       const data = await r.json();
       if (r.ok) {
-        setCraftResult(data.message || "Beruf gewählt!");
+        setCraftResult(data.message || "Profession chosen!");
         fetchData();
         onRefresh?.();
       } else {
-        setCraftResult(data.error || "Fehler");
+        setCraftResult(data.error || "Error");
       }
-    } catch { setCraftResult("Netzwerkfehler"); }
+    } catch { setCraftResult("Network error"); }
     setChoosingProf(false);
   };
 
@@ -214,7 +294,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
   return (
     <div className="space-y-4">
-      {/* ─── Header with clickable info popover ────────────────────────── */}
+      {/* ─── Header with currencies + info ─────────────────────────────── */}
       <div className="flex items-center gap-3 flex-wrap">
         <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{"Artisan's Quarter"}</span>
         <button
@@ -225,36 +305,63 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
           ?
         </button>
         <div className="flex items-center gap-3 ml-auto text-xs">
-          <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/2 Berufe</span>
-          <span style={{ color: "#f59e0b" }}>
-            <img src="/images/icons/currency-gold.png" alt="" width={18} height={18} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-            {loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0}
+          <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/2 Professions</span>
+          {dailyBonusAvailable && (
+            <span className="px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)", fontSize: 9 }}>
+              2x XP
+            </span>
+          )}
+          <span className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
+            <img src="/images/icons/currency-gold.png" alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+            <span className="font-mono font-bold">{currencies.gold ?? loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0}</span>
           </span>
+          <span className="flex items-center gap-1" style={{ color: "#ff8c00" }}>
+            <img src="/images/icons/currency-essenz.png" alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+            <span className="font-mono font-bold">{currencies.essenz ?? loggedInUser.currencies?.essenz ?? 0}</span>
+          </span>
+          {onNavigate && (
+            <button onClick={() => onNavigate("character")} className="cross-nav-link text-xs px-2 py-0.5 rounded" style={{ color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
+              Character &rarr;
+            </button>
+          )}
         </div>
       </div>
 
       {/* Info popover */}
       {infoOpen && (
         <div className="rounded-xl p-4 space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>Wie funktionieren Berufe?</p>
+          <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>How do Professions work?</p>
           <ul className="text-xs space-y-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-            <li>&bull; W&auml;hle bis zu <strong style={{ color: "#e8e8e8" }}>2 Berufe</strong> aus den 4 verf&uuml;gbaren NPCs</li>
-            <li>&bull; Sammle <strong style={{ color: "#e8e8e8" }}>Materialien</strong> durch das Abschlie&szlig;en von Quests</li>
-            <li>&bull; Besuche deinen NPC und <strong style={{ color: "#e8e8e8" }}>crafte Rezepte</strong> mit Gold + Materialien</li>
-            <li>&bull; H&ouml;here <strong style={{ color: "#e8e8e8" }}>Berufsstufen</strong> schalten st&auml;rkere Rezepte frei</li>
-            <li>&bull; Berufswechsel kostet <strong style={{ color: "#f44" }}>200 Essenz</strong> und setzt den Fortschritt zur&uuml;ck</li>
+            <li>&bull; Choose up to <strong style={{ color: "#e8e8e8" }}>2 Professions</strong> from the 4 available NPCs</li>
+            <li>&bull; Collect <strong style={{ color: "#e8e8e8" }}>Materials</strong> by completing quests</li>
+            <li>&bull; Visit your NPC and <strong style={{ color: "#e8e8e8" }}>craft recipes</strong> using Gold + Materials</li>
+            <li>&bull; Higher <strong style={{ color: "#e8e8e8" }}>profession ranks</strong> unlock stronger recipes</li>
+            <li>&bull; Ranks: <span style={{ color: "#22c55e" }}>Apprentice</span> &rarr; <span style={{ color: "#3b82f6" }}>Journeyman</span> &rarr; <span style={{ color: "#a855f7" }}>Expert</span> &rarr; <span style={{ color: "#f59e0b" }}>Artisan</span> &rarr; <span style={{ color: "#ef4444" }}>Master</span></li>
+            <li>&bull; Recipes show <span style={{ color: "#f97316" }}>orange</span>/<span style={{ color: "#eab308" }}>yellow</span>/<span style={{ color: "#22c55e" }}>green</span>/<span style={{ color: "#6b7280" }}>gray</span> skill-up chance (like WoW)</li>
+            <li>&bull; Switching professions costs <strong style={{ color: "#f44" }}>200 Essenz</strong> and resets progress</li>
+            <li>&bull; <span style={{ color: "#facc15" }}>Daily Bonus</span>: First craft each day gives <strong style={{ color: "#facc15" }}>2x profession XP</strong></li>
+            <li>&bull; Buff recipes can be <strong style={{ color: "#e8e8e8" }}>batch crafted</strong> (x1-x10) for efficiency</li>
+            <li>&bull; New recipes are <strong style={{ color: "#e8e8e8" }}>discovered</strong> as your profession rank increases</li>
           </ul>
+          {/* Synergy hints */}
+          <div className="pt-2 mt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <p className="text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Recommended Pairings</p>
+            <div className="flex flex-wrap gap-2">
+              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)", color: "#f59e0b" }}>Blacksmith + Enchanter = Gear Mastery</span>
+              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)", color: "#22c55e" }}>Alchemist + Cook = Full Sustenance</span>
+            </div>
+          </div>
         </div>
       )}
 
       {/* ─── All Materials Bar ─────────────────────────────────────────── */}
       {Object.keys(materials).length > 0 && (
         <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materialien</p>
+          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materials</p>
           <div className="flex flex-wrap gap-2">
             {materialDefs.filter(m => materials[m.id]).map(m => (
               <div key={m.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${RARITY_COLORS[m.rarity] || "#555"}30` }} title={m.desc}>
-                <img src={m.icon} alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                <img src={m.icon} alt="" width={16} height={16} style={{ imageRendering: "smooth" }} onError={hideOnError} />
                 <span className="text-xs" style={{ color: RARITY_COLORS[m.rarity] || "#ccc" }}>{m.name}</span>
                 <span className="text-xs font-mono font-bold" style={{ color: "rgba(255,255,255,0.6)" }}>x{materials[m.id]}</span>
               </div>
@@ -265,120 +372,115 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
       {/* ─── NPC Grid ──────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {(() => {
-        const LOCATIONS: Record<string, { label: string; color: string; desc: string }> = {
-          schmied: { label: "Deepforge", color: "#f59e0b", desc: "Reroll stats, upgrade rarity" },
-          alchemist: { label: "Alchemist Lab", color: "#22c55e", desc: "Potions & elixirs" },
-          koch: { label: "Guild Kitchen", color: "#e87b35", desc: "Meals with XP/Gold buffs" },
-          verzauberer: { label: "Arcanum", color: "#a78bfa", desc: "Gear enchantments" },
-        };
-        return professions.map(prof => {
-          const locked = !prof.unlocked;
-          const loc = LOCATIONS[prof.id] || { label: prof.name, color: prof.color, desc: "" };
-          const isChosen = prof.chosen;
-          const canChoose = prof.canChoose && !isChosen && !locked;
-          // Materials relevant to this profession
-          const profMats = profMaterialIds[prof.id];
-          const relevantMats = profMats ? materialDefs.filter(m => profMats.has(m.id) && materials[m.id]) : [];
+      {professions.map(prof => {
+        const locked = !prof.unlocked;
+        const loc = NPC_LOCATIONS[prof.id] || { label: prof.name, color: prof.color, desc: "" };
+        const isChosen = prof.chosen;
+        const canChoose = prof.canChoose && !isChosen && !locked;
+        const profMats = profMaterialIds[prof.id];
+        const relevantMats = profMats ? materialDefs.filter(m => profMats.has(m.id) && materials[m.id]) : [];
+        const rankGlow = prof.rank === "Master" ? `0 0 12px ${prof.color}20` : prof.rank === "Artisan" ? `0 0 8px ${prof.color}15` : prof.rank === "Expert" ? `0 0 6px ${prof.color}10` : "none";
+        const synergy = SYNERGY_HINTS[prof.id];
+        const synergyChosen = synergy ? professions.find(p => p.id === synergy.partner && p.chosen) : null;
 
-          return (
-            <div key={prof.id} className={`rounded-xl overflow-hidden ${locked ? "" : "npc-card-hover"}`} style={{ background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}06`, border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}25`}`, opacity: locked ? 0.5 : 1 }}>
-              {/* Location header */}
-              <div className="px-4 pt-3 pb-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70`, fontSize: 10 }}>{loc.label}</span>
-                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{loc.desc}</span>
-                  <div className="ml-auto flex items-center gap-1.5">
-                    {isChosen && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color, fontSize: 9 }}>Aktiv</span>}
-                    {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2</span>}
+        return (
+          <div key={prof.id} className={`rounded-xl overflow-hidden npc-rank-glow ${locked ? "" : "npc-card-hover"}`} data-rank={prof.rank || "Novice"} style={{ background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}06`, border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}25`}`, opacity: locked ? 0.5 : 1, boxShadow: locked ? "none" : rankGlow }}>
+            {/* Location header */}
+            <div className="px-4 pt-3 pb-1">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70`, fontSize: 10 }}>{loc.label}</span>
+                <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{loc.desc}</span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  {isChosen && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color, fontSize: 9 }}>Active</span>}
+                  {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2</span>}
+                </div>
+              </div>
+            </div>
+
+            {/* NPC card — clickable to open modal */}
+            <button
+              onClick={() => { if (!locked) { setSelectedNpc(prof); setNpcModalTab("recipes"); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); } }}
+              disabled={locked}
+              className="w-full p-4 pt-2 text-left"
+              style={{ cursor: locked ? "not-allowed" : "pointer" }}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                {/* NPC portrait — border evolves with rank */}
+                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}12`, border: `2px solid ${prof.rankColor || prof.color}${prof.playerLevel >= 7 ? "80" : prof.playerLevel >= 3 ? "50" : "30"}` }}>
+                  <img src={prof.npcPortrait} alt={prof.npcName} width={56} height={56} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={hideOnError} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
+                    {prof.rank && prof.rank !== "Novice" && (
+                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.rankColor}15`, color: prof.rankColor, fontSize: 9, border: `1px solid ${prof.rankColor}30` }}>
+                        {prof.rank}
+                      </span>
+                    )}
                   </div>
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{prof.description}</p>
+                  {isChosen && synergy && synergyChosen && (
+                    <p className="text-xs mt-0.5" style={{ color: `${prof.color}60`, fontSize: 9 }}>&#9733; {synergy.label} active</p>
+                  )}
                 </div>
               </div>
 
-              {/* NPC card — clickable to open modal */}
-              <button
-                onClick={() => { if (!locked) { setSelectedNpc(prof); setNpcModalTab("recipes"); setCraftResult(null); } }}
-                disabled={locked}
-                className="w-full p-4 pt-2 text-left"
-                style={{ cursor: locked ? "not-allowed" : "pointer" }}
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}12`, border: `1px solid ${prof.color}30` }}>
-                    <img src={prof.npcPortrait} alt={prof.npcName} width={56} height={56} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+              {prof.unlocked && (
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div className="h-full rounded-full transition-all" style={{ background: `linear-gradient(90deg, ${prof.color}, ${prof.rankColor || prof.color})`, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{prof.description}</p>
-                  </div>
-                </div>
-
-                {/* XP bar */}
-                {prof.unlocked && (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ background: prof.color, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
-                    </div>
-                    <span className="text-xs font-mono" style={{ color: prof.color }}>Lv.{prof.playerLevel}</span>
-                  </div>
-                )}
-                {locked && (
-                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                    Requires Player Level {prof.unlockCondition?.value || "?"}
-                  </p>
-                )}
-              </button>
-
-              {/* Choose profession button */}
-              {canChoose && (
-                <div className="px-4 pb-3">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleChooseProfession(prof.id); }}
-                    disabled={choosingProf}
-                    className="forge-btn w-full text-xs font-semibold py-2 rounded-lg"
-                    style={{ background: `${prof.color}15`, color: prof.color, border: `1px solid ${prof.color}35` }}
-                  >
-                    {choosingProf ? "..." : "Beruf w\u00e4hlen"}
-                  </button>
+                  <span className="text-xs font-mono" style={{ color: prof.rankColor || prof.color }}>Lv.{prof.playerLevel}</span>
                 </div>
               )}
-
-              {/* Materials relevant to this profession */}
-              {relevantMats.length > 0 && !locked && (
-                <div className="px-4 pb-3 flex flex-wrap gap-1.5">
-                  {relevantMats.slice(0, 6).map(m => (
-                    <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90`, fontSize: 10 }}>
-                      <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                      x{materials[m.id]}
-                    </span>
-                  ))}
-                </div>
+              {locked && (
+                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  Requires Player Level {prof.unlockCondition?.value || "?"}
+                </p>
               )}
-            </div>
-          );
-        });
-      })()}
+            </button>
+
+            {canChoose && (
+              <div className="px-4 pb-3">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleChooseProfession(prof.id); }}
+                  disabled={choosingProf}
+                  className="forge-btn w-full text-xs font-semibold py-2 rounded-lg"
+                  style={{ background: `${prof.color}15`, color: prof.color, border: `1px solid ${prof.color}35` }}
+                >
+                  {choosingProf ? "..." : "Choose Profession"}
+                </button>
+              </div>
+            )}
+
+            {relevantMats.length > 0 && !locked && (
+              <div className="px-4 pb-3 flex flex-wrap gap-1.5">
+                {relevantMats.slice(0, 6).map(m => (
+                  <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90`, fontSize: 10 }}>
+                    <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+                    x{materials[m.id]}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
       </div>
 
       {/* ─── Workshop Tools — permanent upgrades ────────────────────────────── */}
       {(() => {
-        const currentGear = (loggedInUser as Record<string, unknown>).gear as string || "worn";
-        const TIERS = [
-          { id: "worn", name: "Worn Tools", tier: 0, xpBonus: 0, cost: 0, currency: "gold", desc: "No bonus", icon: "/images/icons/tools-worn.png" },
-          { id: "sturdy", name: "Sturdy Tools", tier: 1, xpBonus: 2, cost: 250, currency: "gold", desc: "+2% XP on all quests", icon: "/images/icons/tools-sturdy.png" },
-          { id: "masterwork", name: "Masterwork Tools", tier: 2, xpBonus: 4, cost: 750, currency: "gold", desc: "+4% XP on all quests", icon: "/images/icons/tools-masterwork.png" },
-          { id: "legendary", name: "Legendary Tools", tier: 3, xpBonus: 7, cost: 150, currency: "essenz", desc: "+7% XP on all quests", icon: "/images/icons/tools-legendary.png" },
-          { id: "mythic", name: "Mythic Forge", tier: 4, xpBonus: 10, cost: 500, currency: "essenz", desc: "+10% XP on all quests", icon: "/images/icons/tools-mythic.png" },
-        ];
-        const currentTierNum = TIERS.find(t => t.id === currentGear)?.tier ?? 0;
-        const gold = loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0;
-        const essenz = loggedInUser.currencies?.essenz ?? 0;
+        const currentGear = loggedInUser.gear || "worn";
+        const currentTierNum = WORKSHOP_TIERS.find(t => t.id === currentGear)?.tier ?? 0;
+        const gold = currencies.gold ?? loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0;
+        const essenz = currencies.essenz ?? loggedInUser.currencies?.essenz ?? 0;
 
         return (
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.6)" }}>Workshop Tools</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Permanente XP-Upgrades. Jede Stufe muss nacheinander freigeschaltet werden.</p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>Permanent XP upgrades. Each tier must be unlocked sequentially.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {TIERS.filter(t => t.tier > 0).map(gear => {
+              {WORKSHOP_TIERS.filter(t => t.tier > 0).map(gear => {
                 const owned = gear.tier <= currentTierNum;
                 const isNext = gear.tier === currentTierNum + 1;
                 const canAfford = gear.currency === "gold" ? gold >= gear.cost : essenz >= gear.cost;
@@ -389,7 +491,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
                     border: `1px solid ${owned ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.06)"}`,
                     opacity: owned || isNext ? 1 : 0.35,
                   }}>
-                    <img src={gear.icon} alt="" className="w-10 h-10 flex-shrink-0" style={{ imageRendering: "smooth" }} onError={e => { e.currentTarget.style.display = "none"; }} />
+                    <img src={gear.icon} alt="" className="w-10 h-10 flex-shrink-0" style={{ imageRendering: "smooth" }} onError={hideOnError} />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold" style={{ color: owned ? "#818cf8" : "#e8e8e8" }}>
                         {gear.name} {owned && <span style={{ color: "rgba(129,140,248,0.5)" }}>&check;</span>}
@@ -417,7 +519,8 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
                           border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.06)"}`,
                         }}
                       >
-                        {gear.cost} {gear.currency === "essenz" ? "Essenz" : "Gold"}
+                        <img src={gear.currency === "essenz" ? "/images/icons/currency-essenz.png" : "/images/icons/currency-gold.png"} alt="" width={14} height={14} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={hideOnError} />
+                        {gear.cost}
                       </button>
                     )}
                   </div>
@@ -433,11 +536,11 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.82)" }}
-          onClick={e => { if (e.target === e.currentTarget) { setSelectedNpc(null); setCraftResult(null); } }}
+          onClick={e => { if (e.target === e.currentTarget) { setSelectedNpc(null); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); } }}
         >
           <div className="relative w-full max-w-xl rounded-xl" style={{ background: "#141418", border: `1px solid ${selectedNpc.color}30`, maxHeight: "85vh", overflowY: "auto", overflowX: "hidden" }}>
             {/* Close */}
-            <button onClick={() => { setSelectedNpc(null); setCraftResult(null); }} className="forge-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
+            <button onClick={() => { setSelectedNpc(null); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]); }} className="forge-btn absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
               <span className="text-white text-sm">&#10005;</span>
             </button>
 
@@ -445,10 +548,15 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
             <div className="p-5 pb-3" style={{ background: `linear-gradient(180deg, ${selectedNpc.color}12 0%, transparent 100%)` }}>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0" style={{ border: `2px solid ${selectedNpc.color}50` }}>
-                  <img src={selectedNpc.npcPortrait} alt="" width={64} height={64} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                  <img src={selectedNpc.npcPortrait} alt="" width={64} height={64} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={hideOnError} />
                 </div>
                 <div>
-                  <p className="text-lg font-bold" style={{ color: selectedNpc.color }}>{selectedNpc.npcName}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-lg font-bold" style={{ color: selectedNpc.color }}>{selectedNpc.npcName}</p>
+                    {selectedNpc.rank && selectedNpc.rank !== "Novice" && (
+                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${selectedNpc.rankColor}15`, color: selectedNpc.rankColor, border: `1px solid ${selectedNpc.rankColor}30` }}>{selectedNpc.rank}</span>
+                    )}
+                  </div>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{selectedNpc.name} &middot; Level {selectedNpc.playerLevel}/{selectedNpc.maxLevel}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="w-24 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -470,8 +578,8 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
                 return (
                   <div className="mt-3 flex flex-wrap gap-1.5">
                     {mats.map(m => (
-                      <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: materials[m.id] ? `${RARITY_COLORS[m.rarity]}` : "rgba(255,255,255,0.15)", fontSize: 10 }}>
-                        <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.04)", color: materials[m.id] ? RARITY_COLORS[m.rarity] : "rgba(255,255,255,0.15)", fontSize: 10 }}>
+                        <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "smooth" }} onError={hideOnError} />
                         {m.name} <strong className="font-mono">x{materials[m.id] || 0}</strong>
                       </span>
                     ))}
@@ -483,7 +591,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
             {/* Tab bar */}
             {(() => {
               const tabs: { key: typeof npcModalTab; label: string; color: string }[] = [
-                { key: "recipes", label: "Rezepte", color: selectedNpc.color },
+                { key: "recipes", label: "Recipes", color: selectedNpc.color },
               ];
               if (selectedNpc.id === "schmied") {
                 tabs.push({ key: "schmiedekunst", label: "Schmiedekunst", color: "#ff8c00" });
@@ -507,13 +615,13 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
               );
             })()}
 
-            {/* ─── Tab: Rezepte ─────────────────────────────────────────── */}
+            {/* ─── Tab: Recipes ──────────────────────────────────────────── */}
             {npcModalTab === "recipes" && (
               <>
                 {/* Slot selector for Schmied/Verzauberer */}
                 {(selectedNpc.id === "schmied" || selectedNpc.id === "verzauberer") && (
                   <div className="px-5 py-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                    <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Ziel-Slot</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Target Slot</p>
                     <div className="flex flex-wrap gap-1.5">
                       {Object.entries(SLOT_LABELS).map(([slot, label]) => {
                         const hasGear = !!(equippedSlots[slot] && typeof equippedSlots[slot] === "object");
@@ -540,63 +648,106 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
                 {/* Recipes list */}
                 <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-                  <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Rezepte</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p>
                   {recipes.filter(r => r.profession === selectedNpc.id).map(recipe => {
+                    const meetsLevel = recipe.canCraft;
+                    const onCooldown = (recipe.cooldownRemaining ?? 0) > 0;
+                    const skillUp = SKILL_UP_COLORS[recipe.skillUpColor || "orange"];
+                    const isBatchable = recipe.result?.type === "buff" || recipe.result?.type === "streak_shield" || recipe.result?.type === "forge_temp";
+                    const effectiveCount = isBatchable ? craftCount : 1;
                     const canAfford = (() => {
-                      const gold = loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0;
-                      if (recipe.cost?.gold && gold < recipe.cost.gold) return false;
+                      const gold = currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0;
+                      if (recipe.cost?.gold && gold < recipe.cost.gold * effectiveCount) return false;
                       for (const [matId, amt] of Object.entries(recipe.materials || {})) {
-                        if ((materials[matId] || 0) < amt) return false;
+                        if ((materials[matId] || 0) < (amt as number) * effectiveCount) return false;
                       }
                       return true;
                     })();
-                    const meetsLevel = recipe.canCraft;
-                    const canDo = canAfford && meetsLevel;
+                    const canDo = canAfford && meetsLevel && !onCooldown;
 
                     return (
-                      <div key={recipe.id} className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                      <div key={recipe.id} className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderLeft: `3px solid ${skillUp?.color || "rgba(255,255,255,0.06)"}` }}>
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="text-sm font-semibold" style={{ color: meetsLevel ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>{recipe.name}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold" style={{ color: meetsLevel ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>{recipe.name}</p>
+                              {/* Skill-up indicator dot */}
+                              <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: skillUp?.color || "#6b7280" }} title={skillUp?.label || ""} />
+                            </div>
                             <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{recipe.desc}</p>
+                            {/* D3-style reroll preview: show what stats CAN be rolled */}
+                            {meetsLevel && (recipe.id === "reroll_stat" || recipe.id === "reroll_minor" || recipe.id === "reinforce_armor" || recipe.id === "enchant_socket") && equippedSlots[selectedSlot] && typeof equippedSlots[selectedSlot] === "object" && (
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)", fontSize: 9 }}>
+                                Current: {Object.entries((equippedSlots[selectedSlot] as Record<string, unknown>).stats as Record<string, number> || {}).map(([k, v]) => `${k} ${v}`).join(", ") || "none"}
+                              </p>
+                            )}
                             {!meetsLevel && (
-                              <p className="text-xs mt-1" style={{ color: "#f44" }}>Benötigt {selectedNpc.name} Lv.{recipe.reqProfLevel}</p>
+                              <p className="text-xs mt-1" style={{ color: "#f44" }}>Requires {selectedNpc.name} Lv.{recipe.reqProfLevel}</p>
+                            )}
+                            {onCooldown && (
+                              <p className="text-xs mt-1" style={{ color: "#f97316" }}>
+                                Cooldown: {(recipe.cooldownRemaining ?? 0) >= 3600 ? `${Math.floor((recipe.cooldownRemaining ?? 0) / 3600)}h ${Math.floor(((recipe.cooldownRemaining ?? 0) % 3600) / 60)}m` : `${Math.ceil((recipe.cooldownRemaining ?? 0) / 60)}m`}
+                              </p>
                             )}
                           </div>
-                          <button
-                            onClick={() => canDo && handleCraft(recipe.id)}
-                            disabled={!canDo || crafting}
-                            className="forge-btn text-xs px-3 py-1.5 rounded-lg font-semibold flex-shrink-0"
-                            style={{
-                              background: canDo ? `${selectedNpc.color}20` : "rgba(255,255,255,0.03)",
-                              color: canDo ? selectedNpc.color : "rgba(255,255,255,0.2)",
-                              border: `1px solid ${canDo ? `${selectedNpc.color}40` : "rgba(255,255,255,0.06)"}`,
-                            }}
-                          >
-                            {crafting ? "..." : "Craften"}
-                          </button>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {isBatchable && canDo && (
+                              <select
+                                value={craftCount}
+                                onChange={e => setCraftCount(parseInt(e.target.value))}
+                                className="text-xs rounded-lg px-1 py-1 font-mono"
+                                style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.1)", width: 38 }}
+                              >
+                                {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>x{n}</option>)}
+                              </select>
+                            )}
+                            <button
+                              onClick={() => canDo && handleCraft(recipe.id, effectiveCount)}
+                              disabled={!canDo || crafting}
+                              className="forge-btn text-xs px-3 py-1.5 rounded-lg font-semibold"
+                              style={{
+                                background: canDo ? `${selectedNpc.color}20` : "rgba(255,255,255,0.03)",
+                                color: canDo ? selectedNpc.color : "rgba(255,255,255,0.2)",
+                                border: `1px solid ${canDo ? `${selectedNpc.color}40` : "rgba(255,255,255,0.06)"}`,
+                              }}
+                            >
+                              {crafting ? "..." : onCooldown ? "On CD" : "Craft"}
+                            </button>
+                          </div>
                         </div>
                         {/* Cost display */}
                         <div className="flex flex-wrap gap-2 mt-2">
                           {recipe.cost?.gold && (
-                            <span className="text-xs flex items-center gap-1" style={{ color: (loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0) >= recipe.cost.gold ? "#f59e0b" : "#f44" }}>
-                              <img src="/images/icons/currency-gold.png" alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                              {recipe.cost.gold}
+                            <span className="text-xs flex items-center gap-1" style={{ color: (currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0) >= recipe.cost.gold * effectiveCount ? "#f59e0b" : "#f44" }}>
+                              <img src="/images/icons/currency-gold.png" alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+                              {recipe.cost.gold * effectiveCount}{effectiveCount > 1 ? ` (${recipe.cost.gold}x${effectiveCount})` : ""}
                             </span>
                           )}
                           {Object.entries(recipe.materials || {}).map(([matId, amt]) => {
                             const mat = materialDefs.find(m => m.id === matId);
-                            const has = (materials[matId] || 0) >= (amt as number);
+                            const needed = (amt as number) * effectiveCount;
+                            const has = (materials[matId] || 0) >= needed;
                             return (
                               <span key={matId} className="text-xs flex items-center gap-1" style={{ color: has ? RARITY_COLORS[mat?.rarity || "common"] : "#f44" }}>
-                                <img src={mat?.icon || ""} alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                                {materials[matId] || 0}/{amt as number} {mat?.name || matId}
+                                <img src={mat?.icon || ""} alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+                                {materials[matId] || 0}/{needed} {mat?.name || matId}
                               </span>
                             );
                           })}
                           {recipe.cooldownMinutes > 0 && (
                             <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>CD: {recipe.cooldownMinutes >= 60 ? `${Math.floor(recipe.cooldownMinutes / 60)}h` : `${recipe.cooldownMinutes}m`}</span>
                           )}
+                          {recipe.xpGain != null && (() => {
+                            const skillUp = SKILL_UP_COLORS[recipe.skillUpColor || "orange"];
+                            const multiplier = recipe.skillUpColor === "gray" ? 0 : recipe.skillUpColor === "green" ? 0.25 : recipe.skillUpColor === "yellow" ? 0.75 : 1;
+                            const effectiveXp = Math.floor(recipe.xpGain * (isBatchable ? craftCount : 1) * multiplier);
+                            const xpColor = recipe.skillUpColor === "gray" ? "#6b7280" : dailyBonusAvailable ? "#facc15" : "rgba(255,255,255,0.2)";
+                            return (
+                              <span className="text-xs font-mono" style={{ color: xpColor }} title={skillUp?.label}>
+                                {recipe.skillUpColor === "gray" ? "0" : `+${effectiveXp}${dailyBonusAvailable ? "x2" : ""}`} XP
+                              </span>
+                            );
+                          })()}
                         </div>
                       </div>
                     );
@@ -614,7 +765,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
             {/* ─── Tab: Schmiedekunst (Schmied only) ───────────────────── */}
             {npcModalTab === "schmiedekunst" && selectedNpc.id === "schmied" && (() => {
-              const inv: InventoryItem[] = (loggedInUser as Record<string, unknown>).inventory as InventoryItem[] || [];
+              const inv = getUserInventory(loggedInUser);
               const dismantleItems = inv.filter(i => i.rarity && i.name && (i.instanceId || i.id));
               const hasItems = dismantleItems.length > 0;
               // Group by rarity
@@ -626,7 +777,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
               return (
                 <div className="px-5 py-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Zerlege Items in <strong style={{ color: "#ff8c00" }}>Essenz</strong> + <strong style={{ color: "#22c55e" }}>Materialien</strong>. Essenz wird f&uuml;r Rezepte ben&ouml;tigt.
+                    Dismantle items into <strong style={{ color: "#ff8c00" }}>Essenz</strong> + <strong style={{ color: "#22c55e" }}>Materials</strong>. Essenz is used for recipes and profession switching.
                   </p>
 
                   {dismantleResult && (
@@ -636,14 +787,24 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
                   )}
 
                   {!hasItems ? (
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>Keine Items im Inventar zum Zerlegen.</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>No items in inventory to dismantle.</p>
                   ) : (
                     <div className="space-y-3">
                       {RARITY_ORDER.filter(r => grouped[r]?.length).map(rarity => (
                         <div key={rarity}>
                           <div className="flex items-center gap-2 mb-1.5">
                             <span className="text-xs font-semibold uppercase" style={{ color: RARITY_COLORS[rarity], fontSize: 10 }}>{rarity}</span>
-                            <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>+{ESSENZ_TABLE[rarity] || 2} Essenz</span>
+                            <span className="text-xs font-mono" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>+{ESSENZ_TABLE[rarity] || 2} Essenz each</span>
+                            {/* Salvage All button (D3-style) */}
+                            {grouped[rarity].length >= 2 && rarity !== "legendary" && (
+                              <button
+                                onClick={() => handleDismantleAll(rarity)}
+                                className="salvage-all-btn text-xs px-2 py-0.5 rounded font-semibold ml-auto"
+                                style={{ background: "rgba(255,140,0,0.1)", color: "#ff8c00", border: "1px solid rgba(255,140,0,0.25)", fontSize: 9 }}
+                              >
+                                Salvage All ({grouped[rarity].length})
+                              </button>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {grouped[rarity].slice(0, 12).map(item => (
@@ -652,7 +813,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
                                 onClick={() => handleDismantle(item.instanceId || item.id)}
                                 className="forge-btn text-xs px-2 py-1 rounded-lg"
                                 style={{ background: `${RARITY_COLORS[rarity]}08`, border: `1px solid ${RARITY_COLORS[rarity]}30`, color: RARITY_COLORS[rarity] }}
-                                title={`${item.name} zerlegen → +${ESSENZ_TABLE[rarity] || 2} Essenz`}
+                                title={`Dismantle ${item.name} → +${ESSENZ_TABLE[rarity] || 2} Essenz`}
                               >
                                 {item.name}
                               </button>
@@ -671,12 +832,24 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
             {/* ─── Tab: Transmutation (Verzauberer only) ───────────────── */}
             {npcModalTab === "transmutation" && selectedNpc.id === "verzauberer" && (() => {
-              const inv: InventoryItem[] = (loggedInUser as Record<string, unknown>).inventory as InventoryItem[] || [];
+              const inv = getUserInventory(loggedInUser);
               const epicItems = inv.filter(i => i.rarity === "epic" && i.name && (i.instanceId || i.id));
+              // Group epics by slot for proper same-slot validation
+              const epicsBySlot: Record<string, InventoryItem[]> = {};
+              for (const item of epicItems) {
+                const s = item.slot || "unknown";
+                if (!epicsBySlot[s]) epicsBySlot[s] = [];
+                epicsBySlot[s].push(item);
+              }
+              // Only allow selecting items from the same slot as the first selected item
+              const firstSelected = selectedTransmute.length > 0
+                ? epicItems.find(i => (i.instanceId || i.id) === selectedTransmute[0])
+                : null;
+              const lockedSlot = firstSelected?.slot || null;
               return (
                 <div className="px-5 py-4 space-y-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-                    Kombiniere 3 Epic-Items vom gleichen Slot mit 500 Gold, um ein Legendary-Item zu erschaffen.
+                    Combine 3 Epic items from the same slot + 500 Gold to create a Legendary item.
                   </p>
 
                   {transmuteResult && (
@@ -687,41 +860,61 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
 
                   {epicItems.length === 0 ? (
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.2)" }}>
-                      Keine Epic-Items im Inventar. Epics droppen aus Quests oder können gecraftet werden.
+                      No Epic items in inventory. Epics drop from quests or can be crafted.
                     </p>
                   ) : epicItems.length < 3 ? (
                     <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
-                      {epicItems.length}/3 Epic-Items vorhanden — sammle {3 - epicItems.length} weitere.
+                      {epicItems.length}/3 Epic items available — collect {3 - epicItems.length} more.
                     </p>
                   ) : (
                     <>
-                      <div className="flex flex-wrap gap-1.5">
-                        {epicItems.map(item => {
-                          const iid = item.instanceId || item.id;
-                          const sel = selectedTransmute.includes(iid);
+                      {/* Show epics grouped by slot */}
+                      <div className="space-y-2">
+                        {Object.entries(epicsBySlot).map(([slot, items]) => {
+                          const slotLocked = lockedSlot && lockedSlot !== slot;
                           return (
-                            <button key={iid} onClick={() => {
-                              setSelectedTransmute(prev => sel ? prev.filter(x => x !== iid) : prev.length < 3 ? [...prev, iid] : prev);
-                            }} className="forge-btn text-xs px-2.5 py-1.5 rounded-lg" style={{
-                              background: sel ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
-                              border: `1px solid ${sel ? "rgba(168,85,247,0.5)" : "rgba(168,85,247,0.15)"}`,
-                              color: sel ? "#c084fc" : "#a855f7",
-                            }}>
-                              {sel ? "\u2713 " : ""}{item.name}
-                              <span className="ml-1 font-mono" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{item.slot}</span>
-                            </button>
+                            <div key={slot}>
+                              <p className="text-xs font-semibold uppercase mb-1" style={{ color: slotLocked ? "rgba(255,255,255,0.1)" : "rgba(168,85,247,0.5)", fontSize: 10 }}>
+                                {SLOT_LABELS[slot] || slot} ({items.length})
+                              </p>
+                              <div className="flex flex-wrap gap-1.5">
+                                {items.map(item => {
+                                  const iid = item.instanceId || item.id;
+                                  const sel = selectedTransmute.includes(iid);
+                                  const disabled = !!slotLocked && !sel;
+                                  return (
+                                    <button key={iid} onClick={() => {
+                                      if (disabled) return;
+                                      setSelectedTransmute(prev => sel ? prev.filter(x => x !== iid) : prev.length < 3 ? [...prev, iid] : prev);
+                                    }} disabled={disabled} className="forge-btn text-xs px-2.5 py-1.5 rounded-lg" style={{
+                                      background: sel ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
+                                      border: `1px solid ${sel ? "rgba(168,85,247,0.5)" : "rgba(168,85,247,0.15)"}`,
+                                      color: sel ? "#c084fc" : disabled ? "rgba(255,255,255,0.15)" : "#a855f7",
+                                      opacity: disabled ? 0.4 : 1,
+                                    }}>
+                                      {sel ? "\u2713 " : ""}{item.name}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           );
                         })}
                       </div>
                       <div className="flex items-center gap-3 pt-1">
                         <span className="text-xs font-mono" style={{ color: selectedTransmute.length === 3 ? "#c084fc" : "rgba(255,255,255,0.2)" }}>
-                          {selectedTransmute.length}/3
+                          {selectedTransmute.length}/3{lockedSlot ? ` (${SLOT_LABELS[lockedSlot] || lockedSlot})` : ""}
                         </span>
+                        {selectedTransmute.length > 0 && selectedTransmute.length < 3 && (
+                          <button onClick={() => setSelectedTransmute([])} className="forge-btn text-xs px-2 py-1 rounded-lg" style={{ color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                            Reset
+                          </button>
+                        )}
                         {selectedTransmute.length === 3 && (
                           <button onClick={handleTransmute} className="forge-btn text-xs px-3 py-1.5 rounded-lg font-semibold" style={{
                             background: "rgba(168,85,247,0.15)", color: "#c084fc", border: "1px solid rgba(168,85,247,0.4)",
                           }}>
-                            Transmutieren (500g)
+                            Transmute (500g)
                           </button>
                         )}
                       </div>

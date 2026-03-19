@@ -662,62 +662,86 @@ Kein Code nötig für bestehende Effekt-Typen. Neue Effekt-Typen brauchen Anpass
 
 ---
 
-## 12. Crafting-Rezepte & Materialien erstellen
+## 12. Artisan's Quarter — Crafting Recipes & Materials
 
-**Datei**: `public/data/professions.json`
+**Data**: `public/data/professions.json`
+**Frontend**: `components/ForgeView.tsx`
+**Backend**: `routes/crafting.js`
 
-### Profession-NPCs
+### Profession NPCs (4 total, max 2 per player)
 
-4 Berufe mit je eigenem NPC:
-- **Schmied** (Grimvar): Gear-Stats rerolln, Rarität upgraden
-- **Alchemist** (Ysolde): Buff-Tränke brauen (XP, Gold, Glück, Streak-Shield)
-- **Verzauberer** (Eldric): Gear-Enchants (temporär + permanent)
-- **Koch** (Bruna): Mahlzeiten & Buffs (XP, Gold, Forge-Temp, Streak-Shield)
+| Profession | NPC | Location | Unlock | Recipes |
+|---|---|---|---|---|
+| **Blacksmith** | Grimvar the Smith | Deepforge | Lv.5 | Stat Reroll, Minor Reroll, Rarity Upgrade, Reinforce Armor |
+| **Alchemist** | Ysolde the Alchemist | Alchemist Lab | Lv.5 | Elixir of Experience/Wealth, Potion of Fortune, Elixir of Perseverance, Flask of Ambition |
+| **Enchanter** | Eldric the Enchanter | Arcanum | Lv.8 | Temporary Enchantment, Permanent Enchant, Arcane Infusion |
+| **Cook** | Bruna the Cook | Guild Kitchen | Lv.3 | Hearty Stew, Golden Soup, Forgefire Roast, Star Banquet, Endurance Ration, Champion's Feast |
 
-### Neues Material hinzufügen
+### Adding a New Material
 
 In `professions.json → materials[]`:
 
 ```json
 {
-  "id": "neues-material",
-  "name": "Neues Material",
-  "icon": "/images/icons/mat-neues.png",
+  "id": "new-material",
+  "name": "New Material",
+  "icon": "/images/icons/mat-new.png",
   "rarity": "rare",
-  "desc": "Beschreibung des Materials."
+  "desc": "Description of the material."
 }
 ```
 
-Dann in `materialDropRates` die Drop-Chance pro Quest-Rarity eintragen:
+Then add drop rates per quest rarity in `materialDropRates`:
 ```json
 "materialDropRates": {
-  "rare": { "neues-material": 0.15 }
+  "rare": { "new-material": 0.15 }
 }
 ```
 
-### Neues Rezept hinzufügen
+### Adding a New Recipe
 
 In `professions.json → recipes[]`:
 
 ```json
 {
-  "id": "neues-rezept",
+  "id": "new-recipe",
   "profession": "alchemist",
-  "name": "Neuer Trank",
-  "desc": "Effekt-Beschreibung",
+  "name": "New Potion",
+  "desc": "Effect description.",
   "reqProfLevel": 3,
+  "xpGain": 15,
   "cost": { "gold": 100 },
-  "materials": { "kraeuterbuendel": 2, "neues-material": 1 },
+  "materials": { "kraeuterbuendel": 2, "new-material": 1 },
   "result": { "type": "buff", "buffType": "xp_boost_10", "duration": "3_quests" },
-  "cooldownMinutes": 0
+  "cooldownMinutes": 0,
+  "discovery": { "type": "profLevel", "value": 3 }
 }
 ```
 
-**WICHTIG:** Neue Rezept-IDs mit neuen Effekten brauchen Code-Änderungen im `switch` in `routes/crafting.js`.
+**Fields explained:**
+- `xpGain`: Profession XP earned per craft (scales with recipe difficulty, 8-50)
+- `discovery`: Optional. Recipe is hidden in the UI until condition is met. `{ "type": "profLevel", "value": 6 }` = visible only at profession level 6+. No discovery = always visible.
+- `cooldownMinutes`: Per-recipe cooldown (tracked independently per recipe, not per profession)
 
-### Profession-Level
+**IMPORTANT:** New recipe IDs with new effect types need code changes in the `switch` in `routes/crafting.js`. Existing result types: `reroll`, `upgrade_rarity`, `reinforce`, `buff`, `streak_shield`, `temp_enchant`, `perm_enchant`, `forge_temp`.
 
-Jede Profession hat 10 Level mit steigenden XP-Schwellen (definiert in `levelThresholds`). +10 XP pro Craft.
+### Batch Crafting
+
+Buff/meal recipes (result type `buff`, `streak_shield`, `forge_temp`) support batch crafting via `count` parameter (1-10). Gold and materials are multiplied by count. Slot-requiring recipes (rerolls, enchants) are always single-craft.
+
+### Daily Crafting Bonus
+
+First craft each day awards **2x profession XP**. Tracked via `u.lastCraftDate`. Shown as "2x XP" badge in the Artisan's Quarter header.
+
+### Profession Leveling
+
+Each profession has 10 levels with scaling XP thresholds (defined in `levelThresholds`). XP per craft varies by recipe difficulty (8-50 XP). WoW-style ranks: Novice (Lv.0) → Apprentice (1-2) → Journeyman (3-4) → Expert (5-6) → Artisan (7-8) → Master (9-10).
+
+### Schmiedekunst System (Blacksmith tab)
+
+- **Dismantle**: Destroy inventory items → Essenz (2-100 by rarity) + chance at materials
+- **Salvage All**: D3-style bulk dismantle per rarity (legendary excluded, must be individual)
+- **Transmutation**: Combine 3 same-slot epic items + 500 Gold → 1 random legendary of that slot
 
 ---
 
