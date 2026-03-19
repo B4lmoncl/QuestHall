@@ -754,6 +754,23 @@ export default function Dashboard() {
                 <p className="text-xs mt-1 font-mono text-w20">
                   {playerLevelInfo.xpInLevel} {playerLevelInfo.xpForLevel ? `/ ${playerLevelInfo.xpForLevel} XP` : "(max)"}
                 </p>
+                {dailyBonusAvailable && (
+                  <button
+                    onClick={handleClaimDailyBonus}
+                    disabled={claimingDailyBonus}
+                    className="mt-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"
+                    style={{
+                      background: "linear-gradient(90deg, rgba(250,204,21,0.12), rgba(245,158,11,0.15))",
+                      color: "#facc15",
+                      border: "1px solid rgba(250,204,21,0.3)",
+                      cursor: claimingDailyBonus ? "wait" : "pointer",
+                      opacity: claimingDailyBonus ? 0.5 : 1,
+                      animation: "pulse-online 2s ease-in-out infinite",
+                    }}
+                  >
+                    <span>☀</span> {claimingDailyBonus ? "Claiming..." : "Claim Daily Bonus"}
+                  </button>
+                )}
               </div>
 
               {/* Right side: Currencies + Forge */}
@@ -912,7 +929,7 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-widest mb-3 text-w25">Adventurers</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} dailyBonusAvailable={u.name?.toLowerCase() === playerName?.toLowerCase() ? dailyBonusAvailable : false} onClaimDailyBonus={u.name?.toLowerCase() === playerName?.toLowerCase() ? handleClaimDailyBonus : undefined} claimingDailyBonus={claimingDailyBonus} />)}
+                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} />)}
                 </div>
               </div>
             )}
