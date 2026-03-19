@@ -297,32 +297,32 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   return (
     <div className="space-y-4">
       {/* ─── Header with currencies + info ─────────────────────────────── */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>{"Artisan's Quarter"}</span>
+      <div className="flex items-center gap-4 flex-wrap">
+        <span className="text-base font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{"Artisan's Quarter"}</span>
         <button
           onClick={() => setInfoOpen(v => !v)}
-          className="forge-btn w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+          className="forge-btn w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
           style={{ background: infoOpen ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)", color: infoOpen ? "#e8e8e8" : "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.1)" }}
         >
           ?
         </button>
-        <div className="flex items-center gap-3 ml-auto text-xs">
-          <span className="font-mono" style={{ color: "rgba(255,255,255,0.3)" }}>{chosenCount}/{maxProfSlots} Professions</span>
+        <div className="flex items-center gap-4 ml-auto text-sm">
+          <span className="font-mono font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{chosenCount}/{maxProfSlots} Professions</span>
           {dailyBonusAvailable && (
-            <span className="px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)", fontSize: 9 }}>
+            <span className="px-2 py-1 rounded font-bold text-xs" style={{ background: "rgba(250,204,21,0.12)", color: "#facc15", border: "1px solid rgba(250,204,21,0.25)" }}>
               2x XP
             </span>
           )}
-          <span className="flex items-center gap-1" style={{ color: "#f59e0b" }}>
-            <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+          <span className="flex items-center gap-1.5" style={{ color: "#f59e0b" }}>
+            <img src="/images/icons/currency-gold.png" alt="" width={24} height={24} style={{ imageRendering: "smooth" }} onError={hideOnError} />
             <span className="font-mono font-bold">{currencies.gold ?? loggedInUser.currencies?.gold ?? loggedInUser.gold ?? 0}</span>
           </span>
-          <span className="flex items-center gap-1" style={{ color: "#ff8c00" }}>
-            <img src="/images/icons/currency-essenz.png" alt="" width={20} height={20} style={{ imageRendering: "smooth" }} onError={hideOnError} />
+          <span className="flex items-center gap-1.5" style={{ color: "#ff8c00" }}>
+            <img src="/images/icons/currency-essenz.png" alt="" width={24} height={24} style={{ imageRendering: "smooth" }} onError={hideOnError} />
             <span className="font-mono font-bold">{currencies.essenz ?? loggedInUser.currencies?.essenz ?? 0}</span>
           </span>
           {onNavigate && (
-            <button onClick={() => onNavigate("character")} className="cross-nav-link text-xs px-2 py-0.5 rounded" style={{ color: "rgba(255,255,255,0.25)", border: "1px solid rgba(255,255,255,0.08)" }}>
+            <button onClick={() => onNavigate("character")} className="cross-nav-link text-sm px-3 py-1 rounded" style={{ color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.1)" }}>
               Character &rarr;
             </button>
           )}
@@ -390,11 +390,11 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {/* Location header */}
             <div className="px-4 pt-3 pb-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70`, fontSize: 10 }}>{loc.label}</span>
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.2)", fontSize: 9 }}>{loc.desc}</span>
+                <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70` }}>{loc.label}</span>
+                <span className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>{loc.desc}</span>
                 <div className="ml-auto flex items-center gap-1.5">
-                  {isChosen && <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color, fontSize: 9 }}>Active</span>}
-                  {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2</span>}
+                  {isChosen && <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color }}>Active</span>}
+                  {!isChosen && !prof.canChoose && !locked && <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: "rgba(255,68,68,0.1)", color: "#f44" }}>{chosenCount}/{maxProfSlots}</span>}
                 </div>
               </div>
             </div>
@@ -413,14 +413,14 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
+                    <p className="text-base font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
                     {prof.rank && prof.rank !== "Novice" && (
-                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.rankColor}15`, color: prof.rankColor, fontSize: 9, border: `1px solid ${prof.rankColor}30` }}>
+                      <span className="text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: `${prof.rankColor}15`, color: prof.rankColor, border: `1px solid ${prof.rankColor}30` }}>
                         {prof.rank}
                       </span>
                     )}
                   </div>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)", lineHeight: 1.3 }}>{prof.description}</p>
+                  <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{prof.description}</p>
                   {isChosen && synergy && synergyChosen && (
                     <p className="text-xs mt-0.5" style={{ color: `${prof.color}60`, fontSize: 9 }}>&#9733; {synergy.label} active</p>
                   )}
@@ -432,7 +432,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                   <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
                     <div className="h-full rounded-full transition-all" style={{ background: `linear-gradient(90deg, ${prof.color}, ${prof.rankColor || prof.color})`, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
                   </div>
-                  <span className="text-xs font-mono" style={{ color: prof.rankColor || prof.color }}>Lv.{prof.playerLevel}</span>
+                  <span className="text-sm font-mono font-semibold" style={{ color: prof.rankColor || prof.color }}>Lv.{prof.playerLevel}</span>
                 </div>
               )}
               {locked && (
