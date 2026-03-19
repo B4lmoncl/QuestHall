@@ -71,6 +71,8 @@ export default function Dashboard() {
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [secondsAgo, setSecondsAgo] = useState(0);
   const [apiLive, setApiLive] = useState(false);
+  const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
+  const [claimingDailyBonus, setClaimingDailyBonus] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
   const [completedSearch, setCompletedSearch] = useState("");
   const [rejectedOpen, setRejectedOpen] = useState(false);
@@ -286,6 +288,7 @@ export default function Dashboard() {
       setFavorites(batch.favorites || []);
       setActiveNpcs(batch.activeNpcs || []);
       setApiLive(!!batch.apiLive);
+      if (batch.dailyBonusAvailable !== undefined) setDailyBonusAvailable(!!batch.dailyBonusAvailable);
     } else {
       // Fallback: individual fetches if batch endpoint not available
       const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(playerName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
@@ -341,6 +344,40 @@ export default function Dashboard() {
     addToast, setApiErrorWithAutoClose,
     lastPoolRefresh, setLastPoolRefresh,
   });
+
+  // Daily bonus claim
+  const handleClaimDailyBonus = useCallback(async () => {
+    if (!reviewApiKey || !playerName || claimingDailyBonus) return;
+    setClaimingDailyBonus(true);
+    try {
+      const r = await fetch("/api/daily-bonus/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
+        body: JSON.stringify({ player: playerName }),
+      });
+      const data = await r.json();
+      if (r.ok && data.ok) {
+        setDailyBonusAvailable(false);
+        const rewardParts: string[] = [];
+        if (data.rewards?.essenz) rewardParts.push(`${data.rewards.essenz} Essenz`);
+        if (data.rewards?.runensplitter) rewardParts.push(`${data.rewards.runensplitter} Runensplitter`);
+        setRewardCelebration({
+          type: "daily-bonus",
+          title: "Daily Bonus Claimed!",
+          subtitle: rewardParts.join(" + ") + (data.milestone ? ` (${data.milestone} streak bonus!)` : ""),
+          xp: 0,
+          gold: 0,
+        });
+        refresh();
+      } else {
+        addToast(data.error || "Could not claim daily bonus", "error");
+      }
+    } catch {
+      addToast("Network error", "error");
+    } finally {
+      setClaimingDailyBonus(false);
+    }
+  }, [reviewApiKey, playerName, claimingDailyBonus, refresh, addToast, setRewardCelebration]);
 
   // Wrap handleToggleFavorite to also update local favorites state
   const handleToggleFavorite = useCallback(async (questId: string) => {
@@ -875,7 +912,7 @@ export default function Dashboard() {
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-widest mb-3 text-w25">Adventurers</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} />)}
+                  {users.filter(u => !agents.some(a => a.id === u.id)).map(u => <UserCard key={u.id} user={u} classes={classesList} dailyBonusAvailable={u.name?.toLowerCase() === playerName?.toLowerCase() ? dailyBonusAvailable : false} onClaimDailyBonus={u.name?.toLowerCase() === playerName?.toLowerCase() ? handleClaimDailyBonus : undefined} claimingDailyBonus={claimingDailyBonus} />)}
                 </div>
               </div>
             )}

@@ -84,6 +84,16 @@ router.get('/api/dashboard', async (req, res) => {
 
   const activeNpcs = (npcsData && npcsData.npcs) || [];
 
+  // Daily bonus status (lightweight — direct state access)
+  let dailyBonusAvailable = false;
+  if (playerLower) {
+    const u = state.users[playerLower];
+    if (u) {
+      const today = new Date().toISOString().slice(0, 10);
+      dailyBonusAvailable = u.dailyBonusLastClaim !== today;
+    }
+  }
+
   res.json({
     agents: agents || [],
     quests: quests || { open: [], inProgress: [], completed: [], suggested: [], rejected: [] },
@@ -94,6 +104,7 @@ router.get('/api/dashboard', async (req, res) => {
     habits,
     favorites,
     activeNpcs,
+    dailyBonusAvailable,
     apiLive: true,
   });
 });
