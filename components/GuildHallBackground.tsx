@@ -256,7 +256,7 @@ export default function GuildHallBackground() {
     );
 
     // Shooting stars (night/dawn only)
-    let shootingStars: ShootingStar[] = [];
+    const shootingStars: ShootingStar[] = [];
     let nextShootingStarAt = 180 + Math.random() * 400; // frames until next
 
     let animId: number;
