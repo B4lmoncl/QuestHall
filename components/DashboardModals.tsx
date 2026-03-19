@@ -211,7 +211,7 @@ export default function DashboardModals({
                 <button onClick={() => setActiveQuestsInfoOpen(false)} className="btn-close">×</button>
               </div>
               <p className="text-xs leading-relaxed mb-3 text-w60">
-                Quests you&apos;ve claimed and are currently working on. Claiming too many quests at once (&gt;20) will apply an XP hoarding penalty.
+                Your quest overview. Claiming too many quests at once (&gt;20) will apply an XP hoarding penalty.
               </p>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
@@ -221,6 +221,14 @@ export default function DashboardModals({
                 <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
                   <span className="text-xs text-w50">Open on Board</span>
                   <span className="font-mono font-bold text-sm text-w50">{openQuestsCount}</span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Total Completed</span>
+                  <span className="font-mono font-bold text-sm" style={{ color: "#22c55e" }}>{loggedInUser?.questsCompleted ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between px-2 py-1 rounded-lg bg-w3">
+                  <span className="text-xs text-w50">Total XP Earned</span>
+                  <span className="font-mono font-bold text-sm" style={{ color: "#a855f7" }}>{loggedInUser?.xp ?? 0}</span>
                 </div>
               </div>
             </div>
