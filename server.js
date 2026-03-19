@@ -109,6 +109,14 @@ app.use(require('./routes/crafting'));
 app.use(require('./routes/challenges-weekly'));
 app.use(require('./routes/npcs-misc'));  // Must be last (has SPA fallback catch-all)
 
+// ─── Express error handler (catch-all for unhandled route errors) ────────────
+app.use((err, req, res, _next) => {
+  console.error(`[error] ${req.method} ${req.path}:`, err.message || err);
+  if (!res.headersSent) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // ─── Boot sequence ───────────────────────────────────────────────────────────
 ensureDataDir();
 ensureRuntimeFiles();
