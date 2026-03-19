@@ -121,8 +121,8 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-3">
         <span className="text-4xl" style={{ opacity: 0.3 }}>&#9876;</span>
-        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>Die Schmiede</p>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Melde dich an, um die Schmiede zu betreten.</p>
+        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>Deepforge</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Melde dich an, um die Deepforge zu betreten.</p>
       </div>
     );
   }
@@ -133,7 +133,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3 flex-wrap">
-        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Die Schmiede</span>
+        <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.35)" }}>Deepforge</span>
         <div className="flex items-center gap-3 ml-auto text-xs">
           <span style={{ color: "#f59e0b" }}>
             <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />

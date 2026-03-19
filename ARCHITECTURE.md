@@ -249,7 +249,7 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - **Recipes**: Each has gold cost + material cost + profession level requirement + cooldown
 - **Profession leveling**: 10 levels per profession, XP gained per craft
 - **Unlock conditions**: Schmied/Alchemist at player level 5, Verzauberer at level 8
-- **Frontend**: "The Forge" tab with NPC popout modals (same createPortal pattern as WandererRest)
+- **Frontend**: "Deepforge" tab with NPC popout modals (same createPortal pattern as WandererRest)
 - **Endpoints**: `GET /api/professions?player=X`, `POST /api/professions/craft`
 - **Data**: `public/data/professions.json` (professions, materials, recipes)
 
