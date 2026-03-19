@@ -6,6 +6,8 @@ const path = require('path');
 const router = require('express').Router();
 const { state, saveUsers } = require('../lib/state');
 const { now, getLevelInfo, rollAffixStats, PRIMARY_STATS, MINOR_STATS } = require('../lib/helpers');
+
+const VALID_SLOTS = ['weapon', 'shield', 'helm', 'armor', 'amulet', 'boots'];
 const { requireAuth } = require('../lib/middleware');
 
 // ─── Load professions data at boot ──────────────────────────────────────────
@@ -147,6 +149,11 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   u.professions[recipe.profession].level = newProfLevel.level;
 
   // ─── Execute recipe effect ──────────────────────────────────────────────
+  // Validate targetSlot if provided
+  if (targetSlot && !VALID_SLOTS.includes(targetSlot)) {
+    return res.status(400).json({ error: `Invalid slot: ${targetSlot}` });
+  }
+
   let result = { success: true, message: '' };
 
   switch (recipeId) {
@@ -443,6 +450,16 @@ router.post('/api/schmiedekunst/transmute', requireAuth, (req, res) => {
     const item = u.inventory.find(i => (i.instanceId || i.id) === id);
     if (!item) return res.status(404).json({ error: `Item ${id} not found in inventory` });
     items.push(item);
+  }
+
+  // Validate: none can be equipped
+  if (u.equipment) {
+    const equippedIds = new Set(Object.values(u.equipment).filter(v => v && typeof v === 'object').map(v => v.instanceId));
+    for (const item of items) {
+      if (equippedIds.has(item.instanceId || item.id)) {
+        return res.status(400).json({ error: `"${item.name}" ist ausgerüstet — erst ablegen` });
+      }
+    }
   }
 
   // Validate: all must be epic rarity

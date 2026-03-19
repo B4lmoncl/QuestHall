@@ -243,7 +243,9 @@ export default function Dashboard() {
       setAgents(sortAgents(batch.agents || []));
       setQuests(batch.quests);
       setUsers(batch.users || []);
-      if (Array.isArray(batch.achievements) && batch.achievements.length > 0) setAchievementCatalogue(batch.achievements);
+      const rawAchs = batch.achievements as any;
+      const batchAchs = Array.isArray(rawAchs) ? rawAchs : rawAchs?.achievements;
+      if (Array.isArray(batchAchs) && batchAchs.length > 0) setAchievementCatalogue(batchAchs);
       setCampaigns(batch.campaigns || []);
       setRituals(batch.rituals || []);
       setHabits(batch.habits || []);

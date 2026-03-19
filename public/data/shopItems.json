@@ -1,16 +1,23 @@
 {
   "items": [
-    { "id": "gaming_1h",   "name": "1h Gaming",    "cost": 100, "icon": "/images/icons/shop-gaming.png", "desc": "1 hour of guilt-free gaming" },
-    { "id": "snack_break", "name": "Snack Break",   "cost": 25,  "icon": "/images/icons/shop-snack.png", "desc": "Treat yourself to a snack" },
-    { "id": "day_off",     "name": "Day Off Quest", "cost": 500, "icon": "/images/icons/shop-dayoff.png", "desc": "Skip one day of recurring quests" },
-    { "id": "movie_night", "name": "Movie Night",   "cost": 150, "icon": "/images/icons/shop-movie.png", "desc": "Evening off for a movie" },
-    { "id": "sleep_in",    "name": "Sleep In",      "cost": 75,  "icon": "/images/icons/shop-sleep.png", "desc": "Extra hour of sleep, guilt-free" }
+    { "id": "gaming_1h",   "name": "1h Gaming",       "cost": 100,  "icon": "/images/icons/shop-gaming.png",   "desc": "1 Stunde schuld-freies Gaming." },
+    { "id": "snack_break", "name": "Snack Break",      "cost": 25,   "icon": "/images/icons/shop-snack.png",    "desc": "Gönn dir einen Snack." },
+    { "id": "day_off",     "name": "Tag Frei",         "cost": 500,  "icon": "/images/icons/shop-dayoff.png",   "desc": "Überspringt einen Tag bei wiederkehrenden Quests." },
+    { "id": "movie_night", "name": "Movie Night",      "cost": 150,  "icon": "/images/icons/shop-movie.png",    "desc": "Ein Abend frei für einen Film." },
+    { "id": "sleep_in",    "name": "Ausschlafen",      "cost": 75,   "icon": "/images/icons/shop-sleep.png",    "desc": "Eine Extra-Stunde Schlaf, ohne Reue." },
+    { "id": "spa_day",     "name": "Spa-Tag",          "cost": 300,  "icon": "/images/icons/shop-spa.png",      "desc": "Ein Tag voller Selbstpflege. Du hast es dir verdient." },
+    { "id": "new_book",    "name": "Neues Buch",       "cost": 200,  "icon": "/images/icons/shop-book.png",     "desc": "Kauf dir das Buch, das du schon lange lesen wolltest." },
+    { "id": "fancy_meal",  "name": "Essen gehen",      "cost": 250,  "icon": "/images/icons/shop-meal.png",     "desc": "Gönn dir ein richtiges Essen auswärts." },
+    { "id": "hobby_time",  "name": "Hobby-Zeit",       "cost": 125,  "icon": "/images/icons/shop-hobby.png",    "desc": "2 Stunden für dein Hobby, geschützt." },
+    { "id": "social_outing","name": "Social Outing",   "cost": 175,  "icon": "/images/icons/shop-social.png",   "desc": "Triff Freunde — Quest erledigt." },
+    { "id": "nature_walk", "name": "Natur-Spaziergang","cost": 50,   "icon": "/images/icons/shop-nature.png",   "desc": "30 Minuten draußen. Frische Luft." },
+    { "id": "digital_detox","name": "Digital Detox",   "cost": 400,  "icon": "/images/icons/shop-detox.png",    "desc": "Einen Tag ohne Bildschirm. Hardcore-Belohnung." }
   ],
   "gearTiers": [
-    { "id": "worn",       "name": "Worn Tools",       "cost": 0,    "tier": 0, "xpBonus": 0,  "icon": "/images/icons/tools-worn.png", "desc": "Starting gear. No bonus." },
-    { "id": "sturdy",     "name": "Sturdy Tools",     "cost": 100,  "tier": 1, "xpBonus": 3,  "icon": "/images/icons/tools-sturdy.png", "desc": "+3% XP on all quests" },
-    { "id": "masterwork", "name": "Masterwork Tools", "cost": 300,  "tier": 2, "xpBonus": 6,  "icon": "/images/icons/tools-masterwork.png", "desc": "+6% XP on all quests" },
-    { "id": "legendary",  "name": "Legendary Tools",  "cost": 700,  "tier": 3, "xpBonus": 10, "icon": "/images/icons/tools-legendary.png", "desc": "+10% XP on all quests" },
-    { "id": "mythic",     "name": "Mythic Forge",     "cost": 1500, "tier": 4, "xpBonus": 15, "icon": "/images/icons/tools-mythic.png", "desc": "+15% XP on all quests" }
+    { "id": "worn",       "name": "Worn Tools",       "cost": 0,    "tier": 0, "xpBonus": 0, "icon": "/images/icons/tools-worn.png", "desc": "Abgenutzte Werkzeuge. Kein Bonus." },
+    { "id": "sturdy",     "name": "Sturdy Tools",     "cost": 250,  "tier": 1, "xpBonus": 2, "icon": "/images/icons/tools-sturdy.png", "desc": "+2% XP auf alle Quests" },
+    { "id": "masterwork", "name": "Masterwork Tools", "cost": 750,  "tier": 2, "xpBonus": 4, "icon": "/images/icons/tools-masterwork.png", "desc": "+4% XP auf alle Quests" },
+    { "id": "legendary",  "name": "Legendary Tools",  "cost": 2000, "tier": 3, "xpBonus": 7, "icon": "/images/icons/tools-legendary.png", "desc": "+7% XP auf alle Quests" },
+    { "id": "mythic",     "name": "Mythic Forge",     "cost": 5000, "tier": 4, "xpBonus": 10, "icon": "/images/icons/tools-mythic.png", "desc": "+10% XP auf alle Quests" }
   ]
 }

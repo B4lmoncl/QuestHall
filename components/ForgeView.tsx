@@ -194,48 +194,64 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
         </div>
       )}
 
-      {/* NPC Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        {professions.map(prof => {
+      {/* NPC Grid — grouped by themed location */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {(() => {
+        const LOCATIONS: Record<string, { label: string; color: string; desc: string }> = {
+          schmied: { label: "Schmiede", color: "#f59e0b", desc: "Gear rerolln & veredeln" },
+          alchemist: { label: "Alchemisten-Labor", color: "#22c55e", desc: "Tränke & Elixiere brauen" },
+          koch: { label: "Gildenküche", color: "#e87b35", desc: "Mahlzeiten & Buffs zubereiten" },
+          verzauberer: { label: "Arkanum", color: "#a78bfa", desc: "Gear verzaubern & verstärken" },
+        };
+        return professions.map(prof => {
           const locked = !prof.unlocked;
+          const loc = LOCATIONS[prof.id] || { label: prof.name, color: prof.color, desc: "" };
+          const isChosen = (prof as any).chosen;
+          const canChoose = (prof as any).canChoose;
           return (
-            <button
-              key={prof.id}
-              onClick={() => !locked && setSelectedNpc(prof)}
-              disabled={locked}
-              className="relative rounded-xl p-4 text-left transition-all"
-              style={{
-                background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}08`,
-                border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}25`}`,
-                opacity: locked ? 0.5 : 1,
-                cursor: locked ? "not-allowed" : "pointer",
-              }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}15`, border: `1px solid ${prof.color}30` }}>
-                  <img src={prof.npcPortrait} alt={prof.npcName} width={56} height={56} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{prof.name}</p>
+            <div key={prof.id} className="rounded-xl overflow-hidden" style={{ background: locked ? "rgba(255,255,255,0.02)" : `${prof.color}04`, border: `1px solid ${locked ? "rgba(255,255,255,0.05)" : `${prof.color}20`}`, opacity: locked ? 0.5 : 1 }}>
+              {/* Location header */}
+              <div className="px-4 pt-3 pb-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold uppercase tracking-widest" style={{ color: `${loc.color}60`, fontSize: 10 }}>{loc.label}</span>
+                  {isChosen && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: `${prof.color}15`, color: prof.color, fontSize: 9 }}>Aktiv</span>}
+                  {!isChosen && !canChoose && !locked && <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(255,68,68,0.1)", color: "#f44", fontSize: 9 }}>2/2 Berufe</span>}
                 </div>
               </div>
-              {prof.unlocked && (
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
-                    <div className="h-full rounded-full" style={{ background: prof.color, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
+              {/* NPC card */}
+              <button
+                onClick={() => !locked && setSelectedNpc(prof)}
+                disabled={locked}
+                className="w-full p-4 pt-2 text-left transition-all"
+                style={{ cursor: locked ? "not-allowed" : "pointer" }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0" style={{ background: `${prof.color}12`, border: `1px solid ${prof.color}25` }}>
+                    <img src={prof.npcPortrait} alt={prof.npcName} width={64} height={64} style={{ imageRendering: "smooth", width: "100%", height: "100%", objectFit: "cover" }} onError={e => { (e.target as HTMLImageElement).style.display = "none"; }} />
                   </div>
-                  <span className="text-xs font-mono" style={{ color: prof.color }}>Lv.{prof.playerLevel}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold" style={{ color: prof.color }}>{prof.npcName}</p>
+                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{prof.description}</p>
+                  </div>
                 </div>
-              )}
-              {locked && (
-                <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  Benötigt Spieler-Level {prof.unlockCondition?.value || "?"}
-                </p>
-              )}
-            </button>
+                {prof.unlocked && (
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                      <div className="h-full rounded-full" style={{ background: prof.color, width: `${prof.nextLevelXp ? Math.min(100, (prof.playerXp / prof.nextLevelXp) * 100) : 100}%` }} />
+                    </div>
+                    <span className="text-xs font-mono" style={{ color: prof.color }}>Lv.{prof.playerLevel}</span>
+                  </div>
+                )}
+                {locked && (
+                  <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                    Benötigt Spieler-Level {prof.unlockCondition?.value || "?"}
+                  </p>
+                )}
+              </button>
+            </div>
           );
-        })}
+        });
+      })()}
       </div>
 
       {/* ─── Schmiedekunst (Kanai's Cube) ──────────────────────────────────── */}
@@ -330,7 +346,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
           style={{ background: "rgba(0,0,0,0.82)" }}
           onClick={e => { if (e.target === e.currentTarget) { setSelectedNpc(null); setCraftResult(null); } }}
         >
-          <div className="relative w-full max-w-lg rounded-xl overflow-hidden" style={{ background: "#141418", border: `1px solid ${selectedNpc.color}30`, maxHeight: "85vh", overflowY: "auto" }}>
+          <div className="relative w-full max-w-xl rounded-xl" style={{ background: "#141418", border: `1px solid ${selectedNpc.color}30`, maxHeight: "85vh", overflowY: "auto", overflowX: "hidden" }}>
             {/* Close */}
             <button onClick={() => { setSelectedNpc(null); setCraftResult(null); }} className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
               <span className="text-white text-sm">&#10005;</span>

@@ -76,46 +76,7 @@ export default function ShopView({ onBuy, onGearBuy }: {
         </div>
       </div>
 
-      {/* Workshop / Gear */}
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(99,102,241,0.7)" }}>Workshop</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-          {GEAR_TIERS_CLIENT.filter(g => g.tier > 0).map(gear => {
-            const owned = gear.tier <= currentTier;
-            const canBuy = !owned && gear.tier === currentTier + 1 && gold >= gear.cost;
-            return (
-              <div
-                key={gear.id}
-                className="flex items-center gap-3 p-3 rounded-xl"
-                style={{ background: "#1e1e1e", border: `1px solid ${owned ? "rgba(99,102,241,0.3)" : "rgba(255,255,255,0.07)"}` }}
-              >
-                {gear.icon && gear.icon.startsWith("/") ? <img src={gear.icon} alt="" style={{ width: 40, height: 40, imageRendering: "smooth" }} /> : <span className="text-2xl flex-shrink-0">{gear.icon}</span>}
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold" style={{ color: owned ? "#a78bfa" : "#f0f0f0" }}>
-                    {gear.name} {owned && "✓"}
-                  </p>
-                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{gear.desc}</p>
-                </div>
-                {!owned && (
-                  <button
-                    onClick={() => canBuy && onGearBuy(user.id, gear.id)}
-                    disabled={!canBuy}
-                    className="shop-buy-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
-                    style={{
-                      background: canBuy ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.04)",
-                      color: canBuy ? "#a78bfa" : "rgba(255,255,255,0.2)",
-                      border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.08)"}`,
-                    }}
-                  >
-                    <img src="/images/icons/currency-gold.png" alt="" width={20} height={20} style={{ imageRendering: "smooth", display: "inline", verticalAlign: "middle", marginRight: 2 }} onError={e => { e.currentTarget.style.display = "none"; }} /> {gear.cost}
-                  </button>
-                )}
-                {owned && <span className="text-xs px-2.5 py-1" style={{ color: "rgba(99,102,241,0.5)" }}>Owned</span>}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* Workshop moved to Deepforge — tool upgrades available there */}
     </div>
   );
 }
