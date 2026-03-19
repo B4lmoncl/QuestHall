@@ -44,9 +44,13 @@ router.get('/api/professions', (req, res) => {
     const unlocked = u ? (p.unlockCondition?.type === 'level' ? playerLevel >= p.unlockCondition.value : true) : false;
     const profProgress = u ? getProfLevel(u, p.id) : { level: 0, xp: 0 };
     const lastCraft = (u?.professions || {})[p.id]?.lastCraftAt || null;
+    const chosen = (u?.chosenProfessions || []).includes(p.id);
+    const canChoose = chosen || (u?.chosenProfessions || []).length < 2;
     return {
       ...p,
       unlocked,
+      chosen,
+      canChoose,
       playerLevel: profProgress.level,
       playerXp: profProgress.xp,
       nextLevelXp: p.levelThresholds[profProgress.level] || null,
@@ -80,6 +84,15 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   const playerLevel = getLevelInfo(u.xp || 0).level;
   if (profDef.unlockCondition?.type === 'level' && playerLevel < profDef.unlockCondition.value) {
     return res.status(400).json({ error: `Requires player level ${profDef.unlockCondition.value}` });
+  }
+
+  // Check 2-profession limit: player can only have 2 active professions
+  u.chosenProfessions = u.chosenProfessions || [];
+  if (!u.chosenProfessions.includes(recipe.profession)) {
+    if (u.chosenProfessions.length >= 2) {
+      return res.status(400).json({ error: `Du hast bereits 2 Berufe gewählt (${u.chosenProfessions.join(', ')}). Wechsel erst einen ab.` });
+    }
+    u.chosenProfessions.push(recipe.profession);
   }
 
   // Check profession level
@@ -306,6 +319,43 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     gold: u.currencies?.gold ?? u.gold ?? 0,
     newProfLevel: newProfLevel.level,
     profLevelUp: newProfLevel.level > profProgress.level,
+  });
+});
+
+// ─── POST /api/professions/switch — drop a profession to choose another ─────
+router.post('/api/professions/switch', requireAuth, (req, res) => {
+  const uid = req.resolvedPlayerId;
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'User not found' });
+  const { dropProfession } = req.body;
+  if (!dropProfession) return res.status(400).json({ error: 'dropProfession required' });
+
+  u.chosenProfessions = u.chosenProfessions || [];
+  if (!u.chosenProfessions.includes(dropProfession)) {
+    return res.status(400).json({ error: `${dropProfession} ist kein aktiver Beruf` });
+  }
+
+  // Cost: 200 essenz to switch (lose all profession XP)
+  const { ensureUserCurrencies } = require('../lib/state');
+  ensureUserCurrencies(u);
+  const switchCost = 200;
+  if ((u.currencies.essenz || 0) < switchCost) {
+    return res.status(400).json({ error: `Berufswechsel kostet ${switchCost} Essenz (du hast ${u.currencies.essenz || 0})` });
+  }
+  u.currencies.essenz -= switchCost;
+
+  // Remove profession
+  u.chosenProfessions = u.chosenProfessions.filter(p => p !== dropProfession);
+  // Reset profession XP
+  if (u.professions?.[dropProfession]) {
+    u.professions[dropProfession] = { level: 0, xp: 0 };
+  }
+
+  saveUsers();
+  res.json({
+    message: `${dropProfession} abgelegt. Du kannst jetzt einen neuen Beruf wählen.`,
+    chosenProfessions: u.chosenProfessions,
+    essenz: u.currencies.essenz,
   });
 });
 
