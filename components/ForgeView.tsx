@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { useDashboard } from "@/app/DashboardContext";
+import { getAuthHeaders } from "@/lib/auth-client";
 import type { User } from "@/app/types";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -102,7 +103,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
     try {
       const r = await fetch("/api/professions/craft", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ recipeId, targetSlot: selectedSlot }),
       });
       const data = await r.json();
@@ -125,7 +126,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
     try {
       const r = await fetch("/api/schmiedekunst/dismantle", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ inventoryItemId: itemId }),
       });
       const data = await r.json();
@@ -141,7 +142,7 @@ export default function ForgeView({ onRefresh }: { onRefresh?: () => void }) {
     try {
       const r = await fetch("/api/schmiedekunst/transmute", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": reviewApiKey },
+        headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
         body: JSON.stringify({ itemIds: selectedTransmute }),
       });
       const data = await r.json();

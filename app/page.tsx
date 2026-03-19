@@ -696,6 +696,7 @@ export default function Dashboard() {
                     { emoji: "", key: "essenz" as const, value: Number(loggedInUser?.currencies?.essenz ?? 0), color: "#ef4444", iconSrc: "/images/icons/currency-essenz.png" },
                     { emoji: "", key: "gildentaler" as const, value: Number(loggedInUser?.currencies?.gildentaler ?? 0), color: "#10b981", iconSrc: "/images/icons/currency-gildentaler.png" },
                     { emoji: "", key: "mondstaub" as const, value: Number(loggedInUser?.currencies?.mondstaub ?? 0), color: "#c084fc", iconSrc: "/images/icons/currency-mondstaub.png" },
+                    { emoji: "", key: "sternentaler" as const, value: Number(loggedInUser?.currencies?.sternentaler ?? 0), color: "#fbbf24", iconSrc: "/images/icons/currency-sternentaler.png" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
                       {c.iconSrc ? <img src={c.iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { e.currentTarget.style.display = "none"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
