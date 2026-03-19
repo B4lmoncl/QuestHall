@@ -164,6 +164,29 @@ for (const uid of Object.keys(state.users)) {
   migrateUserEquipment(uid);
 }
 
+// Migrate inventory items: backfill missing slot/icon from gear templates
+(() => {
+  let migrated = 0;
+  for (const u of Object.values(state.users)) {
+    if (!u.inventory || !Array.isArray(u.inventory)) continue;
+    for (const item of u.inventory) {
+      if (!item || typeof item === 'string') continue;
+      const tid = item.templateId || item.itemId;
+      if (!tid) continue;
+      const tmpl = state.gearById.get(tid) || state.itemTemplates?.get(tid);
+      if (!tmpl) continue;
+      if (!item.slot && tmpl.slot) { item.slot = tmpl.slot; migrated++; }
+      if (!item.icon && tmpl.icon) { item.icon = tmpl.icon; }
+      if (!item.rarity && tmpl.rarity) { item.rarity = tmpl.rarity; }
+    }
+  }
+  if (migrated > 0) {
+    const { saveUsers } = require('./lib/state');
+    saveUsers();
+    console.log(`[migration] Backfilled slot/icon/rarity on ${migrated} inventory items`);
+  }
+})();
+
 // NPC & rotation systems
 startupNpcCheck();
 const npcInterval = setInterval(checkPeriodicTasks, NPC_ROTATION_MS);
