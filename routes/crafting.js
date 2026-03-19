@@ -65,6 +65,21 @@ function getSkillUpColor(profLevel, reqProfLevel) {
   return 'gray';                     // no skill-up
 }
 
+// XP multiplier based on skill-up color (WoW-style diminishing returns)
+function getSkillUpXpMultiplier(profLevel, reqProfLevel) {
+  const colors = PROFESSIONS_DATA.skillUpColors;
+  if (colors) {
+    const color = getSkillUpColor(profLevel, reqProfLevel);
+    return colors[color]?.xpMultiplier ?? 1;
+  }
+  // Fallback if no config
+  const diff = profLevel - reqProfLevel;
+  if (diff <= 0) return 1.0;
+  if (diff <= 2) return 0.75;
+  if (diff <= 4) return 0.25;
+  return 0;
+}
+
 function getProfLevel(u, profId) {
   const prof = (u.professions || {})[profId];
   if (!prof) return { level: 0, xp: 0 };
@@ -141,7 +156,7 @@ router.get('/api/professions', (req, res) => {
   const materials = u?.craftingMaterials || {};
   const currencies = u ? { essenz: u.currencies?.essenz ?? 0, gold: u.currencies?.gold ?? u.gold ?? 0, stardust: u.currencies?.stardust ?? 0 } : {};
   const dailyBonus = u ? getDailyBonusInfo(u) : { dailyBonusAvailable: false };
-  res.json({ professions, recipes, materials, materialDefs: PROFESSIONS_DATA.materials, proficiencyRanks: PROFICIENCY_RANKS, currencies, dailyBonus });
+  res.json({ professions, recipes, materials, materialDefs: PROFESSIONS_DATA.materials, proficiencyRanks: PROFICIENCY_RANKS, skillUpColors: PROFESSIONS_DATA.skillUpColors || {}, currencies, dailyBonus });
 });
 
 // ─── POST /api/professions/craft — execute a recipe ─────────────────────────
@@ -256,13 +271,16 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     if (u.craftingMaterials[matId] <= 0) delete u.craftingMaterials[matId];
   }
 
-  // Update profession XP & timestamp — use recipe-specific xpGain with daily bonus
+  // Update profession XP & timestamp — use recipe-specific xpGain with skill-up color scaling + daily bonus
   u.professions = u.professions || {};
   u.professions[recipe.profession] = u.professions[recipe.profession] || { level: 0, xp: 0 };
-  const baseXp = (recipe.xpGain || profDef.xpPerCraft || 10) * effectiveCount;
+  const rawXp = (recipe.xpGain || profDef.xpPerCraft || 10) * effectiveCount;
+  const skillUpMultiplier = getSkillUpXpMultiplier(profProgress.level, recipe.reqProfLevel);
+  const baseXp = Math.floor(rawXp * skillUpMultiplier);
   const { dailyBonusAvailable } = getDailyBonusInfo(u);
   const xpMultiplier = dailyBonusAvailable ? 2 : 1;
   const totalXpGained = baseXp * xpMultiplier;
+  const skillUpColor = getSkillUpColor(profProgress.level, recipe.reqProfLevel);
   u.professions[recipe.profession].xp += totalXpGained;
   u.professions[recipe.profession].lastCraftAt = now();
   // Track per-recipe cooldown
@@ -484,6 +502,7 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
     newProfLevel: newProfLevel.level,
     profLevelUp: newProfLevel.level > profProgress.level,
     xpGained: totalXpGained,
+    skillUpColor,
     dailyBonusUsed: dailyBonusAvailable,
     craftCount: effectiveCount,
   });

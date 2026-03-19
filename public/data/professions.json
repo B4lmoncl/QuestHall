@@ -12,7 +12,7 @@
       "icon": "/images/icons/prof-schmied.png",
       "maxLevel": 10,
       "xpPerCraft": 10,
-      "levelThresholds": [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
+      "levelThresholds": [0, 100, 250, 450, 720, 1100, 1600, 2200, 3000, 4000],
       "unlockCondition": { "type": "level", "value": 5 }
     },
     {
@@ -26,7 +26,7 @@
       "icon": "/images/icons/prof-alchemist.png",
       "maxLevel": 10,
       "xpPerCraft": 10,
-      "levelThresholds": [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
+      "levelThresholds": [0, 100, 250, 450, 720, 1100, 1600, 2200, 3000, 4000],
       "unlockCondition": { "type": "level", "value": 5 }
     },
     {
@@ -40,7 +40,7 @@
       "icon": "/images/icons/prof-verzauberer.png",
       "maxLevel": 10,
       "xpPerCraft": 10,
-      "levelThresholds": [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
+      "levelThresholds": [0, 100, 250, 450, 720, 1100, 1600, 2200, 3000, 4000],
       "unlockCondition": { "type": "level", "value": 8 }
     },
     {
@@ -54,7 +54,7 @@
       "icon": "/images/icons/prof-koch.png",
       "maxLevel": 10,
       "xpPerCraft": 10,
-      "levelThresholds": [0, 50, 120, 220, 360, 550, 800, 1100, 1500, 2000],
+      "levelThresholds": [0, 100, 250, 450, 720, 1100, 1600, 2200, 3000, 4000],
       "unlockCondition": { "type": "level", "value": 3 }
     }
   ],
@@ -73,6 +73,12 @@
     { "id": "feuerwurz", "name": "Fireroot", "icon": "/images/icons/mat-feuerwurz.png", "rarity": "uncommon", "desc": "A spicy root that warms from within." },
     { "id": "sternenfrucht", "name": "Starfruit", "icon": "/images/icons/mat-sternenfrucht.png", "rarity": "rare", "desc": "A luminous fruit from the celestial gardens." }
   ],
+  "skillUpColors": {
+    "orange": { "maxDiff": 0, "xpMultiplier": 1.0, "label": "Guaranteed", "color": "#f97316" },
+    "yellow": { "maxDiff": 2, "xpMultiplier": 0.75, "label": "Likely", "color": "#eab308" },
+    "green":  { "maxDiff": 4, "xpMultiplier": 0.25, "label": "Unlikely", "color": "#22c55e" },
+    "gray":   { "maxDiff": 99, "xpMultiplier": 0, "label": "No XP", "color": "#6b7280" }
+  },
   "materialDropRates": {
     "common": { "eisenerz": 0.30, "magiestaub": 0.25, "kraeuterbuendel": 0.30, "wildfleisch": 0.25 },
     "uncommon": { "eisenerz": 0.20, "magiestaub": 0.20, "kraeuterbuendel": 0.20, "kristallsplitter": 0.12, "mondblume": 0.10, "runenstein": 0.12, "wildfleisch": 0.18, "feuerwurz": 0.10 },
@@ -111,7 +117,7 @@
       "name": "Rarity Upgrade",
       "desc": "50% chance to upgrade item rarity by one tier. Materials are consumed on failure.",
       "reqProfLevel": 7,
-      "xpGain": 35,
+      "xpGain": 20,
       "cost": { "gold": 500 },
       "materials": { "drachenschuppe": 2, "aetherkern": 1 },
       "result": { "type": "upgrade_rarity", "successChance": 0.5 },
@@ -124,7 +130,7 @@
       "name": "Reinforce Armor",
       "desc": "Adds +3-6 to a random primary stat permanently. Master-level smithing.",
       "reqProfLevel": 9,
-      "xpGain": 50,
+      "xpGain": 30,
       "cost": { "gold": 800 },
       "materials": { "drachenschuppe": 3, "aetherkern": 2, "seelensplitter": 1 },
       "result": { "type": "reinforce", "statBonus": [3, 6], "target": "primary_stat" },
@@ -173,7 +179,7 @@
       "name": "Elixir of Perseverance",
       "desc": "Grants 1 Streak Shield (max 10).",
       "reqProfLevel": 6,
-      "xpGain": 25,
+      "xpGain": 15,
       "cost": { "gold": 200 },
       "materials": { "phoenixfeder": 1, "mondblume": 2, "kraeuterbuendel": 3 },
       "result": { "type": "streak_shield", "amount": 1 },
@@ -186,7 +192,7 @@
       "name": "Flask of Ambition",
       "desc": "+25% XP + 20% Gold for the next 5 quests. Masterwork brew.",
       "reqProfLevel": 8,
-      "xpGain": 40,
+      "xpGain": 25,
       "cost": { "gold": 400 },
       "materials": { "sternenfrucht": 2, "mondblume": 3, "phoenixfeder": 1, "kraeuterbuendel": 5 },
       "result": { "type": "buff", "buffType": "ambition_buff", "duration": "5_quests" },
@@ -211,7 +217,7 @@
       "name": "Permanent Enchantment",
       "desc": "Permanently adds +1-2 to a minor stat on an item.",
       "reqProfLevel": 5,
-      "xpGain": 30,
+      "xpGain": 18,
       "cost": { "gold": 300 },
       "materials": { "runenstein": 3, "aetherkern": 1, "seelensplitter": 1 },
       "result": { "type": "perm_enchant", "statBonus": [1, 2], "target": "minor_stat" },
@@ -224,7 +230,7 @@
       "name": "Arcane Infusion",
       "desc": "Adds +3-5 to a random primary stat permanently. Requires rare reagents.",
       "reqProfLevel": 8,
-      "xpGain": 45,
+      "xpGain": 28,
       "cost": { "gold": 600 },
       "materials": { "runenstein": 5, "aetherkern": 2, "seelensplitter": 1, "drachenschuppe": 2 },
       "result": { "type": "perm_enchant", "statBonus": [3, 5], "target": "primary_stat" },
@@ -273,7 +279,7 @@
       "name": "Star Banquet",
       "desc": "+15% XP + 10% Gold for the next 3 quests. A grand feast!",
       "reqProfLevel": 5,
-      "xpGain": 20,
+      "xpGain": 14,
       "cost": { "gold": 100 },
       "materials": { "sternenfrucht": 1, "wildfleisch": 2, "feuerwurz": 1 },
       "result": { "type": "buff", "buffType": "feast_buff", "duration": "3_quests" },
@@ -286,7 +292,7 @@
       "name": "Endurance Ration",
       "desc": "Grants 1 Streak Shield (max 10).",
       "reqProfLevel": 7,
-      "xpGain": 25,
+      "xpGain": 15,
       "cost": { "gold": 150 },
       "materials": { "sternenfrucht": 1, "feuerwurz": 2, "mondblume": 1 },
       "result": { "type": "streak_shield", "amount": 1 },
@@ -299,7 +305,7 @@
       "name": "Champion's Feast",
       "desc": "+20% XP + 15% Gold + 10% Luck for 5 quests. The ultimate meal.",
       "reqProfLevel": 9,
-      "xpGain": 50,
+      "xpGain": 30,
       "cost": { "gold": 300 },
       "materials": { "sternenfrucht": 3, "wildfleisch": 3, "feuerwurz": 2, "mondblume": 2 },
       "result": { "type": "buff", "buffType": "champions_feast", "duration": "5_quests" },
