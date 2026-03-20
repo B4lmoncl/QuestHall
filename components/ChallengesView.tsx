@@ -24,14 +24,27 @@ function CurrencyBadge({ type, amount }: { type: string; amount: number }) {
 }
 
 // ─── Star display ────────────────────────────────────────────────────────────
-function Stars({ earned, max = 3 }: { earned: number; max?: number }) {
+function Stars({ earned, max = 3, animated = false }: { earned: number; max?: number; animated?: boolean }) {
   return (
     <span className="inline-flex gap-0.5">
-      {Array.from({ length: max }, (_, i) => (
-        <span key={i} style={{ color: i < earned ? "#fbbf24" : "rgba(255,255,255,0.12)", fontSize: 16 }}>
-          ★
-        </span>
-      ))}
+      {Array.from({ length: max }, (_, i) => {
+        const isEarned = i < earned;
+        return (
+          <span
+            key={i}
+            className={isEarned && animated ? "star-earned" : ""}
+            style={{
+              color: isEarned ? "#fbbf24" : "rgba(255,255,255,0.12)",
+              fontSize: 16,
+              display: "inline-block",
+              animationDelay: animated && isEarned ? `${i * 0.15}s` : undefined,
+              textShadow: isEarned ? "0 0 8px rgba(251,191,36,0.5)" : "none",
+            }}
+          >
+            ★
+          </span>
+        );
+      })}
     </span>
   );
 }
@@ -91,16 +104,23 @@ function SternenpfadView({
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
-          <Stars earned={totalStars} max={9} />
+          <Stars earned={totalStars} max={9} animated />
           <span className="text-xs font-bold ml-1" style={{ color: "#fbbf24" }}>{totalStars}/9</span>
         </div>
       </div>
 
       {/* Weekly Modifier Banner */}
       {modifier && (
-        <div className="rounded-lg px-4 py-3" style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.2)" }}>
+        <div className="rounded-lg px-4 py-3 relative overflow-hidden" style={{ background: "linear-gradient(135deg, rgba(168,85,247,0.08) 0%, rgba(99,102,241,0.06) 100%)", border: "1px solid rgba(168,85,247,0.25)", boxShadow: "0 0 20px rgba(168,85,247,0.06)" }}>
+          <div className="absolute top-0 right-0 w-20 h-20 rounded-full" style={{ background: "radial-gradient(circle, rgba(168,85,247,0.1) 0%, transparent 70%)", transform: "translate(30%, -30%)" }} />
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a855f7" }}>Weekly Modifier</span>
+            <span className="text-sm" style={{ lineHeight: 1 }}>&#9889;</span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a855f7" }}>Weekly Modifier Active</span>
+            {modifier.multiplier && (
+              <span className="text-xs font-bold px-1.5 py-0.5 rounded" style={{ background: modifier.multiplier > 1 ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)", color: modifier.multiplier > 1 ? "#22c55e" : "#ef4444" }}>
+                {modifier.multiplier > 1 ? "+" : ""}{Math.round((modifier.multiplier - 1) * 100)}%
+              </span>
+            )}
           </div>
           <p className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{modifier.name}</p>
           <p className="text-xs text-w30 mt-0.5">{modifier.description}</p>
@@ -190,7 +210,7 @@ function SternenpfadView({
                   <span className="text-xs font-bold uppercase tracking-wider" style={{ color: stageColor }}>
                     Stage {stage.stage}
                   </span>
-                  <Stars earned={stage.earnedStars} />
+                  <Stars earned={stage.earnedStars} animated />
                   {speedBonusActive && (
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
                       Speed Bonus
@@ -234,16 +254,29 @@ function SternenpfadView({
                   </div>
                 )}
 
-                {/* Rewards */}
-                <div className="flex flex-wrap gap-1.5">
-                  {Object.entries(stage.rewards).map(([type, amount]) => (
-                    <CurrencyBadge key={type} type={type} amount={amount as number} />
-                  ))}
-                  {stage.earnedStars >= 2 && (
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>
-                      +{stage.earnedStars === 3 ? "33" : "15"}% Bonus
-                    </span>
-                  )}
+                {/* Reward tiers by star rating */}
+                <div className="space-y-1">
+                  {[1, 2, 3].map(stars => {
+                    const multiplier = stars === 3 ? 1.33 : stars === 2 ? 1.15 : 1;
+                    const isCurrentTier = stage.earnedStars === stars;
+                    return (
+                      <div key={stars} className="flex items-center gap-2 text-xs px-2 py-1 rounded" style={{
+                        background: isCurrentTier ? "rgba(251,191,36,0.06)" : "transparent",
+                        border: isCurrentTier ? "1px solid rgba(251,191,36,0.15)" : "1px solid transparent",
+                        opacity: stage.earnedStars >= stars ? 1 : 0.45,
+                      }}>
+                        <span style={{ color: stage.earnedStars >= stars ? "#fbbf24" : "rgba(255,255,255,0.2)", width: 36 }}>
+                          {"★".repeat(stars)}
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {Object.entries(stage.rewards).map(([type, base]) => (
+                            <CurrencyBadge key={type} type={type} amount={Math.round((base as number) * multiplier)} />
+                          ))}
+                        </div>
+                        {stars > 1 && <span className="text-w15 ml-auto">+{stars === 3 ? "33" : "15"}%</span>}
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Claim button */}
@@ -483,10 +516,15 @@ function ExpeditionView({
                         </span>
                         <span className="text-w50">{c.name}</span>
                       </div>
-                      <span className="font-semibold" style={{ color: aboveFair ? "#4ade80" : "rgba(255,255,255,0.4)" }}>{c.count}</span>
+                      <span className="font-semibold" style={{ color: aboveFair ? "#4ade80" : "#f87171" }}>{c.count}</span>
+                      {aboveFair ? (
+                        <span className="text-xs ml-1" style={{ color: "#4ade80", fontSize: 9 }}>&#9650;</span>
+                      ) : (
+                        <span className="text-xs ml-1" style={{ color: "#f87171", fontSize: 9 }}>&#9660;</span>
+                      )}
                     </div>
                     <div className="ml-6 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.04)" }}>
-                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: aboveFair ? "#4ade80" : "rgba(255,255,255,0.15)" }} />
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: aboveFair ? "#4ade80" : "#f8717180" }} />
                     </div>
                   </div>
                 );
