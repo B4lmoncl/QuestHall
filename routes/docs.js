@@ -522,7 +522,7 @@ function buildDocsHtml(docs) {
 
     const responsesHtml = Object.entries(op.responses || {}).map(([code, resp]) => {
       const ex = resp.content?.['application/json']?.example;
-      const ok = parseInt(code) < 400;
+      const ok = parseInt(code, 10) < 400;
       return `<div style="margin-bottom:0.8rem">
         <span style="font-family:monospace;color:${ok ? '#22c55e' : '#ef4444'};font-weight:700">${code}</span>
         <span style="color:#aaa;font-size:0.9rem;margin-left:0.5rem">${esc(resp.description)}</span>
