@@ -169,7 +169,7 @@ server.js             # Express entry point (~289 lines)
 ### 2.14 Navigation (Urithiru-inspired)
 **Files**: `app/config.ts`
 
-- 5 floors: The Pinnacle, The Great Halls, The Trade Quarter, The Inner Sanctum, The Breakaway
+- 5 floors: The Pinnacle, The Great Halls, The Trading District, The Inner Sanctum, The Breakaway
 - Each floor has 1-4 rooms (tabs), floor banners with gradient backgrounds
 - The Breakaway is a standalone 5th floor for the social hub (inspired by Urithiru's social area)
 

@@ -89,7 +89,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                 <ul className="space-y-1 mt-1">
                   <li><span style={{ color: "#fbbf24" }}>The Pinnacle</span> — Prestige: Observatory (Kampagnen), Proving Grounds (Leaderboard), Hall of Honors, Season</li>
                   <li><span style={{ color: "#f97316" }}>The Great Halls</span> — Abenteuer: Quest Board, Wanderer&apos;s Rest (NPCs), Weekly Challenges</li>
-                  <li><span style={{ color: "#a855f7" }}>The Trade Quarter</span> — Handel: Bazaar (Shop), Artisan&apos;s Quarter (Crafting), Vault of Fate (Gacha)</li>
+                  <li><span style={{ color: "#a855f7" }}>The Trading District</span> — Handel: Bazaar (Shop), Artisan&apos;s Quarter (Crafting), Vault of Fate (Gacha)</li>
                   <li><span style={{ color: "#3b82f6" }}>The Inner Sanctum</span> — Persönlich: Character, Arcanum, Ritual Chamber, Vow Shrine</li>
                   <li><span style={{ color: "#ec4899" }}>The Breakaway</span> — Sozial: Friends, Messages, Trading</li>
                 </ul>
@@ -298,7 +298,7 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
           {tab === "crafting" && (
             <>
               <GuideSection title="Artisan's Quarter">
-                Das Crafting-Hub im <strong>Trade Quarter</strong> mit 4 Berufs-NPCs. Erreichbar über den <strong>Artisan&apos;s Quarter</strong>-Tab (nur eingeloggt). Jeder Beruf hat ein eigenes Mindest-Level.
+                Das Crafting-Hub im <strong>Trading District</strong> mit 4 Berufs-NPCs. Erreichbar über den <strong>Artisan&apos;s Quarter</strong>-Tab (nur eingeloggt). Jeder Beruf hat ein eigenes Mindest-Level.
               </GuideSection>
               <GuideSection title="Professions (4)">
                 <ul className="space-y-1 mt-1">
