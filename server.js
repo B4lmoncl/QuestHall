@@ -66,6 +66,17 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Mutation rate limiter — 60 writes per minute per IP (POST/PATCH/PUT/DELETE only)
+const mutationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many mutations — please slow down', retryAfter: 60 },
+  skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
+});
+app.use('/api/', mutationLimiter);
+
 // Static files
 // Static files with caching headers
 app.use('/_next/static', express.static(path.join(__dirname, 'out', '_next', 'static'), {
@@ -177,9 +188,15 @@ require('./routes/challenges-weekly').loadWeeklyChallenges();
 require('./routes/expedition').loadExpeditions();
 require('./routes/expedition').loadExpeditionState();
 
-// Migrate legacy equipment (string IDs → rolled instances)
-for (const uid of Object.keys(state.users)) {
-  migrateUserEquipment(uid);
+// Migrate legacy equipment (string IDs → rolled instances) — only if needed
+{
+  const needsMigration = Object.values(state.users).some(u =>
+    u.equipment && Object.values(u.equipment).some(v => typeof v === 'string')
+  );
+  if (needsMigration) {
+    for (const uid of Object.keys(state.users)) migrateUserEquipment(uid);
+    console.log('[migration] Equipment migration complete');
+  }
 }
 
 // Migrate inventory items: backfill missing slot/icon from gear templates

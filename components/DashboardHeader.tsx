@@ -51,6 +51,7 @@ export default function DashboardHeader({
   const [registerPasswordConfirm, setRegisterPasswordConfirm] = useState("");
   const [registerError, setRegisterError] = useState("");
   const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
   const [soundMuted, setSoundMuted] = useState(() => {
     try { return localStorage.getItem("qh_sound_muted") === "1"; } catch { return false; }
   });
@@ -80,7 +81,8 @@ export default function DashboardHeader({
   }, [settingsPopupOpen]);
 
   const handleLogin = async () => {
-    if (!reviewKeyInput || !playerNameInput) return;
+    if (!reviewKeyInput || !playerNameInput || authLoading) return;
+    setAuthLoading(true);
     try {
     const r = await fetch("/api/auth/login", {
       method: "POST",
@@ -89,7 +91,6 @@ export default function DashboardHeader({
     });
     const data = await r.json();
     if (data.success) {
-      // Store JWT access token in memory, API key in localStorage as fallback
       setAccessToken(data.accessToken || null);
       try { localStorage.setItem("dash_api_key", data.apiKey); } catch { /* private browsing */ }
       try { localStorage.setItem("dash_player_name", data.name); } catch { /* private browsing */ }
@@ -103,12 +104,14 @@ export default function DashboardHeader({
       setLoginError(data.error || "Invalid credentials");
     }
     } catch { setLoginError("Connection error"); }
+    finally { setAuthLoading(false); }
   };
 
   const handleRegister = async () => {
-    if (!registerName.trim()) return;
+    if (!registerName.trim() || authLoading) return;
     if (registerPassword.length < 6) { setRegisterError("Password must be at least 6 characters"); return; }
     if (registerPassword !== registerPasswordConfirm) { setRegisterError("Passwords do not match"); return; }
+    setAuthLoading(true);
     try {
     const r = await fetch("/api/register", {
       method: "POST",
@@ -133,6 +136,7 @@ export default function DashboardHeader({
       setRegisterError(data.error || "Registration failed");
     }
     } catch { setRegisterError("Connection error"); }
+    finally { setAuthLoading(false); }
   };
 
   const handleLogout = () => {
@@ -240,7 +244,7 @@ export default function DashboardHeader({
                       className="flex items-center gap-2 px-4 py-2.5 text-xs text-left text-w50"
                       style={{ background: "none", border: "none", cursor: "not-allowed", opacity: 0.5 }}
                     >
-                      Einstellungen <span className="text-w25" style={{ fontSize: 10 }}>(bald)</span>
+                      Einstellungen <span className="text-w25">(bald)</span>
                     </button>
                     <div className="bg-w7" style={{ height: 1, margin: "0 12px" }} />
                     <button
@@ -286,10 +290,11 @@ export default function DashboardHeader({
                         <div className="flex gap-1">
                           <button
                             onClick={handleLogin}
+                            disabled={authLoading}
                             className="flex-1 text-xs px-3 py-1 rounded font-medium"
-                            style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)" }}
+                            style={{ background: "rgba(139,92,246,0.2)", color: "#a78bfa", border: "1px solid rgba(139,92,246,0.4)", opacity: authLoading ? 0.5 : 1 }}
                           >
-                            Sign In
+                            {authLoading ? "Signing in…" : "Sign In"}
                           </button>
                           <button
                             onClick={() => { setLoginOpen(false); setOnboardingOpen(true); }}
@@ -320,7 +325,7 @@ export default function DashboardHeader({
                         <input type="password" value={registerPasswordConfirm} onChange={e => setRegisterPasswordConfirm(e.target.value)} placeholder="Confirm password" className="text-xs px-2 py-1 rounded input-dark" />
                         {registerError && <p className="text-xs" style={{ color: "#ef4444" }}>{registerError}</p>}
                         <div className="flex gap-1">
-                          <button onClick={handleRegister} className="flex-1 text-xs px-3 py-1 rounded font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>Create</button>
+                          <button onClick={handleRegister} disabled={authLoading} className="flex-1 text-xs px-3 py-1 rounded font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)", opacity: authLoading ? 0.5 : 1 }}>{authLoading ? "Creating…" : "Create"}</button>
                           <button onClick={() => { setRegisterOpen(false); setRegisterError(""); setRegisterPassword(""); setRegisterPasswordConfirm(""); }} className="text-xs px-2 py-1 rounded text-w30 bg-w4 border-w8">Back</button>
                         </div>
                       </div>

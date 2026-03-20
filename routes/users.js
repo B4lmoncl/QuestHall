@@ -51,7 +51,7 @@ router.get('/api/users', (req, res) => {
     // Enrich earned achievements with catalogue data (icon/desc may be missing on old entries)
     if (Array.isArray(safeUser.earnedAchievements)) {
       safeUser.earnedAchievements = safeUser.earnedAchievements.map(a => {
-        const tpl = state.ACHIEVEMENT_CATALOGUE.find(t => t.id === a.id);
+        const tpl = state.achievementCatalogueById?.get(a.id);
         if (!tpl) return a;
         return { ...a, icon: a.icon || tpl.icon, desc: a.desc || tpl.desc, rarity: a.rarity || tpl.rarity, category: a.category || tpl.category };
       });

@@ -140,6 +140,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [confirmProf, setConfirmProf] = useState<ProfessionDef | null>(null);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [craftCount, setCraftCount] = useState(1);
+  const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
   const loggedIn = playerName && reviewApiKey;
 
@@ -202,9 +203,18 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
 
   const handleDismantle = async (itemId: string, itemName?: string, itemRarity?: string) => {
     if (!reviewApiKey) return;
-    // Confirm for rare+ items to prevent accidental dismantles
     const needsConfirm = ["rare", "epic", "legendary"].includes(itemRarity || "");
-    if (needsConfirm && !window.confirm(`Dismantle ${itemRarity?.toUpperCase()} "${itemName || "item"}"?\n\nThis cannot be undone.`)) return;
+    if (needsConfirm) {
+      setConfirmAction({
+        message: `Dismantle ${itemRarity?.toUpperCase()} "${itemName || "item"}"?\n\nThis cannot be undone.`,
+        onConfirm: () => { setConfirmAction(null); doDismantle(itemId); },
+      });
+      return;
+    }
+    doDismantle(itemId);
+  };
+  const doDismantle = async (itemId: string) => {
+    if (!reviewApiKey) return;
     try {
       const r = await fetch("/api/schmiedekunst/dismantle", {
         method: "POST",
@@ -232,7 +242,13 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
 
   const handleDismantleAll = async (rarity: string, count?: number) => {
     if (!reviewApiKey) return;
-    if (!window.confirm(`Salvage ALL ${count || ""} ${rarity.toUpperCase()} items?\n\nAll items of this rarity will be dismantled. This cannot be undone.`)) return;
+    setConfirmAction({
+      message: `Salvage ALL ${count || ""} ${rarity.toUpperCase()} items?\n\nAll items of this rarity will be dismantled. This cannot be undone.`,
+      onConfirm: () => { setConfirmAction(null); doDismantleAll(rarity); },
+    });
+  };
+  const doDismantleAll = async (rarity: string) => {
+    if (!reviewApiKey) return;
     try {
       const r = await fetch("/api/schmiedekunst/dismantle-all", {
         method: "POST",
@@ -260,7 +276,13 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
 
   const handleTransmute = async () => {
     if (!reviewApiKey || selectedTransmute.length !== 3) return;
-    if (!window.confirm("Transmute 3 Epic items + 500 Gold into 1 Legendary?\n\nThe 3 selected items will be destroyed. This cannot be undone.")) return;
+    setConfirmAction({
+      message: "Transmute 3 Epic items + 500 Gold into 1 Legendary?\n\nThe 3 selected items will be destroyed. This cannot be undone.",
+      onConfirm: () => { setConfirmAction(null); doTransmute(); },
+    });
+  };
+  const doTransmute = async () => {
+    if (!reviewApiKey) return;
     try {
       const r = await fetch("/api/schmiedekunst/transmute", {
         method: "POST",
@@ -451,7 +473,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                   </div>
                   <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.4 }}>{prof.description}</p>
                   {isChosen && synergy && synergyChosen && (
-                    <p className="text-xs mt-0.5" style={{ color: `${prof.color}60`, fontSize: 9 }}>&#9733; {synergy.label} active</p>
+                    <p className="text-xs mt-0.5" style={{ color: `${prof.color}60` }}>&#9733; {synergy.label} active</p>
                   )}
                 </div>
               </div>
@@ -487,7 +509,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {relevantMats.length > 0 && !locked && (
               <div className="px-4 pb-3 flex flex-wrap gap-1.5">
                 {relevantMats.slice(0, 6).map(m => (
-                  <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90`, fontSize: 10 }}>
+                  <span key={m.id} className="text-xs flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(255,255,255,0.03)", color: `${RARITY_COLORS[m.rarity]}90` }}>
                     <img src={m.icon} alt="" width={12} height={12} style={{ imageRendering: "auto" }} onError={hideOnError} />
                     x{materials[m.id]}
                   </span>
@@ -721,7 +743,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                             <p className="text-sm mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>{recipe.desc}</p>
                             {/* D3-style reroll preview: show what stats CAN be rolled */}
                             {meetsLevel && (recipe.id === "reroll_stat" || recipe.id === "reroll_minor" || recipe.id === "reinforce_armor" || recipe.id === "enchant_socket") && equippedSlots[selectedSlot] && typeof equippedSlots[selectedSlot] === "object" && (
-                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)", fontSize: 9 }}>
+                              <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>
                                 Current: {Object.entries((equippedSlots[selectedSlot] as Record<string, unknown>).stats as Record<string, number> || {}).map(([k, v]) => `${k} ${v}`).join(", ") || "none"}
                               </p>
                             )}
@@ -1063,7 +1085,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
               </div>
 
               {maxProfSlots < 4 && (
-                <p className="text-center pt-1" style={{ color: "rgba(255,255,255,0.25)", fontSize: 10 }}>
+                <p className="text-xs text-center pt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
                   Weitere Slots werden durch Levelaufstieg freigeschaltet (Lv5, Lv15, Lv20, Lv25)
                 </p>
               )}
@@ -1085,6 +1107,21 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
               >
                 {choosingProf ? "..." : "Beruf erlernen"}
               </button>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Confirmation modal (replaces window.confirm) */}
+      {confirmAction && createPortal(
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.7)" }} onClick={() => setConfirmAction(null)}>
+          <div className="w-full max-w-sm rounded-xl p-5" style={{ background: "#1a1509", border: "1px solid rgba(180,140,70,0.35)" }} onClick={e => e.stopPropagation()}>
+            <p className="text-sm font-semibold mb-1" style={{ color: "#fbbf24" }}>Confirm Action</p>
+            <p className="text-xs mb-4 whitespace-pre-line" style={{ color: "rgba(255,255,255,0.6)" }}>{confirmAction.message}</p>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmAction(null)} className="flex-1 text-xs py-2 rounded-lg" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}>Cancel</button>
+              <button onClick={confirmAction.onConfirm} className="flex-1 text-xs py-2 rounded-lg font-semibold" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.4)", cursor: "pointer" }}>Confirm</button>
             </div>
           </div>
         </div>,

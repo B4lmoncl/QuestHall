@@ -1,9 +1,9 @@
 # Quest Hall — Full Codebase Audit Report
 
-**Date:** 2026-03-19
+**Date:** 2026-03-20 (Session 8 — Deep 6-agent audit + fixes)
 **Auditor:** Claude Opus 4.6
-**Scope:** Complete frontend + backend + data consistency audit
-**Status:** All critical, high, and medium issues resolved
+**Scope:** Complete frontend + backend + data + documentation audit
+**Status:** Sessions 7-8 fixes applied; remaining items documented
 
 ---
 
@@ -11,8 +11,8 @@
 
 | Layer | Stack | Entry Point |
 |-------|-------|-------------|
-| Frontend | Next.js 16.1.6, React 19, TypeScript 5, Tailwind CSS 4 | `app/page.tsx` (~2126 lines) |
-| Backend | Express 4.18, Node.js 20, CommonJS | `server.js` → `routes/*.js` (14 files) |
+| Frontend | Next.js 16.1.6, React 19, TypeScript 5, Tailwind CSS 4 | `app/page.tsx` (~2150 lines) |
+| Backend | Express 4.18, Node.js 20, CommonJS | `server.js` → `routes/*.js` (17 files) |
 | Desktop | Electron 29 (Quest Forge v1.5.0) | `electron-quest-app/` |
 | Persistence | JSON files in `/data/` directory | `lib/state.js` (debounced writes) |
 | Auth | JWT (15min access + 7d refresh) + API Key | `lib/auth.js` |
@@ -21,376 +21,233 @@
 
 ---
 
-## 2. Frontend-Backend Mismatches Found & Fixed
+## 2. Previous Sessions Summary (1–6)
 
-### CRITICAL (all fixed)
-
-#### M-01: Gacha Pity Thresholds — Frontend Outdated ✅
-- **Was:** Frontend showed "Soft Pity at 35, Hard Pity at 50"
-- **Backend:** `routes/gacha.js:36-37` uses `SOFT_PITY_START = 55`, `HARD_PITY = 75`
-- **Fix:** Updated all pity references in GachaView.tsx to use API values (`pity.softPityStart || 55`, `pity.hardPity || 75`), updated info modal text to 55/75
-
-#### M-02: Gacha Legendary Drop Rate — Frontend Shows 2x Actual Rate ✅
-- **Was:** Frontend + bannerTemplates.json showed "1.6%"
-- **Backend:** `routes/gacha.js:35` uses `BASE_RATE = 0.008` (0.8%)
-- **Fix:** Updated GachaView.tsx (info modal + inline rates) and bannerTemplates.json to show 0.8%. Common rate recalculated from 10.4% → 11.2%
-
-#### M-03: Gacha 10-Pull Guarantee — Wrong Rarity Shown ✅
-- **Was:** Frontend said "at least one Rare or better"
-- **Backend:** Guarantees at least 1 **Epic** (not Rare)
-- **Fix:** Updated text to "at least one Epic or better"
-
-#### M-04: Kraft Stat Description — Wrong Percentage ✅
-- **Was:** DashboardModals.tsx said "+1% pro Kraft-Punkt"
-- **Backend:** `lib/helpers.js` uses `0.005` = **+0.5% per punkt**
-- **Fix:** Changed to "0.5% pro Kraft-Punkt" with `.toFixed(1)` for display precision
-
-#### M-05: Weisheit Stat Description — Wrong Percentage ✅
-- **Was:** DashboardModals.tsx said "+1% pro Weisheit-Punkt"
-- **Backend:** `lib/helpers.js` uses `0.005` = **+0.5% per punkt**
-- **Fix:** Changed to "0.5% pro Weisheit-Punkt" with `.toFixed(1)` for display precision
-
-### HIGH (all fixed)
-
-#### M-06: Stardust Currency Description — False Earn Method ✅
-- **Was:** DashboardModals.tsx claimed stardust from "täglichen Login"
-- **Backend:** Daily bonus does NOT award stardust
-- **Fix:** Removed "beim täglichen Login" from stardust description
-
-#### M-07: Unreachable Achievements — 3 Achievements Could Never Trigger ✅
-- `hidden_midnight` (night_completions) — `_nightCompletions` was never set
-- `weekend_warrior` (weekend_completions) — `_weekendCompletions` was never set
-- `hidden_npc_collector` (all_npcs_unlocked) — `_npcsUnlocked` was never set
-- **Fix:** Added `_nightCompletions` tracking (22:00-05:00) and `_weekendCompletions` tracking (Sat/Sun) in `onQuestCompletedByUser()`. Added `_npcsUnlocked` tracking in NPC chain completion handler in `routes/quests.js`.
-
-#### M-08: Workshop Tool Costs — Wrong Currency & Amount ✅
-- **Was:** ForgeView.tsx showed Legendary Tools as `150 essenz` and Mythic Forge as `500 essenz`
-- **Backend:** `shopItems.json` defines Legendary as `2000 gold` and Mythic as `5000 gold`
-- **Fix:** Updated ForgeView.tsx WORKSHOP_TIERS to use correct gold costs (2000/5000)
-
-#### M-09: Quest Gold Display — Fixed Values vs Backend Ranges ✅
-- **Was:** QuestDetailModal.tsx showed fixed gold amounts (common=8, uncommon=14, rare=24, epic=40, legendary=65)
-- **Backend:** `lib/state.js` uses [min, max] ranges ([5,10], [10,18], [18,30], [30,50], [50,80])
-- **Fix:** Updated GOLD_BY_RARITY to use ranges and display as "5–10" format
-
-#### M-10: Stat Tooltips Missing Caps ✅
-- **Was:** Fokus tooltip said "+1 Flat Bonus-XP pro Quest" (no cap mentioned); Glück said "+0.5% Drop Chance pro Punkt" (no cap)
-- **Backend:** Fokus capped at +50 (`Math.min(50, fokus)`), Glück capped at 20% (`Math.min(0.20, ...)`)
-- **Fix:** Updated tooltips to show caps: "+1 Flat Bonus-XP pro Punkt (max +50)" and "+0.5% Drop Chance pro Punkt (max 20%)"
-
-### MEDIUM (deferred — informational only)
-
-#### M-11: XP Modifier Modal — Missing Factors
-- Frontend modal shows: forge, kraft, gear, companions, bond, hoarding, legendary
-- Backend also applies: passiveXpBonus, activeXpBuf, nthBonus, varietyBonus, fokus stat
-- **Impact:** Users don't see temporary buff modifiers (low impact, these are transient)
-- **Status:** Deferred — not a data integrity issue, purely informational gap
+Sessions 1–6 fixed 43 issues (F-01 through F-43):
+- Gacha pity thresholds, legendary drop rates, 10-pull guarantee text
+- Stat descriptions (Kraft, Weisheit), modifier display values
+- Legendary gear effects (15 types), set bonus calculations
+- Quest completion flow, companion bond mechanics
+- Modal close consistency, toast system unification
+- Challenges system (Sternenpfad + Expedition) — 10 fixes
+- GET /api/agents state mutation, currency timezone bug
+- Navigation restructuring (4-floor Urithiru system)
+- Sitewide 12px minimum font size enforcement
 
 ---
 
-## 3. Code Quality Issues
+## 3. Session 7 — Fresh Full Audit Findings
 
-### Verified Non-Issues
+### 3.1 CRITICAL — Data Integrity
 
-#### B-01: StatBar value2 type guard — NOT A BUG
-- `value2` is typed as `string?` in StatBarProps, so `.startsWith()` is safe when `value2` is truthy
-- No fix needed
+#### D-01: Stat Name Inconsistency (`vitalität` vs `vitalitaet`) ✅ FIXED
+- **Location:** `public/data/gachaPool.json` lines 48, 86, 189, 276, 352
+- **Fix applied:** Replaced all 5 `vitalität` → `vitalitaet`
 
-### Fixed
+#### D-02: 31 Achievement Icons Are Placeholders ⬜ DEFERRED
+- **Location:** `public/data/achievementTemplates.json` — 31 entries with `"icon": "?"`
+- **Note:** Requires pixel art asset creation (not a code fix). `onError` gracefully hides missing images.
 
-#### B-02: bannerTemplates.json stale drop rates ✅
-- Updated to match actual backend rates (0.8% legendary, 11.2% common)
+### 3.2 HIGH — Backend Logic
 
-### Known Limitations (out of scope)
+#### B-01: Dashboard Batch Endpoint Uses Internal HTTP Self-Calls ⬜ DEFERRED
+- **Location:** `routes/config-admin.js:35-114`
+- **Note:** Design debt, not a runtime bug. Works correctly today. Refactoring is 2-4 hour effort.
 
-#### P-01: No write queue for concurrent saves
-- All `writeFileSync` calls unprotected by locks
-- Risk: Concurrent API requests can overwrite each other
-- Requires architectural change (write-queue pattern)
+#### B-02: Missing Rate Limiting on Mutation Endpoints ✅ FIXED
+- **Fix applied:** Added mutation rate limiter (60 writes/min per IP) in `server.js` for all POST/PATCH/PUT/DELETE on `/api/`
 
----
+#### B-03: CORS Origin Wildcard ⬜ NOTED
+- **Location:** `server.js:41` — `cors({ credentials: true, origin: true })`
+- **Note:** Acceptable for single-user/dev mode. Should be tightened for production deployment.
 
-## 4. Fix Manifest
+#### B-04: Timing Attack on Master Key Length Check ⬜ NOTED
+- **Location:** `lib/auth.js` — master key comparison
+- **Note:** Low practical risk. Would require sub-ms timing precision from attacker.
 
-### Commits in this audit session
+### 3.3 HIGH — Frontend UX
 
-| # | Commit | Description | Files Changed |
-|---|--------|-------------|---------------|
-| 1 | `0cf63f0` | Restructure stat cards: combine quests, add Artisan card with professions modal | page.tsx |
-| 2 | `09ca814` | Fix audit issues: rank thresholds, XP progress, dead code, edge cases | page.tsx, DashboardModals.tsx |
-| 3 | `1b26603` | Fix profession XP level offset and edge cases | page.tsx |
-| 4 | `4010ede` | Fix streak subColor: use default color when streak is 0 | page.tsx |
-| 5 | `9d2b68c` | Fix 8 frontend-backend mismatches from full codebase audit | DashboardModals.tsx, GachaView.tsx, helpers.js, bannerTemplates.json, quests.js, AUDIT_REPORT.md |
+#### F-44: Silent Error Suppression ✅ PARTIALLY FIXED
+- **Fixed:** All 14 silent catches in `hooks/useQuestActions.ts` now show error toasts
+- **Added:** "error" toast type to `ToastStack` with red styling and 5s duration
+- **Remaining:** ~60 silent catches in other components (page.tsx, CharacterView, QuestModals, GachaView) — most are non-critical background fetches or localStorage operations
 
-### Detailed Fix List
+#### F-45: Missing Loading States on Async Operations ✅ FIXED
+- **Fixed (Session 8):** Added `loadingAction` state to `useQuestActions` (7 handlers: claim, unclaim, complete, approve, reject, coopClaim, coopComplete); added `authLoading` to DashboardHeader (login/register buttons show loading text + disabled state)
 
-| Fix ID | Issue | Description | File(s) | Status |
-|--------|-------|-------------|---------|--------|
-| F-01 | M-04 | Kraft description: 1% → 0.5% | DashboardModals.tsx | ✅ Done |
-| F-02 | M-05 | Weisheit description: 1% → 0.5% | DashboardModals.tsx | ✅ Done |
-| F-03 | M-01 | Gacha pity: 35/50 → 55/75 (dynamic from API) | GachaView.tsx | ✅ Done |
-| F-04 | M-02 | Gacha drop rate: 1.6% → 0.8% | GachaView.tsx, bannerTemplates.json | ✅ Done |
-| F-05 | M-03 | Gacha 10-pull: "Rare" → "Epic" | GachaView.tsx | ✅ Done |
-| F-06 | M-06 | Stardust description: remove false "täglichen Login" | DashboardModals.tsx | ✅ Done |
-| F-07 | M-07 | Achievement tracking: implement 3 missing counters | helpers.js, quests.js | ✅ Done |
-| F-08 | B-02 | bannerTemplates.json: update stale drop rates | bannerTemplates.json | ✅ Done |
-| F-09 | — | Profession rank thresholds: match backend levels | page.tsx | ✅ Done |
-| F-10 | — | Profession XP: fix 1-based level offset | page.tsx | ✅ Done |
-| F-11 | — | Dead code: remove unused completedInfoOpen state+modal | DashboardModals.tsx | ✅ Done |
-| F-12 | — | Streak subColor: neutral color at streak=0 | page.tsx | ✅ Done |
-| F-13 | — | Artisan stat card: add inline prop for consistency | page.tsx | ✅ Done |
-| F-14 | M-08 | Workshop tool costs: 150/500 essenz → 2000/5000 gold | ForgeView.tsx | ✅ Done |
-| F-15 | M-09 | Quest gold display: fixed values → backend ranges | QuestDetailModal.tsx | ✅ Done |
-| F-16 | M-10 | Fokus tooltip: add +50 cap, Glück tooltip: add 20% cap | CharacterView.tsx | ✅ Done |
+#### F-46: Missing Confirmation for Destructive Actions ⬜ REMAINING
+- **Location:** `DashboardHeader.tsx:251` (logout), `useQuestActions.ts` (unclaim, reject quest)
+- **Impact:** Accidental actions cannot be undone
 
-### Verification (Session 1)
+### 3.4 MEDIUM — Data Quality
 
-All fixes verified via:
-- TypeScript compilation (`npx tsc --noEmit`) — 0 errors
-- ESLint (`npm run lint`) — no new errors introduced
-- Automated re-audit by separate agent confirming all old values replaced
+#### D-03: Gacha Item Type Error ✅ FIXED
+- **Fix applied:** Changed `"type": "gacha"` → `"type": "consumable"` for mitleids-katalysator
 
----
+#### D-04: Missing MASTER_KEY in .env.example ✅ FIXED
+- **Fix applied:** Added MASTER_KEY, GITHUB_WEBHOOK_SECRET, PORT, NODE_ENV, API_KEYS to .env.example
 
-## 5. Audit Session 2 — Deep Consistency & QoL Pass
+### 3.5 MEDIUM — Frontend Quality
 
-**Date:** 2026-03-20
+#### F-47: Inconsistent Modal/Popup Closure ✅ PARTIALLY FIXED
+- **Fixed (Session 8):** Class Activation modal (page.tsx) migrated to `<ModalOverlay>` for ESC support; FeedbackModal migrated to `<ModalOverlay>` for consistent portal rendering
+- **Remaining:** Some popouts/drawers still use custom close logic (acceptable for non-modal UI elements)
 
-### Frontend-Backend Mismatches Found & Fixed
+#### F-48: Hardcoded Reward Fallbacks ✅ FIXED
+- **Fix applied:** QuestCards now shows actual `quest.rewards.xp` and `quest.rewards.gold` values, with "~" for undetermined gold instead of hardcoded priority-based fallbacks
 
-#### M-12: Gold Currency Description — Wrong Modifiers ✅
-- **Was:** DashboardModals.tsx said gold is "Beeinflusst durch Streak, Forge-Temperatur, Weisheit, **Companions und Gear**"
-- **Backend:** Gold modifiers are only: Streak, Forge-Temperatur, Weisheit, Legendary gear. Companions and Gear/Tools affect XP, not gold.
-- **Fix:** Updated description to "Beeinflusst durch Streak, Forge-Temperatur, Weisheit und Legendary-Gear"
+#### F-49: No Offline Mode Indication ✅ FIXED
+- **Fix applied:** Added "Connection lost — showing cached data. Actions may not save." red banner when `!apiLive && !loading`
 
-#### M-13: Stardust Currency Description — False Source ✅
-- **Was:** DashboardModals.tsx said stardust "Fällt bei Level-Ups und an **Streak-Meilensteinen** vom Himmel"
-- **Backend:** No code awards stardust at streak milestones. Only source: level-ups (`helpers.js:1077`)
-- **Fix:** Removed "Streak-Meilensteinen" from stardust description
+#### F-50: Dead Code / Commented Features ✅ FIXED
+- **Fix applied:** Removed BattlePassView comment, unused imports (CVBuilderPanel, CVData, ChangelogCommit, AchievementToast)
 
-#### M-14: Sternentaler Currency Description — Incomplete Source ✅
-- **Was:** DashboardModals.tsx said "Exklusiv aus wöchentlichen Herausforderungen"
-- **Backend:** Also awarded from daily bonus with 15-25% chance (`currency.js:134-138`)
-- **Fix:** Updated to "Hauptsächlich aus wöchentlichen Herausforderungen. Kleine Chance beim täglichen Login-Bonus."
+### 3.6 MEDIUM — Code Quality
 
-#### M-15: Kraft Stat Tooltip — Missing Cap ✅
-- **Was:** CharacterView.tsx STAT_EFFECTS: "+0.5% Quest XP pro Punkt" (no cap)
-- **Backend:** `Math.min(1.30, ...)` = capped at +30%
-- **Fix:** Added "(max +30%)" to Kraft description
+#### C-01: Quest Completion Has 3 Near-Identical Code Paths ⬜ REMAINING
+- **Location:** `routes/quests.js:289-400` — NPC quests, player quests, dev quests
+- **Impact:** Bugs must be fixed 3x; easy to miss one path
 
-#### M-16: Weisheit Stat Tooltip — Missing Cap ✅
-- **Was:** CharacterView.tsx STAT_EFFECTS: "+0.5% Gold pro Punkt" (no cap)
-- **Backend:** `Math.min(1.30, ...)` = capped at +30%
-- **Fix:** Added "(max +30%)" to Weisheit description
+#### C-02: Achievement Lookup Uses O(n) find() ✅ FIXED
+- **Fix applied:** Built `state.achievementCatalogueById` Map at boot; replaced 3 O(n) `.find()` calls with O(1) `.get()` in `lib/helpers.js`, `routes/users.js`, `routes/players.js`
 
-#### M-17: Ausdauer Stat Tooltip — Missing Floor Info ✅
-- **Was:** CharacterView.tsx STAT_EFFECTS: "-0.5% Forge Decay pro Punkt" (no floor)
-- **Backend:** `Math.max(0.1, ...)` = floor at 10% of base rate
-- **Fix:** Added "(min 10% der Basis-Rate)" to Ausdauer description
+#### C-03: Inconsistent Error Response Format ⬜ REMAINING
+- **Location:** Various routes
+- **Impact:** Frontend must handle multiple formats
 
-#### M-18: Vitalität Stat Tooltip — Missing Cap ✅
-- **Was:** CharacterView.tsx STAT_EFFECTS: "+1% Streak-Schutz pro Punkt" (no cap)
-- **Backend:** `Math.min(0.75, ...)` = capped at 75% total
-- **Fix:** Added "(max 75% gesamt)" to Vitalität description
+### 3.7 LOW
 
-#### M-19: Tempo Stat Description — Wrong Value ✅
-- **Was:** CharacterView.tsx STAT_EFFECTS: "+1 Forge-Temp pro Quest"
-- **Backend:** `tempoMulti = 1 + tempo * 0.02` = +2% forge temp recovery per point (NOT +1 flat per quest)
-- **Fix:** Changed to "+2% Forge-Temp-Recovery pro Punkt"
+#### L-01: `any` Type Usage ✅ MOSTLY FIXED
+- **Fixed (Session 8):** Removed 20+ unnecessary `as any` casts across page.tsx, CharacterView, DashboardModals, UserCard, LeaderboardView, QuestPanels
+- **Extended types:** `CharacterData` (xpInLevel, xpForLevel, legendaryEffects, equippedTitle, earnedTitleCount, bondXp), `User.modifiers` (legendary), `AntiRitual` (pactCompleted)
+- **Remaining:** ~15 `as any` in GachaView (icon field not on type), ForgeView (InventoryItem index signature), CharacterView (CSS imageRendering, runtime _playerLevel) — legitimate workarounds
 
-### QoL Improvements
+#### L-02: Missing ARIA Labels / Accessibility ✅ PARTIALLY FIXED
+- **Fixed (Session 8):** Added `role="dialog"` + `aria-modal="true"` to ModalOverlay, `role="status"` + `aria-live="polite"` to ToastStack, `:focus-visible` outline in globals.css
+- **Remaining:** Icon-only buttons still lack aria-label (individual component work)
 
-#### Q-01: Achievements Clickable → Hall of Honors Navigation ✅
-- Achievement toasts (ToastStack) and achievement pills in RewardCelebration are now clickable
-- Clicking navigates to the Hall of Honors view with the achievement highlighted and scrolled into view
-- Highlight glow persists for 3 seconds then fades
-- Added `onAchievementClick` prop to ToastStack and RewardCelebration
-- Added `highlightedAchievementId` prop to HonorsView with scroll-to-element + highlight ring
-
-#### Q-02: Daily Bonus — Individual Currency Reward Pills ✅
-- **Was:** Daily bonus rewards only shown as text in a flavor string
-- **Now:** Individual currency pills (Essenz, Runensplitter, Sternentaler) shown as styled reward pills in RewardCelebration
-
-#### Q-03: Quest Completion — Show All Earned Currencies ✅
-- **Was:** Only XP and Gold shown in quest completion celebration. Runensplitter and Gildentaler awarded silently.
-- **Now:** Backend returns `runensplitterEarned` and `gildentalerEarned` in completion response. Frontend shows them as currency pills in RewardCelebration.
-- Files changed: `lib/helpers.js` (track `_lastRunensplitterEarned`, `_lastGildentalerEarned`), `routes/quests.js` (include in response), `hooks/useQuestActions.ts` (display as currency pills)
-
-#### Q-04: CompanionBond Toast Rendering ✅
-- **Was:** `companionBond` toast type was defined in ToastStack types but had no render component — was silently ignored
-- **Now:** Added `CompanionBondToastContent` component with companion emoji, bond XP gain, bond title, and special styling for bond level-ups
-
-### Documentation Fixes
-
-#### D-01: ARCHITECTURE.md — Stat Effects Outdated ✅
-- Kraft "+1%" → "+0.5% (max +30%)", Weisheit "+1%" → "+0.5% (max +30%)"
-
-#### D-02: ARCHITECTURE.md — Pity Values Outdated ✅
-- "soft pity at 35, hard pity at 50" → "soft pity at 55, hard pity at 75"
-
-#### D-03: LYRA-PLAYBOOK.md — Drop Rates Outdated ✅
-- Legendary "1.6%" → "0.8%", Common "10.4%" → "11.2%"
-
-#### D-04: CLAUDE.md — Pity Values Outdated ✅
-- "soft 35, hard 50" → "soft 55, hard 75"
-
-### Session 2 Fix Manifest
-
-| # | Fix ID | Issue | Description | File(s) | Status |
-|---|--------|-------|-------------|---------|--------|
-| 1 | F-17 | M-12 | Gold description: remove false "Companions und Gear" | DashboardModals.tsx | ✅ Done |
-| 2 | F-18 | M-13 | Stardust description: remove false "Streak-Meilensteinen" | DashboardModals.tsx | ✅ Done |
-| 3 | F-19 | M-14 | Sternentaler description: add daily bonus source | DashboardModals.tsx | ✅ Done |
-| 4 | F-20 | M-15 | Kraft tooltip: add +30% cap | CharacterView.tsx | ✅ Done |
-| 5 | F-21 | M-16 | Weisheit tooltip: add +30% cap | CharacterView.tsx | ✅ Done |
-| 6 | F-22 | M-17 | Ausdauer tooltip: add floor info | CharacterView.tsx | ✅ Done |
-| 7 | F-23 | M-18 | Vitalität tooltip: add 75% cap | CharacterView.tsx | ✅ Done |
-| 8 | F-24 | M-19 | Tempo description: +1 flat → +2% per point | CharacterView.tsx | ✅ Done |
-| 9 | F-25 | Q-01 | Achievement click → Hall of Honors navigation | ToastStack.tsx, RewardCelebration.tsx, HonorsView.tsx, page.tsx | ✅ Done |
-| 10 | F-26 | Q-02 | Daily bonus: individual currency pills | page.tsx | ✅ Done |
-| 11 | F-27 | Q-03 | Quest completion: show runensplitter + gildentaler | helpers.js, quests.js, useQuestActions.ts | ✅ Done |
-| 12 | F-28 | Q-04 | CompanionBond toast renderer | ToastStack.tsx | ✅ Done |
-| 13 | F-29 | D-01 | ARCHITECTURE.md: stat effects outdated | ARCHITECTURE.md | ✅ Done |
-| 14 | F-30 | D-02 | ARCHITECTURE.md: pity values outdated | ARCHITECTURE.md | ✅ Done |
-| 15 | F-31 | D-03 | LYRA-PLAYBOOK.md: drop rates outdated | LYRA-PLAYBOOK.md | ✅ Done |
-| 16 | F-32 | D-04 | CLAUDE.md: pity values outdated | CLAUDE.md | ✅ Done |
-
-#### Q-05: Companion Bond XP Toast on Quest Completion ✅
-- **Was:** Backend returns `companionReward` (bond XP, level-up info) on companion quest completion, but frontend ignored it entirely
-- **Now:** Fires a companionBond toast AND sets celebration type to "companion" with proper accent color and emoji
-
-#### Q-06: Multiple Achievements — Only First Shown ✅
-- **Was:** If multiple achievements earned on one quest, only first shown in celebration. Rest silently lost.
-- **Now:** Additional achievements (index 1+) fire as achievement toasts after the celebration
-
-### Session 2 Additional Fixes
-
-| # | Fix ID | Issue | Description | File(s) | Status |
-|---|--------|-------|-------------|---------|--------|
-| 17 | F-33 | Q-05 | Companion bond toast + celebration on companion quests | useQuestActions.ts | ✅ Done |
-| 18 | F-34 | Q-06 | Multiple achievements: fire toasts for all beyond first | useQuestActions.ts | ✅ Done |
-
-### Verified Non-Issues (Session 2)
-
-- **Image rendering**: Global `img { image-rendering: smooth; }` in `globals.css:26-28` — all images already render smooth by default
-- **Essenz "täglichen Login-Bonus" claim**: Verified CORRECT — daily bonus awards 3 essenz (currency.js:130)
-- **Mondstaub description**: Says "Nur durch extreme Beständigkeit erhältlich" — no code awards it; appears intentionally reserved for future content
-
-### Verification (Session 2)
-
-All fixes verified via:
-- TypeScript compilation (`npx tsc --noEmit`) — 0 errors
+#### L-03: Equipment Migration Runs Every Boot ✅ FIXED
+- **Fixed (Session 8):** Added pre-check that skips migration loop when no legacy string-type equipment values exist
 
 ---
 
-*Audit Session 2 complete. 18 additional fixes applied (8 mismatches, 6 QoL improvements, 4 doc fixes).*
+## 4. Session 8 — Deep 6-Agent Audit
+
+Session 8 launched 6 specialized audit agents covering backend, frontend, data integrity, gear stats, modal consistency, and gacha/shop systems.
+
+### 4.1 Verified Correct (No Action Needed)
+
+| Area | Verification |
+|------|-------------|
+| Streak Gold Bonus | Backend: 1.5%/day, max 45%. Frontend displays correct formula. |
+| XP Multiplier Chain | All 10+ factors (forge, kraft, gear, companion, bond, hoarding, passive, legendary, active, nth, variety) traced end-to-end. |
+| ForgeTemp Decay | 2%/hr decay with Ausdauer modifier. Display matches backend. |
+| Currency Tax | 20% tax enforced server-side in `routes/currency.js:92-93`. UI mentions tax. |
+| Docker Setup | `docker-entrypoint.sh` exists and is correct (448 bytes). |
+| Item ID Overlap | 50 IDs shared between `gearTemplates.json` and `itemTemplates.json` — by design (different representations for different contexts). |
+| Gacha Pity System | Soft pity at 55, hard pity at 75. Correctly implemented. |
+| Toast System | Unified ToastStack with 7 types including error (5s duration). |
+
+### 4.2 New Findings & Fixes
+
+#### F-51: Class Activation Modal Missing ESC Handler ✅ FIXED
+- **Location:** `app/page.tsx` — class activation notification modal
+- **Fix applied:** Replaced custom backdrop div with `<ModalOverlay>` component
+
+#### F-52: FeedbackModal Not Using ModalPortal ✅ FIXED
+- **Location:** `components/FeedbackModal.tsx`
+- **Fix applied:** Migrated from `useModalBehavior` + custom div to `<ModalOverlay>` for consistent portal rendering
+
+#### F-53: Unnecessary `as any` Type Casts ✅ FIXED
+- **Location:** `app/page.tsx` (3 casts), `components/CharacterView.tsx` (6 casts)
+- **Fix applied:** Removed casts by using existing type fields or extending `CharacterData` interface
+
+#### F-54: CharacterData Interface Missing Fields ✅ FIXED
+- **Location:** `app/types.ts`
+- **Fix applied:** Added `xpInLevel`, `xpForLevel`, `legendaryEffects`, `equippedTitle`, `earnedTitleCount` to `CharacterData`; added `bondXp` to companion type
+
+#### F-55: ForgeView Uses `window.confirm()` for Destructive Actions ✅ FIXED
+- **Location:** `components/ForgeView.tsx` (3 occurrences: dismantle, dismantle-all, transmute)
+- **Fix applied:** Replaced with in-component confirmation modal (themed, non-blocking)
+
+#### F-56: DashboardModals `as any` for Legendary Modifier ✅ FIXED
+- **Location:** `components/DashboardModals.tsx` (8 casts for xp.legendary and gold.legendary)
+- **Fix applied:** Added `legendary?` to User modifier types; removed all casts
+
+#### F-57: Missing ARIA Roles and Focus Styles ✅ FIXED
+- **Fix applied:** `role="dialog"` + `aria-modal="true"` on ModalOverlay; `role="status"` + `aria-live="polite"` on ToastStack; `:focus-visible` outline in globals.css
+
+#### F-58: Type Casts in UserCard, LeaderboardView, QuestPanels ✅ FIXED
+- **Fix applied:** Removed 11 `as any` casts by using existing type fields; added `pactCompleted` to AntiRitual type
+
+### 4.3 Backend Deep Audit (40 findings triaged)
+
+A specialized backend audit agent reviewed all 17 route files, `lib/state.js`, `lib/helpers.js`, `lib/npc-engine.js`, and `server.js`. **Most "critical" findings were false positives** due to the agent not accounting for Node.js single-threaded execution model:
+
+| Claim | Verdict | Reason |
+|-------|---------|--------|
+| #1 Race condition in quest hoarding | FALSE POSITIVE | Node.js is single-threaded; NPC departures run on timer, not mid-request |
+| #3 Passive effect null guard missing | FALSE POSITIVE | `if (!tmpl) continue;` already exists at line 692 |
+| #4 Loot pity order wrong | FALSE POSITIVE | `checkLootPity()` called at line 1109, `resetLootPity()` at 1134 — correct order |
+| #8 NPC departure rebuilds | FALSE POSITIVE | `rebuildQuestsById()` called at line 82 after all splices |
+| #16 getWeekId not exported | FALSE POSITIVE | Exported at line 358: `module.exports.getWeekId = getWeekId` |
+| #21 Unused crypto in users.js | FALSE POSITIVE | Used at line 281 for API key generation |
+| #9 /api/config no auth | BY DESIGN | Comment says "no auth required" — public game constants |
+
+**Verified real (minor) issues fixed:**
+
+#### B-05: Quest Creation Missing Type Validation ✅ FIXED
+- **Location:** `routes/quests.js:55-57`
+- **Fix applied:** Enforce `title` and `description` must be strings; cap skills array at 20 entries
+
+**Remaining low-priority backend items (from audit, verified real but minor):**
+- Hardcoded setIds array in `createGearInstance` (fallback to 'adventurer' is acceptable)
+- Some gacha duplicate detection doesn't check `templateId` (only affects gear instances, which go through different flow)
+- Magic numbers in streak recovery not documented as constants
 
 ---
 
-## 6. Audit Session 3 — Full Component Sweep & Modal Consistency
+## 5. Fix Summary
 
-**Date:** 2026-03-20
+### Completed (Session 7)
 
-### Component Audit Results
+| ID | Description | Commit |
+|----|-------------|--------|
+| D-01 | Fix `vitalität` → `vitalitaet` in gachaPool.json (5 occurrences) | cf2bc5d |
+| D-03 | Fix gacha item type `"gacha"` → `"consumable"` | cf2bc5d |
+| D-04 | Complete .env.example with all env vars | cf2bc5d |
+| F-44 | Add error toasts to useQuestActions.ts (14 catches) + error toast type | cf2bc5d |
+| F-49 | Add offline mode indicator banner | 1883d6a |
+| B-02 | Add mutation rate limiter (60/min per IP) | 1883d6a |
+| C-02 | Build achievement Map for O(1) lookups (3 locations) | 1883d6a |
+| F-48 | Remove hardcoded reward fallbacks in QuestCards | 94bb8e9 |
+| F-50 | Clean up dead code and unused imports | 94bb8e9 |
 
-All 25+ frontend components were audited for: hardcoded value mismatches, missing image-rendering, broken functionality, UI inconsistencies.
+### Completed (Session 8)
 
-| Component | Status | Notes |
-|-----------|--------|-------|
-| CampaignHub.tsx | ✅ Clean | Image rendering correct, backend integration correct |
-| WandererRest.tsx | ✅ Clean | All images have `imageRendering: "smooth"`, ESC key handling, NPC data sync |
-| OnboardingWizard.tsx | ⚠️ Fixed | Missing backdrop-click-to-close (ESC worked, backdrop didn't) |
-| QuestCards.tsx | ✅ Clean | Gold fallback values (25/15/9) are midpoints of backend ranges — reasonable |
-| QuestDetailModal.tsx | ✅ Clean | Uses same gold fallback pattern, rarely activated |
-| QuestModals.tsx | ⚠️ Fixed | CreateQuestModal missing ESC key handler |
-| ShopView.tsx | ✅ Clean | Image rendering correct, purchase feedback wired |
-| GachaView.tsx | ✅ Clean | Pity values 55/75 match backend, drop rates correct |
-| ForgeView.tsx | ✅ Clean | All profession data, costs, ranks match backend |
-| LeaderboardView.tsx | ✅ Clean | Image rendering correct, title rarity colors consistent |
-| UserCard.tsx | ✅ Clean | Frame display correct, image fallbacks working |
-| DashboardHeader.tsx | ✅ Clean | Image rendering correct, uses config constants |
-| DashboardModals.tsx | ✅ Clean | All currency descriptions now accurate (fixed in Session 2) |
-| CompanionsWidget.tsx | ✅ Clean | Bond thresholds exact match with backend |
-| RitualChamber.tsx | ✅ Clean | Image rendering correct, uses config streaks |
-| GuildHallBackground.tsx | ✅ Clean | Canvas rendering correct, seasonal colors consistent |
-| BattlePassView.tsx | ⚠️ Orphaned | Commented out in page.tsx, no backend support — dead feature |
+| ID | Description | Commit |
+|----|-------------|--------|
+| F-51 | Migrate Class Activation modal to ModalOverlay | ec38bae |
+| F-52 | Migrate FeedbackModal to ModalOverlay | ec38bae |
+| F-53 | Remove 9 unnecessary `as any` type casts | ec38bae |
+| F-54 | Extend CharacterData interface with missing fields | ec38bae |
+| F-45 | Add loading states to all quest actions + auth buttons | 13a5d7e |
+| L-03 | Skip equipment migration when no legacy data found | f8cb155 |
+| F-55 | Replace 3x window.confirm() with proper modal in ForgeView | 16b5312 |
+| F-56 | Remove 8x as-any casts for legendary modifiers | 16b5312 |
+| F-57 | Add ARIA roles (dialog, status) + focus-visible styles | 16b5312 |
+| F-58 | Remove 11x as-any casts in UserCard, LeaderboardView, QuestPanels | 9662437 |
+| B-05 | Harden quest creation input validation (type checks + skills cap) | 5c2f5ef |
 
-### Modal Close Behavior Audit
+### Remaining (prioritized)
 
-| Modal | Backdrop Click | ESC Key | Status |
-|-------|---------------|---------|--------|
-| DashboardModals (all 5) | ✅ | ✅ | Clean |
-| QuestDetailModal | ✅ | ✅ | Clean |
-| TutorialModal (Guide) | ✅ | ✅ | Clean |
-| TutorialOverlay | ✅ | ✅ | Clean |
-| OnboardingWizard | ✅ Fixed | ✅ | Was missing backdrop click |
-| FeedbackModal | ✅ | ✅ | Clean |
-| RewardCelebration | ✅ | ✅ | Click calls onCollect then close (by design) |
-| GachaPull (Single) | ⚠️ Phase-gated | ⚠️ Phase-gated | By design — can't dismiss during animation |
-| GachaPull (Multi) | ⚠️ Phase-gated | ⚠️ Phase-gated | By design — can't dismiss during animation |
-| CreateQuestModal | ✅ | ✅ Fixed | Was missing ESC handler |
-| ItemActionPopup | ✅ | ✅ | Clean (manual handlers) |
-
-### Fixes Applied
-
-| # | Fix ID | Issue | Description | File(s) | Status |
-|---|--------|-------|-------------|---------|--------|
-| 1 | F-35 | — | CreateQuestModal: add ESC key close via useModalBehavior | QuestModals.tsx | ✅ Done |
-| 2 | F-36 | — | OnboardingWizard: add backdrop-click-to-close | OnboardingWizard.tsx | ✅ Done |
-
-### Known Non-Issues
-
-- **BattlePassView.tsx**: Orphaned component (commented out in page.tsx). No backend API, hardcoded dates. Feature was never completed. Not fixing since it's inactive.
-- **GachaPull phase-gated close**: By design — gacha animations shouldn't be dismissible mid-animation.
-- **QuestCards gold fallback (25/15/9)**: These are midpoints of backend ranges [20-30]/[12-20]/[6-12]. Only used when `quest.rewards.gold` is missing (rare). Cosmetic only.
-
-### Verification (Session 3)
-
-- TypeScript compilation (`npx tsc --noEmit`) — 0 errors
-- No new ESLint errors introduced
-
----
-
-*Audit Session 3 complete. Full component sweep done. 2 modal consistency fixes applied. All components clean.*
-
----
-
-## 7. Audit Session 4 — User-Reported Fixes
-
-**Date:** 2026-03-20
-
-### Issues Reported by User
-
-#### M-20: Sternentaler — Daily Bonus Should Not Award ✅
-- **Was:** `routes/currency.js:134-138` gave 15-25% chance of sternentaler from daily bonus
-- **User:** "Sternentaler sollten NUR aus wöchentlichen Herausforderungen kommen"
-- **Fix:** Removed sternentaler chance from daily bonus handler. Updated frontend description from "Hauptsächlich aus wöchentlichen Herausforderungen. Kleine Chance beim täglichen Login-Bonus." to "Exklusiv aus wöchentlichen Herausforderungen."
-- **Files:** `routes/currency.js`, `components/DashboardModals.tsx`
-
-#### M-21: Tempo Stat — +2% Per Point Too Strong ✅
-- **Was:** `lib/helpers.js:218` used `tempo * 0.02` = +2% forge temp recovery per point
-- **User:** "Tempo 2% forge temp pro punkt ist zu stark. Mit 10 Tempo ist man dann ja schon bei 30% pro quest recovery."
-- **Fix:** Reduced to `tempo * 0.01` = +1% per point. Updated all frontend tooltips (CharacterView, TutorialModal).
-- **Files:** `lib/helpers.js`, `components/CharacterView.tsx`, `components/TutorialModal.tsx`
-
-#### M-22: Image Rendering — `smooth` Not Valid CSS Value ✅
-- **Was:** Global CSS and all inline styles used `image-rendering: smooth` — a CSS Images Level 4 value NOT supported by any major browser (Chrome, Firefox, Safari all ignore it)
-- **Effect:** The property was silently dropped, leaving images at browser default with no explicit rendering directive
-- **Fix:** Changed global CSS (`globals.css`) and all inline `imageRendering` from `"smooth"` to `"auto"` (the standard, universally-supported value for bilinear filtering). Added `!important` to global rule to prevent any cascade override. Updated 25 component files.
-- **Files:** `app/globals.css`, 25 component files
-
-### Session 4 Fix Manifest
-
-| # | Fix ID | Issue | Description | File(s) | Status |
-|---|--------|-------|-------------|---------|--------|
-| 1 | F-37 | M-20 | Remove sternentaler from daily bonus | currency.js, DashboardModals.tsx | ✅ Done |
-| 2 | F-38 | M-21 | Tempo: +2% → +1% per point | helpers.js, CharacterView.tsx, TutorialModal.tsx | ✅ Done |
-| 3 | F-39 | M-22 | image-rendering: smooth → auto (25+ files) | globals.css, 25 component files | ✅ Done |
-
-### Verification (Session 4)
-
-- TypeScript compilation (`npx tsc --noEmit`) — 0 errors
-
----
-
-*Audit Session 4 complete. 3 user-reported fixes applied (balance, economy, rendering).*
+| Priority | ID | Description | Est. Effort |
+|----------|----|-------------|-------------|
+| 🔵 P3 | C-01 | Refactor quest completion code paths | 60 min |
+| 🔵 P3 | C-03 | Standardize error response format | 45 min |
+| ⚪ P4 | D-02 | Create 31 achievement icon assets | External |
+| ⚪ P4 | B-01 | Refactor dashboard to direct function calls | 2-4 hrs |
+| ⚪ P4 | L-01 | Replace remaining ~15 `as any` types (most legitimate) | 20 min |
+| ⚪ P4 | L-02 | Add aria-label to icon-only buttons | 30 min |
+| ⚪ noted | B-03 | CORS tightening (production only) | 10 min |
+| ⚪ noted | B-04 | Timing-safe key length check | 5 min |
