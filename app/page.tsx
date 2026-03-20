@@ -14,6 +14,8 @@ const GachaView = lazy(() => import("@/components/GachaView"));
 const CharacterView = lazy(() => import("@/components/CharacterView"));
 const RitualChamber = lazy(() => import("@/components/RitualChamber"));
 const ChallengesView = lazy(() => import("@/components/ChallengesView"));
+const DailyLoginCalendar = lazy(() => import("@/components/DailyLoginCalendar"));
+const SocialView = lazy(() => import("@/components/SocialView"));
 import { GuideModal, GuideContent, TutorialOverlay, TUTORIAL_STEPS } from "@/components/TutorialModal";
 import {
   CreateQuestModal, PersonalQuestPanel, ForgeChallengesPanel, AntiRitualePanel,
@@ -26,6 +28,7 @@ import {
 } from "@/components/QuestBoard";
 import { ToastStack, useToastStack } from "@/components/ToastStack";
 import { RewardCelebration, RewardCelebrationData } from "@/components/RewardCelebration";
+import { useFloatingRewards, FloatingRewardsLayer } from "@/components/FloatingRewards";
 import { CompanionsWidget } from "@/components/CompanionsWidget";
 import { RoadmapView } from "@/components/RoadmapView";
 import { InfoTooltip } from "@/components/InfoTooltip";
@@ -91,6 +94,14 @@ const MAT_RARITY_COLORS: Record<string, string> = {
   common: "#9ca3af", uncommon: "#22c55e", rare: "#3b82f6", epic: "#a855f7", legendary: "#f59e0b",
 };
 
+const MAT_SOURCES: Record<string, string> = {
+  common: "Common/Uncommon quest drops · Dismantling common gear",
+  uncommon: "Uncommon/Rare quest drops · Dismantling uncommon gear",
+  rare: "Rare/Epic quest drops · Dismantling rare gear",
+  epic: "Epic/Legendary quest drops · Dismantling epic gear",
+  legendary: "Legendary quest drops · Dismantling legendary gear",
+};
+
 // Suspense fallback for lazy-loaded views
 const ViewFallback = () => <div className="flex items-center justify-center py-20 text-w30 text-sm font-mono">Loading...</div>;
 
@@ -106,6 +117,7 @@ export default function Dashboard() {
   const [weeklyChallenge, setWeeklyChallenge] = useState<import("@/app/types").WeeklyChallenge | null>(null);
   const [expedition, setExpedition] = useState<import("@/app/types").Expedition | null>(null);
   const [claimingDailyBonus, setClaimingDailyBonus] = useState(false);
+  const [loginCalendarOpen, setLoginCalendarOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
   const [completedSearch, setCompletedSearch] = useState("");
   const [rejectedOpen, setRejectedOpen] = useState(false);
@@ -116,7 +128,7 @@ export default function Dashboard() {
   });
   // selectedIds, bulkLoading, reviewComments moved to useQuestActions hook
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [dashViewRaw, setDashViewRaw] = useState<"questBoard" | "npcBoard" | "klassenquests" | "character" | "campaign" | "leaderboard" | "honors" | "season" | "shop" | "forge" | "gacha" | "roadmap" | "changelog" | "challenges" | "rituals" | "vows">("questBoard");
+  const [dashViewRaw, setDashViewRaw] = useState<"questBoard" | "npcBoard" | "klassenquests" | "character" | "campaign" | "leaderboard" | "honors" | "season" | "shop" | "forge" | "gacha" | "roadmap" | "changelog" | "challenges" | "rituals" | "vows" | "social">("questBoard");
   const [activeFloor, setActiveFloor] = useState("haupthalle");
   // Wrap setDashView to auto-sync the active floor
   const dashView = dashViewRaw;
@@ -178,6 +190,7 @@ export default function Dashboard() {
   const [lootDrop, setLootDrop] = useState<LootItem | null>(null);
   const [levelUpCelebration, setLevelUpCelebration] = useState<{ level: number; title: string } | null>(null);
   const [rewardCelebration, setRewardCelebration] = useState<RewardCelebrationData | null>(null);
+  const { rewards: floatingRewards, addFloating, removeFloating } = useFloatingRewards();
   // questBoardTab removed — Rituals and Vows are now standalone views in Charakter-Turm
   const closeLootDrop = useCallback(() => setLootDrop(null), []);
   useModalBehavior(!!lootDrop, closeLootDrop);
@@ -857,23 +870,38 @@ export default function Dashboard() {
                 <p className="text-xs mt-1 font-mono text-w20">
                   {playerLevelInfo.xpInLevel} {playerLevelInfo.xpForLevel ? `/ ${playerLevelInfo.xpForLevel} XP` : "(max)"}
                 </p>
-                {dailyBonusAvailable && (
+                <div className="flex items-center gap-2 mt-2">
+                  {dailyBonusAvailable && (
+                    <button
+                      onClick={handleClaimDailyBonus}
+                      disabled={claimingDailyBonus}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"
+                      style={{
+                        background: "linear-gradient(90deg, rgba(250,204,21,0.12), rgba(245,158,11,0.15))",
+                        color: "#facc15",
+                        border: "1px solid rgba(250,204,21,0.3)",
+                        cursor: claimingDailyBonus ? "wait" : "pointer",
+                        opacity: claimingDailyBonus ? 0.5 : 1,
+                        animation: "pulse-online 2s ease-in-out infinite",
+                      }}
+                    >
+                      <span>☀</span> {claimingDailyBonus ? "Claiming..." : "Claim Daily Bonus"}
+                    </button>
+                  )}
                   <button
-                    onClick={handleClaimDailyBonus}
-                    disabled={claimingDailyBonus}
-                    className="mt-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all inline-flex items-center gap-1.5"
+                    onClick={() => setLoginCalendarOpen(true)}
+                    className="px-2 py-1.5 rounded-lg text-xs font-semibold inline-flex items-center gap-1"
                     style={{
-                      background: "linear-gradient(90deg, rgba(250,204,21,0.12), rgba(245,158,11,0.15))",
-                      color: "#facc15",
-                      border: "1px solid rgba(250,204,21,0.3)",
-                      cursor: claimingDailyBonus ? "wait" : "pointer",
-                      opacity: claimingDailyBonus ? 0.5 : 1,
-                      animation: "pulse-online 2s ease-in-out infinite",
+                      background: "rgba(251,191,36,0.06)",
+                      color: "rgba(251,191,36,0.6)",
+                      border: "1px solid rgba(251,191,36,0.15)",
+                      cursor: "pointer",
                     }}
+                    title="Login-Kalender"
                   >
-                    <span>☀</span> {claimingDailyBonus ? "Claiming..." : "Claim Daily Bonus"}
+                    📅
                   </button>
-                )}
+                </div>
               </div>
 
               {/* Right side: Currencies + Forge */}
@@ -1039,17 +1067,23 @@ export default function Dashboard() {
                   {/* Materials Inventory */}
                   <div className="mb-2">
                     <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "rgba(255,255,255,0.4)" }}>Materials</p>
+                    <p className="text-xs mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Earned from quest completions (scaled by rarity) and dismantling gear.</p>
                     {matDefs.length > 0 ? (
-                      <div className="grid grid-cols-2 gap-1.5">
+                      <div className="space-y-1">
                         {matDefs.map(m => {
                           const count = mats[m.id] ?? 0;
+                          const rarColor = MAT_RARITY_COLORS[m.rarity] ?? "#9ca3af";
+                          const source = MAT_SOURCES[m.rarity] ?? "Quest drops";
                           return (
-                            <div key={m.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5" style={{ background: count > 0 ? "rgba(255,255,255,0.03)" : "transparent", opacity: count > 0 ? 1 : 0.35 }}>
-                              <img src={m.icon} alt="" width={18} height={18} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} />
-                              <div className="flex-1 min-w-0">
-                                <span className="text-xs truncate block" style={{ color: MAT_RARITY_COLORS[m.rarity] ?? "#9ca3af" }}>{m.name}</span>
+                            <div key={m.id} className="rounded-lg px-2.5 py-1.5" style={{ background: count > 0 ? "rgba(255,255,255,0.03)" : "transparent", opacity: count > 0 ? 1 : 0.35 }}>
+                              <div className="flex items-center gap-2">
+                                <img src={m.icon} alt="" width={18} height={18} className="img-render-auto" onError={e => (e.currentTarget.style.display = "none")} />
+                                <div className="flex-1 min-w-0">
+                                  <span className="text-xs truncate block" style={{ color: rarColor }}>{m.name}</span>
+                                </div>
+                                <span className="text-xs font-mono font-bold" style={{ color: count > 0 ? "#f0f0f0" : "rgba(255,255,255,0.2)" }}>{count}</span>
                               </div>
-                              <span className="text-xs font-mono font-bold" style={{ color: count > 0 ? "#f0f0f0" : "rgba(255,255,255,0.2)" }}>{count}</span>
+                              <p className="text-xs mt-0.5 pl-[26px]" style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>{source}</p>
                             </div>
                           );
                         })}
@@ -1583,6 +1617,11 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* ── THE BREAKAWAY (Social & Trade) ── */}
+        {dashView === "social" && (
+          <ErrorBoundary><Suspense fallback={<ViewFallback />}><SocialView /></Suspense></ErrorBoundary>
+        )}
+
         {/* ── THE WANDERER'S REST (NPC Tab) ── */}
         {dashView === "npcBoard" && (() => {
           const devVisibleOpen = applySort(applyFilter(quests.open.filter(q => (q.type ?? "development") === "development" && (q.createdBy ?? "").toLowerCase() !== "lyra")));
@@ -1804,11 +1843,24 @@ export default function Dashboard() {
         />
       )}
 
+      {/* Daily Login Calendar */}
+      {loginCalendarOpen && (
+        <Suspense fallback={null}>
+          <DailyLoginCalendar onClose={() => setLoginCalendarOpen(false)} />
+        </Suspense>
+      )}
+
       {/* Reward Celebration (quest/ritual/vow/companion completion) */}
       {rewardCelebration && (
         <RewardCelebration data={rewardCelebration} onClose={closeRewardCelebration} onAchievementClick={navigateToAchievement} onCollect={(rd) => {
           if (rd.loot) setPurchaseToast(`${rd.loot.name} added to inventory!`);
           if (rd.achievement) addToast({ type: "achievement", achievement: rd.achievement as EarnedAchievement });
+          // Trigger floating reward numbers
+          const floats: { text: string; color: string }[] = [];
+          if (rd.xpEarned > 0) floats.push({ text: `+${rd.xpEarned} XP`, color: "#a78bfa" });
+          if (rd.goldEarned > 0) floats.push({ text: `+${rd.goldEarned} Gold`, color: "#fbbf24" });
+          if (rd.bondXp && rd.bondXp > 0) floats.push({ text: `+${rd.bondXp} Bond`, color: "#ff6b9d" });
+          if (floats.length > 0) addFloating(floats);
         }} />
       )}
 
@@ -2180,6 +2232,7 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+    <FloatingRewardsLayer rewards={floatingRewards} onRemove={removeFloating} />
     </DashboardProvider>
   );
 }

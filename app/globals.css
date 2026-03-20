@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b0d11;
+  --background: #111318;
   --foreground: #e8e8e8;
   --accent: #ff4444;
 }
@@ -18,7 +18,7 @@
 }
 
 body {
-  background: linear-gradient(180deg, #0b0d11 0%, #220f24 50%, #0b0d11 100%);
+  background: linear-gradient(180deg, #111318 0%, #2a1530 50%, #111318 100%);
   background-size: 100% 200%;
   animation: gradient-shift 18s ease infinite;
   color: var(--foreground);
@@ -693,6 +693,12 @@ img {
   50% { opacity: 1; transform: scale(1.05) translateY(-5px); }
   100% { opacity: 1; transform: scale(1) translateY(0); }
 }
+@keyframes floatRewardUp {
+  0% { opacity: 0; transform: translateY(0) scale(0.6); }
+  15% { opacity: 1; transform: translateY(-10px) scale(1.1); }
+  30% { transform: translateY(-25px) scale(1); }
+  100% { opacity: 0; transform: translateY(-120px) scale(0.85); }
+}
 @keyframes reward-sparkle {
   0% { opacity: 0; transform: translate(0px, 0px) scale(0); }
   20% { opacity: 1; transform: translate(calc(var(--sx) * 0.5), calc(var(--sy) * 0.5)) scale(1.2); }
@@ -795,10 +801,10 @@ img {
 .bg-w8  { background: rgba(255,255,255,0.08); }
 
 /* Dark surface backgrounds                                                  */
-.bg-surface      { background: #1a1a1a; }
-.bg-surface-alt  { background: #1e1e1e; }
-.bg-card         { background: #252525; }
-.bg-input        { background: #141414; }
+.bg-surface      { background: #1e1e22; }
+.bg-surface-alt  { background: #222228; }
+.bg-card         { background: #2a2a30; }
+.bg-input        { background: #181820; }
 
 /* Borders — white at various opacities                                      */
 .border-w6  { border: 1px solid rgba(255,255,255,0.06); }
