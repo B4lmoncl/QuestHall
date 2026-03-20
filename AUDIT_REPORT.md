@@ -1,9 +1,9 @@
 # Quest Hall — Full Codebase Audit Report
 
-**Date:** 2026-03-20 (Session 7 — Fresh full audit after main merge)
+**Date:** 2026-03-20 (Session 8 — Deep 6-agent audit + fixes)
 **Auditor:** Claude Opus 4.6
 **Scope:** Complete frontend + backend + data + documentation audit
-**Status:** Most critical and high-priority fixes applied; remaining items documented
+**Status:** Sessions 7-8 fixes applied; remaining items documented
 
 ---
 
@@ -90,9 +90,9 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 
 ### 3.5 MEDIUM — Frontend Quality
 
-#### F-47: Inconsistent Modal/Popup Closure ⬜ REMAINING
-- **Location:** Various modals across page.tsx and components
-- **Impact:** Inconsistent user experience
+#### F-47: Inconsistent Modal/Popup Closure ✅ PARTIALLY FIXED
+- **Fixed (Session 8):** Class Activation modal (page.tsx) migrated to `<ModalOverlay>` for ESC support; FeedbackModal migrated to `<ModalOverlay>` for consistent portal rendering
+- **Remaining:** Some popouts/drawers still use custom close logic (acceptable for non-modal UI elements)
 
 #### F-48: Hardcoded Reward Fallbacks ✅ FIXED
 - **Fix applied:** QuestCards now shows actual `quest.rewards.xp` and `quest.rewards.gold` values, with "~" for undetermined gold instead of hardcoded priority-based fallbacks
@@ -118,9 +118,9 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 
 ### 3.7 LOW
 
-#### L-01: `any` Type Usage (42 occurrences) ⬜ REMAINING
-- Across LeaderboardView, GachaView, CharacterView, ForgeView, DashboardModals
-- Non-blocking but reduces type safety
+#### L-01: `any` Type Usage ✅ PARTIALLY FIXED
+- **Fixed (Session 8):** Removed 9 unnecessary `as any` casts: 3 in `page.tsx` (`equippedTitle` already on User type), 6 in `CharacterView.tsx` (extended `CharacterData` with missing fields: `xpInLevel`, `xpForLevel`, `legendaryEffects`, `equippedTitle`, `earnedTitleCount`, `bondXp`)
+- **Remaining:** ~33 `as any` across LeaderboardView, GachaView, ForgeView, DashboardModals — most are legitimate (CSS property workarounds, runtime-injected fields)
 
 #### L-02: Missing ARIA Labels / Accessibility ⬜ REMAINING
 - Icon-only buttons lack aria-label
@@ -131,7 +131,44 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 
 ---
 
-## 4. Fix Summary
+## 4. Session 8 — Deep 6-Agent Audit
+
+Session 8 launched 6 specialized audit agents covering backend, frontend, data integrity, gear stats, modal consistency, and gacha/shop systems.
+
+### 4.1 Verified Correct (No Action Needed)
+
+| Area | Verification |
+|------|-------------|
+| Streak Gold Bonus | Backend: 1.5%/day, max 45%. Frontend displays correct formula. |
+| XP Multiplier Chain | All 10+ factors (forge, kraft, gear, companion, bond, hoarding, passive, legendary, active, nth, variety) traced end-to-end. |
+| ForgeTemp Decay | 2%/hr decay with Ausdauer modifier. Display matches backend. |
+| Currency Tax | 20% tax enforced server-side in `routes/currency.js:92-93`. UI mentions tax. |
+| Docker Setup | `docker-entrypoint.sh` exists and is correct (448 bytes). |
+| Item ID Overlap | 50 IDs shared between `gearTemplates.json` and `itemTemplates.json` — by design (different representations for different contexts). |
+| Gacha Pity System | Soft pity at 55, hard pity at 75. Correctly implemented. |
+| Toast System | Unified ToastStack with 7 types including error (5s duration). |
+
+### 4.2 New Findings & Fixes
+
+#### F-51: Class Activation Modal Missing ESC Handler ✅ FIXED
+- **Location:** `app/page.tsx` — class activation notification modal
+- **Fix applied:** Replaced custom backdrop div with `<ModalOverlay>` component
+
+#### F-52: FeedbackModal Not Using ModalPortal ✅ FIXED
+- **Location:** `components/FeedbackModal.tsx`
+- **Fix applied:** Migrated from `useModalBehavior` + custom div to `<ModalOverlay>` for consistent portal rendering
+
+#### F-53: Unnecessary `as any` Type Casts ✅ FIXED
+- **Location:** `app/page.tsx` (3 casts), `components/CharacterView.tsx` (6 casts)
+- **Fix applied:** Removed casts by using existing type fields or extending `CharacterData` interface
+
+#### F-54: CharacterData Interface Missing Fields ✅ FIXED
+- **Location:** `app/types.ts`
+- **Fix applied:** Added `xpInLevel`, `xpForLevel`, `legendaryEffects`, `equippedTitle`, `earnedTitleCount` to `CharacterData`; added `bondXp` to companion type
+
+---
+
+## 5. Fix Summary
 
 ### Completed (Session 7)
 
@@ -147,18 +184,26 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 | F-48 | Remove hardcoded reward fallbacks in QuestCards | 94bb8e9 |
 | F-50 | Clean up dead code and unused imports | 94bb8e9 |
 
+### Completed (Session 8)
+
+| ID | Description | Commit |
+|----|-------------|--------|
+| F-51 | Migrate Class Activation modal to ModalOverlay | ec38bae |
+| F-52 | Migrate FeedbackModal to ModalOverlay | ec38bae |
+| F-53 | Remove 9 unnecessary `as any` type casts | ec38bae |
+| F-54 | Extend CharacterData interface with missing fields | ec38bae |
+
 ### Remaining (prioritized)
 
 | Priority | ID | Description | Est. Effort |
 |----------|----|-------------|-------------|
 | 🟡 P2 | F-45 | Add loading states to async operations | 45 min |
 | 🔵 P3 | F-46 | Add confirmation dialogs for destructive actions | 30 min |
-| 🔵 P3 | F-47 | Standardize modal closure behavior | 45 min |
 | 🔵 P3 | C-01 | Refactor quest completion code paths | 60 min |
 | 🔵 P3 | C-03 | Standardize error response format | 45 min |
 | ⚪ P4 | D-02 | Create 31 achievement icon assets | External |
 | ⚪ P4 | B-01 | Refactor dashboard to direct function calls | 2-4 hrs |
-| ⚪ P4 | L-01 | Replace `any` types | 60 min |
+| ⚪ P4 | L-01 | Replace remaining ~33 `as any` types (most legitimate) | 30 min |
 | ⚪ P4 | L-02 | Add ARIA labels | 45 min |
 | ⚪ P4 | L-03 | Add boot migration skip flag | 10 min |
 | ⚪ noted | B-03 | CORS tightening (production only) | 10 min |
