@@ -117,13 +117,14 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 
 ### 3.7 LOW
 
-#### L-01: `any` Type Usage ✅ PARTIALLY FIXED
-- **Fixed (Session 8):** Removed 9 unnecessary `as any` casts: 3 in `page.tsx` (`equippedTitle` already on User type), 6 in `CharacterView.tsx` (extended `CharacterData` with missing fields: `xpInLevel`, `xpForLevel`, `legendaryEffects`, `equippedTitle`, `earnedTitleCount`, `bondXp`)
-- **Remaining:** ~33 `as any` across LeaderboardView, GachaView, ForgeView, DashboardModals — most are legitimate (CSS property workarounds, runtime-injected fields)
+#### L-01: `any` Type Usage ✅ MOSTLY FIXED
+- **Fixed (Session 8):** Removed 20+ unnecessary `as any` casts across page.tsx, CharacterView, DashboardModals, UserCard, LeaderboardView, QuestPanels
+- **Extended types:** `CharacterData` (xpInLevel, xpForLevel, legendaryEffects, equippedTitle, earnedTitleCount, bondXp), `User.modifiers` (legendary), `AntiRitual` (pactCompleted)
+- **Remaining:** ~15 `as any` in GachaView (icon field not on type), ForgeView (InventoryItem index signature), CharacterView (CSS imageRendering, runtime _playerLevel) — legitimate workarounds
 
-#### L-02: Missing ARIA Labels / Accessibility ⬜ REMAINING
-- Icon-only buttons lack aria-label
-- No visible focus indicators on many interactive elements
+#### L-02: Missing ARIA Labels / Accessibility ✅ PARTIALLY FIXED
+- **Fixed (Session 8):** Added `role="dialog"` + `aria-modal="true"` to ModalOverlay, `role="status"` + `aria-live="polite"` to ToastStack, `:focus-visible` outline in globals.css
+- **Remaining:** Icon-only buttons still lack aria-label (individual component work)
 
 #### L-03: Equipment Migration Runs Every Boot ✅ FIXED
 - **Fixed (Session 8):** Added pre-check that skips migration loop when no legacy string-type equipment values exist
@@ -165,6 +166,20 @@ Session 8 launched 6 specialized audit agents covering backend, frontend, data i
 - **Location:** `app/types.ts`
 - **Fix applied:** Added `xpInLevel`, `xpForLevel`, `legendaryEffects`, `equippedTitle`, `earnedTitleCount` to `CharacterData`; added `bondXp` to companion type
 
+#### F-55: ForgeView Uses `window.confirm()` for Destructive Actions ✅ FIXED
+- **Location:** `components/ForgeView.tsx` (3 occurrences: dismantle, dismantle-all, transmute)
+- **Fix applied:** Replaced with in-component confirmation modal (themed, non-blocking)
+
+#### F-56: DashboardModals `as any` for Legendary Modifier ✅ FIXED
+- **Location:** `components/DashboardModals.tsx` (8 casts for xp.legendary and gold.legendary)
+- **Fix applied:** Added `legendary?` to User modifier types; removed all casts
+
+#### F-57: Missing ARIA Roles and Focus Styles ✅ FIXED
+- **Fix applied:** `role="dialog"` + `aria-modal="true"` on ModalOverlay; `role="status"` + `aria-live="polite"` on ToastStack; `:focus-visible` outline in globals.css
+
+#### F-58: Type Casts in UserCard, LeaderboardView, QuestPanels ✅ FIXED
+- **Fix applied:** Removed 11 `as any` casts by using existing type fields; added `pactCompleted` to AntiRitual type
+
 ---
 
 ## 5. Fix Summary
@@ -193,17 +208,20 @@ Session 8 launched 6 specialized audit agents covering backend, frontend, data i
 | F-54 | Extend CharacterData interface with missing fields | ec38bae |
 | F-45 | Add loading states to all quest actions + auth buttons | 13a5d7e |
 | L-03 | Skip equipment migration when no legacy data found | f8cb155 |
+| F-55 | Replace 3x window.confirm() with proper modal in ForgeView | 16b5312 |
+| F-56 | Remove 8x as-any casts for legendary modifiers | 16b5312 |
+| F-57 | Add ARIA roles (dialog, status) + focus-visible styles | 16b5312 |
+| F-58 | Remove 11x as-any casts in UserCard, LeaderboardView, QuestPanels | 9662437 |
 
 ### Remaining (prioritized)
 
 | Priority | ID | Description | Est. Effort |
 |----------|----|-------------|-------------|
-| 🔵 P3 | F-46 | Add confirmation dialogs for destructive actions | 30 min |
 | 🔵 P3 | C-01 | Refactor quest completion code paths | 60 min |
 | 🔵 P3 | C-03 | Standardize error response format | 45 min |
 | ⚪ P4 | D-02 | Create 31 achievement icon assets | External |
 | ⚪ P4 | B-01 | Refactor dashboard to direct function calls | 2-4 hrs |
-| ⚪ P4 | L-01 | Replace remaining ~33 `as any` types (most legitimate) | 30 min |
-| ⚪ P4 | L-02 | Add ARIA labels | 45 min |
+| ⚪ P4 | L-01 | Replace remaining ~15 `as any` types (most legitimate) | 20 min |
+| ⚪ P4 | L-02 | Add aria-label to icon-only buttons | 30 min |
 | ⚪ noted | B-03 | CORS tightening (production only) | 10 min |
 | ⚪ noted | B-04 | Timing-safe key length check | 5 min |
