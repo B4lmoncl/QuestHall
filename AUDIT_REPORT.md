@@ -284,3 +284,71 @@ All fixes verified via:
 ---
 
 *Audit Session 2 complete. 18 additional fixes applied (8 mismatches, 6 QoL improvements, 4 doc fixes).*
+
+---
+
+## 6. Audit Session 3 — Full Component Sweep & Modal Consistency
+
+**Date:** 2026-03-20
+
+### Component Audit Results
+
+All 25+ frontend components were audited for: hardcoded value mismatches, missing image-rendering, broken functionality, UI inconsistencies.
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| CampaignHub.tsx | ✅ Clean | Image rendering correct, backend integration correct |
+| WandererRest.tsx | ✅ Clean | All images have `imageRendering: "smooth"`, ESC key handling, NPC data sync |
+| OnboardingWizard.tsx | ⚠️ Fixed | Missing backdrop-click-to-close (ESC worked, backdrop didn't) |
+| QuestCards.tsx | ✅ Clean | Gold fallback values (25/15/9) are midpoints of backend ranges — reasonable |
+| QuestDetailModal.tsx | ✅ Clean | Uses same gold fallback pattern, rarely activated |
+| QuestModals.tsx | ⚠️ Fixed | CreateQuestModal missing ESC key handler |
+| ShopView.tsx | ✅ Clean | Image rendering correct, purchase feedback wired |
+| GachaView.tsx | ✅ Clean | Pity values 55/75 match backend, drop rates correct |
+| ForgeView.tsx | ✅ Clean | All profession data, costs, ranks match backend |
+| LeaderboardView.tsx | ✅ Clean | Image rendering correct, title rarity colors consistent |
+| UserCard.tsx | ✅ Clean | Frame display correct, image fallbacks working |
+| DashboardHeader.tsx | ✅ Clean | Image rendering correct, uses config constants |
+| DashboardModals.tsx | ✅ Clean | All currency descriptions now accurate (fixed in Session 2) |
+| CompanionsWidget.tsx | ✅ Clean | Bond thresholds exact match with backend |
+| RitualChamber.tsx | ✅ Clean | Image rendering correct, uses config streaks |
+| GuildHallBackground.tsx | ✅ Clean | Canvas rendering correct, seasonal colors consistent |
+| BattlePassView.tsx | ⚠️ Orphaned | Commented out in page.tsx, no backend support — dead feature |
+
+### Modal Close Behavior Audit
+
+| Modal | Backdrop Click | ESC Key | Status |
+|-------|---------------|---------|--------|
+| DashboardModals (all 5) | ✅ | ✅ | Clean |
+| QuestDetailModal | ✅ | ✅ | Clean |
+| TutorialModal (Guide) | ✅ | ✅ | Clean |
+| TutorialOverlay | ✅ | ✅ | Clean |
+| OnboardingWizard | ✅ Fixed | ✅ | Was missing backdrop click |
+| FeedbackModal | ✅ | ✅ | Clean |
+| RewardCelebration | ✅ | ✅ | Click calls onCollect then close (by design) |
+| GachaPull (Single) | ⚠️ Phase-gated | ⚠️ Phase-gated | By design — can't dismiss during animation |
+| GachaPull (Multi) | ⚠️ Phase-gated | ⚠️ Phase-gated | By design — can't dismiss during animation |
+| CreateQuestModal | ✅ | ✅ Fixed | Was missing ESC handler |
+| ItemActionPopup | ✅ | ✅ | Clean (manual handlers) |
+
+### Fixes Applied
+
+| # | Fix ID | Issue | Description | File(s) | Status |
+|---|--------|-------|-------------|---------|--------|
+| 1 | F-35 | — | CreateQuestModal: add ESC key close via useModalBehavior | QuestModals.tsx | ✅ Done |
+| 2 | F-36 | — | OnboardingWizard: add backdrop-click-to-close | OnboardingWizard.tsx | ✅ Done |
+
+### Known Non-Issues
+
+- **BattlePassView.tsx**: Orphaned component (commented out in page.tsx). No backend API, hardcoded dates. Feature was never completed. Not fixing since it's inactive.
+- **GachaPull phase-gated close**: By design — gacha animations shouldn't be dismissible mid-animation.
+- **QuestCards gold fallback (25/15/9)**: These are midpoints of backend ranges [20-30]/[12-20]/[6-12]. Only used when `quest.rewards.gold` is missing (rare). Cosmetic only.
+
+### Verification (Session 3)
+
+- TypeScript compilation (`npx tsc --noEmit`) — 0 errors
+- No new ESLint errors introduced
+
+---
+
+*Audit Session 3 complete. Full component sweep done. 2 modal consistency fixes applied. All components clean.*
