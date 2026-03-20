@@ -72,9 +72,8 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 - **Added:** "error" toast type to `ToastStack` with red styling and 5s duration
 - **Remaining:** ~60 silent catches in other components (page.tsx, CharacterView, QuestModals, GachaView) — most are non-critical background fetches or localStorage operations
 
-#### F-45: Missing Loading States on Async Operations ⬜ REMAINING
-- **Location:** `DashboardHeader.tsx` (login/register), `hooks/useQuestActions.ts` (claim/unclaim/complete)
-- **Impact:** Users may double-click, causing duplicate requests
+#### F-45: Missing Loading States on Async Operations ✅ FIXED
+- **Fixed (Session 8):** Added `loadingAction` state to `useQuestActions` (7 handlers: claim, unclaim, complete, approve, reject, coopClaim, coopComplete); added `authLoading` to DashboardHeader (login/register buttons show loading text + disabled state)
 
 #### F-46: Missing Confirmation for Destructive Actions ⬜ REMAINING
 - **Location:** `DashboardHeader.tsx:251` (logout), `useQuestActions.ts` (unclaim, reject quest)
@@ -126,8 +125,8 @@ Sessions 1–6 fixed 43 issues (F-01 through F-43):
 - Icon-only buttons lack aria-label
 - No visible focus indicators on many interactive elements
 
-#### L-03: Equipment Migration Runs Every Boot ⬜ REMAINING
-- `server.js:186-206` — Migration logic runs on every restart even if all users are already migrated
+#### L-03: Equipment Migration Runs Every Boot ✅ FIXED
+- **Fixed (Session 8):** Added pre-check that skips migration loop when no legacy string-type equipment values exist
 
 ---
 
@@ -192,12 +191,13 @@ Session 8 launched 6 specialized audit agents covering backend, frontend, data i
 | F-52 | Migrate FeedbackModal to ModalOverlay | ec38bae |
 | F-53 | Remove 9 unnecessary `as any` type casts | ec38bae |
 | F-54 | Extend CharacterData interface with missing fields | ec38bae |
+| F-45 | Add loading states to all quest actions + auth buttons | 13a5d7e |
+| L-03 | Skip equipment migration when no legacy data found | f8cb155 |
 
 ### Remaining (prioritized)
 
 | Priority | ID | Description | Est. Effort |
 |----------|----|-------------|-------------|
-| 🟡 P2 | F-45 | Add loading states to async operations | 45 min |
 | 🔵 P3 | F-46 | Add confirmation dialogs for destructive actions | 30 min |
 | 🔵 P3 | C-01 | Refactor quest completion code paths | 60 min |
 | 🔵 P3 | C-03 | Standardize error response format | 45 min |
@@ -205,6 +205,5 @@ Session 8 launched 6 specialized audit agents covering backend, frontend, data i
 | ⚪ P4 | B-01 | Refactor dashboard to direct function calls | 2-4 hrs |
 | ⚪ P4 | L-01 | Replace remaining ~33 `as any` types (most legitimate) | 30 min |
 | ⚪ P4 | L-02 | Add ARIA labels | 45 min |
-| ⚪ P4 | L-03 | Add boot migration skip flag | 10 min |
 | ⚪ noted | B-03 | CORS tightening (production only) | 10 min |
 | ⚪ noted | B-04 | Timing-safe key length check | 5 min |
