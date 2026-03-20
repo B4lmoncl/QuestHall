@@ -148,6 +148,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
   const [craftCount, setCraftCount] = useState(1);
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [buyingTool, setBuyingTool] = useState<string | null>(null);
 
   // Close callbacks for modal behavior hooks
   const closeNpcModal = useCallback(() => {
@@ -608,7 +609,8 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                     {!owned && (
                       <button
                         onClick={async () => {
-                          if (!canBuy || !reviewApiKey) return;
+                          if (!canBuy || !reviewApiKey || buyingTool) return;
+                          setBuyingTool(gear.id);
                           try {
                             const r = await fetch("/api/shop/gear/buy", {
                               method: "POST",
@@ -617,8 +619,9 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                             });
                             if (r.ok) { onRefresh?.(); fetchData(); }
                           } catch { /* ignore */ }
+                          setBuyingTool(null);
                         }}
-                        disabled={!canBuy}
+                        disabled={!canBuy || buyingTool === gear.id}
                         className="forge-btn text-xs px-2.5 py-1 rounded-lg font-semibold flex-shrink-0"
                         style={{
                           background: canBuy ? "rgba(99,102,241,0.2)" : "rgba(255,255,255,0.03)",
@@ -626,8 +629,10 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                           border: `1px solid ${canBuy ? "rgba(99,102,241,0.4)" : "rgba(255,255,255,0.06)"}`,
                         }}
                       >
-                        <img src={gear.currency === "essenz" ? "/images/icons/currency-essenz.png" : "/images/icons/currency-gold.png"} alt="" width={18} height={18} style={{ imageRendering: "auto", display: "inline", verticalAlign: "middle", marginRight: 3 }} onError={hideOnError} />
-                        {gear.cost}
+                        {buyingTool === gear.id ? "..." : (<>
+                          <img src={gear.currency === "essenz" ? "/images/icons/currency-essenz.png" : "/images/icons/currency-gold.png"} alt="" width={18} height={18} style={{ imageRendering: "auto", display: "inline", verticalAlign: "middle", marginRight: 3 }} onError={hideOnError} />
+                          {gear.cost}
+                        </>)}
                       </button>
                     )}
                   </div>

@@ -92,12 +92,15 @@ function FriendsTab({ apiKey, playerName }: { apiKey: string; playerName: string
     } catch { /* ignore */ }
   };
 
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+
   const removeFriend = async (friendId: string) => {
     try {
       await fetch(`/api/social/friend/${friendId}`, {
         method: "DELETE",
         headers: getAuthHeaders(apiKey),
       });
+      setConfirmRemove(null);
       fetchFriends();
     } catch { /* ignore */ }
   };
@@ -183,11 +186,25 @@ function FriendsTab({ apiKey, playerName }: { apiKey: string; playerName: string
                     <span className="text-xs text-w20 ml-2">Lv.{f.level}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => removeFriend(f.id)}
-                  className="btn-interactive text-xs px-2 py-1 rounded text-w20 hover:text-w50"
-                  title="Remove friend"
-                >✕</button>
+                {confirmRemove === f.id ? (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => removeFriend(f.id)}
+                      className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
+                      style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}
+                    >Remove</button>
+                    <button
+                      onClick={() => setConfirmRemove(null)}
+                      className="btn-interactive text-xs px-2 py-1 rounded text-w30"
+                    >No</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmRemove(f.id)}
+                    className="btn-interactive text-xs px-2 py-1 rounded text-w20 hover:text-w50"
+                    title="Remove friend"
+                  >✕</button>
+                )}
               </div>
             ))}
           </div>
@@ -224,6 +241,14 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
       if (r.ok) setMessages((await r.json()).messages || []);
     } catch { /* ignore */ }
   };
+
+  // Auto-refresh messages every 10s when a conversation is active
+  useEffect(() => {
+    if (!activeConvo) return;
+    const interval = setInterval(() => { openConvo(activeConvo); }, 10000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeConvo, apiKey, playerName]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -367,7 +392,7 @@ function TradeOfferDisplay({ offer, label, color }: { offer: TradeOffer; label: 
 // ─── Trades Tab ─────────────────────────────────────────────────────────────
 
 function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string }) {
-  const { users } = useDashboard();
+  const { users, loggedInUser } = useDashboard();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [selectedTrade, setSelectedTrade] = useState<Trade | null>(null);
   const [loading, setLoading] = useState(true);
@@ -379,10 +404,29 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
   const [newTradeTarget, setNewTradeTarget] = useState("");
   const [newTradeGold, setNewTradeGold] = useState(0);
   const [newTradeMsg, setNewTradeMsg] = useState("");
+  const [newTradeItems, setNewTradeItems] = useState<string[]>([]);
 
   // Counter-offer form
   const [counterGold, setCounterGold] = useState(0);
   const [counterMsg, setCounterMsg] = useState("");
+  const [counterItems, setCounterItems] = useState<string[]>([]);
+
+  // Get unequipped inventory items for trade
+  const tradeableItems = (loggedInUser?.inventory || []).filter(item => {
+    if (!loggedInUser?.equipment) return true;
+    const eq = loggedInUser.equipment;
+    for (const slot of Object.keys(eq)) {
+      const eqItem = eq[slot as keyof typeof eq];
+      if (typeof eqItem === "object" && eqItem && ("instanceId" in eqItem ? eqItem.instanceId === item.id : (eqItem as { id?: string }).id === item.id)) return false;
+      if (typeof eqItem === "string" && eqItem === item.id) return false;
+    }
+    return true;
+  });
+
+  const toggleTradeItem = (itemId: string, target: "new" | "counter") => {
+    const setter = target === "new" ? setNewTradeItems : setCounterItems;
+    setter(prev => prev.includes(itemId) ? prev.filter(id => id !== itemId) : [...prev, itemId]);
+  };
 
   const fetchTrades = useCallback(async () => {
     try {
@@ -404,7 +448,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
         headers: { ...getAuthHeaders(apiKey), "Content-Type": "application/json" },
         body: JSON.stringify({
           to: newTradeTarget.trim(),
-          offer: { gold: newTradeGold, items: [] },
+          offer: { gold: newTradeGold, items: newTradeItems },
           message: newTradeMsg.trim(),
         }),
       });
@@ -414,6 +458,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
       setNewTradeTarget("");
       setNewTradeGold(0);
       setNewTradeMsg("");
+      setNewTradeItems([]);
       fetchTrades();
     } catch { setError("Network error"); }
     setActionLoading(false);
@@ -443,7 +488,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
         method: "POST",
         headers: { ...getAuthHeaders(apiKey), "Content-Type": "application/json" },
         body: JSON.stringify({
-          offer: { gold: counterGold, items: [] },
+          offer: { gold: counterGold, items: counterItems },
           message: counterMsg.trim(),
         }),
       });
@@ -451,6 +496,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
       if (!r.ok) { setError(d.error || "Failed"); setActionLoading(false); return; }
       setCounterGold(0);
       setCounterMsg("");
+      setCounterItems([]);
       fetchTrades();
       setSelectedTrade(null);
     } catch { setError("Network error"); }
@@ -565,6 +611,32 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
                   />
                 </div>
               </div>
+              {/* Counter-offer item picker */}
+              {tradeableItems.length > 0 && (
+                <div className="mb-3">
+                  <label className="text-xs text-w25 block mb-1">Items to offer ({counterItems.length} selected)</label>
+                  <div className="max-h-[120px] overflow-y-auto space-y-1 rounded-lg p-2" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", scrollbarWidth: "thin" }}>
+                    {tradeableItems.map(item => {
+                      const selected = counterItems.includes(item.id);
+                      const rarityColor = item.rarity === "legendary" ? "#ff8c00" : item.rarity === "epic" ? "#a855f7" : item.rarity === "rare" ? "#3b82f6" : item.rarity === "uncommon" ? "#22c55e" : "#888";
+                      return (
+                        <button
+                          key={item.id}
+                          onClick={() => toggleTradeItem(item.id, "counter")}
+                          className="btn-interactive w-full flex items-center gap-2 text-xs px-2 py-1.5 rounded text-left"
+                          style={{ background: selected ? "rgba(251,191,36,0.1)" : "transparent", border: `1px solid ${selected ? "rgba(251,191,36,0.3)" : "transparent"}` }}
+                        >
+                          <span className="w-3 h-3 rounded border flex items-center justify-center flex-shrink-0" style={{ borderColor: selected ? "#fbbf24" : "#555", background: selected ? "#fbbf24" : "transparent" }}>
+                            {selected && <span style={{ color: "#000", fontSize: 8, lineHeight: 1 }}>&#10003;</span>}
+                          </span>
+                          <span style={{ color: rarityColor }}>{item.name}</span>
+                          <span className="text-w15 capitalize ml-auto">{item.rarity} {item.slot}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <label className="text-xs text-w25 block mb-1">Message</label>
               <input
                 value={counterMsg}
@@ -632,6 +704,32 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
               className="input-dark w-full text-xs px-3 py-2 rounded-lg"
             />
           </div>
+          {/* Item picker */}
+          {tradeableItems.length > 0 && (
+            <div>
+              <label className="text-xs text-w25 block mb-1">Items to offer ({newTradeItems.length} selected)</label>
+              <div className="max-h-[140px] overflow-y-auto space-y-1 rounded-lg p-2" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", scrollbarWidth: "thin" }}>
+                {tradeableItems.map(item => {
+                  const selected = newTradeItems.includes(item.id);
+                  const rarityColor = item.rarity === "legendary" ? "#ff8c00" : item.rarity === "epic" ? "#a855f7" : item.rarity === "rare" ? "#3b82f6" : item.rarity === "uncommon" ? "#22c55e" : "#888";
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => toggleTradeItem(item.id, "new")}
+                      className="btn-interactive w-full flex items-center gap-2 text-xs px-2 py-1.5 rounded text-left"
+                      style={{ background: selected ? "rgba(168,85,247,0.12)" : "transparent", border: `1px solid ${selected ? "rgba(168,85,247,0.3)" : "transparent"}` }}
+                    >
+                      <span className="w-3 h-3 rounded border flex items-center justify-center flex-shrink-0" style={{ borderColor: selected ? "#a855f7" : "#555", background: selected ? "#a855f7" : "transparent" }}>
+                        {selected && <span style={{ color: "#fff", fontSize: 8, lineHeight: 1 }}>&#10003;</span>}
+                      </span>
+                      <span style={{ color: rarityColor }}>{item.name}</span>
+                      <span className="text-w15 capitalize ml-auto">{item.rarity} {item.slot}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <div>
             <label className="text-xs text-w25 block mb-1">Message</label>
             <input
@@ -652,7 +750,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
             >
               Send Proposal
             </button>
-            <button onClick={() => { setShowNewTrade(false); setError(null); }} className="btn-interactive text-xs px-4 py-2 rounded-lg text-w30">Cancel</button>
+            <button onClick={() => { setShowNewTrade(false); setError(null); setNewTradeItems([]); }} className="btn-interactive text-xs px-4 py-2 rounded-lg text-w30">Cancel</button>
           </div>
         </div>
       )}

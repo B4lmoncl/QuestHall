@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useDashboard } from "@/app/DashboardContext";
 import type { WeeklyChallenge, Expedition, ExpeditionCheckpoint } from "@/app/types";
 import { InfoTooltip } from "@/components/InfoTooltip";
@@ -32,6 +32,34 @@ function Stars({ earned, max = 3 }: { earned: number; max?: number }) {
           ★
         </span>
       ))}
+    </span>
+  );
+}
+
+// ─── Weekly Reset Timer ──────────────────────────────────────────────────────
+function WeeklyResetTimer() {
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    const calcTimeLeft = () => {
+      const now = new Date();
+      // Next Monday 00:00 UTC
+      const daysUntilMonday = (8 - now.getUTCDay()) % 7 || 7;
+      const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + daysUntilMonday));
+      const diff = next.getTime() - now.getTime();
+      const d = Math.floor(diff / 86400000);
+      const h = Math.floor((diff % 86400000) / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      setTimeLeft(`${d}d ${h}h ${m}m`);
+    };
+    calcTimeLeft();
+    const interval = setInterval(calcTimeLeft, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <span className="text-xs px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.35)" }}>
+      Resets in {timeLeft}
     </span>
   );
 }
@@ -174,7 +202,14 @@ function SternenpfadView({
                 {/* Progress bar */}
                 <div className="mb-2">
                   <div className="flex items-center justify-between text-xs mb-1">
-                    <span className="text-w30">{progressValue}/{progressMax}</span>
+                    <span className="text-w30">
+                      {progressValue}/{progressMax}
+                      {isActive && modifier && modifier.multiplier && modifier.multiplier !== 1 && (
+                        <span className="ml-1.5" style={{ color: modifier.multiplier > 1 ? "#22c55e" : "#ef4444" }}>
+                          (effective: {Math.round(progressValue * modifier.multiplier * 10) / 10})
+                        </span>
+                      )}
+                    </span>
                     <span className="text-w20">{progressPct}%</span>
                   </div>
                   <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
@@ -537,9 +572,12 @@ export default function ChallengesView({
   return (
     <div className="space-y-4">
       {/* Section header */}
-      <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span>
-        <InfoTooltip text="Two weekly challenges reset every Monday. Star Path is a solo 3-stage challenge — earn up to 9 stars with speed bonuses. Expedition is a guild-wide cooperative challenge — all players contribute quests toward shared checkpoints. Rewards include Gold, Rune Shards, Essenz and the exclusive Sternentaler currency." />
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span>
+          <InfoTooltip text="Two weekly challenges reset every Monday. Star Path is a solo 3-stage challenge — earn up to 9 stars with speed bonuses. Expedition is a guild-wide cooperative challenge — all players contribute quests toward shared checkpoints. Rewards include Gold, Rune Shards, Essenz and the exclusive Sternentaler currency." />
+        </div>
+        <WeeklyResetTimer />
       </div>
 
       {/* Toggle buttons */}
