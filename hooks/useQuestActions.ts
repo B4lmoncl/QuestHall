@@ -43,6 +43,8 @@ export function useQuestActions({
   const [reviewComments, setReviewComments] = useState<Record<string, string>>({});
   const [poolRefreshing, setPoolRefreshing] = useState(false);
   const [shopUserId, setShopUserId] = useState<string | null>(null);
+  // Tracks which quest+action is currently in-flight to prevent double-clicks
+  const [loadingAction, setLoadingAction] = useState<{ questId: string; action: string } | null>(null);
 
   const updateNpcQuestStatus = useCallback((questId: string, status: string, claimedBy: string | null) => {
     const updateChain = (npc: ActiveNpc): ActiveNpc => ({
@@ -61,7 +63,8 @@ export function useQuestActions({
   }, [setActiveNpcs, setSelectedNpc]);
 
   const handleApprove = useCallback(async (id: string, comment?: string) => {
-    if (!reviewApiKey) return;
+    if (!reviewApiKey || loadingAction) return;
+    setLoadingAction({ questId: id, action: "approve" });
     try {
       const body = comment ? JSON.stringify({ comment }) : undefined;
       const r = await fetch(`/api/quest/${id}/approve`, {
@@ -77,11 +80,14 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not approve quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, refresh, addToast]);
+  }, [reviewApiKey, loadingAction, refresh, addToast]);
 
   const handleReject = useCallback(async (id: string, comment?: string) => {
-    if (!reviewApiKey) return;
+    if (!reviewApiKey || loadingAction) return;
+    setLoadingAction({ questId: id, action: "reject" });
     try {
       const body = comment ? JSON.stringify({ comment }) : undefined;
       const r = await fetch(`/api/quest/${id}/reject`, {
@@ -97,8 +103,10 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not reject quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, refresh, addToast]);
+  }, [reviewApiKey, loadingAction, refresh, addToast]);
 
   const handleChangePriority = useCallback(async (id: string, priority: Quest["priority"]) => {
     if (!reviewApiKey) return;
@@ -157,7 +165,8 @@ export function useQuestActions({
   }, [reviewApiKey, playerName]);
 
   const handleClaim = useCallback(async (questId: string) => {
-    if (!reviewApiKey || !playerName) return;
+    if (!reviewApiKey || !playerName || loadingAction) return;
+    setLoadingAction({ questId, action: "claim" });
     try {
       const r = await fetch(`/api/quest/${questId}/claim`, {
         method: "POST",
@@ -173,11 +182,14 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not claim quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, playerName, refresh, updateNpcQuestStatus, addToast]);
+  }, [reviewApiKey, playerName, loadingAction, refresh, updateNpcQuestStatus, addToast]);
 
   const handleUnclaim = useCallback(async (questId: string) => {
-    if (!reviewApiKey || !playerName) return;
+    if (!reviewApiKey || !playerName || loadingAction) return;
+    setLoadingAction({ questId, action: "unclaim" });
     try {
       const r = await fetch(`/api/quest/${questId}/unclaim`, {
         method: "POST",
@@ -192,11 +204,14 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not unclaim quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, playerName, refresh, updateNpcQuestStatus, addToast]);
+  }, [reviewApiKey, playerName, loadingAction, refresh, updateNpcQuestStatus, addToast]);
 
   const handleCoopClaim = useCallback(async (questId: string) => {
-    if (!reviewApiKey || !playerName) return;
+    if (!reviewApiKey || !playerName || loadingAction) return;
+    setLoadingAction({ questId, action: "coopClaim" });
     try {
       const r = await fetch(`/api/quest/${questId}/coop-claim`, {
         method: "POST",
@@ -210,11 +225,14 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not join co-op quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, playerName, refresh, addToast]);
+  }, [reviewApiKey, playerName, loadingAction, refresh, addToast]);
 
   const handleCoopComplete = useCallback(async (questId: string) => {
-    if (!reviewApiKey || !playerName) return;
+    if (!reviewApiKey || !playerName || loadingAction) return;
+    setLoadingAction({ questId, action: "coopComplete" });
     try {
       const r = await fetch(`/api/quest/${questId}/coop-complete`, {
         method: "POST",
@@ -228,11 +246,14 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not complete co-op quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, playerName, refresh, addToast]);
+  }, [reviewApiKey, playerName, loadingAction, refresh, addToast]);
 
   const handleComplete = useCallback(async (questId: string, questTitle: string) => {
-    if (!reviewApiKey || !playerName) return;
+    if (!reviewApiKey || !playerName || loadingAction) return;
+    setLoadingAction({ questId, action: "complete" });
     try {
       const r = await fetch(`/api/quest/${questId}/complete`, {
         method: "POST",
@@ -312,8 +333,10 @@ export function useQuestActions({
       }
     } catch {
       addToast({ type: "error", message: "Network error — could not complete quest" });
+    } finally {
+      setLoadingAction(null);
     }
-  }, [reviewApiKey, playerName, refresh, setChainOffer, setRewardCelebration, pendingLevelUpRef, setActiveNpcs, setSelectedNpc, addToast]);
+  }, [reviewApiKey, playerName, loadingAction, refresh, setChainOffer, setRewardCelebration, pendingLevelUpRef, setActiveNpcs, setSelectedNpc, addToast]);
 
   const handleChainAccept = useCallback(async (chainOffer: { template: Record<string, unknown>; parentTitle: string } | null) => {
     if (!reviewApiKey || !chainOffer) return;
@@ -403,6 +426,7 @@ export function useQuestActions({
     reviewComments, setReviewComments,
     poolRefreshing,
     shopUserId, setShopUserId,
+    loadingAction,
     // Handlers
     handleApprove,
     handleReject,
