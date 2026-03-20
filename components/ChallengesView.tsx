@@ -98,12 +98,12 @@ function SternenpfadView({
               const types = challenge.progress.types;
               progressValue = types ? Object.keys(types).length : 0;
             } else if (req.type === "streak_maintained") {
-              progressValue = 0; // streak is tracked separately on the user
+              progressValue = challenge.streakDays || 0;
             }
           }
           if (isCompleted) progressValue = progressMax;
 
-          const progressPct = Math.min(100, Math.round((progressValue / progressMax) * 100));
+          const progressPct = progressMax > 0 ? Math.min(100, Math.round((progressValue / progressMax) * 100)) : 0;
 
           // Speed bonus: check if stage was started within speedBonusDays
           const stageStart = challenge.stageStartedAt[i];
@@ -413,11 +413,13 @@ export default function ChallengesView({
   const [activeTab, setActiveTab] = useState<"sternenpfad" | "expedition">("sternenpfad");
   const [claimingStage, setClaimingStage] = useState(false);
   const [claimingCheckpoint, setClaimingCheckpoint] = useState<number | null>(null);
+  const [claimError, setClaimError] = useState<string | null>(null);
   const { reviewApiKey, playerName } = useDashboard();
 
   const handleClaimStage = useCallback(async () => {
     if (!reviewApiKey) return;
     setClaimingStage(true);
+    setClaimError(null);
     try {
       const { getAuthHeaders } = await import("@/lib/auth-client");
       const headers = getAuthHeaders(reviewApiKey);
@@ -427,9 +429,13 @@ export default function ChallengesView({
       });
       if (resp.ok) {
         await onRefresh();
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        setClaimError(data.error || "Fehler beim Beanspruchen");
       }
     } catch (e) {
       console.error("[challenges] claim stage failed:", e);
+      setClaimError("Netzwerkfehler");
     } finally {
       setClaimingStage(false);
     }
@@ -438,6 +444,7 @@ export default function ChallengesView({
   const handleClaimCheckpoint = useCallback(async (checkpoint: number) => {
     if (!reviewApiKey) return;
     setClaimingCheckpoint(checkpoint);
+    setClaimError(null);
     try {
       const { getAuthHeaders } = await import("@/lib/auth-client");
       const headers = getAuthHeaders(reviewApiKey);
@@ -448,9 +455,13 @@ export default function ChallengesView({
       });
       if (resp.ok) {
         await onRefresh();
+      } else {
+        const data = await resp.json().catch(() => ({}));
+        setClaimError(data.error || "Fehler beim Beanspruchen");
       }
     } catch (e) {
       console.error("[challenges] claim checkpoint failed:", e);
+      setClaimError("Netzwerkfehler");
     } finally {
       setClaimingCheckpoint(null);
     }
@@ -486,6 +497,14 @@ export default function ChallengesView({
           Expedition
         </button>
       </div>
+
+      {/* Error toast */}
+      {claimError && (
+        <div className="rounded-lg px-4 py-2 flex items-center justify-between" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
+          <span className="text-xs" style={{ color: "#ef4444" }}>{claimError}</span>
+          <button onClick={() => setClaimError(null)} className="text-xs text-w30 ml-2 hover:text-w50">✕</button>
+        </div>
+      )}
 
       {/* Content */}
       {activeTab === "sternenpfad" && (

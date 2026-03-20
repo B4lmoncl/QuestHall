@@ -505,6 +505,7 @@ export interface WeeklyChallenge {
   totalStars: number;
   modifier: WeeklyModifier | null;
   speedBonusDays: number;
+  streakDays?: number;
 }
 
 export interface ExpeditionCheckpoint {

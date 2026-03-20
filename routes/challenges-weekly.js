@@ -84,22 +84,25 @@ function getActiveChallenge(userId) {
 }
 
 // Calculate stars for a given stage based on progress
-function calculateStageStars(stageData, progress, u, stageStartedAt) {
+function calculateStageStars(stageData, progress, u, stageStartedAt, modifier) {
   if (!stageData || !stageData.starThresholds) return 0;
   const thresholds = stageData.starThresholds; // [1star, 2star, 3star]
   const req = stageData.requirement;
+
+  // Use modifier-adjusted progress for star calculation
+  const effectiveProgress = modifier ? getEffectiveProgress(progress, modifier) : progress;
 
   // Get the relevant progress value
   let value = 0;
   switch (req.type) {
     case 'quest_type':
-      value = progress[`type_${req.questType}`] || 0;
+      value = effectiveProgress[`type_${req.questType}`] || 0;
       break;
     case 'total_quests':
-      value = progress.totalQuests || 0;
+      value = effectiveProgress.totalQuests || 0;
       break;
     case 'unique_types':
-      value = Object.keys(progress.types || {}).length;
+      value = Object.keys(effectiveProgress.types || {}).length;
       break;
     case 'streak_maintained':
       value = u.streakDays || 0;
@@ -137,7 +140,10 @@ function evaluateStageProgress(userId, challenge) {
   const stageData = challenge.template.stages[challenge.currentStage];
   if (!stageData) return false;
 
-  const progress = challenge.progress || {};
+  // Use modifier-adjusted progress for evaluation
+  const modifier = getActiveModifier(challenge.weekId);
+  const rawProgress = challenge.progress || {};
+  const progress = modifier ? getEffectiveProgress(rawProgress, modifier) : rawProgress;
   const req = stageData.requirement;
 
   switch (req.type) {
@@ -154,17 +160,20 @@ function evaluateStageProgress(userId, challenge) {
   }
 }
 
-// Apply modifier to quest progress tracking
-function getModifiedCount(questType, modifier, rawCount) {
-  if (!modifier) return rawCount;
-  if (modifier.bonusType === 'variety') {
-    // Variety modifier is handled differently — first occurrence of each type counts double
-    return rawCount;
-  }
-  if (questType === modifier.bonusType) {
-    return Math.floor(rawCount * modifier.bonusMultiplier);
-  }
-  return Math.floor(rawCount * modifier.malusMultiplier);
+// Get effective progress values (modifier-adjusted) for a given progress object
+function getEffectiveProgress(progress, modifier) {
+  if (!modifier || !progress.effective) return progress;
+  // Return a merged view: raw counts for compatibility, effective counts for evaluation
+  return {
+    ...progress,
+    totalQuests: progress.effective.totalQuests || progress.totalQuests || 0,
+    // Override type counts with effective values
+    ...Object.fromEntries(
+      Object.entries(progress.effective)
+        .filter(([k]) => k.startsWith('type_'))
+        .map(([k, v]) => [k, v])
+    ),
+  };
 }
 
 // ─── GET /api/weekly-challenge — get current weekly challenge + progress ─────
@@ -188,7 +197,7 @@ router.get('/api/weekly-challenge', (req, res) => {
       return challenge.stars[i] || 0;
     }
     if (i === challenge.currentStage) {
-      return calculateStageStars(s, challenge.progress, u, challenge.stageStartedAt[i]);
+      return calculateStageStars(s, challenge.progress, u, challenge.stageStartedAt[i], modifier);
     }
     return 0;
   });
@@ -217,6 +226,7 @@ router.get('/api/weekly-challenge', (req, res) => {
       totalStars,
       modifier,
       speedBonusDays: WEEKLY_DATA.weeklyChallenge?.speedBonusDays || 2,
+      streakDays: u.streakDays || 0,
     },
   });
 });
@@ -288,7 +298,8 @@ router.post('/api/weekly-challenge/claim', requireAuth, (req, res) => {
 
   // Calculate stars for this stage before claiming
   const stageData = challenge.template.stages[challenge.currentStage];
-  const stageStars = calculateStageStars(stageData, challenge.progress, u, u.weeklyChallenge.stageStartedAt[challenge.currentStage]);
+  const modifier = getActiveModifier(challenge.weekId);
+  const stageStars = calculateStageStars(stageData, challenge.progress, u, u.weeklyChallenge.stageStartedAt[challenge.currentStage], modifier);
   u.weeklyChallenge.stars[challenge.currentStage] = stageStars;
 
   // Award rewards (base + star bonus)

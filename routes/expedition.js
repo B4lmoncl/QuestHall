@@ -6,8 +6,8 @@
 const fs = require('fs');
 const path = require('path');
 const router = require('express').Router();
-const { state, saveUsers, ensureUserCurrencies, RUNTIME_DIR } = require('../lib/state');
-const { now, getLevelInfo, awardCurrency } = require('../lib/helpers');
+const { state, saveUsers, ensureUserCurrencies, RUNTIME_DIR, ensureRuntimeDir } = require('../lib/state');
+const { now, awardCurrency } = require('../lib/helpers');
 const { requireAuth } = require('../lib/middleware');
 const { getWeekId } = require('./challenges-weekly');
 
@@ -43,12 +43,18 @@ function loadExpeditionState() {
   }
 }
 
+let _saveTimer = null;
 function saveExpeditionState() {
-  try {
-    fs.writeFileSync(EXPEDITION_FILE, JSON.stringify(state.expedition, null, 2));
-  } catch (e) {
-    console.warn('[expedition] Failed to save state:', e.message);
-  }
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(() => {
+    _saveTimer = null;
+    try {
+      ensureRuntimeDir();
+      fs.writeFileSync(EXPEDITION_FILE, JSON.stringify(state.expedition, null, 2));
+    } catch (e) {
+      console.warn('[expedition] Failed to save state:', e.message);
+    }
+  }, 200);
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -216,9 +222,9 @@ router.post('/api/expedition/claim', requireAuth, (req, res) => {
     const weekSeed = parseInt(exp.weekId.replace(/\D/g, ''), 10);
     const bonusTitle = bonusTitles.length > 0 ? bonusTitles[weekSeed % bonusTitles.length] : null;
     if (bonusTitle) {
-      u.earnedExpeditionTitles = u.earnedExpeditionTitles || [];
-      if (!u.earnedExpeditionTitles.some(t => t.id === bonusTitle.id)) {
-        u.earnedExpeditionTitles.push({ ...bonusTitle, earnedAt: now() });
+      u.earnedTitles = u.earnedTitles || [];
+      if (!u.earnedTitles.some(t => t.id === bonusTitle.id)) {
+        u.earnedTitles.push({ id: bonusTitle.id, name: bonusTitle.name, rarity: bonusTitle.rarity || 'rare', earnedAt: now() });
       }
     }
   }
