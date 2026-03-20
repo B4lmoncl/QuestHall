@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useDashboard } from "@/app/DashboardContext";
+import { useModalBehavior } from "@/components/ModalPortal";
 import { getAuthHeaders } from "@/lib/auth-client";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -148,6 +149,18 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [craftCount, setCraftCount] = useState(1);
   const [confirmAction, setConfirmAction] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
+  // Close callbacks for modal behavior hooks
+  const closeNpcModal = useCallback(() => {
+    setSelectedNpc(null); setCraftResult(null); setDismantleResult(null); setTransmuteResult(null); setSelectedTransmute([]);
+  }, []);
+  const closeConfirmProf = useCallback(() => setConfirmProf(null), []);
+  const closeConfirmAction = useCallback(() => setConfirmAction(null), []);
+
+  // Consistent modal behavior: ESC to close + body scroll lock
+  useModalBehavior(!!selectedNpc, closeNpcModal);
+  useModalBehavior(!!confirmProf, closeConfirmProf);
+  useModalBehavior(!!confirmAction, closeConfirmAction);
+
   const loggedIn = playerName && reviewApiKey;
 
   const fetchData = useCallback(async () => {
@@ -178,6 +191,9 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
       }
     }
   }, [professions, selectedNpc]);
+
+  // Reset craft count when switching NPC or modal tab
+  useEffect(() => { setCraftCount(1); }, [selectedNpc, npcModalTab]);
 
   const handleCraft = async (recipeId: string, count = 1) => {
     if (crafting || !reviewApiKey) return;
@@ -1105,44 +1121,44 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 <img src={confirmProf.npcPortrait} alt="" width={40} height={40} className="rounded-lg" style={{ imageRendering: "auto", border: `1px solid ${confirmProf.color}30` }} />
               )}
               <div>
-                <h3 className="text-sm font-bold" style={{ color: confirmProf.color }}>{confirmProf.name} wählen</h3>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{confirmProf.npcName ? `Ausbilder: ${confirmProf.npcName}` : ""}</p>
+                <h3 className="text-sm font-bold" style={{ color: confirmProf.color }}>Choose {confirmProf.name}</h3>
+                <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>{confirmProf.npcName ? `Trainer: ${confirmProf.npcName}` : ""}</p>
               </div>
             </div>
 
             <div className="space-y-2 text-xs" style={{ color: "rgba(255,255,255,0.55)" }}>
               <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
                 <div className="flex justify-between">
-                  <span>Belegte Slots</span>
+                  <span>Used Slots</span>
                   <span className="font-mono font-semibold" style={{ color: chosenCount >= maxProfSlots ? "#f44" : "#e8e8e8" }}>{chosenCount} / {maxProfSlots}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Freie Slots</span>
+                  <span>Free Slots</span>
                   <span className="font-mono font-semibold" style={{ color: "#22c55e" }}>{maxProfSlots - chosenCount}</span>
                 </div>
               </div>
 
               <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>Das passiert:</p>
+                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>What happens:</p>
                 <ul className="space-y-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Du erlernst <strong style={{ color: confirmProf.color }}>{confirmProf.name}</strong> auf Stufe 1</li>
-                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Zugang zu allen Rezepten des Berufes</li>
-                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Täglicher Bonus: Erstes Crafting gibt 2x XP</li>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> You learn <strong style={{ color: confirmProf.color }}>{confirmProf.name}</strong> at Level 1</li>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Access to all recipes of this profession</li>
+                  <li className="flex gap-2"><span style={{ color: "#22c55e" }}>&#10003;</span> Daily bonus: First craft grants 2x XP</li>
                 </ul>
               </div>
 
               <div className="rounded-lg p-3 space-y-1.5" style={{ background: "rgba(255,68,68,0.03)", border: "1px solid rgba(255,68,68,0.08)" }}>
-                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>Berufswechsel später:</p>
+                <p className="font-semibold" style={{ color: "rgba(255,255,255,0.7)" }}>Switching professions later:</p>
                 <ul className="space-y-1" style={{ color: "rgba(255,255,255,0.45)" }}>
-                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Kostet <strong style={{ color: "#ff8c00" }}>200 Essenz</strong></li>
-                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> <strong>Gesamter Fortschritt</strong> des abgelegten Berufs geht verloren</li>
-                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Level und XP werden auf 0 zurückgesetzt</li>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Costs <strong style={{ color: "#ff8c00" }}>200 Essenz</strong></li>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> <strong>All progress</strong> in the dropped profession is lost</li>
+                  <li className="flex gap-2"><span style={{ color: "#f44" }}>&#10007;</span> Level and XP are reset to 0</li>
                 </ul>
               </div>
 
               {maxProfSlots < 4 && (
                 <p className="text-xs text-center pt-1" style={{ color: "rgba(255,255,255,0.25)" }}>
-                  Weitere Slots werden durch Levelaufstieg freigeschaltet (Lv5, Lv15, Lv20, Lv25)
+                  More slots unlock through leveling up (Lv5, Lv15, Lv20, Lv25)
                 </p>
               )}
             </div>
@@ -1153,7 +1169,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 className="forge-btn flex-1 text-xs font-semibold py-2.5 rounded-lg"
                 style={{ color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.08)" }}
               >
-                Abbrechen
+                Cancel
               </button>
               <button
                 onClick={() => { const id = confirmProf.id; setConfirmProf(null); handleChooseProfession(id); }}
@@ -1161,7 +1177,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 className="forge-btn flex-1 text-xs font-bold py-2.5 rounded-lg"
                 style={{ background: `${confirmProf.color}18`, color: confirmProf.color, border: `1px solid ${confirmProf.color}40` }}
               >
-                {choosingProf ? "..." : "Beruf erlernen"}
+                {choosingProf ? "..." : "Learn Profession"}
               </button>
             </div>
           </div>

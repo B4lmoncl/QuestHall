@@ -3,7 +3,7 @@
  */
 const router = require('express').Router();
 const { state, saveUsers, saveSocial, ensureUserCurrencies, EQUIPMENT_SLOTS } = require('../lib/state');
-const { now } = require('../lib/helpers');
+const { now, getLevelInfo } = require('../lib/helpers');
 const { requireAuth, requireSelf } = require('../lib/middleware');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -70,7 +70,7 @@ router.get('/api/social/:playerId/friends', requireAuth, requireSelf('playerId')
         color: friendUser?.color || '#a78bfa',
         since: f.since,
         isOnline,
-        level: friendUser ? (friendUser.xp || 0) : 0,
+        level: friendUser ? getLevelInfo(friendUser.xp || 0).level : 0,
         classId: friendUser?.classId || null,
       };
     });
