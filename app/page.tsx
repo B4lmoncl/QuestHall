@@ -694,6 +694,15 @@ export default function Dashboard() {
         setInfoOverlayTab={setInfoOverlayTab}
       />
 
+      {!apiLive && !loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6" style={{ position: "relative", zIndex: 3, marginTop: 8 }}>
+          <div className="rounded-lg px-4 py-2 flex items-center gap-2 text-xs font-medium" style={{ background: "rgba(239,68,68,0.1)", border: "1px solid rgba(239,68,68,0.3)", color: "#fca5a5" }}>
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: "#ef4444" }} />
+            Connection lost — showing cached data. Actions may not save.
+          </div>
+        </div>
+      )}
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8" style={{ position: "relative", zIndex: 2, background: "rgba(11,13,17,0.75)", borderRadius: 16, backdropFilter: "blur(8px)", marginTop: 8 }}>
         {/* Stats — Player-specific */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-3" data-tutorial="stat-cards">

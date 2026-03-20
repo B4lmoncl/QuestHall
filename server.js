@@ -66,6 +66,17 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
+// Mutation rate limiter — 60 writes per minute per IP (POST/PATCH/PUT/DELETE only)
+const mutationLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many mutations — please slow down', retryAfter: 60 },
+  skip: (req) => req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS',
+});
+app.use('/api/', mutationLimiter);
+
 // Static files
 // Static files with caching headers
 app.use('/_next/static', express.static(path.join(__dirname, 'out', '_next', 'static'), {

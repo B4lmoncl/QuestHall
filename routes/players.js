@@ -133,7 +133,7 @@ router.get('/api/users/:id/achievements', (req, res) => {
   if (!u) return res.status(404).json({ error: 'User not found' });
   // Enrich with catalogue data (icon/desc may be missing on old entries)
   const enriched = (u.earnedAchievements || []).map(a => {
-    const tpl = state.ACHIEVEMENT_CATALOGUE.find(t => t.id === a.id);
+    const tpl = state.achievementCatalogueById?.get(a.id);
     if (!tpl) return a;
     return { ...a, icon: a.icon || tpl.icon, desc: a.desc || tpl.desc, rarity: a.rarity || tpl.rarity };
   });
