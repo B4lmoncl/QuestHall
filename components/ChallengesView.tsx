@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { useDashboard } from "@/app/DashboardContext";
 import type { WeeklyChallenge, Expedition, ExpeditionCheckpoint } from "@/app/types";
+import { InfoTooltip } from "@/components/InfoTooltip";
 
 // ─── Currency icons ──────────────────────────────────────────────────────────
 const CURRENCY_ICONS: Record<string, { label: string; color: string }> = {
@@ -35,7 +36,7 @@ function Stars({ earned, max = 3 }: { earned: number; max?: number }) {
   );
 }
 
-// ─── Sternenpfad (Solo) ─────────────────────────────────────────────────────
+// ─── Star Path (Solo) ────────────────────────────────────────────────────────
 function SternenpfadView({
   challenge,
   onClaim,
@@ -58,7 +59,7 @@ function SternenpfadView({
           )}
           <div>
             <h3 className="text-sm font-bold" style={{ color: "#e8e8e8" }}>{challenge.name}</h3>
-            <p className="text-xs text-w30">Kalenderwoche {challenge.weekId}</p>
+            <p className="text-xs text-w30">Week {challenge.weekId}</p>
           </div>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg" style={{ background: "rgba(251,191,36,0.08)", border: "1px solid rgba(251,191,36,0.2)" }}>
@@ -71,19 +72,32 @@ function SternenpfadView({
       {modifier && (
         <div className="rounded-lg px-4 py-3" style={{ background: "rgba(168,85,247,0.06)", border: "1px solid rgba(168,85,247,0.2)" }}>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a855f7" }}>Wochenmodifikator</span>
+            <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "#a855f7" }}>Weekly Modifier</span>
           </div>
           <p className="text-xs font-semibold" style={{ color: "#c4b5fd" }}>{modifier.name}</p>
           <p className="text-xs text-w30 mt-0.5">{modifier.description}</p>
         </div>
       )}
 
-      {/* Stages */}
-      <div className="space-y-3">
+      {/* Journey Path */}
+      <div className="relative" style={{ paddingLeft: 28 }}>
+        {/* Vertical connecting line */}
+        <div
+          className="absolute"
+          style={{
+            left: 11,
+            top: 12,
+            bottom: 12,
+            width: 2,
+            background: "linear-gradient(180deg, rgba(251,191,36,0.3) 0%, rgba(34,197,94,0.3) 50%, rgba(255,255,255,0.06) 100%)",
+          }}
+        />
+
         {challenge.stages.map((stage, i) => {
           const isActive = stage.current && !stage.completed;
           const isCompleted = stage.completed;
-          const stageColor = isCompleted ? "#22c55e" : isActive ? "#fbbf24" : "rgba(255,255,255,0.1)";
+          const stageColor = isCompleted ? "#22c55e" : isActive ? "#fbbf24" : "rgba(255,255,255,0.2)";
+          const isLast = i === challenge.stages.length - 1;
 
           // Progress calculation for active stage
           let progressValue = 0;
@@ -105,105 +119,144 @@ function SternenpfadView({
 
           const progressPct = progressMax > 0 ? Math.min(100, Math.round((progressValue / progressMax) * 100)) : 0;
 
-          // Speed bonus: check if stage was started within speedBonusDays
+          // Speed bonus
           const stageStart = challenge.stageStartedAt[i];
           const speedBonusActive = isActive && !!stageStart &&
             ((new Date().getTime() - new Date(stageStart).getTime()) / (1000 * 60 * 60 * 24)) <= challenge.speedBonusDays;
 
           return (
-            <div
-              key={i}
-              className="rounded-xl p-4 transition-all"
-              style={{
-                background: isActive ? "rgba(251,191,36,0.04)" : "rgba(255,255,255,0.02)",
-                border: `1px solid ${isActive ? "rgba(251,191,36,0.2)" : "rgba(255,255,255,0.06)"}`,
-                opacity: !isActive && !isCompleted ? 0.5 : 1,
-              }}
-            >
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-bold uppercase tracking-wider" style={{ color: stageColor }}>
-                      Stufe {stage.stage}
-                    </span>
-                    <Stars earned={stage.earnedStars} />
-                    {speedBonusActive && (
-                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
-                        Speed-Bonus aktiv
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-w40">{stage.desc}</p>
-                </div>
-              </div>
-
-              {/* Progress bar */}
-              <div className="mt-2 mb-2">
-                <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-w30">{progressValue}/{progressMax}</span>
-                  <span className="text-w20">{progressPct}%</span>
-                </div>
-                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
-                  <div
-                    className="h-full rounded-full transition-all"
-                    style={{
-                      width: `${progressPct}%`,
-                      background: isCompleted ? "#22c55e" : `linear-gradient(90deg, ${stageColor}, ${stageColor}80)`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Star thresholds */}
-              {(isActive || isCompleted) && stage.starThresholds && (
-                <div className="flex gap-3 text-xs text-w20 mt-1">
-                  {stage.starThresholds.map((t: number, si: number) => (
-                    <span key={si} style={{ color: progressValue >= t ? "#fbbf24" : undefined }}>
-                      ★{si + 1}: {t}{stage.requirement.type === "quest_type" ? ` ${stage.requirement.questType}` : ""}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Rewards preview */}
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {Object.entries(stage.rewards).map(([type, amount]) => (
-                  <CurrencyBadge key={type} type={type} amount={amount as number} />
-                ))}
-                {stage.earnedStars >= 2 && (
-                  <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>
-                    +{stage.earnedStars === 3 ? "33" : "15"}% Bonus
-                  </span>
+            <div key={i} className="relative" style={{ marginBottom: isLast ? 0 : 16 }}>
+              {/* Waypoint node */}
+              <div
+                className="absolute flex items-center justify-center"
+                style={{
+                  left: -28,
+                  top: 14,
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: isCompleted ? "#22c55e" : isActive ? "#fbbf24" : "rgba(255,255,255,0.06)",
+                  border: `2px solid ${stageColor}`,
+                  boxShadow: isActive ? `0 0 12px ${stageColor}50, 0 0 4px ${stageColor}30` : isCompleted ? `0 0 8px ${stageColor}30` : "none",
+                  zIndex: 2,
+                }}
+              >
+                {isCompleted ? (
+                  <span style={{ color: "#000", fontSize: 12, fontWeight: 800 }}>✓</span>
+                ) : (
+                  <span style={{ color: isActive ? "#000" : "rgba(255,255,255,0.3)", fontSize: 10, fontWeight: 700 }}>{i + 1}</span>
                 )}
               </div>
 
-              {/* Claim button */}
-              {isActive && challenge.canAdvance && (
-                <button
-                  onClick={onClaim}
-                  disabled={claiming}
-                  className="btn-interactive mt-3 w-full text-xs font-bold py-2 px-4 rounded-lg transition-all"
-                  style={{
-                    background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
-                    color: "#000",
-                    opacity: claiming ? 0.5 : 1,
-                  }}
-                >
-                  {claiming ? "Wird beansprucht..." : `Stufe ${stage.stage} abschließen`}
-                </button>
-              )}
+              {/* Stage card */}
+              <div
+                className="rounded-xl transition-all"
+                style={{
+                  padding: "14px 16px",
+                  background: isActive ? "rgba(251,191,36,0.04)" : isCompleted ? "rgba(34,197,94,0.03)" : "rgba(255,255,255,0.015)",
+                  border: `1px solid ${isActive ? "rgba(251,191,36,0.2)" : isCompleted ? "rgba(34,197,94,0.12)" : "rgba(255,255,255,0.05)"}`,
+                  opacity: !isActive && !isCompleted ? 0.5 : 1,
+                }}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: stageColor }}>
+                    Stage {stage.stage}
+                  </span>
+                  <Stars earned={stage.earnedStars} />
+                  {speedBonusActive && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                      Speed Bonus
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-w40 mb-2">{stage.desc}</p>
+
+                {/* Progress bar */}
+                <div className="mb-2">
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="text-w30">{progressValue}/{progressMax}</span>
+                    <span className="text-w20">{progressPct}%</span>
+                  </div>
+                  <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${progressPct}%`,
+                        background: isCompleted ? "#22c55e" : `linear-gradient(90deg, ${stageColor}, ${stageColor}80)`,
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Star thresholds */}
+                {(isActive || isCompleted) && stage.starThresholds && (
+                  <div className="flex gap-3 text-xs text-w20 mb-2">
+                    {stage.starThresholds.map((t: number, si: number) => (
+                      <span key={si} style={{ color: progressValue >= t ? "#fbbf24" : undefined }}>
+                        ★{si + 1}: {t}{stage.requirement.type === "quest_type" ? ` ${stage.requirement.questType}` : ""}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {/* Rewards */}
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.entries(stage.rewards).map(([type, amount]) => (
+                    <CurrencyBadge key={type} type={type} amount={amount as number} />
+                  ))}
+                  {stage.earnedStars >= 2 && (
+                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(251,191,36,0.1)", color: "#fbbf24" }}>
+                      +{stage.earnedStars === 3 ? "33" : "15"}% Bonus
+                    </span>
+                  )}
+                </div>
+
+                {/* Claim button */}
+                {isActive && challenge.canAdvance && (
+                  <button
+                    onClick={onClaim}
+                    disabled={claiming}
+                    className="btn-interactive mt-3 w-full text-xs font-bold py-2 px-4 rounded-lg transition-all"
+                    style={{
+                      background: "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)",
+                      color: "#000",
+                      opacity: claiming ? 0.5 : 1,
+                    }}
+                  >
+                    {claiming ? "Claiming..." : `Claim Stage ${stage.stage}`}
+                  </button>
+                )}
+              </div>
             </div>
           );
         })}
-      </div>
 
-      {/* All complete message */}
-      {challenge.currentStage >= 3 && (
-        <div className="text-center py-4 rounded-xl" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)" }}>
-          <p className="text-sm font-bold" style={{ color: "#22c55e" }}>Sternenpfad abgeschlossen!</p>
-          <p className="text-xs text-w30 mt-1">{totalStars}/9 Sterne gesammelt</p>
-        </div>
-      )}
+        {/* Finish flag at bottom */}
+        {challenge.currentStage >= 3 && (
+          <div className="relative" style={{ marginTop: 16 }}>
+            <div
+              className="absolute flex items-center justify-center"
+              style={{
+                left: -28,
+                top: 8,
+                width: 24,
+                height: 24,
+                borderRadius: "50%",
+                background: "#22c55e",
+                border: "2px solid #22c55e",
+                boxShadow: "0 0 12px rgba(34,197,94,0.4)",
+                zIndex: 2,
+              }}
+            >
+              <span style={{ fontSize: 12 }}>⚑</span>
+            </div>
+            <div className="text-center py-4 rounded-xl" style={{ background: "rgba(34,197,94,0.05)", border: "1px solid rgba(34,197,94,0.2)" }}>
+              <p className="text-sm font-bold" style={{ color: "#22c55e" }}>Star Path Complete!</p>
+              <p className="text-xs text-w30 mt-1">{totalStars}/9 Stars earned</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -222,7 +275,7 @@ function ExpeditionView({
   const overallPct = Math.min(100, Math.round((expedition.progress / maxRequired) * 100));
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-start gap-3">
         {expedition.icon && (
@@ -231,17 +284,17 @@ function ExpeditionView({
         <div className="flex-1">
           <h3 className="text-sm font-bold" style={{ color: "#e8e8e8" }}>{expedition.name}</h3>
           <p className="text-xs text-w30 mt-0.5">{expedition.description}</p>
-          <p className="text-xs text-w20 mt-1">{expedition.playerCount} Spieler · Kalenderwoche {expedition.weekId}</p>
+          <p className="text-xs text-w20 mt-1">{expedition.playerCount} Players · Week {expedition.weekId}</p>
         </div>
       </div>
 
       {/* Global progress */}
-      <div className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center justify-between text-xs mb-1.5">
-          <span className="font-semibold text-w50">Gilden-Fortschritt</span>
+      <div className="rounded-lg p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center justify-between text-xs mb-2">
+          <span className="font-semibold text-w50">Guild Progress</span>
           <span className="font-bold" style={{ color: "#4ade80" }}>{expedition.progress} Quests</span>
         </div>
-        <div className="h-2 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
+        <div className="h-2.5 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
           <div
             className="h-full rounded-full transition-all"
             style={{
@@ -251,7 +304,7 @@ function ExpeditionView({
           />
         </div>
         {/* Checkpoint markers on progress bar */}
-        <div className="relative h-3 mt-1">
+        <div className="relative h-4 mt-1.5">
           {expedition.checkpoints.map((cp, i) => {
             const pct = Math.round((cp.required / maxRequired) * 100);
             return (
@@ -261,13 +314,13 @@ function ExpeditionView({
                 style={{ left: `${pct}%` }}
               >
                 <div
-                  className="w-2 h-2 rounded-full"
+                  className="w-2.5 h-2.5 rounded-full"
                   style={{
                     background: cp.reached ? (cp.isBonus ? "#fbbf24" : "#22c55e") : "rgba(255,255,255,0.15)",
                     boxShadow: cp.reached ? `0 0 6px ${cp.isBonus ? "#fbbf24" : "#22c55e"}40` : "none",
                   }}
                 />
-                <span className="text-xs text-w20 absolute -bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap">
+                <span className="text-xs text-w20 absolute -bottom-3.5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                   {cp.required}
                 </span>
               </div>
@@ -277,7 +330,7 @@ function ExpeditionView({
       </div>
 
       {/* Checkpoints */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         {expedition.checkpoints.map((cp: ExpeditionCheckpoint) => {
           const isCurrent = !cp.reached && (cp.number === 1 || expedition.checkpoints[cp.number - 2]?.reached);
           const canClaim = cp.reached && !cp.claimedByPlayer;
@@ -285,7 +338,7 @@ function ExpeditionView({
           return (
             <div
               key={cp.number}
-              className="rounded-lg p-3 transition-all"
+              className="rounded-xl p-4 transition-all"
               style={{
                 background: cp.isBonus
                   ? "rgba(251,191,36,0.04)"
@@ -306,10 +359,10 @@ function ExpeditionView({
                 opacity: !cp.reached && !isCurrent ? 0.5 : 1,
               }}
             >
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2 flex-1">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 flex-1">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
                     style={{
                       background: cp.reached
                         ? cp.isBonus ? "#fbbf24" : "#22c55e"
@@ -319,26 +372,26 @@ function ExpeditionView({
                   >
                     {cp.reached ? "✓" : cp.number}
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold" style={{ color: cp.isBonus ? "#fbbf24" : cp.reached ? "#4ade80" : "#e8e8e8" }}>
                       {cp.name}
                       {cp.isBonus && <span className="ml-1 text-xs text-w20">(Bonus)</span>}
                     </p>
-                    <p className="text-xs text-w20">
-                      {cp.required} Quests benötigt
-                      {cp.claimedByPlayer && <span style={{ color: "#22c55e" }}> · Beansprucht</span>}
+                    <p className="text-xs text-w20 mt-0.5">
+                      {cp.required} quests required
+                      {cp.claimedByPlayer && <span style={{ color: "#22c55e" }}> · Claimed</span>}
                     </p>
                   </div>
                 </div>
 
                 {/* Rewards */}
-                <div className="flex flex-wrap gap-1 justify-end">
+                <div className="flex flex-wrap gap-1.5 justify-end">
                   {Object.entries(cp.rewards).map(([type, amount]) => (
                     <CurrencyBadge key={type} type={type} amount={amount as number} />
                   ))}
                   {cp.bonusTitle && (
                     <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(168,85,247,0.1)", color: "#a855f7" }}>
-                      Titel: {cp.bonusTitle.name}
+                      Title: {cp.bonusTitle.name}
                     </span>
                   )}
                 </div>
@@ -349,7 +402,7 @@ function ExpeditionView({
                 <button
                   onClick={() => onClaim(cp.number)}
                   disabled={claiming === cp.number}
-                  className="btn-interactive mt-2 w-full text-xs font-bold py-1.5 px-4 rounded-lg transition-all"
+                  className="btn-interactive mt-3 w-full text-xs font-bold py-2 px-4 rounded-lg transition-all"
                   style={{
                     background: cp.isBonus
                       ? "linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)"
@@ -358,7 +411,7 @@ function ExpeditionView({
                     opacity: claiming === cp.number ? 0.5 : 1,
                   }}
                 >
-                  {claiming === cp.number ? "Wird beansprucht..." : "Belohnung einfordern"}
+                  {claiming === cp.number ? "Claiming..." : "Claim Reward"}
                 </button>
               )}
             </div>
@@ -367,15 +420,15 @@ function ExpeditionView({
       </div>
 
       {/* Player contribution + leaderboard */}
-      <div className="rounded-lg p-3" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-w35">Beiträge</span>
+      <div className="rounded-xl p-4" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold uppercase tracking-wider text-w35">Contributions</span>
           <span className="text-xs font-bold" style={{ color: "#4ade80" }}>
-            Dein Beitrag: {expedition.playerContribution} Quests
+            Your contribution: {expedition.playerContribution} Quests
           </span>
         </div>
         {expedition.contributions.length > 0 ? (
-          <div className="space-y-1">
+          <div className="space-y-1.5">
             {expedition.contributions.map((c, i) => (
               <div key={c.userId} className="flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
@@ -393,7 +446,7 @@ function ExpeditionView({
             ))}
           </div>
         ) : (
-          <p className="text-xs text-w20 text-center py-2">Noch keine Beiträge diese Woche</p>
+          <p className="text-xs text-w20 text-center py-3">No contributions this week yet</p>
         )}
       </div>
     </div>
@@ -431,11 +484,11 @@ export default function ChallengesView({
         await onRefresh();
       } else {
         const data = await resp.json().catch(() => ({}));
-        setClaimError(data.error || "Fehler beim Beanspruchen");
+        setClaimError(data.error || "Failed to claim reward");
       }
     } catch (e) {
       console.error("[challenges] claim stage failed:", e);
-      setClaimError("Netzwerkfehler");
+      setClaimError("Network error");
     } finally {
       setClaimingStage(false);
     }
@@ -457,11 +510,11 @@ export default function ChallengesView({
         await onRefresh();
       } else {
         const data = await resp.json().catch(() => ({}));
-        setClaimError(data.error || "Fehler beim Beanspruchen");
+        setClaimError(data.error || "Failed to claim reward");
       }
     } catch (e) {
       console.error("[challenges] claim checkpoint failed:", e);
-      setClaimError("Netzwerkfehler");
+      setClaimError("Network error");
     } finally {
       setClaimingCheckpoint(null);
     }
@@ -471,7 +524,8 @@ export default function ChallengesView({
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center gap-2">
-        <span className="text-xs font-semibold uppercase tracking-widest text-w35">Challenges</span>
+        <span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span>
+        <InfoTooltip text="Two weekly challenges reset every Monday. Star Path is a solo 3-stage challenge — earn up to 9 stars with speed bonuses. Expedition is a guild-wide cooperative challenge — all players contribute quests toward shared checkpoints. Rewards include Gold, Rune Shards, Essenz and the exclusive Sternentaler currency." />
       </div>
 
       {/* Toggle buttons */}
@@ -484,7 +538,7 @@ export default function ChallengesView({
             color: activeTab === "sternenpfad" ? "#fbbf24" : "rgba(255,255,255,0.3)",
           }}
         >
-          ★ Sternenpfad
+          ★ Star Path
         </button>
         <button
           onClick={() => setActiveTab("expedition")}
@@ -516,8 +570,8 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <p className="text-sm font-bold mb-1 text-w25">Kein Sternenpfad aktiv</p>
-            <p className="text-xs text-w15">{playerName ? "Der Sternenpfad wird montags zurückgesetzt." : "Melde dich an, um den Sternenpfad zu sehen."}</p>
+            <p className="text-sm font-bold mb-1 text-w25">No Star Path active</p>
+            <p className="text-xs text-w15">{playerName ? "The Star Path resets every Monday." : "Log in to view the Star Path."}</p>
           </div>
         )
       )}
@@ -531,8 +585,8 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
-            <p className="text-sm font-bold mb-1 text-w25">Keine Expedition aktiv</p>
-            <p className="text-xs text-w15">Die Expedition wird montags zurückgesetzt.</p>
+            <p className="text-sm font-bold mb-1 text-w25">No Expedition active</p>
+            <p className="text-xs text-w15">The Expedition resets every Monday.</p>
           </div>
         )
       )}

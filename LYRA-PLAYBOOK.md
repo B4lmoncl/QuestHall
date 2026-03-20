@@ -745,6 +745,181 @@ Each profession has 10 levels with scaling XP thresholds (defined in `levelThres
 
 ---
 
+## 13. Weekly Challenges — Star Path (Sternenpfad)
+
+**Data**: `public/data/weeklyChallenges.json`
+**Backend**: `routes/challenges-weekly.js`
+**Frontend**: `components/ChallengesView.tsx`
+
+The Star Path is a **solo weekly challenge** with 3 stages. It resets every Monday. Each stage has star ratings (1-3 stars), for a maximum of 9 stars per week. A weekly modifier boosts/penalizes certain quest types. Completing stages quickly earns a speed bonus (+1 star).
+
+### ⏰ Time-Bound Content Requirement
+
+**New weekly challenge templates MUST be created regularly** to keep the rotation fresh. The system randomly selects from templates each week. With only 8 templates currently, players will see repeats within 2 months. **Target: maintain at least 16-20 templates** for good variety.
+
+### Challenge Template Schema
+
+In `weeklyChallenges.json → challenges[]`:
+
+```json
+{
+  "id": "unique-challenge-id",
+  "name": "Challenge Display Name",
+  "icon": "/images/icons/challenge-icon.png",
+  "stages": [
+    {
+      "stage": 1,
+      "desc": "What the player needs to do",
+      "requirement": { "type": "quest_type", "questType": "personal", "count": 3 },
+      "starThresholds": [3, 5, 7],
+      "rewards": { "gold": 50, "xp": 30, "sternentaler": 2 }
+    },
+    {
+      "stage": 2,
+      "desc": "Stage 2 description",
+      "requirement": { "type": "total_quests", "count": 5 },
+      "starThresholds": [5, 8, 10],
+      "rewards": { "gold": 75, "xp": 50, "sternentaler": 3 }
+    },
+    {
+      "stage": 3,
+      "desc": "Stage 3 description (hardest)",
+      "requirement": { "type": "unique_types", "count": 4 },
+      "starThresholds": [4, 5, 6],
+      "rewards": { "gold": 100, "xp": 75, "sternentaler": 5 }
+    }
+  ]
+}
+```
+
+### Requirement Types
+
+| Type | Fields | Description |
+|------|--------|-------------|
+| `quest_type` | `questType`, `count` | Complete N quests of a specific type (e.g., "personal", "learning") |
+| `total_quests` | `count` | Complete N quests of any type |
+| `unique_types` | `count` | Complete quests across N different quest types |
+| `streak_maintained` | `count` | Maintain a daily streak for N days within the week |
+
+### Star Thresholds
+
+`starThresholds` is an array of 3 numbers `[1★, 2★, 3★]`. These represent the count required to earn each star level. E.g., `[3, 5, 7]` means: 3 completions = 1★, 5 = 2★, 7 = 3★.
+
+Star bonuses on rewards: 2★ = +15%, 3★ = +33%.
+
+### Weekly Modifiers
+
+In `weeklyChallenges.json → weeklyModifiers[]`:
+
+```json
+{
+  "id": "modifier-id",
+  "name": "Modifier Display Name",
+  "description": "What this modifier does",
+  "bonusType": "personal",
+  "bonusMultiplier": 1.5,
+  "malusType": "development",
+  "malusMultiplier": 0.75
+}
+```
+
+Each week, one modifier is randomly selected. `bonusType` quests count 1.5x toward stage progress; `malusType` quests count 0.75x. Modifiers affect all stages equally.
+
+### Speed Bonus
+
+If a stage is completed within `speedBonusDays` (default: 2) days of starting it, the player earns +1 bonus star for that stage. This rewards active players who tackle stages quickly.
+
+### Design Guidelines
+
+- Stages should escalate in difficulty (stage 1 = easy, stage 3 = hard)
+- Mix requirement types across stages for variety
+- Star thresholds should feel achievable but rewarding to max
+- Rewards should scale with stage difficulty
+- **Sternentaler** is the exclusive currency earned only from weekly challenges — include it in every stage's rewards
+
+---
+
+## 14. Weekly Challenges — Expedition (Cooperative)
+
+**Data**: `public/data/expeditions.json`
+**Backend**: `routes/expedition.js`
+**Frontend**: `components/ChallengesView.tsx`
+
+The Expedition is a **guild-wide cooperative weekly challenge**. All registered players contribute quests toward shared checkpoints. It resets every Monday. There are 3 regular checkpoints + 1 bonus checkpoint. The quest requirement scales with the number of registered players.
+
+### ⏰ Time-Bound Content Requirement
+
+**New expedition templates MUST be created regularly** to keep the rotation fresh. The system randomly selects from templates each week. With only 8 templates currently, players will see repeats within 2 months. **Target: maintain at least 16-20 templates** for good variety.
+
+Additionally, **bonus titles** rotate through a pool of 6. New bonus titles should be added periodically to maintain excitement around the bonus checkpoint reward.
+
+### Expedition Template Schema
+
+In `expeditions.json → expeditions[]`:
+
+```json
+{
+  "id": "unique-expedition-id",
+  "name": "Expedition Display Name",
+  "description": "Flavor text describing the expedition",
+  "icon": "/images/icons/expedition-icon.png",
+  "checkpointNames": [
+    "Checkpoint 1 Name",
+    "Checkpoint 2 Name",
+    "Checkpoint 3 Name",
+    "Bonus Checkpoint Name"
+  ]
+}
+```
+
+### Checkpoint Scaling
+
+Quest requirements per checkpoint are defined globally in `expeditions.json → questsPerPlayerPerCheckpoint`:
+
+```json
+"questsPerPlayerPerCheckpoint": [8, 12, 18, 25]
+```
+
+These values are multiplied by the number of registered players. E.g., with 5 players: checkpoint 1 requires 40 quests, checkpoint 2 requires 60, etc. This scaling ensures active players can compensate for inactive ones.
+
+### Checkpoint Rewards
+
+Defined globally in `expeditions.json → checkpointRewards`:
+
+```json
+"checkpointRewards": {
+  "1": { "gold": 100, "xp": 50 },
+  "2": { "gold": 200, "xp": 100, "runensplitter": 5 },
+  "3": { "gold": 350, "xp": 200, "runensplitter": 10, "essenz": 25 },
+  "bonus": { "gold": 500, "xp": 300, "sternentaler": 10 }
+}
+```
+
+The **bonus checkpoint** additionally awards a rotating title from `bonusTitles[]`.
+
+### Bonus Titles
+
+In `expeditions.json → bonusTitles[]`:
+
+```json
+{
+  "id": "title-id",
+  "name": "Title Display Name",
+  "rarity": "epic"
+}
+```
+
+One title is randomly selected each week for the bonus checkpoint reward. All bonus titles should be `epic` rarity.
+
+### Design Guidelines
+
+- Expedition names should feel like epic guild undertakings (journeys, battles, explorations)
+- 4 checkpoint names per template: the first 3 should escalate thematically, the 4th (bonus) should feel climactic
+- Flavor descriptions should be 1-2 sentences, evocative and RPG-themed
+- Bonus titles should be memorable and desirable — they're the primary aspirational reward
+
+---
+
 ## Checkliste für neuen Content
 
 - [ ] ID ist einzigartig (prüfe mit `grep -r "deine-id" public/data/`)
