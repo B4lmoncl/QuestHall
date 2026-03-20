@@ -195,6 +195,7 @@ export default function DashboardHeader({
             onClick={toggleMute}
             className="btn-interactive text-xs px-2 py-0.5 rounded text-w40 bg-w5 border-w10"
             title={soundMuted ? "Sound einschalten" : "Sound ausschalten"}
+            aria-label={soundMuted ? "Unmute sound effects" : "Mute sound effects"}
             style={{ minWidth: 28, textAlign: "center" }}
           >
             {soundMuted ? "🔇" : "🔊"}
@@ -204,6 +205,7 @@ export default function DashboardHeader({
             onClick={() => { setInfoOverlayTab("guide"); setInfoOverlayOpen(true); }}
             className="btn-interactive text-xs px-2 py-0.5 rounded text-w40 bg-w5 border-w10"
             title="Info, Guide & Tutorial"
+            aria-label="Open info, guide and tutorial"
           >
             Info
           </button>
@@ -286,7 +288,7 @@ export default function DashboardHeader({
                           className="text-xs px-2 py-1 rounded input-dark"
                           onKeyDown={e => { if (e.key === "Enter") handleLogin(); }}
                         />
-                        {loginError && <p className="text-xs" style={{ color: "#ef4444" }}>{loginError}</p>}
+                        {loginError && <p role="alert" className="text-xs" style={{ color: "#ef4444" }}>{loginError}</p>}
                         <div className="flex gap-1">
                           <button
                             onClick={handleLogin}
@@ -323,7 +325,7 @@ export default function DashboardHeader({
                         <input type="text" value={registerName} onChange={e => setRegisterName(e.target.value)} placeholder="Choose a name" className="text-xs px-2 py-1 rounded input-dark" />
                         <input type="password" value={registerPassword} onChange={e => setRegisterPassword(e.target.value)} placeholder="Password (min 6 chars)" className="text-xs px-2 py-1 rounded input-dark" />
                         <input type="password" value={registerPasswordConfirm} onChange={e => setRegisterPasswordConfirm(e.target.value)} placeholder="Confirm password" className="text-xs px-2 py-1 rounded input-dark" />
-                        {registerError && <p className="text-xs" style={{ color: "#ef4444" }}>{registerError}</p>}
+                        {registerError && <p role="alert" className="text-xs" style={{ color: "#ef4444" }}>{registerError}</p>}
                         <div className="flex gap-1">
                           <button onClick={handleRegister} disabled={authLoading} className="flex-1 text-xs px-3 py-1 rounded font-medium" style={{ background: "rgba(34,197,94,0.15)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)", opacity: authLoading ? 0.5 : 1 }}>{authLoading ? "Creating…" : "Create"}</button>
                           <button onClick={() => { setRegisterOpen(false); setRegisterError(""); setRegisterPassword(""); setRegisterPasswordConfirm(""); }} className="text-xs px-2 py-1 rounded text-w30 bg-w4 border-w8">Back</button>

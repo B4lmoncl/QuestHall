@@ -570,8 +570,9 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <p className="text-2xl mb-2">⭐</p>
             <p className="text-sm font-bold mb-1 text-w25">No Star Path active</p>
-            <p className="text-xs text-w15">{playerName ? "The Star Path resets every Monday." : "Log in to view the Star Path."}</p>
+            <p className="text-xs text-w15">{playerName ? "The Star Path resets every Monday. A new challenge awaits!" : "Log in to view the Star Path."}</p>
           </div>
         )
       )}
@@ -585,8 +586,9 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <p className="text-2xl mb-2">🏔️</p>
             <p className="text-sm font-bold mb-1 text-w25">No Expedition active</p>
-            <p className="text-xs text-w15">The Expedition resets every Monday.</p>
+            <p className="text-xs text-w15">The Expedition resets every Monday. Rally your guild!</p>
           </div>
         )
       )}

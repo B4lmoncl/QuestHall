@@ -182,7 +182,7 @@ router.post('/api/quest', requireApiKey, (req, res) => {
     if (tpl.id) state.questCatalogById.set(tpl.id, tpl);
     rebuildCatalogMeta();
     saveQuestCatalog();
-  } catch (_) {}
+  } catch (e) { console.warn('[quest] Failed to seed catalog template:', e.message); }
   console.log(`[quest] created: ${quest.id} — "${title}"`);
   res.json({ ok: true, quest });
 });

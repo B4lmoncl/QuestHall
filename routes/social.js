@@ -214,7 +214,7 @@ router.get('/api/social/:playerId/messages/:otherPlayerId', requireAuth, require
   if (!state.users[uid]) return res.status(404).json({ error: 'Player not found' });
   if (!state.users[otherId]) return res.status(404).json({ error: 'Other player not found' });
 
-  const limit = Math.min(Math.max(parseInt(req.query.limit) || 50, 1), 200);
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
   const before = req.query.before || null;
 
   let msgs = state.socialData.messages.filter(

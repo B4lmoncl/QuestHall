@@ -97,7 +97,9 @@ export default function LeaderboardView({ entries, agents, mode = "agents" }: {
   if (merged.length === 0) {
     return (
       <div className="rounded-xl p-8 text-center" style={{ background: "#252525", border: "1px solid rgba(255,255,255,0.06)" }}>
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.2)" }}>{mode === "players" ? "No players registered yet." : "No agents registered yet."}</p>
+        <p className="text-2xl mb-2">{mode === "players" ? "🏆" : "🤖"}</p>
+        <p className="text-sm font-medium mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>{mode === "players" ? "The Proving Grounds await" : "No agents deployed"}</p>
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.15)" }}>{mode === "players" ? "Register and complete quests to claim your rank." : "Deploy agents to see them on the leaderboard."}</p>
       </div>
     );
   }

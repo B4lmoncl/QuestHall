@@ -245,9 +245,11 @@ router.post('/api/professions/learn', requireAuth, (req, res) => {
   }
 
   // Deduct gold and learn
-  u.gold -= goldNeeded;
+  ensureUserCurrencies(u);
+  if (u.currencies) u.currencies.gold -= goldNeeded;
+  else u.gold = (u.gold || 0) - goldNeeded;
   u.learnedRecipes.push(recipeId);
-  state.saveUsers();
+  saveUsers();
 
   const profDef = PROFESSIONS_DATA.professions.find(p => p.id === recipe.profession);
   res.json({ success: true, recipe: recipe.name, profession: profDef?.name || recipe.profession, goldSpent: goldNeeded });
@@ -256,7 +258,7 @@ router.post('/api/professions/learn', requireAuth, (req, res) => {
 // ─── POST /api/professions/craft — execute a recipe ─────────────────────────
 router.post('/api/professions/craft', requireAuth, (req, res) => {
   const { recipeId, targetSlot, targetStatIndex, count: rawCount } = req.body;
-  const count = Math.max(1, Math.min(10, parseInt(rawCount) || 1)); // batch: 1-10
+  const count = Math.max(1, Math.min(10, parseInt(rawCount, 10) || 1)); // batch: 1-10
   if (!recipeId) return res.status(400).json({ error: 'recipeId required' });
 
   const uid = req.auth?.userId;

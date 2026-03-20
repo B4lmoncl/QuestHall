@@ -354,7 +354,7 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
               )}
             </>
           ) : !expanded ? (
-            <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(220,185,120,0.28)" }}>{flavorText}</p>
+            <p className="text-xs mt-0.5 italic truncate" style={{ color: "rgba(220,185,120,0.45)" }}>{flavorText}</p>
           ) : null}
           {expanded && quest.description && (
             <p className="text-xs mt-2 leading-relaxed" style={{ color: "rgba(220,195,140,0.6)", fontStyle: "italic", borderLeft: `2px solid ${rarityColor}44`, paddingLeft: 8 }}>{quest.description}</p>

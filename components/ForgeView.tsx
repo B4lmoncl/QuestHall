@@ -832,7 +832,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                                   border: `1px solid ${canDo ? `${selectedNpc.color}40` : "rgba(255,255,255,0.06)"}`,
                                 }}
                               >
-                                {crafting ? "..." : onCooldown ? "On CD" : "Craft"}
+                                {crafting ? "Crafting\u2026" : onCooldown ? "On Cooldown" : "Craft"}
                               </button>
                             )}
                           </div>

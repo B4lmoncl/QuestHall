@@ -530,4 +530,67 @@ Recipes now have explicit **source** types replacing the old auto-unlock system:
 
 ---
 
-*End of Audit Report*
+## 9. Phase 2026-03-20 — Full Codebase Audit & QoL Pass
+
+### 9.1 Critical Fix: `state.saveUsers()` in crafting.js
+
+**Severity:** CRITICAL
+**File:** `routes/crafting.js:250`
+**Issue:** `POST /api/professions/learn` called `state.saveUsers()` — a method that does NOT exist on the state object. The correct function is the imported `saveUsers()`.
+**Impact:** Gold deductions and recipe learning from trainer NPCs were applied in-memory but NEVER persisted to disk. On server restart, the changes were lost (gold refunded, recipe unlearned).
+**Fix:** Changed `state.saveUsers()` → `saveUsers()`. Also added `ensureUserCurrencies(u)` call and consistent gold deduction using `u.currencies.gold` pattern.
+
+### 9.2 Code Quality Fixes
+
+| Issue | Severity | File | Fix |
+|-------|----------|------|-----|
+| `parseInt()` without radix parameter | Medium | `routes/crafting.js:259` | Added `, 10` radix |
+| `parseInt()` without radix parameter | Medium | `routes/social.js:217` | Added `, 10` radix |
+| Silent error swallowing `catch (_) {}` | Medium | `routes/quests.js:185` | Added `console.warn` for quest catalog seeding failures |
+
+### 9.3 UX / Quality of Life Improvements
+
+| Improvement | File | Description |
+|-------------|------|-------------|
+| Flavor text contrast improved | `components/QuestCards.tsx:357` | Opacity raised from 0.28 → 0.45 for better readability |
+| Craft button loading text | `components/ForgeView.tsx:835` | Changed "..." → "Crafting…" and "On CD" → "On Cooldown" for clarity |
+| Login error accessibility | `components/DashboardHeader.tsx:289` | Added `role="alert"` to login error message for screen readers |
+| Register error accessibility | `components/DashboardHeader.tsx:326` | Added `role="alert"` to register error message for screen readers |
+| Sound toggle aria-label | `components/DashboardHeader.tsx:197` | Added `aria-label` for screen reader support |
+| Info button aria-label | `components/DashboardHeader.tsx:206` | Added `aria-label` for screen reader support |
+| Roadmap empty state | `components/RoadmapView.tsx:200` | Added themed icon and descriptive copy |
+| Star Path empty state | `components/ChallengesView.tsx:572` | Added star icon and encouraging text |
+| Expedition empty state | `components/ChallengesView.tsx:587` | Added mountain icon and guild-themed text |
+| Leaderboard empty state | `components/LeaderboardView.tsx:99` | Added themed icons, titles, and helpful descriptions |
+
+### 9.4 Remaining Acknowledged Issues (Low Priority)
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| CORS `origin: true` accepts all origins | Medium | **Acknowledged** — OK for single-user/self-hosted deployment; would need origin whitelist for production multi-tenant |
+| Dashboard batch uses internal HTTP calls | Low | **Acknowledged** — Intentional design to reuse middleware (auth, rate limiting) |
+| No CSRF protection | Medium | **Acknowledged** — Mitigated by API key/JWT requirement on all mutating endpoints |
+| Timing-safe comparison leaks key length | Low | **Acknowledged** — Master key length is not a meaningful secret in this context |
+| `state.quests.find()` used in some routes instead of `questsById.get()` | Low | **Acknowledged** — Only used for complex multi-field lookups where Map can't help |
+| Inconsistent error response formats (`{error}` vs `{success, error}`) | Low | **Acknowledged** — Frontend handles both formats; standardization would be nice but not breaking |
+
+### 9.5 Confirmed Non-Issues (Re-verified)
+
+| Reported Concern | Actual Status |
+|-----------------|---------------|
+| Confirmation dialogs for destructive actions | **Already implemented** — Transmute, Dismantle-All, and Dismantle (rare+) all have 2-step confirmation with `confirmAction` state |
+| Quest search filter missing | **Already implemented** — Search input at `page.tsx:1475` filters open and in-progress quests |
+| Skill-up color tooltips missing | **Already implemented** — Both dot indicator and XP display have `title={skillUp.label}` |
+| Login/Register loading states | **Already implemented** — Buttons show "Signing in…" / "Creating…" with `disabled` + opacity |
+
+### 9.6 Frontend-Backend Consistency (Re-verified 2026-03-20)
+
+All stat effects, XP/gold calculations, streak mechanics, shop effects, crafting recipes, gacha rates, and currency operations verified matching between frontend display and backend logic. The only mismatch found was the `state.saveUsers()` bug (Section 9.1), now fixed.
+
+### 9.7 Modal Behavior (Re-verified 2026-03-20)
+
+All modals use the `useModalBehavior` hook providing consistent ESC-to-close, body scroll lock, and backdrop-click-to-close behavior. No inconsistencies found.
+
+---
+
+*End of Audit Report — Updated 2026-03-20*
