@@ -427,25 +427,39 @@ function ExpeditionView({
             Your contribution: {expedition.playerContribution} Quests
           </span>
         </div>
-        {expedition.contributions.length > 0 ? (
-          <div className="space-y-1.5">
-            {expedition.contributions.map((c, i) => (
-              <div key={c.userId} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-w20 w-4 text-right">{i + 1}.</span>
-                  <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-                    style={{ background: c.color + "20", color: c.color }}
-                  >
-                    {c.avatar.slice(0, 2)}
-                  </span>
-                  <span className="text-w50">{c.name}</span>
-                </div>
-                <span className="font-semibold text-w40">{c.count}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
+        {expedition.contributions.length > 0 ? (() => {
+          const topCount = expedition.contributions[0]?.count || 1;
+          const fairShare = expedition.playerCount > 0 ? Math.ceil(maxRequired / expedition.playerCount) : 1;
+          return (
+            <div className="space-y-1.5">
+              {expedition.contributions.map((c, i) => {
+                const pct = Math.min(100, Math.round((c.count / topCount) * 100));
+                const aboveFair = c.count >= fairShare;
+                return (
+                  <div key={c.userId} className="text-xs">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-w20 w-4 text-right">{i + 1}.</span>
+                        <span
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ background: c.color + "20", color: c.color }}
+                        >
+                          {c.avatar.slice(0, 2)}
+                        </span>
+                        <span className="text-w50">{c.name}</span>
+                      </div>
+                      <span className="font-semibold" style={{ color: aboveFair ? "#4ade80" : "rgba(255,255,255,0.4)" }}>{c.count}</span>
+                    </div>
+                    <div className="ml-6 rounded-full overflow-hidden" style={{ height: 3, background: "rgba(255,255,255,0.04)" }}>
+                      <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: aboveFair ? "#4ade80" : "rgba(255,255,255,0.15)" }} />
+                    </div>
+                  </div>
+                );
+              })}
+              <p className="text-xs mt-2" style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>Fair share: ~{fairShare} quests per player</p>
+            </div>
+          );
+        })() : (
           <p className="text-xs text-w20 text-center py-3">No contributions this week yet</p>
         )}
       </div>
@@ -570,8 +584,9 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <p className="text-2xl mb-2">⭐</p>
             <p className="text-sm font-bold mb-1 text-w25">No Star Path active</p>
-            <p className="text-xs text-w15">{playerName ? "The Star Path resets every Monday." : "Log in to view the Star Path."}</p>
+            <p className="text-xs text-w15">{playerName ? "The Star Path resets every Monday. A new challenge awaits!" : "Log in to view the Star Path."}</p>
           </div>
         )
       )}
@@ -585,8 +600,9 @@ export default function ChallengesView({
           />
         ) : (
           <div className="rounded-xl px-6 py-12 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
+            <p className="text-2xl mb-2">🏔️</p>
             <p className="text-sm font-bold mb-1 text-w25">No Expedition active</p>
-            <p className="text-xs text-w15">The Expedition resets every Monday.</p>
+            <p className="text-xs text-w15">The Expedition resets every Monday. Rally your guild!</p>
           </div>
         )
       )}

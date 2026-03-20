@@ -197,8 +197,9 @@ export function RoadmapView() {
 
       {items.length === 0 && (
         <div className="flex flex-col items-center py-12" style={{ color: "rgba(255,255,255,0.3)" }}>
-          <span className="text-3xl mb-2">○</span>
-          <p className="text-xs">No roadmap items yet.</p>
+          <span className="text-3xl mb-2">🗺️</span>
+          <p className="text-sm font-medium mb-1">The road ahead is uncharted</p>
+          <p className="text-xs">No roadmap items yet. Check back soon for upcoming features.</p>
         </div>
       )}
     </div>

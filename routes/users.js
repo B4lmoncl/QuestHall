@@ -92,7 +92,13 @@ router.post('/api/users/:id/register', requireAuth, (req, res) => {
     // Update lookup Maps so usersByName/usersByApiKey stay in sync
     state.usersByName.set((name || id).toLowerCase(), state.users[id]);
   } else {
-    if (name) state.users[id].name = name;
+    if (name && name !== state.users[id].name) {
+      // Remove old name from lookup Map before updating
+      const oldName = state.users[id].name;
+      if (oldName) state.usersByName.delete(oldName.toLowerCase());
+      state.users[id].name = name;
+      state.usersByName.set(name.toLowerCase(), state.users[id]);
+    }
     if (avatar) state.users[id].avatar = avatar;
     if (color) state.users[id].color = color;
   }

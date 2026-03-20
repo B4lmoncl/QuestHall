@@ -16,9 +16,9 @@ Browser → Express (port 3001) → lib/state.js (in-memory) → /data/*.json (d
 | Directory | Purpose | Language |
 |-----------|---------|----------|
 | `lib/` | Backend business logic (state, helpers, engines) | JS (CommonJS) |
-| `routes/` | Express route handlers (14 files) | JS (CommonJS) |
+| `routes/` | Express route handlers (18 files) | JS (CommonJS) |
 | `app/` | Next.js app directory (page, types, utils, context) | TypeScript |
-| `components/` | React UI components (36 files) | TypeScript |
+| `components/` | React UI components (42 files) | TypeScript |
 | `public/data/` | Read-only game templates (JSON) | JSON |
 | `data/` | Runtime persistent data (Docker volume) | JSON |
 | `server.js` | Express entry point, boot sequence | JS |
@@ -113,6 +113,7 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 | `crafting.js` | Crafting professions, Schmiedekunst (dismantle/transmute) | API key |
 | `challenges-weekly.js` | Sternenpfad: 3-stage solo weekly challenges with star ratings, modifiers, speed bonus | API key |
 | `expedition.js` | Expedition: cooperative weekly challenge with shared checkpoints, scaling by player count | API key |
+| `social.js` | Friends, messages, trades, leaderboard | API key |
 | `npcs-misc.js` | NPC rotation, feedback (admin-only), SPA fallback | Master key (feedback) |
 | `docs.js` | OpenAPI spec, HTML docs | Public |
 
@@ -185,8 +186,9 @@ Use `paginate(array, req.query)` helper from `lib/helpers.js`.
 ### Code splitting
 
 View components are lazy-loaded with `React.lazy()` + `Suspense`:
-- `LeaderboardView`, `HonorsView`, `CVBuilderPanel`, `CampaignHub`
-- `ShopView`, `GachaView`, `CharacterView`, `RitualChamber`, `ForgeView`
+- `LeaderboardView`, `HonorsView`, `ShopView`, `GachaView`
+- `CharacterView`, `RitualChamber`, `ForgeView`, `ChallengesView`
+- `DailyLoginCalendar`, `SocialView`
 
 Only loaded when the tab is activated — reduces initial bundle by ~40%.
 

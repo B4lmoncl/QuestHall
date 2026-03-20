@@ -560,7 +560,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
                     type="number"
                     min={0}
                     value={counterGold}
-                    onChange={e => setCounterGold(Math.max(0, parseInt(e.target.value) || 0))}
+                    onChange={e => setCounterGold(Math.max(0, parseInt(e.target.value, 10) || 0))}
                     className="input-dark w-full text-xs px-3 py-2 rounded-lg"
                   />
                 </div>
@@ -628,7 +628,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
               type="number"
               min={0}
               value={newTradeGold}
-              onChange={e => setNewTradeGold(Math.max(0, parseInt(e.target.value) || 0))}
+              onChange={e => setNewTradeGold(Math.max(0, parseInt(e.target.value, 10) || 0))}
               className="input-dark w-full text-xs px-3 py-2 rounded-lg"
             />
           </div>
