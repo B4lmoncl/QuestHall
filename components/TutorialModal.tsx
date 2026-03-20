@@ -149,10 +149,11 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
                 </ul>
               </GuideSection>
               <GuideSection title="Quest Hoarding Penalty">
-                <p>Zu viele aktive Quests gleichzeitig? Ab <strong style={{ color: "#ef4444" }}>20 aktiven Quests</strong> gibt es eine XP-Strafe:</p>
+                <p>Zu viele aktive Quests gleichzeitig? Ab <strong style={{ color: "#ef4444" }}>20 aktiven Quests</strong> gibt es eine steigende XP-Strafe:</p>
                 <ul className="space-y-1 mt-1">
-                  <li>• 21-29 Quests: bis zu <span style={{ color: "#ef4444" }}>-50% XP</span></li>
-                  <li>• 30+ Quests: <span style={{ color: "#ef4444" }}>-80% XP</span></li>
+                  <li>• Erste 20 Quests: <span style={{ color: "#22c55e" }}>Kein Malus</span></li>
+                  <li>• Ab Quest 21: <span style={{ color: "#ef4444" }}>-10% XP pro Quest</span> über dem Limit (bei 25 = -50%)</li>
+                  <li>• Hard-Cap: <span style={{ color: "#ef4444" }}>-80% XP</span> ab 30+ aktiven Quests</li>
                 </ul>
               </GuideSection>
               <GuideSection title="The Observatory (Campaigns)">
@@ -226,7 +227,8 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               <GuideSection title="Set Bonuses & Legendary Effects">
                 <ul className="space-y-1 mt-1">
                   <li>• <span style={{ color: "#f0f0f0" }}>Set-Bonus</span>: 3 Teile eines Sets = +5% Primary Stats, 6 Teile = +10%</li>
-                  <li>• <span style={{ color: "#FFD700" }}>Legendary Effects</span>: Besondere Effekte auf Legendary-Gear — z.B. XP-Bonus, Gold-Bonus, Nacht-Gold-Verdopplung, Auto-Streak-Schutz, Material-Verdopplung und mehr.</li>
+                  <li>• <span style={{ color: "#FFD700" }}>Legendary Effects</span> (15 Typen): Besondere Effekte auf Legendary-Gear, z.B.:</li>
+                  <li style={{ marginLeft: 12 }}>XP-Bonus · Gold-Bonus · <span style={{ color: "#818cf8" }}>Nacht-Gold ×2</span> (23-05 Uhr) · Jede-5.-Quest-Bonus · Auto-Streak-Schutz · Material-Verdopplung · Varianten-Bonus und mehr</li>
                 </ul>
               </GuideSection>
               <GuideSection title="Companions & Bond System">
@@ -326,8 +328,18 @@ export function GuideContent({ onRestartTutorial }: { onRestartTutorial?: () => 
               <GuideSection title="Salvaging & Transmutation">
                 Neben Rezepten haben Schmied und Verzauberer jeweils ein spezielles Feature:
                 <ul className="space-y-1 mt-1">
-                  <li>• <strong style={{ color: "#f59e0b" }}>Schmiedekunst</strong> (beim Schmied) — Items <strong>zerlegen</strong> in <span style={{ color: "#ff8c00" }}>Essenz</span> + <span style={{ color: "#22c55e" }}>Materialien</span>. &quot;Salvage All&quot; für Massenzerlegung (nicht für Legendary).</li>
-                  <li>• <strong style={{ color: "#a78bfa" }}>Transmutation</strong> (beim Verzauberer) — 3 Epic-Items gleichen Slots + 500 Gold → 1 Legendary-Item.</li>
+                  <li>• <strong style={{ color: "#f59e0b" }}>Schmiedekunst</strong> (beim Schmied) — Items <strong>zerlegen</strong> in <span style={{ color: "#ff8c00" }}>Essenz</span> + <span style={{ color: "#22c55e" }}>Materialien</span>. &quot;Salvage All&quot; für Massenzerlegung nach Seltenheit (Diablo-3-Stil). Legendary-Items können nicht per &quot;Salvage All&quot; zerlegt werden — nur einzeln.</li>
+                  <li>• <strong style={{ color: "#a78bfa" }}>Transmutation</strong> (beim Verzauberer) — 3 Epic-Items gleichen Slots + 500 Gold → 1 Legendary-Item (Slot-gesperrt).</li>
+                </ul>
+              </GuideSection>
+              <GuideSection title="Materials">
+                Crafting-Materialien in 5 Seltenheitsstufen — je seltener, desto mächtiger die Rezepte:
+                <ul className="space-y-1 mt-1">
+                  <li><span style={{ color: "#9ca3af" }}>Common</span> — Drops aus Common/Uncommon Quests, Zerlegung von Common Gear</li>
+                  <li><span style={{ color: "#22c55e" }}>Uncommon</span> — Drops aus Uncommon/Rare Quests, Zerlegung von Uncommon Gear</li>
+                  <li><span style={{ color: "#3b82f6" }}>Rare</span> — Drops aus Rare/Epic Quests, Zerlegung von Rare Gear</li>
+                  <li><span style={{ color: "#a855f7" }}>Epic</span> — Drops aus Epic/Legendary Quests, Zerlegung von Epic Gear</li>
+                  <li><span style={{ color: "#FFD700" }}>Legendary</span> — Drops aus Legendary Quests, Zerlegung von Legendary Gear</li>
                 </ul>
               </GuideSection>
               <GuideSection title="Workshop Tools">

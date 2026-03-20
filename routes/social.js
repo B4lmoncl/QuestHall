@@ -676,8 +676,8 @@ function executeTrade(trade) {
   ensureUserCurrencies(u1);
   ensureUserCurrencies(u2);
 
-  const offer1 = trade.currentOffer.initiatorOffer || { gold: 0, items: [] };
-  const offer2 = trade.currentOffer.recipientOffer || { gold: 0, items: [] };
+  const offer1 = (trade.currentOffer?.initiatorOffer) || { gold: 0, items: [] };
+  const offer2 = (trade.currentOffer?.recipientOffer) || { gold: 0, items: [] };
 
   const gold1 = Math.max(0, Math.floor(offer1.gold || 0));
   const gold2 = Math.max(0, Math.floor(offer2.gold || 0));

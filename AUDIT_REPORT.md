@@ -433,7 +433,37 @@ See Section 4 header table rows — standard CRUD/read endpoints for their respe
 
 Updated Guide to cover all features:
 - **Added**: Navigation (5 floors), Social/Breakaway (Friends, Messages, Trading), The Arcanum, The Observatory (Campaigns), Season tab
-- **Verified**: All 10 existing tabs (Start, Quests, NPCs, Character, Gacha, Crafting, Rituals, Challenges, Progression, Honors) accurate
+- **Verified**: All 11 tabs (Start, Quests, NPCs, Character, Gacha, Crafting, Rituals, Challenges, Social, Progression, Honors) accurate
+
+### 6.5 Phase 4 Fixes (v1.5.6)
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| `executeTrade` null safety — `trade.currentOffer.initiatorOffer` crashes if `currentOffer` is null | P1 | **Fixed** — Added optional chaining `?.` |
+| Guide hoarding penalty oversimplified — didn't explain gradual -10%/quest mechanic | P1 | **Fixed** — Now shows first 20 free → -10% per quest over 20 → -80% hard cap |
+| Guide missing Schmiedekunst "Salvage All" detail | P2 | **Fixed** — Added Salvage All per-rarity, Legendary exclusion |
+| Guide missing night gold doubling legendary effect | P2 | **Fixed** — Added 15 legendary effect types with night gold (23-05h) |
+| Guide missing Materials section in Crafting tab | P2 | **Fixed** — Added 5-rarity material sources |
+| Guide Transmutation missing slot-lock detail | P2 | **Fixed** — Added "Slot-gesperrt" |
+
+### 6.6 Verified Non-Issues (False Alarms)
+
+| Reported Issue | Actual Status |
+|----------------|---------------|
+| Gacha pull lock leak on early returns | **No bug** — All early returns inside `try` block, `finally` always releases |
+| Hard pity off-by-one (74 vs 75) | **No bug** — Counter=74 means 75th pull, `>= HARD_PITY-1` is correct |
+| NPC quests skip forge temp update | **No bug** — `onQuestCompletedByUser()` calls `updateUserForgeTemp()` for all paths |
+| NPC quests miss loot drops | **No bug** — `onQuestCompletedByUser()` rolls loot for all quest types |
+| Crafting reroll missing poolEntry check | **No bug** — `if (poolEntry)` check exists before `.min/.max` access |
+| Multipliers not validated for NaN | **Low risk** — All multiplier sources return valid numbers; defensive NaN checks unnecessary for current data model |
+
+### 6.7 Acknowledged Architectural Issues (Won't Fix)
+
+| Issue | Reason |
+|-------|--------|
+| Trade execution race condition (double-spend) | Single-process Node.js with sync event loop — concurrent requests serialize naturally. Only possible under extreme load |
+| Expedition progress race condition | Same — Express processes requests sequentially |
+| Dashboard batch uses internal HTTP instead of direct state | Intentional — ensures middleware (auth, rate limit) applies uniformly |
 
 ---
 
