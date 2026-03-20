@@ -8,7 +8,6 @@ import ErrorBoundary from "@/components/ErrorBoundary";
 const ForgeView = lazy(() => import("@/components/ForgeView"));
 const LeaderboardView = lazy(() => import("@/components/LeaderboardView"));
 const HonorsView = lazy(() => import("@/components/HonorsView"));
-const CVBuilderPanel = lazy(() => import("@/components/CVBuilderPanel"));
 const CampaignHub = lazy(() => import("@/components/CampaignHub"));
 const ShopView = lazy(() => import("@/components/ShopView"));
 const GachaView = lazy(() => import("@/components/GachaView"));
@@ -22,7 +21,7 @@ import {
   CategoryBadge, ProductBadge,
   HumanInputBadge, TypeBadge, CreatorBadge, AgentBadge, RecurringBadge,
   CompletedQuestRow, PriorityBadge, ClickablePriorityBadge, EpicQuestCard, QuestCard,
-  ChainQuestToast, AchievementToast, FlavorToast, EmptyState, SkeletonCard,
+  ChainQuestToast, FlavorToast, EmptyState, SkeletonCard,
   UserCard, ShopModal, RARITY_COLORS,
 } from "@/components/QuestBoard";
 import { ToastStack, useToastStack } from "@/components/ToastStack";
@@ -42,8 +41,8 @@ import { SFX } from "@/lib/sounds";
 import type {
   Agent, Quest, NpcQuestChainEntry, ActiveNpc, EarnedAchievement,
   User, CampaignQuest, Campaign, AchievementDef, ClassDef, LeaderboardEntry,
-  QuestsData, Ritual, Habit, LootItem, ChangelogCommit, ChangelogEntry,
-  PersonalTemplate, ForgeChallengeTemplate, AntiRitual, Suggestion, CVData,
+  QuestsData, Ritual, Habit, LootItem, ChangelogEntry,
+  PersonalTemplate, ForgeChallengeTemplate, AntiRitual, Suggestion,
   ShopItem, RoadmapItem,
 } from "@/app/types";
 import {
@@ -1192,7 +1191,6 @@ export default function Dashboard() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-widest text-w35">{CURRENT_SEASON.icon} Season & Battle Pass</span>
             </div>
-            {/* <BattlePassView users={users} quests={quests} /> */}
             <div className="rounded-2xl p-8 text-center" style={{ background: `linear-gradient(135deg, #1a1a1a 0%, ${CURRENT_SEASON.color}10 100%)`, border: `1px solid ${CURRENT_SEASON.color}25`, boxShadow: `0 0 40px ${CURRENT_SEASON.color}08` }}>
               <p className="text-4xl mb-3" style={{ opacity: 0.5 }}>{CURRENT_SEASON.icon}</p>
               <h3 className="text-lg font-bold mb-2" style={{ color: `${CURRENT_SEASON.color}90` }}>Coming Soon</h3>

@@ -220,8 +220,8 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
               <span className="font-bold uppercase" style={{ fontSize: 12, letterSpacing: "0.05em", color: "#e879f9", background: "rgba(232,121,249,0.08)", border: "1px solid rgba(232,121,249,0.25)", padding: "1px 4px", borderRadius: 3 }}>NPC</span>
             )}
             {(quest.chainTotal ?? 1) > 1 && <ChainDots chainIndex={quest.chainIndex ?? 0} chainTotal={quest.chainTotal!} color={RARITY_COLORS[quest.npcRarity ?? "common"] ?? "#f59e0b"} />}
-            <span className="font-mono" style={{ fontSize: "0.75rem", color: "rgba(179,157,219,0.75)" }}>{(quest.rewards?.xp != null && quest.rewards.xp > 0) ? quest.rewards.xp : ({ high: 30, medium: 20, low: 10 }[quest.priority] ?? 10)} XP</span>
-            <span className="font-mono" style={{ fontSize: "0.75rem", color: "rgba(251,191,36,0.75)" }}><img src="/images/icons/currency-gold.png" alt="" style={{width:14,height:14,display:"inline",verticalAlign:"middle",marginRight:2}} /> {(quest.rewards?.gold != null && quest.rewards.gold > 0) ? quest.rewards.gold : ({ high: 25, medium: 15, low: 9 }[quest.priority] ?? 9)}</span>
+            <span className="font-mono" style={{ fontSize: "0.75rem", color: "rgba(179,157,219,0.75)" }}>{quest.rewards?.xp || 0} XP</span>
+            <span className="font-mono" style={{ fontSize: "0.75rem", color: "rgba(251,191,36,0.75)" }}><img src="/images/icons/currency-gold.png" alt="" style={{width:14,height:14,display:"inline",verticalAlign:"middle",marginRight:2}} /> {quest.rewards?.gold || "~"}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="text-xs uppercase font-mono" style={{ color: `${rarityColor}aa`, letterSpacing: "0.06em" }}>{rarity}</span>
