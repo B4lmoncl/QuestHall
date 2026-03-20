@@ -62,7 +62,7 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
   const displayAchs = achs.filter(a => !COMPANION_IDS.includes(a.id)).slice(-8);
 
   // Cosmetic frame from achievement points
-  const frame = (user as any).equippedFrame;
+  const frame = user.equippedFrame;
   const frameBorder = frame ? `2px solid ${frame.color}` : `1px solid ${isMilestoneLevel ? lvl.color + "80" : "rgba(255,255,255,0.08)"}`;
   const frameShadow = frame?.glow
     ? `0 0 16px ${frame.color}40, 0 0 32px ${frame.color}20`
@@ -107,8 +107,8 @@ export function UserCard({ user, classes = [] }: { user: User; classes?: ClassDe
             <p className="text-xs font-bold" style={{ color: lvl.color }}>
               {isMilestoneLevel && "★ "}Lv {lvl.level} · {lvl.title}
             </p>
-            {(user as any).equippedTitle && (() => {
-              const t = (user as any).equippedTitle;
+            {user.equippedTitle && (() => {
+              const t = user.equippedTitle;
               const tc: Record<string,string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a855f7", legendary: "#f97316" };
               return <p className="text-xs font-medium" style={{ color: tc[t.rarity] ?? "#9ca3af" }}>&laquo; {t.name} &raquo;</p>;
             })()}

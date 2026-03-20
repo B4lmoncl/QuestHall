@@ -95,10 +95,10 @@ export function AntiRitualePanel({ onRewardCelebration }: { onRewardCelebration?
           createdAt: r.lastCompleted ?? new Date().toISOString(),
           longestStreak: r.longestStreak ?? (r.streak ?? 0),
           completedDates: r.completedDates ?? [],
-          commitment: (r as any).commitment ?? "none",
-          commitmentDays: (r as any).commitmentDays ?? 0,
-          bloodPact: (r as any).bloodPact ?? false,
-          status: (r as any).status ?? "active",
+          commitment: r.commitment ?? "none",
+          commitmentDays: r.commitmentDays ?? 0,
+          bloodPact: r.bloodPact ?? false,
+          status: r.status ?? "active",
         })));
       }
     } catch { /* ignore */ }
@@ -196,7 +196,7 @@ export function AntiRitualePanel({ onRewardCelebration }: { onRewardCelebration?
               {longestStreak > 0 && <span title="Längste Serie" style={{ color: "rgba(245,158,11,0.5)" }}>Rekord: {longestStreak}</span>}
               {nextMilestone && <span>→ {nextMilestone.badge} in {nextMilestone.days - days}d</span>}
             </div>
-            {ar.bloodPact && ar.commitmentDays && ar.commitmentDays > 0 && !(ar as any).pactCompleted && (
+            {ar.bloodPact && ar.commitmentDays && ar.commitmentDays > 0 && !ar.pactCompleted && (
               <div className="flex items-center gap-2 mt-1 text-xs" style={{ color: "rgba(239,68,68,0.6)" }}>
                 <span style={{ fontSize: 10 }}>⬥</span>
                 <span>Pact-Ziel: <span style={{ color: "#ef4444", fontWeight: 600 }}>{ar.commitmentDays}d</span></span>
@@ -206,7 +206,7 @@ export function AntiRitualePanel({ onRewardCelebration }: { onRewardCelebration?
                 </span>
               </div>
             )}
-            {ar.bloodPact && (ar as any).pactCompleted && (
+            {ar.bloodPact && ar.pactCompleted && (
               <div className="flex items-center gap-1.5 mt-1 text-xs" style={{ color: "rgba(34,197,94,0.7)" }}>
                 <span style={{ fontSize: 10 }}>✦</span>
                 <span style={{ fontWeight: 600 }}>Blood Pact erfüllt</span>

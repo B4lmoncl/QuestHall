@@ -337,6 +337,7 @@ export interface AntiRitual {
   commitment?: string;
   commitmentDays?: number;
   bloodPact?: boolean;
+  pactCompleted?: boolean;
   status?: "active" | "broken";
 }
 
