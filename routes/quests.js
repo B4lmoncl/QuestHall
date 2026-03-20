@@ -52,8 +52,9 @@ function unlockNextChainQuest(completedQuest) {
 // POST /api/quest — create a new quest
 router.post('/api/quest', requireApiKey, (req, res) => {
   const { title, description, priority, category, categories, product, humanInputRequired, createdBy, type, parentQuestId, recurrence, proof, nextQuestTemplate, coopPartners, skills, lore, chapter, suggest, minLevel, classRequired, requiresRelationship, rarity } = req.body;
-  if (!title) return res.status(400).json({ error: 'title is required' });
-  if (typeof title === 'string' && title.length > 500) return res.status(400).json({ error: 'title too long (max 500 chars)' });
+  if (!title || typeof title !== 'string') return res.status(400).json({ error: 'title is required and must be a string' });
+  if (title.length > 500) return res.status(400).json({ error: 'title too long (max 500 chars)' });
+  if (description != null && typeof description !== 'string') return res.status(400).json({ error: 'description must be a string' });
   if (typeof description === 'string' && description.length > 5000) return res.status(400).json({ error: 'description too long (max 5000 chars)' });
   const validPriorities = ['low', 'medium', 'high'];
   const validCategories = ['Coding', 'Research', 'Content', 'Sales', 'Infrastructure', 'Bug Fix', 'Feature'];
@@ -146,7 +147,7 @@ router.post('/api/quest', requireApiKey, (req, res) => {
     coopPartners: Array.isArray(coopPartners) && coopPartners.length > 0 ? coopPartners.slice(0, 2).map(p => String(p).toLowerCase()) : null,
     coopClaimed: [],
     coopCompletions: [],
-    skills: Array.isArray(skills) ? skills.map(s => String(s).trim()).filter(Boolean) : [],
+    skills: Array.isArray(skills) ? skills.map(s => String(s).trim()).filter(Boolean).slice(0, 20) : [],
     lore: typeof lore === 'string' && lore.trim() ? lore.trim() : null,
     chapter: typeof chapter === 'string' && chapter.trim() ? chapter.trim() : null,
     minLevel: (typeof minLevel === 'number' && minLevel >= 1) ? Math.floor(minLevel) : 1,
