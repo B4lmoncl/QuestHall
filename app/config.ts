@@ -54,8 +54,8 @@ export interface Floor {
 export const FLOORS: Floor[] = [
   {
     id: "turmspitze",
-    name: "Turmspitze",
-    subtitle: "Prestige & Ruhm",
+    name: "The Pinnacle",
+    subtitle: "Prestige & Glory",
     icon: "▲",
     color: "#fbbf24",
     gradient: "linear-gradient(135deg, #fbbf24 0%, #1a1a3a 100%)",
@@ -68,8 +68,8 @@ export const FLOORS: Floor[] = [
   },
   {
     id: "haupthalle",
-    name: "Haupthalle",
-    subtitle: "Abenteuer",
+    name: "The Great Halls",
+    subtitle: "Adventure",
     icon: "●",
     color: "#f97316",
     gradient: "linear-gradient(135deg, #f97316 0%, #1a0f0a 100%)",
@@ -81,8 +81,8 @@ export const FLOORS: Floor[] = [
   },
   {
     id: "gewerbeviertel",
-    name: "Gewerbeviertel",
-    subtitle: "Handel & Handwerk",
+    name: "The Trade Quarter",
+    subtitle: "Commerce & Craft",
     icon: "■",
     color: "#a855f7",
     gradient: "linear-gradient(135deg, #a855f7 0%, #1a0a2e 100%)",
@@ -94,8 +94,8 @@ export const FLOORS: Floor[] = [
   },
   {
     id: "charakterturm",
-    name: "Charakter-Turm",
-    subtitle: "Persönlich",
+    name: "The Inner Sanctum",
+    subtitle: "Personal",
     icon: "✦",
     color: "#3b82f6",
     gradient: "linear-gradient(135deg, #3b82f6 0%, #0a1a2e 100%)",
