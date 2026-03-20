@@ -1109,13 +1109,15 @@ export default function Dashboard() {
               </div>
 
               {/* Floor header banner */}
-              <div className="floor-banner relative overflow-hidden" style={{ background: currentFloor.gradient, borderRadius: 0, padding: "14px 20px", minHeight: 52 }}>
+              <div className="floor-banner relative overflow-hidden" style={{ background: currentFloor.gradient, borderRadius: 0, padding: "16px 20px", minHeight: 56 }}>
+                {/* Dark scrim for text legibility */}
+                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 100%)" }} />
                 <div className="relative z-10">
-                  <span className="text-base font-black uppercase tracking-widest" style={{ color: currentFloor.color, textShadow: "0 1px 8px rgba(0,0,0,0.6)" }}>{currentFloor.name}</span>
-                  <span className="text-sm ml-2.5 font-medium" style={{ color: "rgba(255,255,255,0.5)", textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>— {currentFloor.subtitle}</span>
+                  <span className="text-base font-black uppercase tracking-widest" style={{ color: currentFloor.color, textShadow: `0 1px 12px rgba(0,0,0,0.8), 0 0 20px ${currentFloor.color}30` }}>{currentFloor.name}</span>
+                  <span className="text-sm ml-2.5 font-semibold" style={{ color: "rgba(255,255,255,0.65)", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>— {currentFloor.subtitle}</span>
                 </div>
                 {/* Decorative overlay pattern */}
-                <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 11px)" }} />
+                <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 11px)" }} />
               </div>
 
               {/* Room tabs */}
