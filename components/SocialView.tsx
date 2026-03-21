@@ -6,7 +6,7 @@ import { getAuthHeaders } from "@/lib/auth-client";
 import { InfoTooltip } from "@/components/InfoTooltip";
 import type {
   FriendInfo, FriendRequest, Conversation, SocialMessage,
-  Trade, TradeOffer,
+  Trade, TradeOffer, ActivityEvent,
 } from "@/app/types";
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -33,9 +33,37 @@ function PlayerBadge({ name, avatar, color, size = 24 }: { name: string; avatar:
   );
 }
 
+const ONLINE_COLORS: Record<string, string> = { online: "#22c55e", idle: "#eab308", offline: "#555" };
+const ONLINE_LABELS: Record<string, string> = { online: "Online", idle: "Idle", offline: "Offline" };
+const RARITY_COLORS: Record<string, string> = { legendary: "#ff8c00", epic: "#a855f7", rare: "#3b82f6", uncommon: "#22c55e", common: "#888" };
+
+function OnlineDot({ status, lastActiveAt }: { status: string; lastActiveAt?: string | null }) {
+  const label = status === "offline" && lastActiveAt ? `${timeAgo(lastActiveAt)}` : ONLINE_LABELS[status] || "Offline";
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: ONLINE_COLORS[status] || "#555", boxShadow: status === "online" ? "0 0 6px #22c55e" : "none" }} />
+      <span className="text-xs" style={{ color: ONLINE_COLORS[status] || "#555" }}>{label}</span>
+    </span>
+  );
+}
+
+function ReadCheck({ read }: { read: boolean }) {
+  return (
+    <span className="text-xs ml-1" style={{ color: read ? "#60a5fa" : "#555" }} title={read ? "Read" : "Sent"}>
+      {read ? "✓✓" : "✓"}
+    </span>
+  );
+}
+
+// Activity event icons
+const EVENT_ICONS: Record<string, string> = {
+  quest_complete: "⚔️", level_up: "⬆️", achievement: "🏆",
+  gacha_pull: "✨", rare_drop: "💎", trade_complete: "🤝", streak_milestone: "🔥",
+};
+
 // ─── Sub-tab navigation ──────────────────────────────────────────────────────
 
-type SocialTab = "friends" | "messages" | "trades";
+type SocialTab = "friends" | "messages" | "trades" | "activity";
 
 // ─── Friends Tab ────────────────────────────────────────────────────────────
 
@@ -167,44 +195,31 @@ function FriendsTab({ apiKey, playerName }: { apiKey: string; playerName: string
         </div>
       )}
 
-      {/* Friends list */}
+      {/* Friends grid — card layout for visual variety */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-wider text-w35 mb-2">Friends ({friends.length})</p>
         {friends.length === 0 ? (
           <p className="text-xs text-w20 text-center py-6">No friends yet. Send a request above!</p>
         ) : (
-          <div className="space-y-1.5">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {friends.map(f => (
-              <div key={f.id} className="flex items-center justify-between rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center gap-2.5">
-                  <div className="relative">
-                    <PlayerBadge name={f.name} avatar={f.avatar} color={f.color} size={28} />
-                    <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-black" style={{ background: f.isOnline ? "#22c55e" : "#555" }} />
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{f.name}</span>
-                    <span className="text-xs text-w20 ml-2">Lv.{f.level}</span>
-                  </div>
-                </div>
+              <div key={f.id} className="relative rounded-xl p-3 flex flex-col items-center text-center group transition-all" style={{ background: "rgba(255,255,255,0.02)", border: `1px solid ${f.isOnline ? "rgba(34,197,94,0.2)" : "rgba(255,255,255,0.05)"}` }}>
+                {/* Remove button — top right, visible on hover */}
                 {confirmRemove === f.id ? (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => removeFriend(f.id)}
-                      className="btn-interactive text-xs px-2 py-1 rounded font-semibold"
-                      style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.25)" }}
-                    >Remove</button>
-                    <button
-                      onClick={() => setConfirmRemove(null)}
-                      className="btn-interactive text-xs px-2 py-1 rounded text-w30"
-                    >No</button>
+                  <div className="absolute top-1.5 right-1.5 flex gap-1">
+                    <button onClick={() => removeFriend(f.id)} className="btn-interactive text-xs px-1.5 py-0.5 rounded font-semibold" style={{ background: "rgba(239,68,68,0.12)", color: "#ef4444", fontSize: 10 }}>Yes</button>
+                    <button onClick={() => setConfirmRemove(null)} className="btn-interactive text-xs px-1.5 py-0.5 rounded text-w30" style={{ fontSize: 10 }}>No</button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => setConfirmRemove(f.id)}
-                    className="btn-interactive text-xs px-2 py-1 rounded text-w20 hover:text-w50"
-                    title="Remove friend"
-                  >✕</button>
+                  <button onClick={() => setConfirmRemove(f.id)} className="btn-interactive absolute top-1.5 right-1.5 text-xs px-1 py-0.5 rounded text-w15 opacity-0 group-hover:opacity-100 transition-opacity" title="Remove friend">✕</button>
                 )}
+                <div className="relative mb-1.5">
+                  <PlayerBadge name={f.name} avatar={f.avatar} color={f.color} size={36} />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-[#0b0d11]" style={{ background: ONLINE_COLORS[f.onlineStatus || (f.isOnline ? "online" : "offline")] }} />
+                </div>
+                <span className="text-xs font-semibold truncate w-full" style={{ color: "#e8e8e8" }}>{f.name}</span>
+                <span className="text-xs text-w25">Lv.{f.level}</span>
+                <OnlineDot status={f.onlineStatus || (f.isOnline ? "online" : "offline")} lastActiveAt={f.lastActiveAt} />
               </div>
             ))}
           </div>
@@ -296,7 +311,10 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
                   }}
                 >
                   <p className="text-xs" style={{ color: "#e8e8e8" }}>{msg.text}</p>
-                  <p className="text-xs text-w15 mt-0.5 text-right">{timeAgo(msg.createdAt)}</p>
+                  <p className="text-xs text-w15 mt-0.5 text-right">
+                    {timeAgo(msg.createdAt)}
+                    {isMine && <ReadCheck read={msg.read} />}
+                  </p>
                 </div>
               </div>
             );
@@ -374,13 +392,16 @@ function TradeOfferDisplay({ offer, label, color }: { offer: TradeOffer; label: 
       )}
       {offer.items.length > 0 ? (
         <div className="space-y-1">
-          {offer.items.map(item => (
-            <div key={item.instanceId} className="flex items-center gap-2 text-xs px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.03)" }}>
-              <span className="text-w50">{item.name}</span>
-              <span className="text-w20 capitalize">{item.rarity}</span>
-              {item.slot && <span className="text-w15">({item.slot})</span>}
-            </div>
-          ))}
+          {offer.items.map(item => {
+            const rc = RARITY_COLORS[item.rarity] || "#888";
+            return (
+              <div key={item.instanceId} className="flex items-center gap-2 text-xs px-2 py-1.5 rounded" style={{ background: "rgba(255,255,255,0.03)", borderLeft: `2px solid ${rc}` }}>
+                <span className="font-semibold" style={{ color: rc }}>{item.name}</span>
+                <span className="text-w20 capitalize ml-auto">{item.rarity}</span>
+                {item.slot && <span className="text-w15">({item.slot})</span>}
+              </div>
+            );
+          })}
         </div>
       ) : offer.gold === 0 ? (
         <p className="text-xs text-w15 italic">Nothing offered</p>
@@ -833,6 +854,93 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
   );
 }
 
+// ─── Activity Feed Tab ───────────────────────────────────────────────────────
+
+function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: string }) {
+  const [feed, setFeed] = useState<ActivityEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchFeed = useCallback(async () => {
+    try {
+      const r = await fetch(`/api/social/${encodeURIComponent(playerName)}/activity-feed?limit=30`, { headers: getAuthHeaders(apiKey) });
+      if (r.ok) setFeed((await r.json()).feed || []);
+    } catch { /* ignore */ }
+    setLoading(false);
+  }, [apiKey, playerName]);
+
+  useEffect(() => { fetchFeed(); }, [fetchFeed]);
+
+  // Auto-refresh every 30s
+  useEffect(() => {
+    const interval = setInterval(fetchFeed, 30000);
+    return () => clearInterval(interval);
+  }, [fetchFeed]);
+
+  if (loading) return <p className="text-xs text-w20 text-center py-8">Loading...</p>;
+
+  if (feed.length === 0) {
+    return <p className="text-xs text-w20 text-center py-8">No activity yet. Complete quests, pull gacha, and earn achievements to see them here!</p>;
+  }
+
+  return (
+    <div className="space-y-2">
+      {feed.map(event => {
+        const icon = EVENT_ICONS[event.type] || "📌";
+        const isOwn = event.player === playerName.toLowerCase();
+        const name = isOwn ? "You" : event.playerName;
+        let description = "";
+        const d = event.data as Record<string, string>;
+        switch (event.type) {
+          case "quest_complete":
+            description = `completed "${d.quest}"`;
+            break;
+          case "level_up":
+            description = `reached Level ${d.level} — ${d.title}`;
+            break;
+          case "achievement":
+            description = `unlocked "${d.name}"`;
+            break;
+          case "gacha_pull":
+            description = `pulled ${d.rarity} "${d.item}"`;
+            break;
+          case "rare_drop":
+            description = `found ${d.rarity} "${d.item}"`;
+            break;
+          case "trade_complete":
+            description = `completed a trade`;
+            break;
+          case "streak_milestone":
+            description = `hit a ${d.days}-day streak`;
+            break;
+          default:
+            description = event.type.replace(/_/g, " ");
+        }
+        const rarityColor = d.rarity ? (RARITY_COLORS[d.rarity] || "#e8e8e8") : "#e8e8e8";
+
+        return (
+          <div key={event.id} className="flex items-start gap-2.5 rounded-lg px-3 py-2.5" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>
+            <span className="text-sm flex-shrink-0 mt-0.5">{icon}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs">
+                <span className="font-semibold" style={{ color: isOwn ? "#a855f7" : event.playerColor }}>{name}</span>
+                {" "}
+                <span className="text-w40">{description}</span>
+                {d.rarity && ["epic", "legendary"].includes(d.rarity) && (
+                  <span className="ml-1 text-xs font-semibold uppercase" style={{ color: rarityColor }}>{d.rarity}</span>
+                )}
+              </p>
+              <p className="text-xs text-w15 mt-0.5">{timeAgo(event.at)}</p>
+            </div>
+            {!isOwn && (
+              <PlayerBadge name={event.playerName} avatar={event.playerAvatar} color={event.playerColor} size={22} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ─── Main SocialView ────────────────────────────────────────────────────────
 
 export default function SocialView() {
@@ -858,7 +966,7 @@ export default function SocialView() {
 
       {/* Tab navigation */}
       <div className="inline-flex rounded-lg p-0.5" style={{ background: "#111" }}>
-        {(["friends", "messages", "trades"] as SocialTab[]).map(tab => (
+        {(["friends", "messages", "trades", "activity"] as SocialTab[]).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -868,7 +976,7 @@ export default function SocialView() {
               color: activeTab === tab ? "#a855f7" : "rgba(255,255,255,0.3)",
             }}
           >
-            {tab}
+            {tab === "activity" ? "Feed" : tab}
           </button>
         ))}
       </div>
@@ -877,6 +985,7 @@ export default function SocialView() {
       {activeTab === "friends" && <FriendsTab apiKey={reviewApiKey} playerName={playerName} />}
       {activeTab === "messages" && <MessagesTab apiKey={reviewApiKey} playerName={playerName} />}
       {activeTab === "trades" && <TradesTab apiKey={reviewApiKey} playerName={playerName} />}
+      {activeTab === "activity" && <ActivityFeedTab apiKey={reviewApiKey} playerName={playerName} />}
     </div>
   );
 }

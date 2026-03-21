@@ -719,7 +719,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 { key: "recipes", label: "Recipes", color: selectedNpc.color },
               ];
               if (selectedNpc.id === "schmied") {
-                tabs.push({ key: "schmiedekunst", label: "Schmiedekunst", color: "#ff8c00" });
+                tabs.push({ key: "schmiedekunst", label: "Salvage & Transmute", color: "#ff8c00" });
               }
               if (selectedNpc.id === "verzauberer") {
                 tabs.push({ key: "transmutation", label: "Transmutation", color: "#a855f7" });
