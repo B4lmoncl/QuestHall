@@ -256,12 +256,12 @@ function ProfileSettingsModal({ playerName, apiKey, initialStatus, initialPartne
         onClick={e => e.stopPropagation()}
       >
         <div>
-          <h2 className="text-base font-bold" style={{ color: "#f0f0f0" }}>⚙ Profil-Einstellungen</h2>
-          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Beziehungsstatus und weitere Einstellungen</p>
+          <h2 className="text-base font-bold" style={{ color: "#f0f0f0" }}>⚙ Profile Settings</h2>
+          <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.4)" }}>Relationship status and other settings</p>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-semibold block" style={{ color: "rgba(255,255,255,0.5)" }}>Beziehungsstatus</label>
+          <label className="text-xs font-semibold block" style={{ color: "rgba(255,255,255,0.5)" }}>Relationship Status</label>
           {[
             { value: "single",       label: "Single" },
             { value: "relationship", label: "In einer Beziehung" },
@@ -284,7 +284,7 @@ function ProfileSettingsModal({ playerName, apiKey, initialStatus, initialPartne
 
         {status !== "single" && (
           <div>
-            <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(255,255,255,0.5)" }}>Name des Partners / der Partnerin</label>
+            <label className="text-xs font-semibold mb-1.5 block" style={{ color: "rgba(255,255,255,0.5)" }}>Partner's Name</label>
             <input
               value={partner}
               onChange={e => setPartner(e.target.value)}
@@ -1636,7 +1636,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
           <button
             onClick={() => setProfileSettingsOpen(true)}
             className="text-xs px-1.5 py-0.5 rounded-lg ml-2"
-            title="Profil-Einstellungen"
+            title="Profile Settings"
             style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.4)", border: "1px solid rgba(255,255,255,0.1)", cursor: "pointer" }}
           >...</button>
         </div>

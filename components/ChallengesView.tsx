@@ -212,8 +212,8 @@ function SternenpfadView({
                   </span>
                   <Stars earned={stage.earnedStars} animated />
                   {speedBonusActive && (
-                    <span className="text-xs px-1.5 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
-                      Speed Bonus
+                    <span className="text-xs px-1.5 py-0.5 rounded cursor-help" title={`Complete this stage within ${challenge.speedBonusDays} days for +1 bonus star!`} style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e" }}>
+                      ⚡ Speed Bonus
                     </span>
                   )}
                 </div>

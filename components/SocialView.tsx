@@ -49,7 +49,7 @@ function OnlineDot({ status, lastActiveAt }: { status: string; lastActiveAt?: st
 
 function ReadCheck({ read }: { read: boolean }) {
   return (
-    <span className="text-xs ml-1" style={{ color: read ? "#60a5fa" : "#555" }} title={read ? "Read" : "Sent"}>
+    <span className="text-xs ml-1" style={{ color: read ? "#60a5fa" : "#555" }} title={read ? "Read" : "Sent"} aria-label={read ? "Message read" : "Message sent"}>
       {read ? "✓✓" : "✓"}
     </span>
   );
@@ -278,8 +278,13 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeConvo, apiKey, playerName]);
 
+  // Only auto-scroll to bottom if user is already near the bottom (not reading old messages)
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const container = messagesContainerRef.current;
+    if (!container) { messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }); return; }
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+    if (isNearBottom) messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const sendMessage = async () => {
@@ -315,7 +320,7 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
         </div>
 
         {/* Messages */}
-        <div className="space-y-2 max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
+        <div ref={messagesContainerRef} className="space-y-2 max-h-[360px] overflow-y-auto pr-1" style={{ scrollbarWidth: "thin" }}>
           {messages.map(msg => {
             const isMine = msg.from.toLowerCase() === playerName.toLowerCase();
             return (
