@@ -2,6 +2,7 @@
 
 import type { User } from "@/app/types";
 import { ModalPortal } from "@/components/ModalPortal";
+import { Tip } from "@/components/GameTooltip";
 
 interface DashboardModalsProps {
   loggedInUser: User | null;

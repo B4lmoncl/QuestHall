@@ -31,6 +31,7 @@ import { useFloatingRewards, FloatingRewardsLayer } from "@/components/FloatingR
 import { CompanionsWidget } from "@/components/CompanionsWidget";
 import { RoadmapView } from "@/components/RoadmapView";
 import { InfoTooltip } from "@/components/InfoTooltip";
+import { Tip } from "@/components/GameTooltip";
 import { WandererRest } from "@/components/WandererRest";
 import GuildHallBackground from "@/components/GuildHallBackground";
 import FeedbackOverlay from "@/components/FeedbackOverlay";
@@ -1422,7 +1423,7 @@ export default function Dashboard() {
                   {dailyMissions && playerName && (
                     <div className="rounded-xl p-3 mb-3" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.04) 100%)", border: "1px solid rgba(99,102,241,0.15)" }}>
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(99,102,241,0.7)" }}>Daily Missions</span>
+                        <Tip k="daily_missions"><span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(99,102,241,0.7)", cursor: "help" }}>Daily Missions</span></Tip>
                         <span className="text-xs font-mono font-bold" style={{ color: dailyMissions.earned >= dailyMissions.total ? "#4ade80" : "#818cf8" }}>
                           {dailyMissions.earned}/{dailyMissions.total}
                         </span>
