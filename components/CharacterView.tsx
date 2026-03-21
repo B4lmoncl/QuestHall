@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useModalBehavior } from "@/components/ModalPortal";
 import ItemActionPopup from "@/components/ItemActionPopup";
+import { Tip } from "@/components/GameTooltip";
 import type { User, CharacterData, ClassDef, PixelCharacterProps, GearInstance } from "@/app/types";
 import type { ToastInput } from "@/components/ToastStack";
 import { useDashboard } from "@/app/DashboardContext";
@@ -1356,41 +1357,20 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                 <div className="space-y-2 mb-4">
                   {statRows.map(s => {
                     const bonus = s.val - s.base;
-                    const isOpen = statTooltipOpen === s.label;
+                    const tipKey = s.label.toLowerCase().replace("ü", "ue") as string;
+                    const registryKey = tipKey === "glueck" ? "glueck" : tipKey === "kraft" ? "kraft" : tipKey === "ausdauer" ? "ausdauer" : tipKey === "weisheit" ? "weisheit" : tipKey;
                     return (
-                      <div key={s.label} style={{ position: "relative" }}>
-                        <div
-                          className="flex items-center gap-2"
-                          style={{ cursor: "pointer" }}
-                          onClick={(e) => { e.stopPropagation(); setStatTooltipOpen(isOpen ? null : s.label); }}
-                        >
-                          <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "auto" }} className="w-4 h-4" />
-                          <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
-                          <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
-                          {bonus > 0 && (
-                            <span className="text-xs font-mono" style={{ color: "#4ade80" }}>(+{bonus})</span>
-                          )}
-                        </div>
-                        {isOpen && (
-                          <div
-                            style={{
-                              position: "absolute",
-                              top: "calc(100% + 4px)",
-                              right: 0,
-                              zIndex: 300,
-                              background: "#141414",
-                              border: `1px solid rgba(255,255,255,0.15)`,
-                              borderRadius: 6,
-                              padding: "6px 10px",
-                              whiteSpace: "nowrap",
-                              boxShadow: "0 4px 16px rgba(0,0,0,0.7)",
-                            }}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <p className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{s.label}</p>
-                            <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>{STAT_EFFECTS[s.label] ?? s.tooltip}</p>
+                      <div key={s.label}>
+                        <Tip k={registryKey}>
+                          <div className="flex items-center gap-2" style={{ cursor: "help" }}>
+                            <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "auto" }} className="w-4 h-4" />
+                            <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
+                            <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
+                            {bonus > 0 && (
+                              <span className="text-xs font-mono" style={{ color: "#4ade80" }}>(+{bonus})</span>
+                            )}
                           </div>
-                        )}
+                        </Tip>
                       </div>
                     );
                   })}
@@ -1400,12 +1380,20 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                 {hasMinorStats && (
                   <div className="space-y-1.5 mb-4 pt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
                     <p className="text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.35)" }}>Sekundär-Stats</p>
-                    {minorStatRows.filter(s => s.val > 0).map(s => (
-                      <div key={s.label} className="flex items-center gap-2">
-                        <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</span>
-                        <span className="text-xs font-mono font-bold" style={{ color: "#a78bfa" }}>{s.val}</span>
-                      </div>
-                    ))}
+                    {minorStatRows.filter(s => s.val > 0).map(s => {
+                      const tipKey = s.label.toLowerCase().replace("ä", "ae") as string;
+                      const registryKey = tipKey === "vitalitaet" ? "vitalitaet" : tipKey;
+                      return (
+                        <div key={s.label}>
+                          <Tip k={registryKey}>
+                            <div className="flex items-center gap-2" style={{ cursor: "help" }}>
+                              <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.5)" }}>{s.label}</span>
+                              <span className="text-xs font-mono font-bold" style={{ color: "#a78bfa" }}>{s.val}</span>
+                            </div>
+                          </Tip>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
 
