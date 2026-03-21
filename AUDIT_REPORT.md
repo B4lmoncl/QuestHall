@@ -1052,7 +1052,19 @@ New animation keyframes and utility classes:
 - `status-come-online` — Online status transition
 - `badge-bounce-in` — Notification badge entrance
 
-### 16.12 Remaining Issues Summary
+### 16.12 Additional Fixes (Agent-Discovered Issues)
+
+Based on automated frontend component analysis, the following additional issues were identified and fixed:
+
+| Fix | File | Description |
+|-----|------|-------------|
+| Message auto-scroll disruption | `SocialView.tsx` | Messages no longer force-scroll to bottom during 10s polling — only scrolls if user is already near bottom |
+| Speed bonus tooltip | `ChallengesView.tsx` | Added ⚡ icon and title tooltip explaining "Complete within X days for +1 bonus star" |
+| CharacterView German text | `CharacterView.tsx` | Translated "Profil-Einstellungen"→"Profile Settings", "Beziehungsstatus"→"Relationship Status", "Name des Partners"→"Partner's Name" |
+| DashboardHeader German text | `DashboardHeader.tsx` | Translated "Einstellungen (bald)"→"Settings (coming soon)", sound toggle titles |
+| ReadCheck aria-label | `SocialView.tsx` | Added `aria-label` for screen reader accessibility on message read indicators |
+
+### 16.13 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
