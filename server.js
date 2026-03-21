@@ -303,6 +303,7 @@ process.on('SIGINT', () => shutdown('SIGINT'));
 // ─── Global error handlers — prevent data loss on unhandled errors ────────
 process.on('unhandledRejection', (reason) => {
   console.error('[error] Unhandled promise rejection:', reason);
+  flushPendingSaves();
 });
 process.on('uncaughtException', (err) => {
   console.error('[fatal] Uncaught exception:', err);

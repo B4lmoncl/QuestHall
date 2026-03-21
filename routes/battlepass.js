@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { state, saveData } = require("../lib/state");
+const { state, saveData, saveUsers } = require("../lib/state");
 const { requireAuth } = require("../lib/middleware");
 const bpData = require("../public/data/battlePass.json");
 
@@ -162,7 +162,7 @@ router.post("/claim/:level", requireAuth, (req, res) => {
 
   bp.claimedLevels.push(targetLevel);
   bp.level = currentLevel;
-  saveData();
+  saveUsers();
 
   res.json({ ok: true, granted });
 });
