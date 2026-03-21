@@ -1158,7 +1158,24 @@ Replaced the plain text input "Player name..." with a searchable dropdown:
 - Dropdown closes on outside click
 - Still supports direct name entry + Enter key for exact matches
 
-### 17.3 Remaining Issues Summary
+### 17.3 Backend Bug Fixes (Session 3)
+
+| Fix | Severity | File | Description |
+|-----|----------|------|-------------|
+| XP award validation | HIGH | `routes/users.js` | `POST /api/users/:id/award-xp` now validates amount is positive and capped at 100,000. Previously accepted negative values (could subtract XP) |
+| German shop messages | MEDIUM | `routes/shop.js` | Translated buff messages: "erhalten"→"received", "für X Quests"→"for X quests", "Streak-Schild"→"Streak Shield", "Effekt aktiviert"→"Effect activated" |
+| German streak labels | LOW | `lib/state.js` | Translated milestone labels: "2-Wochen"→"2 Weeks", "Monat"→"1 Month", "Silber"→"Silver", "Unerschütterlich"→"Unyielding" |
+
+### 17.4 Agent Findings — Verified Non-Issues
+
+| Reported Issue | Actual Status |
+|----------------|---------------|
+| `/api/daily-bonus/claim` missing | **False alarm** — Endpoint exists in `routes/currency.js:113` |
+| Gacha pity decrement race | **Not a bug** — Currency is validated BEFORE `executePull()` is called; pity reduction only happens on funded pulls |
+| Rituals/Habits not exposed | **False alarm** — Full CRUD exists in `routes/game.js` (rituals) and `routes/habits-inventory.js` (habits) |
+| Companion quest timezone bug | **Low risk** — Only affects companion care quest daily deadlines; uses Berlin timezone fallback consistently |
+
+### 17.5 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
