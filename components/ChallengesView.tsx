@@ -694,8 +694,9 @@ export default function ChallengesView({
       {/* Section header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span>
-          <InfoTooltip text="Two weekly challenges reset every Monday. Star Path is a solo 3-stage challenge — earn up to 9 stars with speed bonuses. Expedition is a guild-wide cooperative challenge — all players contribute quests toward shared checkpoints. Rewards include Gold, Rune Shards, Essenz and the exclusive Sternentaler currency." />
+          <InfoTooltip text="Two weekly challenges reset every Monday. Star Path is a solo 3-stage challenge — earn up to 9 stars with speed bonuses. Expedition is a guild-wide cooperative challenge — all players contribute quests toward shared checkpoints. Rewards include Gold, Rune Shards, Essenz and the exclusive Sternentaler currency.">
+            <span className="text-xs font-semibold uppercase tracking-widest text-w35" style={{ borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>Weekly Challenges</span>
+          </InfoTooltip>
         </div>
         <WeeklyResetTimer />
       </div>

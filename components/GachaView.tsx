@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, useId, useMemo } from "react";
 import type { User, GachaPullResult, GachaBanner, GachaPityInfo } from "@/app/types";
 import { useDashboard } from "@/app/DashboardContext";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import GachaPull, { RARITY_CONFIG } from "./GachaPull";
 import { ModalOverlay } from "./ModalPortal";
 import { getAuthHeaders } from "@/lib/auth-client";
@@ -311,7 +312,7 @@ function BannerPullModal({
   const canPull10 = balance >= banner.cost10;
   const isFeatured = banner.type === "featured";
   const accentColor = isFeatured ? "#a78bfa" : "#818cf8";
-  const [showInfo, setShowInfo] = useState(false);
+  // showInfo state removed — pity info now in hover tooltip
 
   // Unique fog filter IDs
   const reactId = useId();
@@ -512,22 +513,21 @@ function BannerPullModal({
               <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Cost per pull</p>
               <p className="text-sm font-mono font-bold" style={{ color: ci.color }}>{banner.costSingle} {ci.label}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="text-right">
-                <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Your Balance</p>
+            <InfoTooltip align="right" text={<>
+              <p style={{ fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>Pity System</p>
+              {pity ? (<>
+                <p><span style={{ color: "#f97316", fontWeight: 600 }}>Legendary: {pity.pityCounter}/{pity.hardPity || 75}</span>{" · "}<span style={{ color: "#a855f7", fontWeight: 600 }}>Epic: {pity.epicPityCounter}/10</span></p>
+                <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>{(pity.hardPity || 75) - pity.pityCounter} pulls until guaranteed Legendary{pity.pityCounter >= (pity.softPityStart || 55) ? <span style={{ color: "#f97316" }}> — Soft Pity active!</span> : null}{pity.guaranteed5050 ? <span style={{ color: "#22c55e" }}> — Next = Featured!</span> : null}</p>
+              </>) : <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Pull to start tracking pity</p>}
+              <p style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 6, marginTop: 6, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Drop Rates</p>
+              <p><span style={{ color: "#f97316" }}>Legendary 0.8%</span>{" · "}<span style={{ color: "#a855f7" }}>Epic 13%</span>{" · "}<span style={{ color: "#3b82f6" }}>Rare 35%</span>{" · "}<span style={{ color: "#22c55e" }}>Uncommon 40%</span>{" · "}<span style={{ color: "#9ca3af" }}>Common 11.2%</span></p>
+              <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Soft pity at pull 55 — legendary chance rises. Hard pity at 75 guarantees legendary.</p>
+            </>}>
+              <div className="text-right" style={{ cursor: "help" }}>
+                <p className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)", borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>Your Balance</p>
                 <p className="text-sm font-mono font-bold" style={{ color: balance > 0 ? ci.color : "rgba(255,255,255,0.2)" }}>{balance}</p>
               </div>
-              <button
-                onClick={() => setShowInfo(v => !v)}
-                className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-                style={{
-                  color: showInfo ? "#fff" : "rgba(255,255,255,0.45)",
-                  background: showInfo ? accentColor + "40" : "rgba(255,255,255,0.06)",
-                  border: "1px solid " + (showInfo ? accentColor + "60" : "rgba(255,255,255,0.12)"),
-                  cursor: "pointer",
-                }}
-              >?</button>
-            </div>
+            </InfoTooltip>
           </div>
 
           {/* Featured items */}
@@ -540,39 +540,7 @@ function BannerPullModal({
             </div>
           )}
 
-          {/* Click-toggle info panel (pity + drop rates) */}
-          {showInfo && (
-            <div data-feedback-id="gacha-view.banner-modal.pity-panel" className="rounded-xl px-4 py-3 space-y-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)" }}>
-              <div>
-                <p className="text-xs font-bold mb-1.5" style={{ color: "#e0e0e0" }}>Pity System</p>
-                {pity ? (
-                  <>
-                    <p className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>
-                      <span className="font-semibold" style={{ color: "#f97316" }}>Legendary: {pity.pityCounter}/{pity.hardPity || 75}</span>
-                      {"  "}
-                      <span className="font-semibold" style={{ color: "#a855f7" }}>Epic: {pity.epicPityCounter}/10</span>
-                    </p>
-                    <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.35)" }}>
-                      {(pity.hardPity || 75) - pity.pityCounter} pulls until guaranteed Legendary
-                      {pity.pityCounter >= (pity.softPityStart || 55) && <span style={{ color: "#f97316" }}> — Soft Pity active!</span>}
-                      {pity.guaranteed5050 && <span style={{ color: "#22c55e" }}> — Next Legendary = Featured!</span>}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>Pull to start tracking pity</p>
-                )}
-              </div>
-              <div>
-                <p className="text-xs font-bold mb-1.5" style={{ color: "#e0e0e0" }}>Drop Rates</p>
-                <p className="text-[11px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)" }}>
-                  <span style={{ color: "#f97316" }}>Legendary 0.8%</span>{" · "}<span style={{ color: "#a855f7" }}>Epic 13%</span>{" · "}<span style={{ color: "#3b82f6" }}>Rare 35%</span>{" · "}<span style={{ color: "#22c55e" }}>Uncommon 40%</span>{" · "}<span style={{ color: "#9ca3af" }}>Common 11.2%</span>
-                </p>
-                <p className="text-[10px] mt-1.5" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  Soft pity starts at pull 55 — legendary chance increases with each pull. Hard pity at 75 guarantees a legendary item.
-                </p>
-              </div>
-            </div>
-          )}
+          {/* Pity info now in hover tooltip above */}
 
           {/* Pull buttons with fog */}
           <div className="flex gap-3 items-stretch flex-wrap">
@@ -773,15 +741,6 @@ export default function GachaView({ onRefresh, onPullComplete }: {
         {/* Top-right buttons */}
         <div className="absolute top-4 right-4 flex items-center gap-2">
           <button
-            data-feedback-id="gacha-view.info-btn"
-            onClick={() => setInfoOpen(true)}
-            className="btn-interactive text-sm w-8 h-8 rounded-full flex items-center justify-center"
-            style={{ color: "rgba(255,255,255,0.5)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
-            title="How does the Wheel of Stars work?"
-          >
-            ?
-          </button>
-          <button
             data-feedback-id="gacha-view.history-btn"
             onClick={loadHistory}
             className="btn-interactive text-xs px-3 py-1.5 rounded-lg"
@@ -806,7 +765,15 @@ export default function GachaView({ onRefresh, onPullComplete }: {
               filter: "drop-shadow(0 0 12px rgba(167,139,250,0.5)) drop-shadow(0 0 30px rgba(167,139,250,0.25))",
             }} />
           </div>
-          <h2 className="text-xl font-bold" style={{ color: "#e8e8e8" }}>The Vault of Fate</h2>
+          <InfoTooltip text={<>
+            <p style={{ fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 4 }}>How the Wheel Works</p>
+            <p>Draw items from the Aetherstream. <span style={{ color: "#f97316" }}>Legendary 0.8%</span> · <span style={{ color: "#a855f7" }}>Epic 13%</span> · <span style={{ color: "#3b82f6" }}>Rare 35%</span></p>
+            <p><span style={{ color: "#f97316" }}>Soft pity</span> at 55 pulls, <span style={{ color: "#ef4444" }}>hard pity</span> at 75. Epic guaranteed every 10.</p>
+            <p>10-pull = 10% discount + guaranteed Epic+. Duplicates → <span style={{ color: "#a78bfa" }}>Rune Shards</span>.</p>
+            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>Click title for full details.</p>
+          </>}>
+            <h2 className="text-xl font-bold" style={{ color: "#e8e8e8", borderBottom: "1px dotted rgba(255,215,0,0.3)", cursor: "pointer" }} onClick={() => setInfoOpen(true)}>The Vault of Fate</h2>
+          </InfoTooltip>
         </div>
         <p className="text-xs italic leading-relaxed max-w-2xl" style={{ color: "rgba(255,255,255,0.3)" }}>
           A circular chamber with a single, floating astrolabe structure at its center: the Wheel of Stars. Here, heroes draw items, companions, and artifacts from the Aetherstream. The Vault remembers every pull — and rewards persistence.
