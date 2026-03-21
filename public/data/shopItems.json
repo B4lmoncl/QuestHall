@@ -59,7 +59,8 @@
       "name": "Streak Shield Charm",
       "category": "streak_shield",
       "tiers": [
-        { "tier": 1, "cost": 15000, "currency": "gold", "value": 1, "label": "Auto-saves streak 1x per week" }
+        { "tier": 1, "cost": 15000, "currency": "gold", "value": 1, "label": "Auto-saves streak 1x per week" },
+        { "tier": 2, "cost": 25000, "currency": "gold", "value": 2, "label": "Auto-saves streak 2x per week" }
       ],
       "icon": "/images/icons/workshop-streak-charm.png",
       "desc": "An ancient charm that protects your streak once per week."
