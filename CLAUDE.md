@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Quest Hall / Agent Dashboard** (v1.4.0) — A real-time operations center and gamified quest management system for AI agents and players. Combines agent monitoring, RPG quest mechanics (classes, companions, gacha, leveling), a REST API, and an Electron desktop companion app (Quest Forge).
+**Quest Hall / Agent Dashboard** (v1.5.3) — A real-time operations center and gamified quest management system for AI agents and players. Combines agent monitoring, RPG quest mechanics (classes, companions, gacha, leveling), a REST API, and an Electron desktop companion app (Quest Forge).
 
 ## Tech Stack
 
@@ -52,7 +52,7 @@ app/                  # Next.js app directory
   globals.css         # Tailwind + CSS utilities + animations (~720 lines)
   layout.tsx          # Root layout wrapper
   DashboardContext.tsx # React context for shared state
-components/           # React UI components (39 files, ~13k lines)
+components/           # React UI components (45 files, ~15k lines)
   DashboardHeader.tsx # Top navigation bar
   DashboardModals.tsx # Modal system (currencies, modifiers, info)
   CharacterView.tsx   # Character screen + equipment (lazy-loaded)
@@ -68,6 +68,10 @@ components/           # React UI components (39 files, ~13k lines)
   UserCard.tsx        # Player card with frame, title, stats
   LeaderboardView.tsx # Proving Grounds leaderboard
   ChallengesView.tsx  # Weekly challenges (Sternenpfad + Expedition) (lazy-loaded)
+  SocialView.tsx      # Social hub: friends, messages, trades, activity feed
+  PlayerProfileModal.tsx # Steam/Diablo-style player profile modal
+  TavernView.tsx      # The Hearth: rest mode with streak/forge freeze
+  RiftView.tsx        # The Rift: timed dungeon quest chains
   ...                 # 26 more components
 hooks/                # React custom hooks
   useQuestActions.ts  # Quest action handlers (claim, complete, approve, etc.)
@@ -80,7 +84,7 @@ lib/                  # Backend business logic (8 files, ~3800 lines)
   rotation.js         # Daily quest rotation logic
   middleware.js       # Express middleware (auth, master key)
   quest-templates.js  # Quest template interpolation
-routes/               # Express API routes (17 files, ~6200 lines)
+routes/               # Express API routes (19 files, ~8000 lines)
   quests.js           # Quest CRUD, claim, complete (~780 lines)
   habits-inventory.js # Rituals, gear, inventory, effects (~830 lines)
   config-admin.js     # Game config, leaderboard, /api/dashboard batch (~430 lines)
@@ -88,16 +92,18 @@ routes/               # Express API routes (17 files, ~6200 lines)
   agents.js           # Agent CRUD & status
   gacha.js            # Banner pulls with pull lock, pity tracking
   game.js             # Classes, roadmap, rituals
-  shop.js             # Shop items, forge challenges
-  players.js          # Player profiles
+  shop.js             # Shop items, forge challenges, workshop upgrades
+  players.js          # Player profiles, companion, tavern/rest mode
   users.js            # User management, JWT auth, rate-limited login
   campaigns.js        # Campaign quest chains
-  currency.js         # Multi-currency system
+  currency.js         # Multi-currency system, daily bonus
   integrations.js     # GitHub webhook (HMAC verified), catalog API
   crafting.js         # Crafting professions (Schmied, Alchemist, Verzauberer, Koch) + Schmiedekunst
   challenges-weekly.js # Sternenpfad: 3-stage solo weekly challenges with star ratings
   expedition.js       # Expedition: cooperative weekly challenge with shared checkpoints
   npcs-misc.js        # NPC endpoints, feedback (admin-only), SPA fallback
+  social.js           # Friends, messages, trading, activity feed
+  rift.js             # The Rift: timed dungeon quest chains (3 difficulty tiers)
 public/
   data/               # Game template data (36 JSON files)
   images/             # Pixel art assets (~250 files)
@@ -186,6 +192,11 @@ Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (3
 | `routes/social.js` | Social system: friends, messages, trades, activity feed |
 | `components/SocialView.tsx` | Social UI: card grid friends, messages, trades, activity feed |
 | `components/PlayerProfileModal.tsx` | Steam/Diablo-style player profile modal |
+| `routes/rift.js` | The Rift: timed dungeon quest chains (3 tiers) |
+| `components/RiftView.tsx` | Rift UI: tier selection, stage tracking, rewards |
+| `routes/players.js` | Player profiles, companion, tavern/rest mode |
+| `components/TavernView.tsx` | The Hearth: rest mode with streak/forge freeze |
+| `app/config.ts` | UI config: floor/room navigation, type/priority colors |
 
 ## Documentation
 
