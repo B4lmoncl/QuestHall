@@ -482,6 +482,307 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
       </>
     ),
   },
+
+  // ── Rituals & Vows ──
+  rituals: {
+    title: "Rituals",
+    icon: "🔮",
+    accent: "#8b5cf6",
+    body: (
+      <>
+        <p>Daily or weekly habits you commit to. Complete them consistently to build <GTRef k="streak">Streaks</GTRef> and earn bonus <GTRef k="xp">XP</GTRef> + <GTRef k="gold">Gold</GTRef>.</p>
+        <div className="gt-stat-row"><span>Aetherbond tiers</span><span>1× to 16× multiplier</span></div>
+        <div className="gt-stat-row"><span>Blood Pact</span><span>30× but streak resets on miss</span></div>
+        <p className="gt-source">Categories: Personal, Social, Creative, Health, Learning. Schedule: Daily or Weekly.</p>
+      </>
+    ),
+  },
+  aetherbond: {
+    title: "Aetherbond",
+    icon: "⚡",
+    accent: "#a78bfa",
+    body: (
+      <>
+        <p>Commitment tier for rituals. Higher tiers multiply rewards but increase the penalty for missing days.</p>
+        <div className="gt-stat-row"><span>Spark</span><span>3× rewards</span></div>
+        <div className="gt-stat-row"><span>Flame</span><span>3× rewards</span></div>
+        <div className="gt-stat-row"><span>Ember</span><span>7× rewards</span></div>
+        <div className="gt-stat-row"><span>Crucible</span><span>16× rewards</span></div>
+        <div className="gt-stat-row" style={{ color: "#ef4444" }}><span>Eternity</span><span>30× (<GTRef k="blood_pact">Blood Pact</GTRef>)</span></div>
+      </>
+    ),
+  },
+  blood_pact: {
+    title: "Blood Pact",
+    icon: "🩸",
+    accent: "#ef4444",
+    body: (
+      <>
+        <p>The highest commitment tier. Grants <strong>30× multiplied rewards</strong> but missing a single day <strong>resets your entire streak to 0</strong>.</p>
+        <p>Only choose this if you are absolutely certain you can maintain the ritual every day.</p>
+        <p className="gt-source">Cannot be undone once active. The pact remembers.</p>
+      </>
+    ),
+  },
+  vows: {
+    title: "Vows (Anti-Rituals)",
+    icon: "🚫",
+    accent: "#f97316",
+    body: (
+      <>
+        <p>Commitments to <strong>stop</strong> doing something. Every day you resist, your streak grows and you earn rewards.</p>
+        <div className="gt-stat-row"><span>Easy</span><span>1× · 3 <GTRef k="gold">Gold</GTRef> · 8 <GTRef k="xp">XP</GTRef></span></div>
+        <div className="gt-stat-row"><span>Medium</span><span>1× · 5 Gold · 15 XP</span></div>
+        <div className="gt-stat-row"><span>Hard</span><span>1.5× · 8 Gold · 25 XP</span></div>
+        <div className="gt-stat-row"><span>Legendary</span><span>2× · 12 Gold · 40 XP</span></div>
+        <p className="gt-source">Milestones: Bronze (7d), Silver (14d), Gold (21d), Titan (30d), Diamond (60d), Legend (90d).</p>
+      </>
+    ),
+  },
+
+  // ── Campaigns ──
+  campaigns: {
+    title: "Campaigns",
+    icon: "📜",
+    accent: "#818cf8",
+    body: (
+      <>
+        <p>Multi-quest storylines that unfold as you progress. Each campaign has sequential stages with escalating rewards.</p>
+        <p>Complete all stages to finish the campaign and unlock unique rewards.</p>
+        <p className="gt-source">Campaign quests appear alongside regular quests on the Quest Board.</p>
+      </>
+    ),
+  },
+
+  // ── Professions & Crafting ──
+  professions: {
+    title: "Professions",
+    icon: "⚒️",
+    accent: "#f59e0b",
+    body: (
+      <>
+        <p>4 crafting disciplines, each with a unique NPC master. Choose up to 2 professions (more slots unlock at higher levels).</p>
+        <div className="gt-stat-row"><span>Blacksmith (Grimvar)</span><span>Gear rerolling + reinforcing</span></div>
+        <div className="gt-stat-row"><span>Alchemist (Ysolde)</span><span>Buff potions + flasks</span></div>
+        <div className="gt-stat-row"><span>Enchanter (Eldric)</span><span>Gear enchanting + infusions</span></div>
+        <div className="gt-stat-row"><span>Cook (Bruna)</span><span>Meals + consumables</span></div>
+        <p className="gt-source">10 levels per profession. Ranks: Novice → Apprentice → Journeyman → Expert → Artisan → Master.</p>
+      </>
+    ),
+  },
+  recipes: {
+    title: "Recipes",
+    icon: "📖",
+    accent: "#f59e0b",
+    body: (
+      <>
+        <p>Crafting instructions learned as your profession rank increases. Each recipe requires <GTRef k="gold">Gold</GTRef> and <GTRef k="materials">Materials</GTRef>.</p>
+        <p>Skill-up chance shown by color:</p>
+        <div className="gt-stat-row" style={{ color: "#f97316" }}><span>Orange</span><span>Guaranteed skill-up</span></div>
+        <div className="gt-stat-row" style={{ color: "#eab308" }}><span>Yellow</span><span>High chance</span></div>
+        <div className="gt-stat-row" style={{ color: "#22c55e" }}><span>Green</span><span>Low chance</span></div>
+        <div className="gt-stat-row" style={{ color: "#6b7280" }}><span>Gray</span><span>No skill-up possible</span></div>
+      </>
+    ),
+  },
+  schmiedekunst: {
+    title: "Schmiedekunst (Salvage)",
+    icon: "🔨",
+    accent: "#ef4444",
+    body: (
+      <>
+        <p>Dismantle items into <GTRef k="essenz">Essenz</GTRef> + <GTRef k="materials">Materials</GTRef>. Higher rarity items yield more.</p>
+        <p><strong>Transmutation:</strong> Combine 3 same-slot Epic items + 500 <GTRef k="gold">Gold</GTRef> → 1 Legendary item (slot-locked).</p>
+        <p className="gt-source">Salvage All: bulk-dismantle by rarity tier (Diablo 3 style).</p>
+      </>
+    ),
+  },
+  materials: {
+    title: "Crafting Materials",
+    icon: "🧱",
+    accent: "#f59e0b",
+    body: (
+      <>
+        <p>13 materials from quest drops, scaling in rarity from Common to Legendary.</p>
+        <div className="gt-stat-row" style={{ color: "#9ca3af" }}><span>Common</span><span>Iron Ore, Herb Bundle</span></div>
+        <div className="gt-stat-row" style={{ color: "#22c55e" }}><span>Uncommon</span><span>Arcane Dust, Beast Hide</span></div>
+        <div className="gt-stat-row" style={{ color: "#3b82f6" }}><span>Rare</span><span>Moonpetal, Crystal Shard</span></div>
+        <div className="gt-stat-row" style={{ color: "#a855f7" }}><span>Epic</span><span>Void Essence, Dragonscale</span></div>
+        <div className="gt-stat-row" style={{ color: "#FFD700" }}><span>Legendary</span><span>Stardust Fragment</span></div>
+        <p className="gt-source">Drop chance increased by <GTRef k="glueck">Glück</GTRef> stat and Material Magnet upgrade.</p>
+      </>
+    ),
+  },
+
+  // ── Equipment & Inventory ──
+  gear: {
+    title: "Gear & Equipment",
+    icon: "🛡️",
+    accent: "#3b82f6",
+    body: (
+      <>
+        <p>Equip items in 6 slots: Helm, Chest, Gloves, Boots, Weapon, Amulet. Each item has primary + minor stat <GTRef k="affixes">affixes</GTRef>.</p>
+        <div className="gt-stat-row"><span><GTRef k="set_bonus">Set Bonuses</GTRef></span><span>3/6 or 6/6 tier match</span></div>
+        <div className="gt-stat-row"><span><GTRef k="legendary_effects">Legendary Effects</GTRef></span><span>Unique passives on gold items</span></div>
+        <p className="gt-source">Gear drops from quest completions. <GTRef k="glueck">Glück</GTRef> stat increases drop chance.</p>
+      </>
+    ),
+  },
+  affixes: {
+    title: "Gear Affixes",
+    icon: "✦",
+    accent: "#3b82f6",
+    body: (
+      <>
+        <p>Stats rolled on gear items (Diablo 3 style). Values are random within a range per rarity tier.</p>
+        <p><strong>Primary:</strong> <GTRef k="kraft">Kraft</GTRef>, <GTRef k="ausdauer">Ausdauer</GTRef>, <GTRef k="weisheit">Weisheit</GTRef>, <GTRef k="glueck">Glück</GTRef></p>
+        <p><strong>Minor:</strong> <GTRef k="fokus">Fokus</GTRef>, <GTRef k="vitalitaet">Vitalität</GTRef>, <GTRef k="charisma">Charisma</GTRef>, <GTRef k="tempo">Tempo</GTRef></p>
+        <p className="gt-source">Higher rarity → more affixes and higher value ranges.</p>
+      </>
+    ),
+  },
+  inventory: {
+    title: "Inventory",
+    icon: "🎒",
+    accent: "#f59e0b",
+    body: (
+      <>
+        <p>Your item storage. Gear, consumables, and passive items. Drag to reorder, click to equip or use.</p>
+        <p>Filters: All, Gear, Consumables, Passive. Sort by rarity, level, or default position.</p>
+        <p className="gt-source">Discard unwanted items or salvage them in <GTRef k="schmiedekunst">Schmiedekunst</GTRef>.</p>
+      </>
+    ),
+  },
+
+  // ── Achievements & Titles ──
+  achievements: {
+    title: "Hall of Honors",
+    icon: "🏅",
+    accent: "#fbbf24",
+    body: (
+      <>
+        <p>Track your accomplishments. Achievements award points based on rarity:</p>
+        <div className="gt-stat-row" style={{ color: "#9ca3af" }}><span>Common</span><span>5 pts</span></div>
+        <div className="gt-stat-row" style={{ color: "#22c55e" }}><span>Uncommon</span><span>10 pts</span></div>
+        <div className="gt-stat-row" style={{ color: "#3b82f6" }}><span>Rare</span><span>25 pts</span></div>
+        <div className="gt-stat-row" style={{ color: "#a855f7" }}><span>Epic</span><span>50 pts</span></div>
+        <div className="gt-stat-row" style={{ color: "#FFD700" }}><span>Legendary</span><span>100 pts</span></div>
+        <p className="gt-source">Point milestones unlock cosmetic frame upgrades for your player card.</p>
+      </>
+    ),
+  },
+  titles: {
+    title: "Titles",
+    icon: "👑",
+    accent: "#fbbf24",
+    body: (
+      <>
+        <p>Honorific titles earned through gameplay milestones. Equip a title to display it on your player card and leaderboard entry.</p>
+        <p className="gt-source">Titles are earned from achievements, streaks, expeditions, and special events.</p>
+      </>
+    ),
+  },
+
+  // ── Level & Classes ──
+  player_level: {
+    title: "Player Level",
+    icon: "⬆️",
+    accent: "#a855f7",
+    body: (
+      <>
+        <p>Earn <GTRef k="xp">XP</GTRef> from quests to level up (max 30). Each level requires exponentially more XP.</p>
+        <p>Level-ups grant <GTRef k="stardust">Stardust</GTRef> (5 + level) and unlock new features:</p>
+        <div className="gt-stat-row"><span>Lv 5</span><span>1st profession slot</span></div>
+        <div className="gt-stat-row"><span>Lv 15</span><span>2nd profession slot</span></div>
+        <div className="gt-stat-row"><span>Lv 20</span><span>3rd profession slot</span></div>
+        <div className="gt-stat-row"><span>Lv 25</span><span>All 4 profession slots</span></div>
+      </>
+    ),
+  },
+  classes: {
+    title: "Character Classes",
+    icon: "⚔️",
+    accent: "#ef4444",
+    body: (
+      <>
+        <p>Choose a class path to specialize your playstyle. Each class offers unique bonuses and quest affinities.</p>
+        <p className="gt-source">Class quests and skill trees coming soon (The Arcanum).</p>
+      </>
+    ),
+  },
+
+  // ── Weekly Challenge Subtypes ──
+  sternenpfad: {
+    title: "Star Path (Sternenpfad)",
+    icon: "⭐",
+    accent: "#fbbf24",
+    body: (
+      <>
+        <p>Solo weekly challenge with 3 stages. Earn 1-3 stars per stage (max 9★). Speed bonus: +1★ if completed within 2 days.</p>
+        <div className="gt-stat-row"><span>2★ stage</span><span>+15% bonus rewards</span></div>
+        <div className="gt-stat-row"><span>3★ stage</span><span>+33% bonus rewards</span></div>
+        <p className="gt-source">Weekly modifiers: +50% or -25% to specific quest types. Rewards <GTRef k="sternentaler">Sternentaler</GTRef>.</p>
+      </>
+    ),
+  },
+  expedition: {
+    title: "Expedition",
+    icon: "🗺️",
+    accent: "#22c55e",
+    body: (
+      <>
+        <p>Cooperative weekly challenge. All registered players contribute quests toward shared checkpoints.</p>
+        <p>Scales with player count — active players compensate for inactive ones.</p>
+        <div className="gt-stat-row"><span>3 checkpoints</span><span>Increasing rewards</span></div>
+        <div className="gt-stat-row"><span>Bonus checkpoint</span><span>Rotating title reward</span></div>
+        <p className="gt-source">No per-player cap. More completions = faster progress for everyone.</p>
+      </>
+    ),
+  },
+
+  // ── Shop ──
+  bazaar: {
+    title: "The Bazaar",
+    icon: "🏪",
+    accent: "#f59e0b",
+    body: (
+      <>
+        <p>Two categories of items purchasable with <GTRef k="gold">Gold</GTRef>:</p>
+        <p><strong>Self-Care Rewards:</strong> Real-world treats (gaming time, movie night, spa day) — motivational rewards for your effort.</p>
+        <p><strong>Boosts &amp; Buffs:</strong> Temporary gameplay effects (XP scrolls, luck coins, streak shields) applied server-side on purchase.</p>
+        <p className="gt-source">Buff durations and effects vary by item tier.</p>
+      </>
+    ),
+  },
+
+  // ── Gacha Banners ──
+  gacha_banners: {
+    title: "Gacha Banners",
+    icon: "🎰",
+    accent: "#a78bfa",
+    body: (
+      <>
+        <p>Two banner types in the <GTRef k="vault_of_fate">Vault of Fate</GTRef>:</p>
+        <div className="gt-stat-row"><span>Wheel of Stars</span><span>Standard · costs <GTRef k="runensplitter">Rune Shards</GTRef></span></div>
+        <div className="gt-stat-row"><span>Astral Radiance</span><span>Featured · costs <GTRef k="stardust">Stardust</GTRef></span></div>
+        <p>Featured banners have a 50/50 system: lose the coin flip once, and your next Legendary is guaranteed to be the featured item.</p>
+        <p className="gt-source"><GTRef k="pity">Pity</GTRef> tracks separately per banner.</p>
+      </>
+    ),
+  },
+
+  // ── Mondstaub ──
+  mondstaub: {
+    title: "Mondstaub (Moondust)",
+    icon: "🌙",
+    accent: "#c084fc",
+    body: (
+      <>
+        <p>The rarest currency. Only obtainable through extreme consistency — long <GTRef k="streak">Streak</GTRef> milestones and rare events.</p>
+        <p className="gt-source">Reserved for limited rewards. Not convertible to other currencies.</p>
+      </>
+    ),
+  },
 };
 
 // ─── Nested Tooltip Reference (clickable/hoverable keyword) ─────────────────
