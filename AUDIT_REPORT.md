@@ -1310,7 +1310,20 @@ Timed quest chains with escalating difficulty:
 | `7a3c612` | Tavern/Rest Mode (The Hearth — new 6th floor) |
 | `eb41603` | Rift/Dungeon System (The Rift — 3 difficulty tiers) |
 
-### 18.5 Remaining Issues Summary
+## 19. Phase 2026-03-21 — UI Polish & Balancing (Session 7)
+
+### 19.1 Shop UI Polish
+
+**Files:** `components/ShopView.tsx`, `public/data/shopItems.json`
+
+- Added `cursor: not-allowed` on disabled shop buy buttons (was deferred LOW priority from Session 5)
+- Added `title` tooltips on all shop buy buttons showing gold needed vs available
+- Translated all 24 shop item names + descriptions to English:
+  - Self-care: Tag Frei→Day Off, Ausschlafen→Sleep In, Spa-Tag→Spa Day, etc.
+  - Boosts: XP-Schriftrolle→XP Scroll, Goldweihrauch→Gold Incense, etc.
+  - Gear tiers: Abgenutzte Werkzeuge→Worn-out tools, auf alle Quests→on all quests
+
+### 19.2 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
