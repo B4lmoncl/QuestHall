@@ -708,7 +708,7 @@ export default function ChallengesView({
             color: activeTab === "sternenpfad" ? "#fbbf24" : "rgba(255,255,255,0.3)",
           }}
         >
-          ★ Star Path
+          <Tip k="sternenpfad">★ Star Path</Tip>
         </button>
         <button
           onClick={() => setActiveTab("expedition")}
@@ -718,7 +718,7 @@ export default function ChallengesView({
             color: activeTab === "expedition" ? "#4ade80" : "rgba(255,255,255,0.3)",
           }}
         >
-          Expedition
+          <Tip k="expedition">Expedition</Tip>
         </button>
       </div>
 
