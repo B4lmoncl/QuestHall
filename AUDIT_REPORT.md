@@ -1081,7 +1081,34 @@ Based on automated frontend component analysis, the following additional issues 
 | Input length validation already present on main endpoints | N/A | **Verified** — Quests (500/5000), messages (500), feedback (2000) already validated |
 | getMaxProfessionSlots returns 0 below threshold | N/A | **Intentional** — Players below Lv5 correctly cannot choose professions |
 
-### 16.15 Remaining Issues Summary
+### 16.15 New Features (Session 2, Batch 2)
+
+#### Daily Mission Checklist (HSR-inspired)
+**Files:** `routes/config-admin.js`, `app/page.tsx`, `app/utils.ts`
+
+- 6 daily missions computed from existing player actions (no new storage for mission tracking):
+  - Claim Daily Bonus (+100), Complete 1 Quest (+150), Complete 3 Quests (+250), Complete a Ritual (+100), Pet Companion (+50), Craft an Item (+100)
+- 4 milestone reward tiers: 100pts (25g), 300pts (50g+3 essenz), 500pts (100g+2 runensplitter), 750pts (150g+1 sternentaler)
+- `POST /api/daily-missions/claim` endpoint with server-side validation
+- Frontend: inline panel on quest board with compact mission chips and horizontal reward track
+- Auto-prunes old claims (7-day retention)
+
+#### Activity Feed Compact/Detail Toggle
+**File:** `components/SocialView.tsx`
+
+- Toggle button in feed header (⊟ Compact / ⊞ Detailed)
+- Compact view: single-line events with rarity-colored left border, truncated text
+- Detailed view: existing multi-line cards with legendary/epic glow effects
+
+#### Cumulative Star Reward Track
+**File:** `components/ChallengesView.tsx`
+
+- Horizontal milestone bar at top of SternenpfadView
+- Three milestones: 3★ (50 Gold), 6★ (3 Essenz + 100 Gold), 9★ (1 Sternentaler + 5 Essenz)
+- Animated progress fill with golden gradient
+- Checkmark nodes for reached milestones with glow effect
+
+### 16.16 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
