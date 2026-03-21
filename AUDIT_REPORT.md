@@ -1463,4 +1463,164 @@ These were reported as bugs by audit agents but are either intentional design de
 
 ---
 
+## 20. Phase 2026-03-21 — Deep Codebase Audit Session 8
+
+### 20.1 CRITICAL: Rift System Bypasses Entire Reward Pipeline
+
+**Severity: CRITICAL**
+**File:** `routes/rift.js:222-229`
+
+The Rift `complete-stage` endpoint awards XP and Gold **raw** without going through `onQuestCompletedByUser()`. This means:
+
+| What's Missing | Impact |
+|----------------|--------|
+| XP multipliers (Kraft, forge temp, companion, gear, hoarding malus) | Players get raw XP instead of multiplied XP |
+| Gold multipliers (Weisheit, streak, forge temp, legendary effects) | Players get raw gold instead of multiplied gold |
+| Forge temperature update | No forge temp gain from rift stages |
+| Streak update | Rift stages don't count toward daily streak |
+| Loot drops (Glück, luck buff, pity) | No item drops from rift stages |
+| Achievement checks | Rift completions don't trigger achievements |
+| Title checks | Rift completions don't trigger title awards |
+| Expedition contribution | Rift stages don't count toward cooperative expedition |
+| Weekly challenge progress | Rift stages don't count toward Sternenpfad |
+| Crafting material drops | No materials from rift stages |
+| Recipe discovery | No recipe drops from rift stages |
+| Activity feed logging | Rift completions not logged to social feed |
+| Daily mission progress | Rift stages don't count toward daily missions |
+
+**Current code:**
+```js
+u.xp = (u.xp || 0) + nextStage.xpReward;  // Raw XP, no multipliers
+awardCurrency(uid, 'gold', nextStage.goldReward);  // Raw gold, no multipliers
+```
+
+**Fix:** Call `onQuestCompletedByUser()` with a synthetic quest object representing the rift stage, or extract the reward logic into a shared function.
+
+### 20.2 HIGH: NPC Departures Not Processed Between Midnights
+
+**Severity: HIGH**
+**File:** `lib/npc-engine.js:255-260`
+
+`checkPeriodicTasks()` runs every 30 minutes but does NOT call `processNpcDepartures()`. If an NPC's departure time passes between midnight rotations, it stays "active" with quests still available until the next server restart or midnight rotation.
+
+**Fix:** Add `processNpcDepartures(now);` call in `checkPeriodicTasks()`.
+
+### 20.3 MEDIUM: MASTER_KEY Env Var Never Read
+
+**Severity: MEDIUM**
+**File:** `lib/auth.js:34-39`
+
+`getMasterKeyFromEnv()` returns `envKeys[0]` (first API key) but never checks `process.env.MASTER_KEY`. The documented `MASTER_KEY` env var is dead configuration.
+
+**Fix:** Check `process.env.MASTER_KEY` first: `return process.env.MASTER_KEY || envKeys[0] || '';`
+
+### 20.4 MEDIUM: getBondLevel Fallback Returns Wrong Property Key
+
+**Severity: MEDIUM**
+**File:** `lib/helpers.js:89`
+
+When `BOND_LEVELS` is empty, the fallback returns `{ level: 1, name: 'Acquaintance', minXp: 0 }` but the normal return uses `title` (not `name`) as the property key, and BOND_LEVELS[0] is `'Stranger'` not `'Acquaintance'`. Frontend code expecting `.title` would get `undefined`.
+
+**Fix:** Change fallback to `{ level: 1, title: 'Stranger', minXp: 0 }`.
+
+### 20.5 MEDIUM: NPC Force-Spawn Ignores Cooldowns in Fallback
+
+**Severity: MEDIUM**
+**File:** `lib/npc-engine.js:213-217`
+
+`forceSpawnMinimumNpc()` falls back to ALL non-permanent NPCs if no common/uncommon candidates pass the initial filter. The fallback filter does NOT check cooldowns, so a force-spawned NPC could be one still on cooldown.
+
+**Fix:** Add cooldown check to fallback filter.
+
+### 20.6 MEDIUM: Forge Temp Loot Uses Hardcoded Decay Rate
+
+**Severity: MEDIUM**
+**File:** `lib/helpers.js:820-825`
+
+`addLootToInventory` calculates forge temp with hardcoded 2%/h decay, but `calcDynamicForgeTemp()` uses a variable rate based on Ausdauer stat and legendary modifiers. The inline calculation diverges from actual forge temp.
+
+**Fix:** Use `calcDynamicForgeTemp(userId)` to get current temp, then add bonus.
+
+### 20.7 LOW: Tavern Leave Uses Falsy-OR for Frozen Values
+
+**Severity: LOW**
+**File:** `routes/players.js:635-636`
+
+```js
+u.streakDays = u.tavernRest.streakFrozenAt || u.streakDays;
+u.forgeTemp = u.tavernRest.forgeFrozenAt || u.forgeTemp;
+```
+
+If `streakFrozenAt` is 0 (player had 0 streak), `0 || u.streakDays` keeps current value instead of restoring to 0.
+
+**Fix:** Use nullish coalescing: `u.tavernRest.streakFrozenAt ?? u.streakDays`
+
+### 20.8 LOW: Rift Abandon Has No Confirmation Dialog
+
+**Severity: LOW (QoL)**
+**File:** `components/RiftView.tsx:140-153`
+
+`abandonRift()` immediately calls the API with no confirmation dialog. Abandoning a rift is destructive (applies multi-day cooldown), which is inconsistent with other destructive actions (dismantle, transmute) that have 2-step confirmation.
+
+**Fix:** Add confirmation state similar to ForgeView's `confirmAction` pattern.
+
+### 20.9 LOW: saveCampaigns Not Debounced
+
+**Severity: LOW**
+**File:** `lib/state.js:561-568`
+
+`saveCampaigns()` performs synchronous write on every call. Unlike `saveQuests`, `saveUsers`, `savePlayerProgress` which use `debouncedSave()`.
+
+**Fix:** Use `debouncedSave('campaigns', ...)` pattern.
+
+### 20.10 LOW: Local RARITY_ORDER Shadows Imported One
+
+**Severity: LOW**
+**File:** `lib/helpers.js:1208`
+
+Local `const RARITY_ORDER = [...]` redeclaration shadows the imported `RARITY_ORDER` from `state.js`. If the config-defined order is ever customized, recipe drop logic would silently ignore it.
+
+**Fix:** Remove local declaration, use imported one.
+
+### 20.11 LOW: loadManagedKeys Assumes validApiKeys Exists
+
+**Severity: LOW**
+**File:** `lib/state.js:926-936`
+
+`loadManagedKeys()` calls `state.validApiKeys.add(k.key)` but `validApiKeys` is initially `null`. Currently safe due to boot order, but fragile.
+
+**Fix:** Add null guard: `if (state.validApiKeys) state.validApiKeys.add(k.key);`
+
+### 20.12 INFO: selectDailyQuests Dead Code
+
+**File:** `lib/rotation.js:107-154`
+
+Fully implemented function exported but never called anywhere. The quest pool system uses a different mechanism.
+
+### 20.13 INFO: seedQuestCatalog Uses Hardcoded Base Date
+
+**File:** `lib/quest-catalog.js:41`
+
+All seed quests get `createdAt: 2026-03-10T12:00:00Z`. Already 11+ days old on current deployment.
+
+### 20.14 Remaining Issues Summary
+
+| # | Issue | Severity | Status |
+|---|-------|----------|--------|
+| 1 | Rift bypasses reward pipeline | CRITICAL | **To fix** |
+| 2 | NPC departures not processed between midnights | HIGH | **To fix** |
+| 3 | MASTER_KEY env var never read | MEDIUM | **To fix** |
+| 4 | getBondLevel fallback wrong property | MEDIUM | **To fix** |
+| 5 | NPC force-spawn ignores cooldowns | MEDIUM | **To fix** |
+| 6 | Forge temp loot hardcoded decay | MEDIUM | **To fix** |
+| 7 | Tavern leave falsy-OR | LOW | **To fix** |
+| 8 | Rift abandon no confirmation | LOW | **To fix** |
+| 9 | saveCampaigns not debounced | LOW | **To fix** |
+| 10 | Local RARITY_ORDER shadows import | LOW | **To fix** |
+| 11 | loadManagedKeys null guard | LOW | **To fix** |
+| 12 | selectDailyQuests dead code | INFO | Acknowledged |
+| 13 | Hardcoded seed date | INFO | Acknowledged |
+
+---
+
 *End of Audit Report — Updated 2026-03-21*
