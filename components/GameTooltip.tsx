@@ -276,8 +276,9 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
       <>
         <p>Having too many active quests reduces <GTRef k="xp">XP</GTRef> earned. Encourages completing quests before claiming new ones.</p>
         <div className="gt-stat-row"><span>1-20 quests</span><span style={{ color: "#22c55e" }}>No penalty</span></div>
-        <div className="gt-stat-row"><span>21+ quests</span><span style={{ color: "#ef4444" }}>-10% <GTRef k="xp">XP</GTRef> per quest over 20</span></div>
-        <div className="gt-stat-row"><span>28+ quests</span><span style={{ color: "#ef4444" }}>-80% <GTRef k="xp">XP</GTRef> (hard cap)</span></div>
+        <div className="gt-stat-row"><span>21-24 quests</span><span style={{ color: "#ef4444" }}>-10% <GTRef k="xp">XP</GTRef> per quest over 20</span></div>
+        <div className="gt-stat-row"><span>25+ quests</span><span style={{ color: "#ef4444" }}>-50% <GTRef k="xp">XP</GTRef> (soft cap)</span></div>
+        <div className="gt-stat-row"><span>30+ quests</span><span style={{ color: "#ef4444" }}>-80% <GTRef k="xp">XP</GTRef> (hard cap)</span></div>
       </>
     ),
   },
@@ -531,7 +532,7 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
     body: (
       <>
         <p>Commitments to <strong>stop</strong> doing something. Every day you resist, your streak grows and you earn rewards.</p>
-        <div className="gt-stat-row"><span>Easy</span><span>1× · 3 <GTRef k="gold">Gold</GTRef> · 8 <GTRef k="xp">XP</GTRef></span></div>
+        <div className="gt-stat-row"><span>Easy</span><span>0.5× · 3 <GTRef k="gold">Gold</GTRef> · 8 <GTRef k="xp">XP</GTRef></span></div>
         <div className="gt-stat-row"><span>Medium</span><span>1× · 5 <GTRef k="gold">Gold</GTRef> · 15 <GTRef k="xp">XP</GTRef></span></div>
         <div className="gt-stat-row"><span>Hard</span><span>1.5× · 8 <GTRef k="gold">Gold</GTRef> · 25 <GTRef k="xp">XP</GTRef></span></div>
         <div className="gt-stat-row"><span>Legendary</span><span>2× · 12 <GTRef k="gold">Gold</GTRef> · 40 <GTRef k="xp">XP</GTRef></span></div>
