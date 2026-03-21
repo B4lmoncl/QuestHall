@@ -996,17 +996,17 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
 
   // ── Factions ──
   factions: {
-    title: "Die Vier Zirkel",
+    title: "The Four Circles",
     icon: "🜂",
     accent: "#a78bfa",
     body: (
       <>
-        <p>Geheime Orden des Turms. Quests geben automatisch Reputation bei der passenden Fraktion.</p>
-        <div className="gt-stat-row" style={{ color: "#ef4444" }}><span>🔥 Zirkel der Glut</span><span>Fitness</span></div>
-        <div className="gt-stat-row" style={{ color: "#3b82f6" }}><span>📜 Zirkel der Tinte</span><span>Learning</span></div>
-        <div className="gt-stat-row" style={{ color: "#f59e0b" }}><span>⚒️ Zirkel des Amboss</span><span>Dev / Personal</span></div>
-        <div className="gt-stat-row" style={{ color: "#8b5cf6" }}><span>🌊 Zirkel des Echos</span><span>Social / Creative</span></div>
-        <p className="gt-source">6 Stufen: Neutral → Freundlich → Respektiert → Geehrt → Verehrt → Erhaben. Jede Stufe schaltet Titel, Rezepte, Frames und Boni frei.</p>
+        <p>Secret orders of the tower. Quests automatically grant reputation to the matching faction.</p>
+        <div className="gt-stat-row" style={{ color: "#ef4444" }}><span>🔥 Circle of Embers</span><span>Fitness</span></div>
+        <div className="gt-stat-row" style={{ color: "#3b82f6" }}><span>📜 Circle of Ink</span><span>Learning</span></div>
+        <div className="gt-stat-row" style={{ color: "#f59e0b" }}><span>⚒️ Circle of the Anvil</span><span>Dev / Personal</span></div>
+        <div className="gt-stat-row" style={{ color: "#8b5cf6" }}><span>🌊 Circle of Echoes</span><span>Social / Creative</span></div>
+        <p className="gt-source">6 tiers: Neutral → Friendly → Honored → Revered → Exalted → Paragon. Each tier unlocks titles, recipes, frames, and bonuses.</p>
       </>
     ),
   },
