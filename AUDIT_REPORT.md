@@ -101,7 +101,7 @@ server.js             # Express entry point (~289 lines)
 
 - 4 profession NPCs: Blacksmith, Alchemist, Enchanter, Cook
 - Max 2 professions per player, 10 levels each
-- WoW-style ranks: Novice → Apprentice → Journeyman → Expert → Artisan → Master
+- Named ranks: Novice → Apprentice → Journeyman → Expert → Artisan → Master
 - 13 materials (common→legendary), recipe discovery, batch crafting
 - Schmiedekunst: dismantle items → essenz + materials, transmute 3 epics → 1 legendary
 - Daily 2x XP bonus on first craft
@@ -1937,6 +1937,33 @@ No conversion needed — these serve a different purpose than the GameTooltip sy
 |--------|-----------|-------------|
 | `9522e06` | 2026-03-21 | Tooltip system overhaul: positioning, ESC close, game ref removal, old tooltip migration |
 | `b418756` | 2026-03-21 | Fix modal consistency: add ESC key to all modals, add X button to gacha banner |
+| `4902df6` | 2026-03-21 | Fix 2 frontend-backend mismatches in tooltip values |
+
+---
+
+## 26. Frontend-Backend Consistency Verification (Session 10)
+
+### 26.1 Values Verified (All Match)
+
+| Claim in Tooltip | Backend Code | Status |
+|------------------|-------------|--------|
+| Kraft: +0.5% XP per point, cap 30% | `Math.min(1.30, 1 + kraft * 0.005)` | **MATCH** |
+| Weisheit: +0.5% Gold per point, cap 30% | `Math.min(1.30, 1 + weisheit * 0.005)` | **MATCH** |
+| Forge Temp XP: 100%=×1.5, 80%=×1.25, 60%=×1.15, 40%=×1.0, 20%=×0.8, <20%=×0.5 | `getForgeXpBase()` | **MATCH** |
+| Forge Temp Gold: 100%=×1.5, 80%=×1.3, 60%=×1.15 | `getForgeGoldBase()` | **MATCH** |
+| Streak Gold: +1.5%/day, cap 45% | `Math.min(1 + days * 0.015, 1.45)` | **MATCH** |
+| Pity: Soft 55, Hard 75, +2.5%/pull | `SOFT_PITY_START=55, HARD_PITY=75, INCREASE=0.025` | **MATCH** |
+| Bond: +0.5 XP/pet, 2x/day | `bondXp + 0.5, petCountToday >= 2` | **MATCH** |
+| Quest XP: C=10, U=18, R=30, E=50, L=80 | `XP_BY_RARITY` | **MATCH** |
+| Daily Missions: 100=25g, 300=50g+3e, 500=100g+2r, 750=150g+1s | `milestones[]` | **MATCH** |
+| Vow rewards: Med=1×/5g/15xp, Hard=1.5×/8g/25xp, Leg=2×/12g/40xp | `DIFFICULTY_TIERS_VOW` | **MATCH** |
+
+### 26.2 Mismatches Found & Fixed
+
+| # | Frontend Claim | Backend Reality | Severity | Fix |
+|---|---------------|-----------------|----------|-----|
+| 1 | Hoarding: -80% at 28+ quests | -50% at 25+, -80% at 30+ | **HIGH** | Fixed tooltip to show correct soft/hard caps |
+| 2 | Vow Easy: 1× multiplier | 0.5× bondScale | **MEDIUM** | Fixed tooltip to show 0.5× |
 
 ---
 
