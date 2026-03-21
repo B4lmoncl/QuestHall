@@ -208,7 +208,7 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
   if (!ultimateData) return res.status(500).json({ error: 'Ultimates not configured' });
   const requiredLevel = ultimateData.requiredBondLevel || 5;
   if (bondLevel < requiredLevel) {
-    return res.status(400).json({ error: `Bond Level ${requiredLevel} benötigt (aktuell: ${bondLevel})` });
+    return res.status(400).json({ error: `Bond Level ${requiredLevel} required (current: ${bondLevel})` });
   }
 
   // Check cooldown (7 days)
@@ -218,7 +218,7 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
     const elapsed = (Date.now() - new Date(lastUsed).getTime()) / (1000 * 60 * 60 * 24);
     if (elapsed < cooldownDays) {
       const remaining = Math.ceil(cooldownDays - elapsed);
-      return res.status(429).json({ error: `Ultimate auf Cooldown (noch ${remaining} Tag${remaining > 1 ? 'e' : ''})` });
+      return res.status(429).json({ error: `Ultimate on cooldown (${remaining} day${remaining > 1 ? 's' : ''} remaining)` });
     }
   }
 
@@ -228,7 +228,7 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
   if (!ability) return res.status(404).json({ error: 'Unknown ability' });
 
   let result = { success: true, message: '' };
-  const companionName = u.companion.name || 'Dein Begleiter';
+  const companionName = u.companion.name || 'Your Companion';
   const flavorText = (ability.flavorText || '').replace(/\{name\}/g, companionName);
 
   switch (ability.effect.type) {
@@ -241,7 +241,7 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
       }
       // Ownership check: cannot complete another player's claimed quest
       if (quest.claimedBy && quest.claimedBy !== uid) {
-        return res.status(403).json({ error: 'Quest gehört einem anderen Spieler' });
+        return res.status(403).json({ error: 'Quest belongs to another player' });
       }
       if (quest.status === 'open') {
         quest.status = 'in_progress';
@@ -253,7 +253,7 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
       quest.completedAt = now();
       quest.proof = `Companion Ultimate: ${companionName}`;
       const newAchs = onQuestCompletedByUser(uid, quest);
-      result.message = `${companionName} hat "${quest.title}" für dich erledigt!`;
+      result.message = `${companionName} completed "${quest.title}" for you!`;
       result.completedQuest = quest;
       result.newAchievements = newAchs;
       result.xpEarned = u._lastXpEarned;
@@ -271,13 +271,13 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
         activatedAt: now(),
         source: 'companion_ultimate',
       });
-      result.message = `Doppelte Belohnung für die nächste Quest aktiviert!`;
+      result.message = `Double reward for next quest activated!`;
       break;
     }
     case 'streak_extend': {
       const days = ability.effect.days || 3;
       u.streakDays = (u.streakDays || 0) + days;
-      result.message = `Streak um ${days} Tage verlängert! (Gesamt: ${u.streakDays})`;
+      result.message = `Streak extended by ${days} days! (Total: ${u.streakDays})`;
       break;
     }
     default:

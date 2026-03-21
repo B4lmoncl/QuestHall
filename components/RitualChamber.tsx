@@ -170,7 +170,7 @@ export default function RitualChamber({ rituals, setRituals, setRewardCelebratio
                   Rise Again
                 </button>
                 {reviewApiKey && (
-                  <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Ritual löschen">×</button>
+                  <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Delete ritual">×</button>
                 )}
               </>
             ) : (
@@ -225,7 +225,7 @@ export default function RitualChamber({ rituals, setRituals, setRewardCelebratio
                   </button>
                 )}
                 {reviewApiKey && (
-                  <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Ritual löschen">×</button>
+                  <button onClick={() => setDeleteRitualConfirmId(ritual.id)} className="text-xs px-2 py-1.5 rounded-lg transition-all" style={{ background: "rgba(239,68,68,0.08)", color: "rgba(239,68,68,0.5)", border: "1px solid rgba(239,68,68,0.15)", cursor: 'pointer' }} title="Delete ritual">×</button>
                 )}
               </>
             )}

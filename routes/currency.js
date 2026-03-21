@@ -24,10 +24,10 @@ router.post('/api/currency/:playerId', requireApiKey, (req, res) => {
 
   const { action, currency, amount, reason } = req.body;
   if (!action || !currency || !amount) {
-    return res.status(400).json({ error: 'action, currency und amount sind erforderlich' });
+    return res.status(400).json({ error: 'action, currency and amount are required' });
   }
   if (!['earn', 'spend'].includes(action)) {
-    return res.status(400).json({ error: 'action muss "earn" oder "spend" sein' });
+    return res.status(400).json({ error: 'action must be "earn" or "spend"' });
   }
   // "earn" requires master key to prevent unlimited currency minting
   if (action === 'earn') {
@@ -39,7 +39,7 @@ router.post('/api/currency/:playerId', requireApiKey, (req, res) => {
   }
   ensureUserCurrencies(u);
   if (!(currency in u.currencies)) {
-    return res.status(400).json({ error: `Unbekannte Währung: ${currency}` });
+    return res.status(400).json({ error: `Unknown currency: ${currency}` });
   }
   const amt = Math.abs(Math.floor(amount));
   if (amt <= 0) return res.status(400).json({ error: 'Amount must be positive' });
@@ -67,11 +67,11 @@ router.post('/api/currency/:playerId/convert', requireApiKey, (req, res) => {
 
   const { from, to, amount } = req.body;
   if (!from || !to || !amount) {
-    return res.status(400).json({ error: 'from, to und amount sind erforderlich' });
+    return res.status(400).json({ error: 'from, to and amount are required' });
   }
   ensureUserCurrencies(u);
   if (!(from in u.currencies) || !(to in u.currencies)) {
-    return res.status(400).json({ error: 'Unbekannte Währung' });
+    return res.status(400).json({ error: 'Unknown currency' });
   }
   if (from === to) return res.status(400).json({ error: 'Cannot convert to same currency' });
 
@@ -92,7 +92,7 @@ router.post('/api/currency/:playerId/convert', requireApiKey, (req, res) => {
   const taxRate = rules.taxRate || 0.20;
   const received = Math.floor(amt * pair.rate * (1 - taxRate));
   if (received <= 0) {
-    return res.status(400).json({ error: 'Betrag zu klein für Konvertierung (nach Steuer)' });
+    return res.status(400).json({ error: 'Amount too small for conversion (after tax)' });
   }
 
   u.currencies[from] -= amt;

@@ -803,11 +803,11 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
       });
       if (!r.ok && addToast) {
         const data = await r.json().catch(() => null);
-        addToast({ type: "error", message: data?.error || "Ablegen fehlgeschlagen" });
+        addToast({ type: "error", message: data?.error || "Failed to unequip" });
       }
       await fetchChar();
     } catch {
-      if (addToast) addToast({ type: "error", message: "Netzwerkfehler beim Ablegen" });
+      if (addToast) addToast({ type: "error", message: "Network error while unequipping" });
     } finally { setUnequipping(null); }
   };
 
@@ -827,11 +827,11 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         }
       } else if (addToast) {
         const data = await r.json().catch(() => null);
-        addToast({ type: "error", message: data?.error || "Item konnte nicht benutzt werden" });
+        addToast({ type: "error", message: data?.error || "Item could not be used" });
       }
       await fetchChar();
     } catch {
-      if (addToast) addToast({ type: "error", message: "Netzwerkfehler beim Benutzen" });
+      if (addToast) addToast({ type: "error", message: "Network error while using item" });
     }
   };
 
@@ -852,7 +852,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
       }
       await fetchChar();
     } catch {
-      if (addToast) addToast({ type: "error", message: "Netzwerkfehler beim Verwerfen" });
+      if (addToast) addToast({ type: "error", message: "Network error while discarding" });
     }
   };
 

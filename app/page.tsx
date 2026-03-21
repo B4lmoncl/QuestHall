@@ -915,7 +915,7 @@ export default function Dashboard() {
                   >
                     <p className="font-semibold mb-1 text-bright" style={{ fontSize: 14 }}>The Deepforge</p>
                     <p className="mb-2" style={{ color: "rgba(255,255,255,0.55)", fontSize: 13 }}>
-                      Dein Aktivitäts-Level. Steigt mit jeder Quest, sinkt wenn du pausierst.
+                      Your activity level. Rises with each quest, drops when you pause.
                     </p>
                     <p className="mb-1.5 font-semibold text-w60" style={{ fontSize: 12 }}>Was bringt&apos;s?</p>
                     <div className="space-y-1.5 mb-3">
@@ -1376,8 +1376,8 @@ export default function Dashboard() {
                         </div>
                         <p className="text-xs mt-0.5 text-w25">
                           {playerName
-                            ? `${boardOpen.length + playerVisibleInProgress.length} aktive Quests`
-                            : "Logge dich ein · 0 verfügbar"}
+                            ? `${boardOpen.length + playerVisibleInProgress.length} active quests`
+                            : "Log in · 0 available"}
                         </p>
                       </div>
                       <div className="flex items-center gap-1">
@@ -1537,8 +1537,8 @@ export default function Dashboard() {
                     {!playerName && !loading ? (
                       <div className="rounded-xl p-8 text-center bg-card border-w6">
                         <p className="text-base mb-2">×</p>
-                        <p className="text-sm font-semibold mb-1 text-w50">Logge dich ein um deine Quests zu sehen</p>
-                        <p className="text-xs mb-3 text-w25">Dein persönlicher Quest-Pool wartet auf dich!</p>
+                        <p className="text-sm font-semibold mb-1 text-w50">Log in to view your quests</p>
+                        <p className="text-xs mb-3 text-w25">Your personal quest pool awaits!</p>
                         <button onClick={() => setOnboardingOpen(true)} className="text-xs px-4 py-1.5 rounded font-semibold" style={{ background: "rgba(167,139,250,0.18)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.4)" }}>
                           Login
                         </button>
@@ -2028,7 +2028,7 @@ export default function Dashboard() {
             maxWidth: "min(480px, 92vw)",
             animation: "fadeInDown 0.2s ease",
           }}
-          title="Klicken zum Schließen"
+          title="Click to close"
         >
           <span style={{ fontSize: 18, flexShrink: 0 }}>⏱</span>
           <p className="text-xs leading-relaxed flex-1" style={{ color: "#fca5a5" }}>{apiError}</p>
@@ -2194,7 +2194,7 @@ export default function Dashboard() {
             <div className="text-center space-y-1">
               <div className="text-4xl">×</div>
               <h2 className="text-base font-bold text-bright">
-                Dein Klassenpfad steht bereit!
+                Your class path is ready!
               </h2>
               <p className="text-sm font-semibold" style={{ color: "#a78bfa" }}>
                 {classActivatedNotif.classIcon} Willkommen auf dem {classActivatedNotif.className}!
