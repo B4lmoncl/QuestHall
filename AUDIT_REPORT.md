@@ -1323,7 +1323,15 @@ Timed quest chains with escalating difficulty:
   - Boosts: XP-Schriftrolle→XP Scroll, Goldweihrauch→Gold Incense, etc.
   - Gear tiers: Abgenutzte Werkzeuge→Worn-out tools, auf alle Quests→on all quests
 
-### 19.2 Remaining Issues Summary
+### 19.2 UI Agent Fixes (Session 7, Batch 2)
+
+| Fix | File | Description |
+|-----|------|-------------|
+| Gacha pull German text | `GachaView.tsx` | "Ziehe..."→"Pulling..." on pull buttons |
+| Companion German text | `CompanionsWidget.tsx` | "Erfolg!"→"Success!", "Netzwerkfehler"→"Network error" |
+| Shop missing animation | `ShopView.tsx` | Added `tab-content-enter` class (only view missing it) |
+
+### 19.3 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
