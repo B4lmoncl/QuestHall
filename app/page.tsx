@@ -111,6 +111,7 @@ export default function Dashboard() {
   const [weeklyChallenge, setWeeklyChallenge] = useState<import("@/app/types").WeeklyChallenge | null>(null);
   const [expedition, setExpedition] = useState<import("@/app/types").Expedition | null>(null);
   const [socialBadge, setSocialBadge] = useState<{ pendingFriendRequests: number; unreadMessages: number; activeTrades: number } | null>(null);
+  const [dailyMissions, setDailyMissions] = useState<{ missions: { id: string; label: string; points: number; done: boolean }[]; earned: number; total: number; milestones: { threshold: number; reward: Record<string, number>; claimed: boolean }[] } | null>(null);
   const [claimingDailyBonus, setClaimingDailyBonus] = useState(false);
   const [loginCalendarOpen, setLoginCalendarOpen] = useState(false);
   const [completedOpen, setCompletedOpen] = useState(false);
@@ -347,6 +348,7 @@ export default function Dashboard() {
       if (batch.weeklyChallenge !== undefined) setWeeklyChallenge(batch.weeklyChallenge || null);
       if (batch.expedition !== undefined) setExpedition(batch.expedition || null);
       if (batch.socialSummary) setSocialBadge(batch.socialSummary);
+      if (batch.dailyMissions) setDailyMissions(batch.dailyMissions);
     } else {
       // Fallback: individual fetches if batch endpoint not available
       const [a, q, u, lb, ac, camps] = await Promise.all([fetchAgents(), fetchQuests(pName || undefined), fetchUsers(), fetchLeaderboard(), fetchAchievementCatalogue(), fetchCampaigns()]);
@@ -1406,6 +1408,71 @@ export default function Dashboard() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Daily Missions Panel */}
+                  {dailyMissions && playerName && (
+                    <div className="rounded-xl p-3 mb-3" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.04) 100%)", border: "1px solid rgba(99,102,241,0.15)" }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(99,102,241,0.7)" }}>Daily Missions</span>
+                        <span className="text-xs font-mono font-bold" style={{ color: dailyMissions.earned >= dailyMissions.total ? "#4ade80" : "#818cf8" }}>
+                          {dailyMissions.earned}/{dailyMissions.total}
+                        </span>
+                      </div>
+                      {/* Milestone reward track */}
+                      <div className="relative mb-3">
+                        <div className="h-1.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
+                          <div className="h-full rounded-full transition-all duration-700" style={{ width: `${Math.min(100, (dailyMissions.earned / dailyMissions.total) * 100)}%`, background: "linear-gradient(90deg, #818cf8, #a78bfa)" }} />
+                        </div>
+                        <div className="flex justify-between mt-1">
+                          {dailyMissions.milestones.map(ms => {
+                            const reached = dailyMissions.earned >= ms.threshold;
+                            const pct = (ms.threshold / dailyMissions.total) * 100;
+                            return (
+                              <div key={ms.threshold} className="relative" style={{ left: `${pct - 50/(dailyMissions.milestones.length)}%` }}>
+                                {reached && !ms.claimed ? (
+                                  <button
+                                    onClick={async () => {
+                                      try {
+                                        const { getAuthHeaders } = await import("@/lib/auth-client");
+                                        const r = await fetch("/api/daily-missions/claim", {
+                                          method: "POST",
+                                          headers: { ...getAuthHeaders(reviewApiKey!), "Content-Type": "application/json" },
+                                          body: JSON.stringify({ threshold: ms.threshold }),
+                                        });
+                                        if (r.ok) refreshDashboard();
+                                      } catch { /* ignore */ }
+                                    }}
+                                    className="btn-interactive text-xs px-1.5 py-0.5 rounded font-bold badge-enter"
+                                    style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,0.3)" }}
+                                    title={Object.entries(ms.reward).map(([k, v]) => `+${v} ${k}`).join(", ")}
+                                  >
+                                    {ms.threshold}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-mono px-1" style={{ color: ms.claimed ? "#4ade80" : reached ? "#818cf8" : "rgba(255,255,255,0.15)" }}>
+                                    {ms.claimed ? "✓" : ms.threshold}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                      {/* Mission list — compact */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {dailyMissions.missions.map(m => (
+                          <span key={m.id} className="text-xs px-2 py-1 rounded-lg inline-flex items-center gap-1" style={{
+                            background: m.done ? "rgba(74,222,128,0.08)" : "rgba(255,255,255,0.03)",
+                            color: m.done ? "#4ade80" : "rgba(255,255,255,0.3)",
+                            border: `1px solid ${m.done ? "rgba(74,222,128,0.15)" : "rgba(255,255,255,0.05)"}`,
+                            textDecoration: m.done ? "line-through" : "none",
+                          }}>
+                            {m.done ? "✓" : "○"} {m.label} <span className="font-mono" style={{ color: m.done ? "rgba(74,222,128,0.5)" : "rgba(255,255,255,0.15)" }}>+{m.points}</span>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div data-feedback-id="quest-board" className="space-y-2">
                     {/* Category filters — Quest Board only */}

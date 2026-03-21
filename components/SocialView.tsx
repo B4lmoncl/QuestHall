@@ -907,6 +907,7 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
 function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: string }) {
   const [feed, setFeed] = useState<ActivityEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [compactView, setCompactView] = useState(false);
 
   const fetchFeed = useCallback(async () => {
     try {
@@ -936,6 +937,17 @@ function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: s
 
   return (
     <div className="space-y-2">
+      {/* Compact / Detail toggle */}
+      <div className="flex justify-end">
+        <button
+          onClick={() => setCompactView(v => !v)}
+          className="btn-interactive text-xs px-2 py-1 rounded"
+          style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.06)" }}
+          title={compactView ? "Switch to detailed view" : "Switch to compact view"}
+        >
+          {compactView ? "⊞ Detailed" : "⊟ Compact"}
+        </button>
+      </div>
       {feed.map(event => {
         const icon = EVENT_ICONS[event.type] || "📌";
         const isOwn = event.player === playerName.toLowerCase();
@@ -968,6 +980,17 @@ function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: s
             description = event.type.replace(/_/g, " ");
         }
         const rarityColor = d.rarity ? (RARITY_COLORS[d.rarity] || "#e8e8e8") : "#e8e8e8";
+
+        if (compactView) {
+          return (
+            <div key={event.id} className="flex items-center gap-2 text-xs px-2 py-1 rounded" style={{ background: d.rarity === "legendary" ? "rgba(255,140,0,0.04)" : "rgba(255,255,255,0.015)", borderLeft: `2px solid ${d.rarity ? (RARITY_COLORS[d.rarity] || "rgba(255,255,255,0.06)") : "rgba(255,255,255,0.06)"}` }}>
+              <span style={{ fontSize: 11 }}>{icon}</span>
+              <span className="font-semibold truncate" style={{ color: isOwn ? "#a855f7" : event.playerColor }}>{name}</span>
+              <span className="text-w30 truncate flex-1">{description}</span>
+              <span className="text-w15 flex-shrink-0">{timeAgo(event.at)}</span>
+            </div>
+          );
+        }
 
         return (
           <div key={event.id} className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 ${d.rarity === "legendary" ? "feed-event-legendary" : d.rarity === "epic" ? "feed-event-epic" : ""}`} style={{ background: d.rarity === "legendary" ? "rgba(255,140,0,0.04)" : d.rarity === "epic" ? "rgba(168,85,247,0.03)" : "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)" }}>

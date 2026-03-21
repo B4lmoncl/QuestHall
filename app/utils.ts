@@ -125,6 +125,7 @@ export async function fetchDashboard(playerName?: string): Promise<{
   weeklyChallenge?: WeeklyChallenge | null;
   expedition?: Expedition | null;
   socialSummary?: { pendingFriendRequests: number; unreadMessages: number; activeTrades: number } | null;
+  dailyMissions?: { missions: { id: string; label: string; points: number; done: boolean }[]; earned: number; total: number; milestones: { threshold: number; reward: Record<string, number>; claimed: boolean }[] } | null;
   apiLive: boolean;
 } | null> {
   try {
