@@ -547,7 +547,7 @@ const INV_FILTERS: { key: InvFilter; label: string }[] = [
 
 const INV_SORTS: { key: InvSort; label: string }[] = [
   { key: "none", label: "Standard" },
-  { key: "rarity", label: "Seltenheit" },
+  { key: "rarity", label: "Rarity" },
   { key: "name", label: "Name" },
   { key: "level", label: "Level" },
 ];

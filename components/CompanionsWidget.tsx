@@ -233,7 +233,7 @@ export function CompanionsWidget({ user, streak, playerName, apiKey, onDobbieCli
         setTimeout(() => setUltimateGlow(false), 4000);
         if (onUserRefresh) onUserRefresh();
       } else {
-        setUltimateResult(d.error || "Fehler");
+        setUltimateResult(d.error || "Error");
         setTimeout(() => setUltimateResult(null), 4000);
       }
     } catch { setUltimateResult("Netzwerkfehler"); setTimeout(() => setUltimateResult(null), 3000); }
