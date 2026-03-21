@@ -257,9 +257,9 @@ function BannerPreviewCard({
 
         {/* Banner name — large, dramatic */}
         <div>
-          <h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
+          <Tip k="gacha_banners"><h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
             {banner.name}
-          </h3>
+          </h3></Tip>
           <div className="mt-1 h-px w-16" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
         </div>
 

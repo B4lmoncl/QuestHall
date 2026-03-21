@@ -708,14 +708,14 @@ export default function Dashboard() {
             </div>
           )}
           <div data-feedback-id="stats.forge-streak">
-          <StatBar
+          <Tip k="streak"><StatBar
             label="Forge Streak"
             value={loading ? "—" : playerName ? `${animStreak}d` : "—"}
             sub={playerName ? (playerStreak > 0 ? `+${Math.min((playerStreak * 1.5), 45).toFixed(1)}% gold` : "your streak") : "login to view"}
             subColor={playerName && playerStreak > 0 ? "#fbbf24" : undefined}
             accent="#f97316"
             onClick={playerName ? () => setStreakInfoOpen(true) : undefined}
-          />
+          /></Tip>
           </div>
           <div data-feedback-id="stats.quests">
           <StatBar
@@ -827,7 +827,7 @@ export default function Dashboard() {
                     ) : null;
                   })()}
                 </div>
-                <p className="text-xs mb-1.5" style={{ color: "#a78bfa" }}>Lv.{playerLevelInfo.level} · {playerLevelInfo.title}</p>
+                <p className="text-xs mb-1.5" style={{ color: "#a78bfa" }}><Tip k="player_level">Lv.{playerLevelInfo.level}</Tip> · {playerLevelInfo.title}</p>
                 {/* XP progress bar */}
                 <div className="h-1.5 rounded-full overflow-hidden bg-w7">
                   <div
@@ -867,7 +867,7 @@ export default function Dashboard() {
                     }}
                     title="Login Calendar"
                   >
-                    📅
+                    <Tip k="login_calendar">📅</Tip>
                   </button>
                 </div>
               </div>
@@ -886,10 +886,12 @@ export default function Dashboard() {
                     { emoji: "", key: "sternentaler" as const, value: Number(loggedInUser?.currencies?.sternentaler ?? 0), color: "#fbbf24", iconSrc: "/images/icons/currency-sternentaler.png" },
                   ].map(c => (
                     <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)} title={c.key}>
-                      {c.iconSrc ? <img src={c.iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
-                      <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
-                        {c.value}
-                      </span>
+                      <Tip k={c.key}>
+                        {c.iconSrc ? <img src={c.iconSrc} alt="" width={16} height={16} className={`${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
+                        <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
+                          {c.value}
+                        </span>
+                      </Tip>
                     </div>
                   ))}
                 </div>
@@ -898,10 +900,12 @@ export default function Dashboard() {
                 <div data-feedback-id="player-card.forge-tooltip" className="relative group">
                   <div className="flex items-center gap-1.5 cursor-help">
                     <img src="/images/icons/ach-forge-novice.png" alt="forge" width={35} height={35} className="img-render-auto" onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} />
-                    <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
-                      {forgeTemp}%
-                    </span>
-                    <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
+                    <Tip k="forge_temp">
+                      <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
+                        {forgeTemp}%
+                      </span>
+                      <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
+                    </Tip>
                   </div>
                   {/* Forge bar */}
                   <div className="mt-1 rounded-full overflow-hidden bg-w6" style={{ height: 3, width: 120 }}>
@@ -1200,7 +1204,7 @@ export default function Dashboard() {
         {dashView === "campaign" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest text-w35">The Observatory</span>
+              <Tip k="campaigns"><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Observatory</span></Tip>
             </div>
             <div className="rounded-xl px-6 py-16 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
               <p className="text-lg font-bold mb-2 text-w25">Coming Soon</p>

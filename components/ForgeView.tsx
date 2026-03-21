@@ -437,7 +437,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
       {/* ─── All Materials Bar ─────────────────────────────────────────── */}
       {Object.keys(materials).length > 0 && (
         <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materials</p>
+          <Tip k="materials"><p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materials</p></Tip>
           <div className="flex flex-wrap gap-2">
             {materialDefs.filter(m => materials[m.id]).map(m => (
               <div key={m.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${RARITY_COLORS[m.rarity] || "#555"}30` }} title={m.desc}>
@@ -468,7 +468,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {/* Location header */}
             <div className="px-4 pt-3 pb-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70` }}>{loc.label}</span>
+                <Tip k="professions"><span className="text-sm font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70` }}>{loc.label}</span></Tip>
                 <span className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>{loc.desc}</span>
                 <div className="ml-auto flex items-center gap-1.5">
                   {isChosen && <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color }}>Active</span>}
@@ -779,7 +779,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                       color: npcModalTab === t.key ? t.color : "rgba(255,255,255,0.25)",
                       borderBottom: npcModalTab === t.key ? `2px solid ${t.color}` : "2px solid transparent",
                     }}>
-                      {t.label}
+                      {t.key === "schmiedekunst" ? <Tip k="schmiedekunst">{t.label}</Tip> : t.label}
                     </button>
                   ))}
                 </div>
@@ -820,7 +820,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 {/* Recipes list */}
                 <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p>
+                    <Tip k="recipes"><p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p></Tip>
                     <div className="flex items-center gap-3">
                       {Object.entries(SKILL_UP_COLORS).map(([key, sc]) => (
                         <span key={key} className="flex items-center gap-1 text-xs cursor-help" title={`${sc.label}: ${key === "orange" ? "100% XP" : key === "yellow" ? "75% XP" : key === "green" ? "25% XP" : "0% XP — level up to get XP from higher recipes"}`} style={{ color: "rgba(255,255,255,0.3)" }}>
