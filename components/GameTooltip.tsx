@@ -991,6 +991,41 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
       </>
     ),
   },
+
+  // ── Factions ──
+  factions: {
+    title: "Die Vier Zirkel",
+    icon: "🜂",
+    accent: "#a78bfa",
+    body: (
+      <>
+        <p>Geheime Orden des Turms. Quests geben automatisch Reputation bei der passenden Fraktion.</p>
+        <div className="gt-stat-row" style={{ color: "#ef4444" }}><span>🔥 Zirkel der Glut</span><span>Fitness</span></div>
+        <div className="gt-stat-row" style={{ color: "#3b82f6" }}><span>📜 Zirkel der Tinte</span><span>Learning</span></div>
+        <div className="gt-stat-row" style={{ color: "#f59e0b" }}><span>⚒️ Zirkel des Amboss</span><span>Dev / Personal</span></div>
+        <div className="gt-stat-row" style={{ color: "#8b5cf6" }}><span>🌊 Zirkel des Echos</span><span>Social / Creative</span></div>
+        <p className="gt-source">6 Stufen: Neutral → Freundlich → Respektiert → Geehrt → Verehrt → Erhaben. Jede Stufe schaltet Titel, Rezepte, Frames und Boni frei.</p>
+      </>
+    ),
+  },
+
+  // ── Battle Pass ──
+  battle_pass: {
+    title: "Season Pass",
+    icon: "🌅",
+    accent: "#a78bfa",
+    body: (
+      <>
+        <p>Saisonaler Fortschrittstrack mit 40 Stufen. Verdiene Pass-<GTRef k="xp">XP</GTRef> durch alle Aktivitäten:</p>
+        <div className="gt-stat-row"><span>Quests</span><span>10-60 XP nach <GTRef k="rarity">Rarität</GTRef></span></div>
+        <div className="gt-stat-row"><span><GTRef k="rituals">Rituale</GTRef></span><span>8 XP</span></div>
+        <div className="gt-stat-row"><span><GTRef k="rift">Rift</GTRef> Stufe</span><span>20 XP</span></div>
+        <div className="gt-stat-row"><span><GTRef k="daily_missions">Daily Missions</GTRef></span><span>10-30 XP</span></div>
+        <div className="gt-stat-row"><span>Crafting</span><span>5 XP</span></div>
+        <p className="gt-source">250 XP pro Level. Belohnungen: <GTRef k="gold">Gold</GTRef>, <GTRef k="essenz">Essenz</GTRef>, <GTRef k="runensplitter">Runensplitter</GTRef>, <GTRef k="titles">Titel</GTRef>, Frames, <GTRef k="mondstaub">Mondstaub</GTRef>.</p>
+      </>
+    ),
+  },
 };
 
 // ─── Nested Tooltip Reference (clickable/hoverable keyword) ─────────────────

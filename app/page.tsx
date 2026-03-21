@@ -17,6 +17,8 @@ const DailyLoginCalendar = lazy(() => import("@/components/DailyLoginCalendar"))
 const SocialView = lazy(() => import("@/components/SocialView"));
 const TavernView = lazy(() => import("@/components/TavernView"));
 const RiftView = lazy(() => import("@/components/RiftView"));
+const FactionsView = lazy(() => import("@/components/FactionsView"));
+const BattlePassView = lazy(() => import("@/components/BattlePassView"));
 const PlayerProfileModal = lazy(() => import("@/components/PlayerProfileModal"));
 import { GuideModal, GuideContent, TutorialOverlay, TUTORIAL_STEPS } from "@/components/TutorialModal";
 import {
@@ -1182,23 +1184,14 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Season & Battle Pass View — Coming Soon (logic commented out for rework) */}
+        {/* Factions — Die Vier Zirkel */}
+        {dashView === "factions" && (
+          <ErrorBoundary><Suspense fallback={<ViewFallback />}><FactionsView /></Suspense></ErrorBoundary>
+        )}
+
+        {/* Season Pass (Battle Pass) */}
         {dashView === "season" && (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest text-w35">{CURRENT_SEASON.icon} Season & Battle Pass</span>
-            </div>
-            <div className="rounded-2xl p-8 text-center" style={{ background: `linear-gradient(135deg, #1a1a1a 0%, ${CURRENT_SEASON.color}10 100%)`, border: `1px solid ${CURRENT_SEASON.color}25`, boxShadow: `0 0 40px ${CURRENT_SEASON.color}08` }}>
-              <p className="text-4xl mb-3" style={{ opacity: 0.5 }}>{CURRENT_SEASON.icon}</p>
-              <h3 className="text-lg font-bold mb-2" style={{ color: `${CURRENT_SEASON.color}90` }}>Coming Soon</h3>
-              <p className="text-xs mb-4 text-w30" style={{ maxWidth: 340, margin: "0 auto" }}>
-                The Season Pass is being forged anew. New rewards, tiers, and seasonal challenges are on the way.
-              </p>
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs" style={{ background: `${CURRENT_SEASON.color}12`, border: `1px solid ${CURRENT_SEASON.color}30`, color: `${CURRENT_SEASON.color}` }}>
-                {CURRENT_SEASON.icon} {CURRENT_SEASON.name} Season Active
-              </div>
-            </div>
-          </div>
+          <ErrorBoundary><Suspense fallback={<ViewFallback />}><BattlePassView /></Suspense></ErrorBoundary>
         )}
 
         {/* ── SHOP TAB ── */}
