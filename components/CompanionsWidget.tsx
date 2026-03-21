@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Tip } from "@/components/GameTooltip";
 import type { User, Quest } from "@/app/types";
-import { InfoTooltip } from "@/components/InfoTooltip";
 import { RARITY_COLORS } from "@/components/QuestBoard";
 import { getQuestRarity } from "@/app/utils";
 import { SFX } from "@/lib/sounds";

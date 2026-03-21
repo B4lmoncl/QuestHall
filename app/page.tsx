@@ -1177,8 +1177,9 @@ export default function Dashboard() {
         {dashView === "leaderboard" && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-widest text-w35">The Proving Grounds</span>
-              <InfoTooltip text="Rankings based on XP earned. Compete with other players to claim glory!" />
+              <InfoTooltip text="Rankings based on XP earned. Compete with other players to claim glory!">
+                <span className="text-xs font-semibold uppercase tracking-widest text-w35" style={{ borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>The Proving Grounds</span>
+              </InfoTooltip>
             </div>
             {/* Player cards */}
             {users.filter(u => !agents.some(a => a.id === u.id)).length > 0 && (
@@ -1374,13 +1375,14 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <h2 className="text-xs font-semibold uppercase tracking-widest text-w40">Quest Board</h2>
-                          <InfoTooltip text="Your personal quest board. Claim quests to start them, complete them to earn XP and Gold. Filter by type to find what interests you." />
-                          <button
-                            onClick={() => setXpInfoOpen(true)}
-                            title="How does XP work?"
-                            style={{ background: "rgba(167,139,250,0.12)", border: "1px solid rgba(167,139,250,0.25)", color: "#a78bfa", borderRadius: "50%", width: 16, height: 16, fontSize: 9, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1, flexShrink: 0 }}
-                          >XP</button>
+                          <InfoTooltip text={<>
+                            <p>Claim quests to start them, complete them to earn XP and Gold.</p>
+                            <p style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 6, marginTop: 6, fontWeight: 600, color: "rgba(167,139,250,0.8)" }}>XP by Rarity</p>
+                            <p><span style={{ color: "#9ca3af" }}>Common 10</span>{" · "}<span style={{ color: "#22c55e" }}>Uncommon 18</span>{" · "}<span style={{ color: "#3b82f6" }}>Rare 30</span>{" · "}<span style={{ color: "#a855f7" }}>Epic 50</span>{" · "}<span style={{ color: "#FFD700" }}>Legendary 80</span></p>
+                            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.35)" }}>Forge, Gear &amp; Companion bonuses multiply all XP.</p>
+                          </>}>
+                            <h2 className="text-xs font-semibold uppercase tracking-widest text-w40" style={{ borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>Quest Board</h2>
+                          </InfoTooltip>
                         </div>
                         <p className="text-xs mt-0.5 text-w25">
                           {playerName

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useDashboard } from "@/app/DashboardContext";
+import { InfoTooltip } from "@/components/InfoTooltip";
 import { useModalBehavior } from "@/components/ModalPortal";
 import { getAuthHeaders } from "@/lib/auth-client";
 import { Tip } from "@/components/GameTooltip";
@@ -143,7 +144,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const [transmuteResult, setTransmuteResult] = useState<string | null>(null);
   const [selectedTransmute, setSelectedTransmute] = useState<string[]>([]);
   const [npcModalTab, setNpcModalTab] = useState<"recipes" | "schmiedekunst" | "transmutation">("recipes");
-  const [infoOpen, setInfoOpen] = useState(false);
+  // infoOpen state removed — info now shown via hover tooltip on header
   const [choosingProf, setChoosingProf] = useState(false);
   const [confirmProf, setConfirmProf] = useState<ProfessionDef | null>(null);
   const [dailyBonusAvailable, setDailyBonusAvailable] = useState(false);
@@ -409,14 +410,20 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
     <div className="space-y-4">
       {/* ─── Header with currencies + info ─────────────────────────────── */}
       <div className="flex items-center gap-4 flex-wrap">
-        <span className="text-base font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{"Artisan's Quarter"}</span>
-        <button
-          onClick={() => setInfoOpen(v => !v)}
-          className="forge-btn w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
-          style={{ background: infoOpen ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.06)", color: infoOpen ? "#e8e8e8" : "rgba(255,255,255,0.3)", border: "1px solid rgba(255,255,255,0.1)" }}
-        >
-          ?
-        </button>
+        <InfoTooltip text={<>
+          <p style={{ fontWeight: 600, color: "rgba(255,255,255,0.7)", marginBottom: 6 }}>How do Professions work?</p>
+          <p>&bull; Unlock slots as you level (Lv5: 1st, Lv15: 2nd, Lv20: 3rd, Lv25: all 4)</p>
+          <p>&bull; Collect <strong style={{ color: "#e8e8e8" }}>Materials</strong> from quests, <strong style={{ color: "#e8e8e8" }}>craft recipes</strong> with Gold + Materials</p>
+          <p>&bull; Ranks: <span style={{ color: "#22c55e" }}>Apprentice</span> → <span style={{ color: "#3b82f6" }}>Journeyman</span> → <span style={{ color: "#a855f7" }}>Expert</span> → <span style={{ color: "#f59e0b" }}>Artisan</span> → <span style={{ color: "#ef4444" }}>Master</span></p>
+          <p>&bull; Skill-up colors: <span style={{ color: "#f97316" }}>orange</span>/<span style={{ color: "#eab308" }}>yellow</span>/<span style={{ color: "#22c55e" }}>green</span>/<span style={{ color: "#6b7280" }}>gray</span> (WoW-style)</p>
+          <p>&bull; Switching costs <strong style={{ color: "#f44" }}>200 Essenz</strong> &amp; resets progress</p>
+          <p>&bull; <span style={{ color: "#facc15" }}>Daily Bonus</span>: First craft = <strong style={{ color: "#facc15" }}>2x XP</strong> · Batch craft x1-x10</p>
+          <p style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 6, marginTop: 6, color: "rgba(255,255,255,0.4)", fontWeight: 600, fontSize: 10 }}>Recommended Pairings</p>
+          <p><span style={{ color: "#f59e0b" }}>Blacksmith + Enchanter</span> = Gear Mastery</p>
+          <p><span style={{ color: "#22c55e" }}>Alchemist + Cook</span> = Full Sustenance</p>
+        </>}>
+          <span className="text-base font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)", borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>{"Artisan's Quarter"}</span>
+        </InfoTooltip>
         <div className="flex items-center gap-4 ml-auto text-sm">
           <span className="font-mono font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{chosenCount}/{maxProfSlots} Professions</span>
           {dailyBonusAvailable && (
@@ -439,33 +446,6 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
           )}
         </div>
       </div>
-
-      {/* Info popover */}
-      {infoOpen && (
-        <div className="rounded-xl p-4 space-y-2" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)" }}>
-          <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.6)" }}>How do Professions work?</p>
-          <ul className="text-xs space-y-1" style={{ color: "rgba(255,255,255,0.4)" }}>
-            <li>&bull; Unlock profession slots as you level up (Lv5: 1st, Lv15: 2nd, Lv20: 3rd, Lv25: all 4)</li>
-            <li>&bull; Collect <strong style={{ color: "#e8e8e8" }}>Materials</strong> by completing quests</li>
-            <li>&bull; Visit your NPC and <strong style={{ color: "#e8e8e8" }}>craft recipes</strong> using Gold + Materials</li>
-            <li>&bull; Higher <strong style={{ color: "#e8e8e8" }}>profession ranks</strong> unlock stronger recipes</li>
-            <li>&bull; Ranks: <span style={{ color: "#22c55e" }}>Apprentice</span> &rarr; <span style={{ color: "#3b82f6" }}>Journeyman</span> &rarr; <span style={{ color: "#a855f7" }}>Expert</span> &rarr; <span style={{ color: "#f59e0b" }}>Artisan</span> &rarr; <span style={{ color: "#ef4444" }}>Master</span></li>
-            <li>&bull; Recipes show <span style={{ color: "#f97316" }}>orange</span>/<span style={{ color: "#eab308" }}>yellow</span>/<span style={{ color: "#22c55e" }}>green</span>/<span style={{ color: "#6b7280" }}>gray</span> skill-up chance (like WoW)</li>
-            <li>&bull; Switching professions costs <strong style={{ color: "#f44" }}>200 Essenz</strong> and resets progress</li>
-            <li>&bull; <span style={{ color: "#facc15" }}>Daily Bonus</span>: First craft each day gives <strong style={{ color: "#facc15" }}>2x profession XP</strong></li>
-            <li>&bull; Buff recipes can be <strong style={{ color: "#e8e8e8" }}>batch crafted</strong> (x1-x10) for efficiency</li>
-            <li>&bull; New recipes are <strong style={{ color: "#e8e8e8" }}>discovered</strong> as your profession rank increases</li>
-          </ul>
-          {/* Synergy hints */}
-          <div className="pt-2 mt-2" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-            <p className="text-xs font-semibold mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Recommended Pairings</p>
-            <div className="flex flex-wrap gap-2">
-              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.15)", color: "#f59e0b" }}>Blacksmith + Enchanter = Gear Mastery</span>
-              <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.15)", color: "#22c55e" }}>Alchemist + Cook = Full Sustenance</span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ─── All Materials Bar ─────────────────────────────────────────── */}
       {Object.keys(materials).length > 0 && (

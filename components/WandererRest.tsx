@@ -624,8 +624,9 @@ export function WandererRest({
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>NPC Quest Board</h2>
-                    <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests." />
+                    <InfoTooltip text="Agent development quests. The AI NPCs (Nova, Hex, Echo, Pixel, Atlas, Lyra) work on these. Admin can review and approve suggested quests.">
+                      <h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6", borderBottom: "1px dotted rgba(255,215,0,0.3)" }}>NPC Quest Board</h2>
+                    </InfoTooltip>
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>
                 </div>
