@@ -1175,7 +1175,32 @@ Replaced the plain text input "Player name..." with a searchable dropdown:
 | Rituals/Habits not exposed | **False alarm** — Full CRUD exists in `routes/game.js` (rituals) and `routes/habits-inventory.js` (habits) |
 | Companion quest timezone bug | **Low risk** — Only affects companion care quest daily deadlines; uses Berlin timezone fallback consistently |
 
-### 17.5 Remaining Issues Summary
+### 17.5 Onboarding & Tutorial Overhaul (Session 4)
+
+#### OnboardingWizard Overhaul
+**File:** `components/OnboardingWizard.tsx`
+
+Full English translation of the registration wizard (50+ text changes):
+- Step headers: Willkommen→Welcome, Erzähl uns→Tell us, Beziehungsstatus→Relationship Status
+- Labels: Dein Name→Your Name, Alter→Age, Pronomen→Pronouns, Tierart→Pet Type
+- Companion data: Fordernd→Fierce, Weise→Wise, Treu→Loyal, Stark→Strong
+- Pet species: Katze→Cat, Hund→Dog, Hamster→Hamster, Hase→Rabbit
+- Care quests: Füttern→Feed, Spielen→Play, Kuscheln→Cuddle, Gassi gehen→Walk
+- Navigation: Zurück→Back, Los geht's→Begin Your Journey!
+- Errors: Registrierung fehlgeschlagen→Registration failed
+- Summary labels: Klasse→Class, Begleiter→Companion
+- Added step name labels ("Create Hero", "About You", etc.) with X/6 counter
+- Replaced dot indicators with full-width segmented progress bar
+
+#### TutorialModal Updates
+**File:** `components/TutorialModal.tsx`
+
+Added 3 new guide sections for recently implemented features:
+- **Player Search & Profiles** — How to search players, view profiles, add friends from profiles
+- **Daily Missions** — 6 missions, 4 milestones, point system, daily reset mechanics
+- **Activity Feed** — Event types, rarity highlighting, compact/detailed toggle
+
+### 17.6 Remaining Issues Summary
 
 | Issue | Severity | Area | Status |
 |-------|----------|------|--------|
