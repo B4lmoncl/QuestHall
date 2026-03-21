@@ -270,11 +270,14 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
     if (u.riftHistory.length > 20) u.riftHistory = u.riftHistory.slice(-20);
   }
 
-  saveUsers();
+  // Read temp fields from onQuestCompletedByUser before cleanup
   const stageNum = rift.quests.filter(q => q.completed).length;
   const xpEarned = u._lastXpEarned || nextStage.xpReward;
   const goldEarned = u._lastGoldEarned || nextStage.goldReward;
   const loot = u._lastLoot || null;
+  // Cleanup temp fields to prevent persistence bloat
+  delete u._lastXpEarned; delete u._lastGoldEarned; delete u._lastLoot; delete u._lastCompanionReward;
+  saveUsers();
   console.log(`[rift] ${uid} completed stage ${stageNum}/${rift.quests.length} in ${rift.tier} rift (+${xpEarned}XP, +${goldEarned}g)`);
 
   res.json({
