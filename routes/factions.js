@@ -169,6 +169,22 @@ router.post("/:factionId/claim", requireAuth, (req, res) => {
     }
   }
 
+  if (reward.legendaryEffect) {
+    if (!user.legendaryEffects) user.legendaryEffects = [];
+    if (!user.legendaryEffects.includes(reward.legendaryEffect)) {
+      user.legendaryEffects.push(reward.legendaryEffect);
+      granted.push({ type: "legendaryEffect", id: reward.legendaryEffect, desc: reward.effectDesc });
+    }
+  }
+
+  if (reward.recipe) {
+    if (!user.unlockedRecipes) user.unlockedRecipes = [];
+    if (!user.unlockedRecipes.includes(reward.recipe)) {
+      user.unlockedRecipes.push(reward.recipe);
+      granted.push({ type: "recipe", id: reward.recipe, desc: reward.recipeDesc });
+    }
+  }
+
   playerData.claimedRewards.push(standing.id);
   saveUsers();
 

@@ -307,14 +307,22 @@ router.post('/api/shop/buy', requireApiKey, (req, res) => {
   if (!u) return res.status(404).json({ error: 'User not found' });
   const item = SHOP_ITEMS.find(i => i.id === itemId);
   if (!item) return res.status(404).json({ error: 'Item not found' });
-  if ((u.gold || 0) < item.cost) return res.status(400).json({ error: `Insufficient gold. Need ${item.cost}, have ${u.gold || 0}` });
-  u.gold -= item.cost;
+  // Apply faction shop discount (max across all factions)
+  let discount = 0;
+  if (u.factionBonuses) {
+    for (const key of Object.keys(u.factionBonuses)) {
+      if (key.endsWith('_discount')) discount = Math.max(discount, u.factionBonuses[key]);
+    }
+  }
+  const finalCost = Math.max(1, Math.floor(item.cost * (1 - discount / 100)));
+  if ((u.gold || 0) < finalCost) return res.status(400).json({ error: `Insufficient gold. Need ${finalCost}, have ${u.gold || 0}` });
+  u.gold -= finalCost;
   u.purchases = u.purchases || [];
-  u.purchases.push({ itemId: item.id, name: item.name, cost: item.cost, at: now() });
+  u.purchases.push({ itemId: item.id, name: item.name, cost: finalCost, originalCost: item.cost, at: now() });
   const effectMsg = applyShopEffect(u, item);
   saveUsers();
-  console.log(`[shop] ${uid} bought "${item.name}" for ${item.cost} gold${effectMsg ? ` — ${effectMsg}` : ''}`);
-  res.json({ ok: true, item, remainingGold: u.gold, effectApplied: effectMsg });
+  console.log(`[shop] ${uid} bought "${item.name}" for ${finalCost}g${discount ? ` (${discount}% faction discount)` : ''}${effectMsg ? ` — ${effectMsg}` : ''}`);
+  res.json({ ok: true, item, finalCost, discount, remainingGold: u.gold, effectApplied: effectMsg });
 });
 
 // GET /api/personal-templates — list personal life quest templates
