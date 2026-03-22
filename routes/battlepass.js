@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { state, saveData, saveUsers } = require("../lib/state");
+const { state, saveUsers } = require("../lib/state");
 const { requireAuth } = require("../lib/middleware");
 const bpData = require("../public/data/battlePass.json");
 
