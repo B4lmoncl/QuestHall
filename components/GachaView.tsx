@@ -548,6 +548,7 @@ function BannerPullModal({
               data-feedback-id="gacha-view.banner-modal.pull-1x"
               onClick={() => onPull(banner.id, 1)}
               disabled={!canPull1 || pulling}
+              title={!canPull1 ? `Need ${banner.costSingle - balance} more ${ci.label}` : ""}
               className="rounded-xl flex-1 min-w-[140px] transition-all group/btn"
               style={{
                 position: "relative",
@@ -559,7 +560,7 @@ function BannerPullModal({
                 color: canPull1 ? (isFeatured ? "#d4c4fb" : "#c7d2fe") : "rgba(255,255,255,0.2)",
                 border: `1px solid ${canPull1 ? (isFeatured ? "rgba(167,139,250,0.5)" : "rgba(129,140,248,0.5)") : "rgba(255,255,255,0.08)"}`,
                 boxShadow: canPull1 ? `0 0 20px ${isFeatured ? "rgba(167,139,250,0.2)" : "rgba(129,140,248,0.2)"}` : "none",
-                cursor: canPull1 && !pulling ? "pointer" : "default",
+                cursor: canPull1 && !pulling ? "pointer" : !canPull1 ? "not-allowed" : "default",
                 transform: "scale(1)",
                 transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
@@ -582,6 +583,7 @@ function BannerPullModal({
               data-feedback-id="gacha-view.banner-modal.pull-10x"
               onClick={() => onPull(banner.id, 10)}
               disabled={!canPull10 || pulling}
+              title={!canPull10 ? `Need ${banner.cost10 - balance} more ${ci.label}` : ""}
               className="rounded-xl flex-1 min-w-[140px] transition-all group/btn"
               style={{
                 position: "relative",
@@ -593,7 +595,7 @@ function BannerPullModal({
                 color: canPull10 ? (isFeatured ? "#d4c4fb" : "#c7d2fe") : "rgba(255,255,255,0.2)",
                 border: `2px solid ${canPull10 ? (isFeatured ? "rgba(167,139,250,0.8)" : "rgba(129,140,248,0.8)") : "rgba(255,255,255,0.08)"}`,
                 boxShadow: canPull10 ? `0 0 15px ${isFeatured ? "rgba(167,139,250,0.4)" : "rgba(129,140,248,0.4)"}, 0 0 35px ${isFeatured ? "rgba(167,139,250,0.25)" : "rgba(129,140,248,0.25)"}, inset 0 0 15px ${isFeatured ? "rgba(167,139,250,0.1)" : "rgba(129,140,248,0.1)"}` : "none",
-                cursor: canPull10 && !pulling ? "pointer" : "default",
+                cursor: canPull10 && !pulling ? "pointer" : !canPull10 ? "not-allowed" : "default",
                 transform: "scale(1)",
                 transition: "transform 0.15s ease, box-shadow 0.2s ease",
               }}
