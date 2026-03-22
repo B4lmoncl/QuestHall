@@ -197,7 +197,9 @@ Use `paginate(array, req.query)` helper from `lib/helpers.js`.
 View components are lazy-loaded with `React.lazy()` + `Suspense`:
 - `LeaderboardView`, `HonorsView`, `ShopView`, `GachaView`
 - `CharacterView`, `RitualChamber`, `ForgeView`, `ChallengesView`
-- `DailyLoginCalendar`, `SocialView`
+- `DailyLoginCalendar`, `SocialView`, `TavernView`, `RiftView`
+- `FactionsView`, `BattlePassView`, `WorldBossView`, `DungeonView`
+- `PlayerProfileModal`
 
 Only loaded when the tab is activated — reduces initial bundle by ~40%.
 
@@ -410,14 +412,14 @@ Community-wide boss encounters where all players contribute damage via quest com
 - **Ranked rewards**: Top contributors earn bonus loot and exclusive titles
 - **Endpoints**: `GET /api/world-boss`, `POST /api/world-boss/contribute`, `POST /api/world-boss/claim`
 - **Data**: `public/data/worldBosses.json` (boss templates, HP pools, drop tables)
-- **Files**: `routes/world-boss.js`
+- **Files**: `routes/world-boss.js`, `components/WorldBossView.tsx`
 
 ### Gem & Socket System
 
 Diablo-style gem socketing for gear enhancement.
 
-- **6 Gem Types**: Ruby (kraft), Sapphire (weisheit), Emerald (ausdauer), Topaz (glueck), Amethyst (fokus), Diamond (all stats)
-- **5 Tiers**: Chipped → Flawless → Perfect → Radiant → Pristine (escalating stat bonuses)
+- **6 Gem Types**: Ruby (kraft), Sapphire (weisheit), Emerald (glueck), Topaz (ausdauer), Amethyst (vitalitaet), Diamond (fokus)
+- **5 Tiers**: Chipped → Flawed → [Name] → Flawless → Royal (stat bonuses: +2/+4/+7/+11/+16)
 - **Socketing**: Insert gems into gear with sockets; one gem per socket
 - **Upgrading**: Combine 3 same-tier gems → 1 next-tier gem
 - **Salvage**: Recover a lower-tier gem from a socketed item

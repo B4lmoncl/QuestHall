@@ -1338,17 +1338,16 @@ In `gems.json → gemTypes[]`:
 ```json
 {
   "id": "ruby",
-  "name": "Rubin",
+  "name": "Ruby",
   "stat": "kraft",
   "color": "#ef4444",
-  "icon": "/images/gems/ruby.png",
-  "description": "Ein feuriger Edelstein, der die Kraft des Trägers stärkt.",
+  "icon": "🔴",
   "tiers": [
-    { "tier": 1, "name": "Gesplitterter Rubin", "bonus": 1 },
-    { "tier": 2, "name": "Makelloser Rubin", "bonus": 3 },
-    { "tier": 3, "name": "Perfekter Rubin", "bonus": 5 },
-    { "tier": 4, "name": "Strahlender Rubin", "bonus": 8 },
-    { "tier": 5, "name": "Makelloser Rubin", "bonus": 12 }
+    { "tier": 1, "name": "Chipped Ruby", "statBonus": 2 },
+    { "tier": 2, "name": "Flawed Ruby", "statBonus": 4 },
+    { "tier": 3, "name": "Ruby", "statBonus": 7 },
+    { "tier": 4, "name": "Flawless Ruby", "statBonus": 11 },
+    { "tier": 5, "name": "Royal Ruby", "statBonus": 16 }
   ]
 }
 ```
@@ -1357,22 +1356,22 @@ In `gems.json → gemTypes[]`:
 
 | Gem | Stat | Color | Theme |
 |-----|------|-------|-------|
-| Ruby (Rubin) | kraft | `#ef4444` | Fire/strength |
-| Sapphire (Saphir) | weisheit | `#3b82f6` | Water/wisdom |
-| Emerald (Smaragd) | ausdauer | `#22c55e` | Earth/endurance |
-| Topaz (Topas) | glueck | `#f59e0b` | Lightning/luck |
-| Amethyst (Amethyst) | fokus | `#a855f7` | Arcane/focus |
-| Diamond (Diamant) | all stats | `#e5e7eb` | Light/all |
+| Ruby | kraft | `#ef4444` | Fire/strength |
+| Sapphire | weisheit | `#3b82f6` | Water/wisdom |
+| Emerald | glueck | `#22c55e` | Earth/luck |
+| Topaz | ausdauer | `#f59e0b` | Lightning/endurance |
+| Amethyst | vitalitaet | `#a855f7` | Arcane/vitality |
+| Diamond | fokus | `#e2e8f0` | Light/focus |
 
-### Tier Names (German-Themed)
+### Tier Names
 
-| Tier | English | German | Stat Bonus (approximate) |
-|------|---------|--------|--------------------------|
-| 1 | Chipped | Gesplittert | +1 |
-| 2 | Flawless | Makellos | +3 |
-| 3 | Perfect | Perfekt | +5 |
-| 4 | Radiant | Strahlend | +8 |
-| 5 | Pristine | Makellos/Rein | +12 |
+| Tier | Name | Stat Bonus |
+|------|------|------------|
+| 1 | Chipped | +2 |
+| 2 | Flawed | +4 |
+| 3 | [Gem Name] | +7 |
+| 4 | Flawless | +11 |
+| 5 | Royal | +16 |
 
 ### Content Needs
 
