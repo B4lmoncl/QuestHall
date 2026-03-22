@@ -385,7 +385,7 @@ export default function DungeonView({ onRefresh, onRewardCelebration }: { onRefr
             )}
             {collectResult.rewards.gearDropItem && (
               <span className="text-xs px-2 py-1 rounded font-semibold" style={{ background: "rgba(168,85,247,0.08)", color: "#a855f7" }}>
-                {(collectResult.rewards.gearDropItem as { name: string; rarity: string }).name} ({(collectResult.rewards.gearDropItem as { rarity: string }).rarity})
+                {(collectResult.rewards.gearDropItem as { name?: string; rarity?: string }).name ?? "Gear"} ({(collectResult.rewards.gearDropItem as { rarity?: string }).rarity ?? "common"})
               </span>
             )}
           </div>

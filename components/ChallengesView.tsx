@@ -549,7 +549,7 @@ function ExpeditionView({
             Your contribution: {expedition.playerContribution} Quests
           </span>
         </div>
-        {expedition.contributions.length > 0 ? (() => {
+        {expedition.contributions?.length > 0 ? (() => {
           const topCount = expedition.contributions[0]?.count || 1;
           const fairShare = expedition.playerCount > 0 ? Math.ceil(maxRequired / expedition.playerCount) : 1;
           return (
