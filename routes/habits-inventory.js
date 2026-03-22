@@ -9,7 +9,7 @@ const {
 const {
   now, getLevelInfo, getUserStats, getUserEquipment, getUserDropBonus,
   rollLoot, resetLootPity, addLootToInventory, calcDynamicForgeTemp,
-  getBondLevel, getLegendaryEffects, createGearInstance, migrateUserEquipment,
+  getBondLevel, getLegendaryEffects, createGearInstance, migrateUserEquipment, getGearScore,
 } = require('../lib/helpers');
 const { requireAuth, requireSelf } = require('../lib/middleware');
 const { rebuildCatalogMeta } = require('../lib/quest-catalog');
@@ -821,6 +821,7 @@ router.get('/api/player/:name/character', (req, res) => {
     setBonusInfo,
     namedSetBonuses,
     legendaryEffects: getLegendaryEffects(uid),
+    gearScore: getGearScore(uid),
     equippedTitle: u.equippedTitle || null,
     earnedTitleCount: (u.earnedTitles || []).length,
   });

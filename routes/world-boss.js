@@ -119,7 +119,12 @@ function dealBossDamage(userId, questRarity) {
   const boss = getActiveBoss();
   if (!boss || boss.defeated) return null;
 
-  const dmg = bossData.config.damagePerQuest[questRarity] || bossData.config.damagePerQuest.common;
+  const baseDmg = bossData.config.damagePerQuest[questRarity] || bossData.config.damagePerQuest.common;
+  // Gear Score multiplier: every 50 GS = +10% damage (additive, cap +100%)
+  const { getGearScore } = require('../lib/helpers');
+  const { gearScore } = getGearScore(userId);
+  const gsMulti = Math.min(2.0, 1 + Math.floor(gearScore / 50) * 0.10);
+  const dmg = Math.round(baseDmg * gsMulti);
 
   // Update contribution
   if (!boss.contributions[userId]) {

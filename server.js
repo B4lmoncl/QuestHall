@@ -199,6 +199,7 @@ require('./routes/expedition').loadExpeditionState();
 require('./routes/world-boss').loadWorldBossState();
 require('./routes/world-boss').checkAutoSpawn();
 require('./routes/gems').loadGems();
+require('./routes/players').loadCompanionExpeditions();
 
 // Migrate legacy equipment (string IDs → rolled instances) — only if needed
 {
