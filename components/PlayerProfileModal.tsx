@@ -30,6 +30,7 @@ interface ProfileData {
   equipped: Record<string, { name: string; rarity: string; icon: string | null; stats: Record<string, number>; slot: string; setId: string | null; legendaryEffect: { type: string; label: string } | null; desc: string }>;
   achievements: { id: string; name: string; desc: string; icon: string; rarity: string; points: number; earnedAt: string }[];
   professions: { id: string; level: number; xp: number }[];
+  friendshipStatus?: "friends" | "pending_sent" | "pending_received" | "none";
   onlineStatus: string;
   lastActiveAt: string | null;
   memberSince: string | null;
@@ -186,7 +187,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
               {/* Action buttons */}
               {!isSelf && reviewApiKey && (
                 <div className="flex gap-2 mt-4">
-                  {(profile as ProfileData & { friendshipStatus?: string })?.friendshipStatus === "friends" ? (
+                  {profile.friendshipStatus === "friends" ? (
                     confirmRemove ? (
                       <div className="flex gap-2 flex-1">
                         <button onClick={handleRemoveFriend} disabled={removingFriend} className="btn-interactive flex-1 text-xs font-semibold py-2 rounded-lg" style={{ background: "rgba(239,68,68,0.15)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.3)" }}>
@@ -201,7 +202,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
                         Remove Friend
                       </button>
                     )
-                  ) : (profile as ProfileData & { friendshipStatus?: string })?.friendshipStatus === "pending_sent" || friendRequestSent ? (
+                  ) : profile.friendshipStatus === "pending_sent" || friendRequestSent ? (
                     <button disabled className="btn-interactive flex-1 text-xs font-semibold py-2 rounded-lg" style={{ background: "rgba(34,197,94,0.1)", color: "#22c55e", border: "1px solid rgba(34,197,94,0.3)" }}>
                       ✓ Request Sent
                     </button>
@@ -210,7 +211,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
                       Add Friend
                     </button>
                   )}
-                  {onMessage && (profile as ProfileData & { friendshipStatus?: string })?.friendshipStatus === "friends" && (
+                  {onMessage && profile.friendshipStatus === "friends" && (
                     <button onClick={() => { onMessage(playerId); onClose(); }} className="btn-interactive flex-1 text-xs font-semibold py-2 rounded-lg" style={{ background: "rgba(99,102,241,0.12)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.3)" }}>
                       Message
                     </button>
@@ -237,7 +238,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
             </div>
 
             {/* Equipment section */}
-            {Object.keys(profile.equipped).length > 0 && (
+            {profile.equipped && Object.keys(profile.equipped).length > 0 && (
               <div className="p-4" style={{ borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                 <p className="text-xs font-bold uppercase tracking-wider mb-3 text-w35">Equipment</p>
                 <div className="grid grid-cols-3 gap-2">
@@ -263,7 +264,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
                       </div>
                     );
                     return (
-                      <TipCustom key={slot} title={item.name} icon={item.icon ? undefined : "⚔️"} accent={rc} body={tooltipBody}>
+                      <TipCustom key={slot} title={item.name} icon={item.icon ?? "⚔️"} accent={rc} body={tooltipBody}>
                         <div className="rounded-lg p-2 cursor-help" style={{ background: `${rc}08`, border: `1px solid ${rc}25` }}>
                           <div className="flex items-center gap-1.5">
                             {item.icon && <img src={item.icon} alt="" width={24} height={24} style={{ imageRendering: "smooth" }} onError={hideOnError} />}

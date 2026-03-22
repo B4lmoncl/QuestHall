@@ -29,12 +29,12 @@ interface OnboardingWizardProps {
 }
 
 const VIRTUAL_COMPANIONS = [
-  { type: "dragon", emoji: "", iconSrc: "/images/icons/companion-dragon.png", name: "Ember",  desc: "A fiery dragon that pushes you forward",           personality: "fierce",    trait: "Fierce",    questHint: "Complete 3 quests every day!" },
-  { type: "owl", emoji: "", iconSrc: "/images/icons/companion-owl.png", name: "Sage",   desc: "A wise owl that guides your learning journey",     personality: "wise",      trait: "Wise",      questHint: "Learn something new every day" },
-  { type: "phoenix", emoji: "", iconSrc: "/images/icons/companion-phoenix.png", name: "Blaze",  desc: "A phoenix that rises from every setback",          personality: "resilient", trait: "Resilient", questHint: "Stronger after every setback" },
-  { type: "wolf",    emoji: "", iconSrc: "/images/portraits/companion-wolf.png",    name: "Shadow", desc: "A loyal wolf that stands by your side",            personality: "loyal",     trait: "Loyal",     questHint: "Maintain your daily routine" },
-  { type: "fox",     emoji: "", iconSrc: "/images/portraits/companion-fox.png",     name: "Trick",  desc: "A clever fox that finds creative solutions",       personality: "clever",    trait: "Clever",    questHint: "Find a more creative approach" },
-  { type: "bear",    emoji: "", iconSrc: "/images/portraits/companion-bear.png",    name: "Bjorn",  desc: "A strong bear that carries you through tough times",personality: "strong",    trait: "Strong",    questHint: "Fitness and strength quests" },
+  { type: "dragon", emoji: "🐉", iconSrc: "/images/icons/companion-dragon.png", name: "Ember",  desc: "A fiery dragon that pushes you forward",           personality: "fierce",    trait: "Fierce",    questHint: "Complete 3 quests every day!" },
+  { type: "owl", emoji: "🦉", iconSrc: "/images/icons/companion-owl.png", name: "Sage",   desc: "A wise owl that guides your learning journey",     personality: "wise",      trait: "Wise",      questHint: "Learn something new every day" },
+  { type: "phoenix", emoji: "🔥", iconSrc: "/images/icons/companion-phoenix.png", name: "Blaze",  desc: "A phoenix that rises from every setback",          personality: "resilient", trait: "Resilient", questHint: "Stronger after every setback" },
+  { type: "wolf",    emoji: "🐺", iconSrc: "/images/portraits/companion-wolf.png",    name: "Shadow", desc: "A loyal wolf that stands by your side",            personality: "loyal",     trait: "Loyal",     questHint: "Maintain your daily routine" },
+  { type: "fox",     emoji: "🦊", iconSrc: "/images/portraits/companion-fox.png",     name: "Trick",  desc: "A clever fox that finds creative solutions",       personality: "clever",    trait: "Clever",    questHint: "Find a more creative approach" },
+  { type: "bear",    emoji: "🐻", iconSrc: "/images/portraits/companion-bear.png",    name: "Bjorn",  desc: "A strong bear that carries you through tough times",personality: "strong",    trait: "Strong",    questHint: "Fitness and strength quests" },
 ];
 
 const PET_SPECIES = [
@@ -48,7 +48,7 @@ const PET_SPECIES = [
 ];
 
 const PET_EMOJI: Record<string, string> = {
-  cat: "", dog: "", hamster: "", bird: "", fish: "", rabbit: "", other: "",
+  cat: "🐱", dog: "🐕", hamster: "🐹", bird: "🦜", fish: "🐠", rabbit: "🐰", other: "🐾",
 };
 
 export default function OnboardingWizard({ onComplete, onClose }: OnboardingWizardProps) {
