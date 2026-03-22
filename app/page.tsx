@@ -1109,10 +1109,23 @@ export default function Dashboard() {
               </div>
 
               {/* Floor header banner */}
-              <div className="floor-banner relative overflow-hidden" style={{ background: currentFloor.gradient, borderRadius: 0, padding: "16px 20px", minHeight: 56 }}>
-                {/* Dark scrim for text legibility */}
-                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 60%, rgba(0,0,0,0.1) 100%)" }} />
-                <div className="relative z-10">
+              <div className="floor-banner relative overflow-hidden" style={{ background: "#0b0d11", borderRadius: 0, height: 200 }}>
+                {/* Banner background image (right-aligned, 792x200) */}
+                {currentFloor.bannerImage && (
+                  <img
+                    src={currentFloor.bannerImage}
+                    alt=""
+                    className="absolute top-0 right-0 h-full w-auto max-w-none pointer-events-none img-render-auto"
+                    style={{ imageRendering: "smooth" }}
+                    onError={e => { e.currentTarget.style.display = "none"; }}
+                  />
+                )}
+                {/* Gradient overlay (floor color → transparent) */}
+                <div className="absolute inset-0" style={{ background: currentFloor.gradient, opacity: 0.7 }} />
+                {/* Dark scrim for text legibility (left-heavy) */}
+                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, transparent 70%)" }} />
+                {/* Text */}
+                <div className="absolute bottom-5 left-5 z-10">
                   <span className="text-base font-black uppercase tracking-widest" style={{ color: currentFloor.color, textShadow: `0 1px 12px rgba(0,0,0,0.8), 0 0 20px ${currentFloor.color}30` }}>{currentFloor.name}</span>
                   <span className="text-sm ml-2.5 font-semibold" style={{ color: "rgba(255,255,255,0.65)", textShadow: "0 1px 6px rgba(0,0,0,0.8)" }}>— {currentFloor.subtitle}</span>
                 </div>
