@@ -1109,7 +1109,7 @@ export default function Dashboard() {
               </div>
 
               {/* Floor header banner */}
-              <div className="floor-banner relative overflow-hidden" style={{ background: "#0b0d11", borderRadius: 0, height: 200 }}>
+              <div className="floor-banner relative overflow-hidden" style={{ background: currentFloor.gradient, borderRadius: 0, height: 200 }}>
                 {/* Banner background image (right-aligned, 792x200) with left fade-out via mask */}
                 {currentFloor.banner && (
                   <img
