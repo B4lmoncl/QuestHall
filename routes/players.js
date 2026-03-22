@@ -874,53 +874,55 @@ router.post('/api/player/:name/companion/expedition/collect', requireAuth, requi
   const expDef = COMPANION_EXPEDITIONS.expeditions.find(e => e.id === expedition.expeditionId);
   if (!expDef) return res.status(500).json({ error: 'Expedition definition not found' });
 
+  // Mark collected FIRST to prevent double-collect race condition
+  expedition.collected = true;
+  expedition.lastCollectedAt = now();
+
   const bondLevel = u.companion.bondLevel || getBondLevel(u.companion.bondXp || 0).level;
   const bondMultiplier = 1 + bondLevel * (COMPANION_EXPEDITIONS.bondLevelMultiplier || 0.1);
   const playerLevel = getLevelInfo(u.xp || 0).level;
   const rewards = expDef.rewards;
   const collected = {};
 
+  // Helper: roll a range and apply bond multiplier
+  function rollRange(range) {
+    const [min, max] = range;
+    return Math.floor((Math.floor(Math.random() * (max - min + 1)) + min) * bondMultiplier);
+  }
+
   // ── Roll gold ──
   if (rewards.gold) {
-    const [min, max] = rewards.gold;
-    const baseGold = Math.floor(Math.random() * (max - min + 1)) + min;
-    const gold = Math.floor(baseGold * bondMultiplier);
-    awardCurrency(uid, 'gold', gold);
-    collected.gold = gold;
+    const gold = rollRange(rewards.gold);
+    if (gold > 0) { awardCurrency(uid, 'gold', gold); collected.gold = gold; }
   }
 
-  // ── Roll essenz ──
+  // ── Roll essenz (bond multiplier applied) ──
   if (rewards.essenz) {
-    const [min, max] = rewards.essenz;
-    const amount = Math.floor(Math.random() * (max - min + 1)) + min;
-    if (amount > 0) {
-      awardCurrency(uid, 'essenz', amount);
-      collected.essenz = amount;
-    }
+    const amount = rollRange(rewards.essenz);
+    if (amount > 0) { awardCurrency(uid, 'essenz', amount); collected.essenz = amount; }
   }
 
-  // ── Roll runensplitter ──
+  // ── Roll runensplitter (bond multiplier applied) ──
   if (rewards.runensplitter) {
-    const [min, max] = rewards.runensplitter;
-    const amount = Math.floor(Math.random() * (max - min + 1)) + min;
-    if (amount > 0) {
-      awardCurrency(uid, 'runensplitter', amount);
-      collected.runensplitter = amount;
-    }
+    const amount = rollRange(rewards.runensplitter);
+    if (amount > 0) { awardCurrency(uid, 'runensplitter', amount); collected.runensplitter = amount; }
   }
 
-  // ── Roll materials ──
+  // ── Roll materials (bond multiplier scales count) ──
   if (rewards.materials && Math.random() < rewards.materials.chance) {
     const [minCount, maxCount] = rewards.materials.count;
-    const count = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    const baseCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    const count = Math.max(1, Math.floor(baseCount * bondMultiplier));
     const allMaterials = state.professionsData?.materials || [];
     if (allMaterials.length > 0) {
       u.craftingMaterials = u.craftingMaterials || {};
       const droppedMaterials = [];
       for (let i = 0; i < count; i++) {
         const mat = allMaterials[Math.floor(Math.random() * allMaterials.length)];
-        u.craftingMaterials[mat.id] = (u.craftingMaterials[mat.id] || 0) + 1;
-        droppedMaterials.push({ id: mat.id, name: mat.name, rarity: mat.rarity });
+        if (mat && mat.id) {
+          u.craftingMaterials[mat.id] = (u.craftingMaterials[mat.id] || 0) + 1;
+          droppedMaterials.push({ id: mat.id, name: mat.name, rarity: mat.rarity });
+        }
       }
       collected.materials = droppedMaterials;
     }
@@ -932,11 +934,13 @@ router.post('/api/player/:name/companion/expedition/collect', requireAuth, requi
     const allGems = state.gemsData?.gems || [];
     if (allGems.length > 0) {
       const gem = allGems[Math.floor(Math.random() * allGems.length)];
-      const tier = Math.min(maxTier, Math.floor(Math.random() * maxTier) + 1);
-      const gemKey = `${gem.id}_${tier}`;
-      u.gems = u.gems || {};
-      u.gems[gemKey] = (u.gems[gemKey] || 0) + 1;
-      collected.gem = { type: gem.id, name: gem.name, tier };
+      if (gem && gem.id) {
+        const tier = Math.min(maxTier, Math.floor(Math.random() * maxTier) + 1);
+        const gemKey = `${gem.id}_${tier}`;
+        u.gems = u.gems || {};
+        u.gems[gemKey] = (u.gems[gemKey] || 0) + 1;
+        collected.gem = { type: gem.id, name: gem.name, tier };
+      }
     }
   }
 
@@ -948,10 +952,6 @@ router.post('/api/player/:name/companion/expedition/collect', requireAuth, requi
       collected.rareItem = { name: loot.name, rarity: loot.rarity, slot: loot.slot, icon: loot.icon };
     }
   }
-
-  // Mark collected
-  expedition.collected = true;
-  expedition.lastCollectedAt = now();
 
   // Grant Battle Pass XP (companion_pet source — companion activity)
   try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {}
