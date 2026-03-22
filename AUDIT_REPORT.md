@@ -2185,6 +2185,59 @@ Both `POST /:factionId/claim` (faction reward claiming) and `resetWeeklyBonuses(
 | `36a5ead` | 2026-03-22 | Fix: add useModalBehavior to DailyLoginCalendar modal |
 | `336798d` | 2026-03-22 | Fix: Rift difficulty max display incorrect (2.0×/3.0×/4.0× not 1.5×/2.5×/3.5×) |
 
+## 29. Phase 2026-03-22 — Deep Audit Session 13 (Round 2)
+
+### 29.1 Fixes Applied
+
+| # | Issue | Severity | Commit | Description |
+|---|-------|----------|--------|-------------|
+| 1 | BattlePass `seasonStartedAt` never initialized | **HIGH** | `72fe29b` | Season timer always showed full duration; now properly tracked |
+| 2 | Dead `resetWeeklyBonuses` function | Cleanup | `0fee97a` | Replaced by auto-reset in `ensureUserFactions`; dead code removed |
+| 3 | PlayerProfileModal missing auth headers | **MEDIUM** | `bfbf311` | `friendshipStatus` always returned `none` because viewer identity unknown |
+| 4 | Battle Pass XP only from quests | **FEATURE** | `c158738` | All 10 XP sources now active (ritual, vow, crafting, login, companion, missions, stars, expedition) |
+| 5 | Spring particles ugly ovals | **QoL** | `d58e93f` | Cherry blossom shape (5-petal flower) + smaller size |
+| 6 | Image rendering blurry (auto→smooth) | **MEDIUM** | `4b7e13e` | Restored `image-rendering: smooth` across 29 files |
+| 7 | Friend profile always shows "Add Friend" | **HIGH** | `4b7e13e` | Backend returns `friendshipStatus`; frontend shows Add/Remove/Request Sent |
+| 8 | Daily mission milestone no reward feedback | **QoL** | `6118627` | Success toast showing what was earned |
+| 9 | Tooltip overhaul (two-tier system) | **QoL** | `6118627` | Headings: dotted underline + loading bar; inline: subtle opacity shift |
+| 10 | German error in currency spend | **LOW** | `71d45e2` | "Nicht genug" → "Not enough" |
+| 11 | LYRA-PLAYBOOK.md outdated | **Docs** | `e76d814` | +445 lines covering all new features |
+
+### 29.2 Agent-Verified Non-Issues (Session 13)
+
+| Reported Issue | Actual Status |
+|----------------|---------------|
+| Rift saveUsers ordering wrong | **Not a bug** — `saveUsers()` at line 280 is AFTER completion bonus loop (252-255) |
+| Trade race condition | **Already documented** — Section 6.7, single-process Node.js |
+| Habit score missing ownership | **Already fixed** — Session 11, Section 27.3 |
+| BP XP not saved after grant | **Not a bug** — Caller always calls `saveUsers()` after |
+| Weekly challenge modifier persists | **Not a bug** — `u.weeklyChallenge` fully replaced on week rollover (line 65-74) |
+| rollCraftingMaterials not called | **False alarm** — Called at helpers.js:1212 in `onQuestCompletedByUser` |
+| Active buffs not purged on expiry | **Not a bug** — No time-based buffs with `expiresAt` exist; only quest-counted |
+| Gacha pity goes negative | **Not a bug** — `Math.max(0, ...)` already used |
+
+### 29.3 Acknowledged Issues (Low Priority, Deferred)
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| Currency spend endpoint lacks self-ownership check | MEDIUM | **Acknowledged** — Admin/agent endpoint by design; only master key can earn |
+| Daily bonus claim uses req.body.player without self-check | MEDIUM | **Acknowledged** — Frontend sends player name; would break agent flows if restricted |
+| Workshop tier validation assumes sequential tiers | LOW | **Acknowledged** — Tier data is controlled (1,2,3,4); no user input |
+| Leaderboard doesn't filter inactive users | LOW | **Acknowledged** — No user deletion feature exists; all users are active |
+
+### 29.4 Changelog (Session 13)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `4b7e13e` | 2026-03-22 | Fix: image rendering smooth + friend profile buttons + auth headers |
+| `d58e93f` | 2026-03-22 | Fix: spring particles oval → cherry blossom shape |
+| `e76d814` | 2026-03-22 | Update LYRA-PLAYBOOK.md with all new features |
+| `72fe29b` | 2026-03-22 | Fix: Battle Pass seasonStartedAt never initialized |
+| `0fee97a` | 2026-03-22 | Cleanup: remove dead resetWeeklyBonuses |
+| `bfbf311` | 2026-03-22 | Fix: PlayerProfileModal auth headers for friendshipStatus |
+| `c158738` | 2026-03-22 | Feat: Wire up all 10 Battle Pass XP sources |
+| `71d45e2` | 2026-03-22 | Fix: translate German error in currency spend |
+
 ---
 
 *End of Audit Report — Updated 2026-03-22*
