@@ -749,7 +749,7 @@ export default function DungeonView({ onRefresh }: { onRefresh?: () => void }) {
                   <span className="capitalize px-1.5 py-0.5 rounded" style={{
                     background: `${TIER_COLORS[h.tier] || "#888"}10`,
                     color: TIER_COLORS[h.tier] || "#888",
-                    fontSize: 10,
+                    fontSize: 12,
                   }}>
                     {TIER_LABELS[h.tier] || h.tier}
                   </span>

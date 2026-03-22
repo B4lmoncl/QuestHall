@@ -1658,7 +1658,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                                 onClick={() => doGemAction("upgrade", { gemId: gem.id })}
                                 disabled={!!gemAction}
                                 className="text-xs px-1.5 py-0.5 rounded"
-                                style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: gemAction ? "not-allowed" : "pointer", fontSize: 10 }}
+                                style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: gemAction ? "not-allowed" : "pointer", fontSize: 12 }}
                               >
                                 Upgrade
                               </button>
@@ -1700,7 +1700,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                                     onClick={() => doGemAction("socket", { itemId, socketIndex: si })}
                                     disabled={!!gemAction}
                                     className="text-xs px-1 py-0.5 rounded"
-                                    style={{ fontSize: 9, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
+                                    style={{ fontSize: 12, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
                                   >
                                     Socket
                                   </button>
@@ -1709,7 +1709,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                                     onClick={() => doGemAction("unsocket", { itemId, socketIndex: si })}
                                     disabled={!!gemAction}
                                     className="text-xs px-1 py-0.5 rounded"
-                                    style={{ fontSize: 9, background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
+                                    style={{ fontSize: 12, background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
                                   >
                                     Unsocket 50g
                                   </button>
@@ -1923,16 +1923,16 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                           {item.stats && Object.keys(item.stats).length > 0 && (
                             <div className="mt-1 space-y-0.5">
                               {Object.entries(item.stats).slice(0, 3).map(([k, v]) => (
-                                <p key={k} className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>+{v} {k}</p>
+                                <p key={k} className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>+{v} {k}</p>
                               ))}
                             </div>
                           )}
-                          <p className="text-xs mt-1 truncate" style={{ color: "rgba(255,255,255,0.2)", fontSize: 10 }}>{item.source}</p>
+                          <p className="text-xs mt-1 truncate" style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>{item.source}</p>
                         </>
                       ) : (
                         <>
                           <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.25)" }}>???</p>
-                          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.15)", fontSize: 10 }}>{item.source}</p>
+                          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.15)", fontSize: 12 }}>{item.source}</p>
                         </>
                       )}
                     </div>

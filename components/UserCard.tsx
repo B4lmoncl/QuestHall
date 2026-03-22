@@ -135,7 +135,7 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
               background: "#1a1a1e",
               color: lvl.color,
               border: `1px solid ${lvl.color}50`,
-              fontSize: 10,
+              fontSize: 12,
               lineHeight: 1,
             }}
           >
@@ -200,19 +200,19 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
           <Tip k="forge_temp">
             <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
               <p className="text-xs font-mono font-bold" style={{ color: forgeTier.color }}>{temp}%</p>
-              <p className="text-xs" style={{ color: forgeTier.color, opacity: 0.7, fontSize: 10 }}>{forgeTier.label}</p>
+              <p className="text-xs" style={{ color: forgeTier.color, opacity: 0.7, fontSize: 12 }}>{forgeTier.label}</p>
             </div>
           </Tip>
           {/* Quests */}
           <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
             <p className="text-xs font-mono font-bold" style={{ color: "#8b5cf6" }}>{user.questsCompleted ?? 0}</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Quests</p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Quests</p>
           </div>
           {/* Achievement Points */}
           <Tip k="achievements">
             <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
               <p className="text-xs font-mono font-bold" style={{ color: "#d4a64a" }}>{user.achievementPoints ?? 0}</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Points</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Points</p>
             </div>
           </Tip>
         </div>

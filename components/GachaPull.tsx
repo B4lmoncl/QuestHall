@@ -476,7 +476,7 @@ function MultiPullReveal({ results, onDone }: { results: GachaPullResult[]; onDo
                     <span className="text-xs font-mono inline-flex items-center gap-1" style={{ color: "#a78bfa" }}>DUP +{result.duplicateRefund} <img src="/images/icons/currency-runensplitter.png" width={14} height={14} style={{ imageRendering: "smooth" }} /></span>
                   )}
                   {result.isNew && (
-                    <div className="absolute -top-1.5 -right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full"
+                    <div className="absolute -top-1.5 -right-1.5 text-xs font-bold px-1.5 py-0.5 rounded-full"
                       style={{ background: "#22c55e", color: "#000" }}>
                       NEU
                     </div>

@@ -244,7 +244,7 @@ function BannerPreviewCard({
       <div className="relative space-y-4" style={{ zIndex: 1 }}>
         {/* Banner type badge */}
         <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
+          <span className="text-xs uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
             color: accentColor,
             background: `${accentColor}35`,
             border: `1px solid ${accentColor}30`,
@@ -489,7 +489,7 @@ function BannerPullModal({
           <div className="p-5 pb-0 relative" style={{ zIndex: 1 }}>
             <div className="flex items-start justify-between mb-1">
               <div style={{ maxWidth: portraitSrc ? "60%" : undefined }}>
-                <span className="text-[9px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
+                <span className="text-xs uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
                   color: accentColor, background: `${accentColor}35`, border: `1px solid ${accentColor}30`,
                 }}>
                   {isFeatured ? "Featured Banner" : "Standard Banner"}
@@ -818,8 +818,8 @@ export default function GachaView({ onRefresh, onPullComplete }: {
                   <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
                     {(h as any).icon && (h as any).icon.startsWith("/") ? <img src={(h as any).icon} alt="" width={24} height={24} style={{ imageRendering: "smooth" }} /> : <span className="text-base">{h.emoji || "?"}</span>}
                     <span className="text-xs font-semibold flex-1" style={{ color: cfg.color }}>{h.name}</span>
-                    <span className="text-[9px] uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
-                    {h.isDuplicate && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
+                    <span className="text-xs uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
+                    {h.isDuplicate && <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
                   </div>
                 );
               })}
@@ -865,7 +865,7 @@ export default function GachaView({ onRefresh, onPullComplete }: {
                               : <span className="text-sm font-medium relative z-10" style={{ color: "rgba(255,255,255,0.4)" }}>{item.name?.slice(0, 2)}</span>
                           }
                           <span className="text-sm font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
-                          <span className="text-[9px] uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <span className="text-xs uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}
                           </span>
                           {(item as any).desc && (
