@@ -45,14 +45,14 @@ cd electron-quest-app && npm install && npm start
 
 ```
 app/                  # Next.js app directory
-  page.tsx            # Main dashboard component (~2150 lines)
-  types.ts            # Shared TypeScript interfaces (~540 lines)
-  utils.ts            # Fetch helpers, fetchDashboard batch, level utils (~320 lines)
+  page.tsx            # Main dashboard component (~2350 lines)
+  types.ts            # Shared TypeScript interfaces (~725 lines)
+  utils.ts            # Fetch helpers, fetchDashboard batch, level utils (~350 lines)
   config.ts           # UI configuration constants
-  globals.css         # Tailwind + CSS utilities + animations (~720 lines)
+  globals.css         # Tailwind + CSS utilities + animations (~1165 lines)
   layout.tsx          # Root layout wrapper
   DashboardContext.tsx # React context for shared state
-components/           # React UI components (47 files, ~21k lines)
+components/           # React UI components (49 files, ~23k lines)
   DashboardHeader.tsx # Top navigation bar
   DashboardModals.tsx # Modal system (currencies, modifiers, info)
   CharacterView.tsx   # Character screen + equipment (lazy-loaded)
@@ -73,22 +73,22 @@ components/           # React UI components (47 files, ~21k lines)
   TavernView.tsx      # The Hearth: rest mode with streak/forge freeze
   RiftView.tsx        # The Rift: timed dungeon quest chains
   DungeonView.tsx     # The Undercroft: cooperative group dungeons (lazy-loaded)
-  ...                 # 25 more components
+  ...                 # 27 more components
 hooks/                # React custom hooks
   useQuestActions.ts  # Quest action handlers (claim, complete, approve, etc.)
-lib/                  # Backend business logic (8 files, ~3750 lines)
-  state.js            # Central state, Maps, JSON persistence (~1060 lines)
-  helpers.js          # Utility functions, paginate() (~920 lines)
+lib/                  # Backend business logic (8 files, ~3950 lines)
+  state.js            # Central state, Maps, JSON persistence (~1230 lines)
+  helpers.js          # Utility functions, paginate() (~1690 lines)
   auth.js             # JWT, refresh tokens, API key auth
   quest-catalog.js    # Quest template seeding
   npc-engine.js       # NPC rotation & spawning
   rotation.js         # Daily quest rotation logic
   middleware.js       # Express middleware (auth, master key)
   quest-templates.js  # Quest template interpolation
-routes/               # Express API routes (24 files, ~10800 lines)
-  quests.js           # Quest CRUD, claim, complete (~780 lines)
-  habits-inventory.js # Rituals, gear, inventory, effects (~830 lines)
-  config-admin.js     # Game config, leaderboard, /api/dashboard batch (~430 lines)
+routes/               # Express API routes (24 files, ~11400 lines)
+  quests.js           # Quest CRUD, claim, complete (~855 lines)
+  habits-inventory.js # Rituals, gear, inventory, effects (~880 lines)
+  config-admin.js     # Game config, leaderboard, /api/dashboard batch (~607 lines)
   docs.js             # OpenAPI/Swagger documentation (~650 lines)
   agents.js           # Agent CRUD & status
   gacha.js            # Banner pulls with pull lock, pity tracking
@@ -111,14 +111,14 @@ routes/               # Express API routes (24 files, ~10800 lines)
   gems.js             # Gem/Socket system: 6 gem types, 5 tiers, socketing/upgrading
   dungeons.js         # Dungeon system: async coop group dungeons (2-4 players)
 public/
-  data/               # Game template data (41 JSON files)
-  images/             # Pixel art assets (~250 files)
+  data/               # Game template data (43 JSON files)
+  images/             # Pixel art assets (~284 files)
     portraits/        # NPC and character portraits
     companions/       # Companion icons
     npcs/             # NPC portraits
 electron-quest-app/   # Electron desktop companion app (10 files)
 scripts/              # Asset generation & data validation (5 files)
-server.js             # Express entry point, boot sequence (~289 lines)
+server.js             # Express entry point, boot sequence (~322 lines)
 ```
 
 ## Architecture
@@ -164,24 +164,24 @@ Template: `.env.example`
 
 ## Key Game Systems
 
-Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (50 levels with 20 new prestige levels 31-50 each with unique titles), gear/inventory with Diablo-3-style affix rolling (primary + minor stats with ranges), gem/socket system (6 gem types — Ruby/Sapphire/Emerald/Topaz/Amethyst/Diamond, 5 tiers Chipped→Flawless→Perfect→Radiant→Pristine, socket gear then upgrade gems in-place; gem stat bonuses scale by tier; salvage gems to recover lower tier), set bonuses and legendary effects (15 types including gameplay-changers: night gold, every-5th bonus, auto streak shield, material double, variety bonus), **Unique Named Items** (handcrafted legendary items with fixed stats, unique flavor text, and lore — not randomly rolled; tracked in a collection log per player; discoverable from world bosses, Mythic Rift, and special events), companions with bond levels + ultimates at Bond 5, gacha banners with pity (soft 55, hard 75), daily rituals/streaks, campaign quest chains, multi-currency economy (gold, stardust, essenz, runensplitter, sternentaler), title system (earn and equip titles displayed in player card and leaderboard), **achievement points** (common=5, uncommon=10, rare=25, epic=50, legendary=100 pts; cosmetic frame unlocks at milestones), **Artisan's Quarter** (crafting hub with 4 profession NPCs: Blacksmith/Grimvar for gear rerolling+reinforcing, Alchemist/Ysolde for buff potions+flasks, Enchanter/Eldric for gear enchanting+infusions+targeted stat rerolling (D3 Mystic-style: pick one stat on an item to reroll from its affix pool, preserving all other stats; cost escalates per reroll; locked stat visually marked), Cook/Bruna for meals+consumables; 2-profession limit per player; 10 levels per profession with WoW-style ranks Novice→Apprentice→Journeyman→Expert→Artisan→Master; recipe-specific XP scaling 8-50 XP; daily bonus 2x XP on first craft; recipe discovery unlocks at higher ranks; batch crafting x1-x10 for buff recipes; per-recipe cooldowns; 13 materials common→legendary from quest drops; WoW-style skill-up colors orange/yellow/green/gray; synergy hints for profession pairings), **Schmiedekunst** (dismantle items → essenz + materials with D3-style Salvage All per rarity, transmute 3 same-slot epics + 500g → 1 legendary; slot-locked selection UI), **Workshop Tools** (4-tier permanent XP upgrades: Sturdy→Masterwork→Legendary→Mythic, 2-10% XP bonus), **Sternenpfad** (solo weekly challenge: 3 stages with star ratings 1-3 per stage, max 9 stars; weekly modifiers +50%/-25% per quest type; speed bonus +1★ if stage completed within 2 days; star-scaled rewards +15% at 2★, +33% at 3★; exclusive sternentaler currency), **Expedition** (cooperative weekly challenge: guild-wide shared progress toward 3+bonus checkpoints; scales with registered player count; no per-player cap so active players compensate for inactive ones; bonus checkpoint awards rotating titles), **Bazaar shop** (two categories: self-care rewards like gaming/movie/spa + gameplay boosts with temporary buff effects like XP scrolls, luck coins, streak shields — buffs applied server-side on purchase via `applyShopEffect()`), **Social System "The Breakaway"** (friends with 3-tier online status online/idle/offline via `lastActiveAt` tracking, direct messaging with auto-read receipts and double-checkmark indicators, item+gold trading with negotiation rounds and D3-style rarity-colored item display with stat tooltips, WoW Guild News-style activity feed showing quest completions, level-ups, achievements, epic+ gacha pulls, rare drops and trades from friends with compact/detailed view toggle; friends displayed as card grid instead of list; activity log capped at 500 events; **Player Search** with debounced autocomplete for finding and adding friends; **Player Profiles** Steam/Diablo-style modal showing equipment, achievements, professions, companion, online status — accessible from leaderboard, friends list, and search results), **Daily Missions** (HSR-style daily checklist with 6 missions: login, quests, rituals, companion, crafting; 4 milestone reward tiers at 100/300/500/750 points with currency rewards), **Workshop Upgrades** (4 permanent bonus items in Artisan's Quarter: Gold-Forged Tools +2-5% gold, Loot Chance Amulet +1-3% drop, Streak Shield Charm auto-save 1x/week, Material Magnet +5-15% material chance; all additive bonuses with tiered progression), **The Hearth** (tavern/rest mode: freeze streaks + forge temp for 1-7 days; optional reason; auto-expire; 30-day cooldown; rest history; room within The Breakaway floor, inspired by Urithiru gathering halls), **The Rift** (dungeon system: timed quest chains with 3 tiers — Normal 3 quests/72h, Hard 5/48h, Legendary 7/36h; escalating difficulty 1x→3.5x; fail cooldown 3/5/7 days; completion bonuses; new room in Great Halls), **Mythic+ Endless Rift** (infinite scaling rift levels beyond Legendary; starts at Mythic+1 after Legendary clear; each level increases difficulty multiplier +0.25x and time pressure; leaderboard tracks highest Mythic+ level per player; bonus loot tiers at M+5/10/15/20; unique rewards and titles at milestone levels; no fail cooldown — retry immediately), **World Boss System** (community-wide boss encounters; boss has shared HP pool damaged by all players via quest completions; contribution tracking per player; 3 boss tiers — Champion/Titan/Colossus with escalating HP and reward tiers; unique boss-only drops including Unique Named Items; spawn cycle with downtime between bosses; damage multiplied by player level and gear score; boss enrage timer; ranked contribution rewards — top contributors earn bonus loot and exclusive titles), **Season Pass** (40-level reward track: XP from quests 10-50 by rarity, rituals 8, vow clean days 5, daily mission milestones; rewards include gold, essenz, runensplitter, stardust, exclusive titles, cosmetic frames; claim per level), **Die Vier Zirkel** (faction system: 4 factions — Orden der Klinge/combat, Zirkel der Sterne/knowledge, Pakt der Wildnis/nature, Bund der Schatten/stealth; 6 rep tiers Neutral→Friendly→Honored→Revered→Exalted→Paragon; auto-rep +10-30 from quest completion based on quest type; tier rewards: titles, recipes, frames, shop discounts, legendary effects; claimable per tier), **GameTooltip System** (rich tooltip framework with 50+ registry entries covering all stats, currencies, and systems; cross-reference sub-tooltips via GTRef; 800ms hover delay; pin-on-complete; close via click-outside or ESC; absolute positioning with scroll tracking), **Dungeon System "The Undercroft"** (async cooperative group dungeons for 2-4 friends; 3 tiers: Sunken Archive Normal Lv10/GS100, Shattered Spire Hard Lv20/GS250, Hollow Core Legendary Lv35/GS500; create run → invite friends → auto-start at minPlayers → 8h idle timer → collect individual rewards; success determined once per run based on combined gear score + bond bonus vs scaled threshold; rewards include gold, essenz, materials, gems, actual gear items, unique named items; 7-day cooldown per dungeon; bonus title + frame on first clear; persistence in data/dungeonState.json), **Companion Expeditions** (idle mechanic: send companion on timed expeditions for rewards; 4 tiers: Quick Forage 4h, Deep Woods 8h, Mountain Pass 12h, Ancient Ruins 24h; bond level multiplier 1+bondLevel×0.1 scales gold; rewards: gold, essenz, runensplitter, materials, gems, rare items; 1h cooldown between expeditions; no bond XP while companion is away; backend-only — no frontend UI yet).
+Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (50 levels with 20 new prestige levels 31-50 each with unique titles), gear/inventory with Diablo-3-style affix rolling (primary + minor stats with ranges), gem/socket system (6 gem types — Ruby(kraft)/Sapphire(weisheit)/Emerald(glueck)/Topaz(ausdauer)/Amethyst(vitalitaet)/Diamond(fokus), 5 tiers Chipped→Flawed→[Name]→Flawless→Royal, socket gear then upgrade gems in-place; gem stat bonuses scale by tier; salvage gems to recover lower tier), set bonuses and legendary effects (15 types including gameplay-changers: night gold, every-5th bonus, auto streak shield, material double, variety bonus), **Unique Named Items** (handcrafted legendary items with fixed stats, unique flavor text, and lore — not randomly rolled; tracked in a collection log per player; discoverable from world bosses, Mythic Rift, and special events), companions with bond levels + ultimates at Bond 5, gacha banners with pity (soft 55, hard 75), daily rituals/streaks, campaign quest chains, multi-currency economy (gold, stardust, essenz, runensplitter, sternentaler), title system (earn and equip titles displayed in player card and leaderboard), **achievement points** (common=5, uncommon=10, rare=25, epic=50, legendary=100 pts; cosmetic frame unlocks at milestones), **Artisan's Quarter** (crafting hub with 4 profession NPCs: Blacksmith/Grimvar for gear rerolling+reinforcing, Alchemist/Ysolde for buff potions+flasks, Enchanter/Eldric for gear enchanting+infusions+targeted stat rerolling (D3 Mystic-style: pick one stat on an item to reroll from its affix pool, preserving all other stats; cost escalates per reroll; locked stat visually marked), Cook/Bruna for meals+consumables; 2-profession limit per player; 10 levels per profession with WoW-style ranks Novice→Apprentice→Journeyman→Expert→Artisan→Master; recipe-specific XP scaling 8-50 XP; daily bonus 2x XP on first craft; recipe discovery unlocks at higher ranks; batch crafting x1-x10 for buff recipes; per-recipe cooldowns; 13 materials common→legendary from quest drops; WoW-style skill-up colors orange/yellow/green/gray; synergy hints for profession pairings), **Schmiedekunst** (dismantle items → essenz + materials with D3-style Salvage All per rarity, transmute 3 same-slot epics + 500g → 1 legendary; slot-locked selection UI), **Workshop Tools** (4-tier permanent XP upgrades: Sturdy→Masterwork→Legendary→Mythic, 2-10% XP bonus), **Sternenpfad** (solo weekly challenge: 3 stages with star ratings 1-3 per stage, max 9 stars; weekly modifiers +50%/-25% per quest type; speed bonus +1★ if stage completed within 2 days; star-scaled rewards +15% at 2★, +33% at 3★; exclusive sternentaler currency), **Expedition** (cooperative weekly challenge: guild-wide shared progress toward 3+bonus checkpoints; scales with registered player count; no per-player cap so active players compensate for inactive ones; bonus checkpoint awards rotating titles), **Bazaar shop** (two categories: self-care rewards like gaming/movie/spa + gameplay boosts with temporary buff effects like XP scrolls, luck coins, streak shields — buffs applied server-side on purchase via `applyShopEffect()`), **Social System "The Breakaway"** (friends with 3-tier online status online/idle/offline via `lastActiveAt` tracking, direct messaging with auto-read receipts and double-checkmark indicators, item+gold trading with negotiation rounds and D3-style rarity-colored item display with stat tooltips, WoW Guild News-style activity feed showing quest completions, level-ups, achievements, epic+ gacha pulls, rare drops and trades from friends with compact/detailed view toggle; friends displayed as card grid instead of list; activity log capped at 500 events; **Player Search** with debounced autocomplete for finding and adding friends; **Player Profiles** Steam/Diablo-style modal showing equipment, achievements, professions, companion, online status — accessible from leaderboard, friends list, and search results), **Daily Missions** (HSR-style daily checklist with 6 missions: login, quests, rituals, companion, crafting; 4 milestone reward tiers at 100/300/500/750 points with currency rewards), **Workshop Upgrades** (4 permanent bonus items in Artisan's Quarter: Gold-Forged Tools +2-5% gold, Loot Chance Amulet +1-3% drop, Streak Shield Charm auto-save 1x/week, Material Magnet +5-15% material chance; all additive bonuses with tiered progression), **The Hearth** (tavern/rest mode: freeze streaks + forge temp for 1-7 days; optional reason; auto-expire; 30-day cooldown; rest history; room within The Breakaway floor, inspired by Urithiru gathering halls), **The Rift** (dungeon system: timed quest chains with 3 tiers — Normal 3 quests/72h, Hard 5/48h, Legendary 7/36h; escalating difficulty 1x→3.5x; fail cooldown 3/5/7 days; completion bonuses; new room in Great Halls), **Mythic+ Endless Rift** (infinite scaling rift levels beyond Legendary; starts at Mythic+1 after Legendary clear; each level increases difficulty multiplier +0.25x and time pressure; leaderboard tracks highest Mythic+ level per player; bonus loot tiers at M+5/10/15/20; unique rewards and titles at milestone levels; no fail cooldown — retry immediately), **World Boss System** (community-wide boss encounters; boss has shared HP pool damaged by all players via quest completions; contribution tracking per player; 3 boss tiers — Champion/Titan/Colossus with escalating HP and reward tiers; unique boss-only drops including Unique Named Items; spawn cycle with downtime between bosses; damage multiplied by player level and gear score; boss enrage timer; ranked contribution rewards — top contributors earn bonus loot and exclusive titles), **Season Pass** (40-level reward track: XP from quests 10-50 by rarity, rituals 8, vow clean days 5, daily mission milestones; rewards include gold, essenz, runensplitter, stardust, exclusive titles, cosmetic frames; claim per level), **Die Vier Zirkel** (faction system: 4 factions — Orden der Klinge/combat, Zirkel der Sterne/knowledge, Pakt der Wildnis/nature, Bund der Schatten/stealth; 6 rep tiers Neutral→Friendly→Honored→Revered→Exalted→Paragon; auto-rep +10-30 from quest completion based on quest type; tier rewards: titles, recipes, frames, shop discounts, legendary effects; claimable per tier), **GameTooltip System** (rich tooltip framework with 50+ registry entries covering all stats, currencies, and systems; cross-reference sub-tooltips via GTRef; 800ms hover delay; pin-on-complete; close via click-outside or ESC; absolute positioning with scroll tracking), **Dungeon System "The Undercroft"** (async cooperative group dungeons for 2-4 friends; 3 tiers: Sunken Archive Normal Lv10/GS100, Shattered Spire Hard Lv20/GS250, Hollow Core Legendary Lv35/GS500; create run → invite friends → auto-start at minPlayers → 8h idle timer → collect individual rewards; success determined once per run based on combined gear score + bond bonus vs scaled threshold; rewards include gold, essenz, materials, gems, actual gear items, unique named items; 7-day cooldown per dungeon; bonus title + frame on first clear; persistence in data/dungeonState.json), **Companion Expeditions** (idle mechanic: send companion on timed expeditions for rewards; 4 tiers: Quick Forage 4h, Deep Woods 8h, Mountain Pass 12h, Ancient Ruins 24h; bond level multiplier 1+bondLevel×0.1 scales gold; rewards: gold, essenz, runensplitter, materials, gems, rare items; 1h cooldown between expeditions; no bond XP while companion is away; backend-only — no frontend UI yet).
 
 ## Important Files
 
 | File | Role |
 |------|------|
-| `app/page.tsx` | Main dashboard UI (~2150 lines) |
-| `app/types.ts` | All TypeScript interfaces (~540 lines) |
+| `app/page.tsx` | Main dashboard UI (~2350 lines) |
+| `app/types.ts` | All TypeScript interfaces (~725 lines) |
 | `app/utils.ts` | Fetch helpers, `fetchDashboard()` batch, level system |
-| `app/globals.css` | CSS utility classes + animations (~720 lines) |
-| `lib/state.js` | State management, Maps, persistence (~1060 lines) |
-| `lib/helpers.js` | Shared utilities, `paginate()` (~920 lines) |
+| `app/globals.css` | CSS utility classes + animations (~1165 lines) |
+| `lib/state.js` | State management, Maps, persistence (~1230 lines) |
+| `lib/helpers.js` | Shared utilities, `paginate()` (~1690 lines) |
 | `lib/auth.js` | JWT auth, refresh tokens, API key resolution |
 | `server.js` | Express entry, boot sequence, memory pruning |
-| `routes/quests.js` | Core quest API (~780 lines) |
+| `routes/quests.js` | Core quest API (~855 lines) |
 | `routes/config-admin.js` | Game config, leaderboard, `/api/dashboard` batch |
-| `routes/habits-inventory.js` | Rituals, gear, inventory (~830 lines) |
-| `public/data/*.json` | Game data templates (36+ files) |
+| `routes/habits-inventory.js` | Rituals, gear, inventory (~880 lines) |
+| `public/data/*.json` | Game data templates (43 files) |
 | `public/data/titles.json` | Title definitions with conditions |
 | `public/data/gearTemplates.json` | Gear items, set bonuses, legendary effects |
 | `public/data/professions.json` | Crafting professions, materials, recipes |
@@ -208,6 +208,7 @@ Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (5
 | `routes/factions.js` | Die Vier Zirkel: 4 factions with rep tiers |
 | `components/FactionsView.tsx` | Faction UI: rep bars, tier rewards |
 | `components/GameTooltip.tsx` | Tooltip system: 50+ registry entries with cross-refs |
+| `components/WorldBossView.tsx` | World Boss UI: boss HP, contribution, rewards |
 | `routes/world-boss.js` | World Boss: community bosses, contribution tracking, unique drops |
 | `routes/gems.js` | Gem/Socket system: 6 gem types, 5 tiers, socketing/upgrading |
 | `public/data/worldBosses.json` | World boss templates, HP pools, unique drop tables |

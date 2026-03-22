@@ -226,7 +226,7 @@ router.post('/api/rift/enter', requireAuth, (req, res) => {
   // Mythic tier validation
   let mythicLevel = 0;
   if (tierId === 'mythic') {
-    mythicLevel = Math.max(1, parseInt(rawMythicLevel, 10) || 1);
+    mythicLevel = Math.min(100, Math.max(1, parseInt(rawMythicLevel, 10) || 1));
 
     // Must have completed a Legendary Rift first
     const hasLegendaryCompletion = (u.riftHistory || []).some(h => h.tier === 'legendary' && h.success);
@@ -324,8 +324,9 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
         // Scale mythic completion bonuses
         let scaled = amount;
         if (mythicLvl > 0) {
-          if (currency === 'gold') scaled = amount + mythicLvl * 200;
-          else if (currency === 'essenz') scaled = amount + mythicLvl * 5;
+          const cappedLvl = Math.min(mythicLvl, 100);
+          if (currency === 'gold') scaled = amount + cappedLvl * 200;
+          else if (currency === 'essenz') scaled = amount + cappedLvl * 5;
           else scaled = amount;
         }
         awardCurrency(uid, currency, scaled);

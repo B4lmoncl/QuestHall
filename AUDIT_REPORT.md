@@ -2766,6 +2766,80 @@ Four parallel audit agents covering ALL 24 route files:
 
 ---
 
-*End of Audit Report — Updated 2026-03-22*
+## 38. Full Codebase Audit — Session 22 (2026-03-22)
+
+### 38.1 Methodology
+
+Six parallel audit agents covering ALL files:
+- Agent 1: routes/quests.js, habits-inventory.js, config-admin.js, agents.js, gacha.js, game.js, shop.js, players.js
+- Agent 2: routes/users.js, campaigns.js, currency.js, integrations.js, crafting.js, challenges-weekly.js, expedition.js, npcs-misc.js
+- Agent 3: routes/social.js, rift.js, battlepass.js, factions.js, world-boss.js, gems.js, dungeons.js, docs.js
+- Agent 4: All 47 frontend components — modal consistency, tooltips, loading states, QoL
+- Agent 5: Core files — lib/state.js, helpers.js, auth.js, server.js, app/page.tsx, types.ts, utils.ts
+- Agent 6: Existing documentation review — AUDIT_REPORT.md, ARCHITECTURE.md, LYRA-PLAYBOOK.md, CLAUDE.md
+
+### 38.2 NEW Issues Found & Fixed
+
+| # | Bug | Severity | Location | Fix | Commit |
+|---|-----|----------|----------|-----|--------|
+| 1 | **World Boss claim race condition** — two concurrent requests can both pass `includes()` check and claim double rewards | **HIGH** | world-boss.js:300-304 | Added claim lock with early `push()` before reward calculation | `e3e573c` |
+| 2 | **Mythic Rift level uncapped** — no upper bound on mythicLevel, reward scaling (gold +200/lvl, essenz +5/lvl) inflates without limit | **HIGH** | rift.js:229,323-333 | Cap mythicLevel at `highestCleared + 1` (max progression: +1 per clear), hard cap 100 | `e3e573c` |
+| 3 | **Dungeon collect race condition** — two players collecting simultaneously both see `run.success === undefined`, each rolls `Math.random()` independently getting different outcomes | **HIGH** | dungeons.js:482-495 | Mark collected before success determination, atomic check | `e3e573c` |
+| 4 | **Shop gear/item buy auth bypass** — `req.auth?.userId` is null for API key auth, self-check always passes, allowing any API key to buy for any user | **HIGH** | shop.js:214,305 | Enforce identity match like requireSelf pattern | `e3e573c` |
+| 5 | **Crafting reroll targetStatIndex negative** — frontend can send negative index, `Math.min(-999, length-1)` still returns negative, causing undefined array access | **MEDIUM** | crafting.js:442 | Clamp with `Math.max(0, Math.min(idx, length-1))` | `e3e573c` |
+| 6 | **Crafting skill-up XP truncated before daily 2× multiplier** — `Math.floor(rawXp * mult) * 2` loses fractional XP | **LOW** | crafting.js:413-417 | Apply floor after all multipliers: `Math.floor(rawXp * mult * dailyMult)` | `e3e573c` |
+
+### 38.3 NEW Quality of Life Improvements
+
+| # | Improvement | Location | Status |
+|---|------------|----------|--------|
+| 1 | **Reward celebration popups** on all claim flows (expedition, sternenpfad, battlepass, factions, world boss, dungeons) | Multiple components | ✅ Fixed |
+| 2 | **Rich tooltips in Player Profile Modal** — equipment stats, level, title, class, streak, companion, professions, achievements | PlayerProfileModal.tsx | ✅ Fixed |
+| 3 | **Floor banner images** — 200px height with right-aligned pixel art, gradient overlay, ambient particles per floor | page.tsx, config.ts, globals.css | ✅ Fixed |
+| 4 | **Missing tooltips** in ShopModal (Workshop Tools), RiftView (difficulty tiers), DungeonView (gear score), WorldBossView (contribution calc) | Various | Pending |
+| 5 | **Hardcoded bond thresholds** in CompanionsWidget.tsx should come from backend config | CompanionsWidget.tsx | Pending |
+| 6 | **Missing loading skeletons** in GachaView, SocialView friends tab | Various | Pending |
+
+### 38.4 Frontend-Backend Consistency Findings
+
+| Finding | Severity | Frontend | Backend | Status |
+|---------|----------|----------|---------|--------|
+| Messages already fully functional (send, receive, read receipts, 10s auto-refresh) | Info | SocialView.tsx | social.js | ✅ Verified |
+| Gacha epic rate 13% correctly implemented with proper pity (soft 55, hard 75) | Info | GachaView.tsx | gacha.js | ✅ Verified |
+| Companion Expeditions backend complete, no frontend UI | MEDIUM | — | players.js | Known gap |
+| Schmiedekunst Dismantle-All UI referenced in CLAUDE.md but ForgeView only has single dismantle | LOW | ForgeView.tsx | crafting.js | Known gap |
+
+### 38.5 Documented but Not Fixed (Acceptable)
+
+| Finding | Severity | Rationale |
+|---------|----------|-----------|
+| Pull lock lost on process restart | LOW | In-memory lock correct for single-process; restarts are rare |
+| Campaign quest deletion not cascaded | LOW | Gracefully handled with `(deleted)` fallback |
+| Feedback entries never pruned | LOW | 500 cap sufficient for alpha/beta phase |
+| Expedition progress race condition | LOW | Node.js single-threaded; debounced save coalesces |
+| Activity feed limit parsing | LOW | Math.min/max correctly clamps |
+
+### 38.6 Architecture Updates
+
+- **Component count**: 49 files (~23k lines) — updated from 47/21k
+- **Route count**: 24 files (~11,400 lines) — updated from ~10,800
+- **New systems since last audit**: Floor banners with particles, reward celebrations on all claim flows, rich profile tooltips
+- **Prestige levels**: 50 total (20 new prestige levels 31-50) — confirmed in code
+
+### 38.7 Changelog (Session 22)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `c4fdce9` | 2026-03-22 | Reward celebration popups on all claim flows + rich tooltips in player profile |
+| `4bf6861` | 2026-03-22 | Floor banner: 200px height with right-aligned background images |
+| `6e4e9f7` | 2026-03-22 | Merge main: resolve banner conflicts, use banner prop, 200px height |
+| `c02d1d6` | 2026-03-22 | Banner: left fade-out mask on image, lighter gradient, no mask on breakaway |
+| `403cb0e` | 2026-03-22 | Banner: floor gradient as base background behind image |
+| `051c7b9` | 2026-03-22 | Ambient particle effects on floor banners (5 themed styles) |
+| `e3e573c` | 2026-03-22 | Fix 6 bugs: world boss race, rift cap, dungeon race, shop auth, crafting validation |
+| `ed3d6c9` | 2026-03-22 | QoL: Missing tooltips for Rift tiers, Dungeon gear score, World Boss damage |
+| `b0366d9` | 2026-03-22 | Update docs: CLAUDE.md, ARCHITECTURE.md line counts + component counts |
+
+---
 
 *End of Audit Report — Updated 2026-03-22*
