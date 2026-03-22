@@ -2418,6 +2418,15 @@ Comprehensive deep audit of all new features (dungeons, world boss, gems, compan
 | `d214cd6` | 2026-03-22 | Fix: Critical backend issues (dungeons, world boss, gems) |
 | `2ee72c5` | 2026-03-22 | Fix: Minimum font size 12px for readable text |
 | `16f37d0` | 2026-03-22 | Fix: Companion expedition GET auth middleware |
+| `fedd3c0` | 2026-03-22 | Fix: Companion expedition double-collect race + bond multiplier on all rewards |
+
+### 32.6 Additional Fixes (Post-Session 16 Audit)
+
+| # | Bug | Severity | Fix | Commit |
+|---|-----|----------|-----|--------|
+| 11 | **Companion expedition double-collect race** — `collected` flag set AFTER rewards, allowing concurrent requests to both collect | **CRITICAL** | Move `collected = true` before reward processing | `fedd3c0` |
+| 12 | **Bond multiplier only applied to gold** — essenz, runensplitter, materials ignored bond level scaling | **HIGH** | Apply `bondMultiplier` to all reward types via `rollRange()` helper | `fedd3c0` |
+| 13 | **No null safety on material/gem selection** — could crash if professionsData corrupted | **MEDIUM** | Added `mat.id` and `gem.id` null checks | `fedd3c0` |
 
 ---
 
