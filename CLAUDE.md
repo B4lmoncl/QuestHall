@@ -295,15 +295,13 @@ Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (5
 
 ## Documentation
 
-| File | Purpose | When to use |
-|------|---------|-------------|
-| `CLAUDE.md` | **Primary reference** — Tech stack, code conventions, UI design guidelines, game systems overview | Read FIRST in every session. Contains rules that override defaults. |
-| `ARCHITECTURE.md` | System architecture — data flow, component tree, route structure, state management | When you need to understand HOW the system works technically |
-| `LYRA-PLAYBOOK.md` | **Content creation guide** — JSON schemas for NPCs, quests, items, gear, gacha banners, gems, world bosses, dungeons, achievements, titles, recipes. Includes backend formulas (XP, damage, pity, drop rates). | When ADDING NEW CONTENT to `public/data/*.json` files. Shows exact field schemas, valid values, and examples for every content type. |
-| `AUDIT_REPORT.md` | Codebase audit history — fix log, known non-issues (Appendix A), remaining issues | Read Appendix A before any audit to avoid re-investigating verified non-issues |
-| `AUDIT_PROMPT.md` | Reusable audit prompt template | Copy-paste to start a new audit session |
-| `README.md` | API endpoints, deployment, agents | External documentation |
-| `BACKLOG.md` | Bugs, features, tech debt | Planning reference |
-| `ITEM-SYSTEM-SPEC.md` | Gear & equipment design spec | When working on item/gear system |
-| `SCALABILITY-AUDIT.md` | Performance analysis | When optimizing |
-| `TEMPLATES.md` | Quest template formats | When creating quest templates |
+- `CLAUDE.md` — THIS FILE. Primary reference. Read first. Tech stack, code rules, UI design guidelines, game systems.
+- `ARCHITECTURE.md` — Technical architecture: data flow, component tree, route structure, state management.
+- `LYRA-PLAYBOOK.md` — Content creation schemas. Read when adding content to `public/data/*.json`. Contains exact JSON field schemas, valid values, and examples for: NPCs, quests, items, gear, gacha banners, gems, world bosses, dungeons, achievements, titles, recipes, factions, campaigns, companion expeditions. Also has all backend formulas (XP calc, damage, pity, drop rates, gem scaling).
+- `AUDIT_REPORT.md` — Fix history + Appendix A (verified non-issues, features that exist, agent traps). MUST read Appendix A before any audit.
+- `AUDIT_PROMPT.md` — Reusable audit prompt. User pastes this to start audit sessions.
+- `README.md` — API endpoint docs, deployment, agent setup.
+- `BACKLOG.md` — Planned features, known bugs, tech debt.
+- `ITEM-SYSTEM-SPEC.md` — Gear/equipment design spec (affix pools, rarity, slots).
+- `SCALABILITY-AUDIT.md` — Performance analysis.
+- `TEMPLATES.md` — Quest template format reference.
