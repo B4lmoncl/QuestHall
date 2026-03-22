@@ -1,8 +1,26 @@
 // ─── Player API ────────────────────────────────────────────────────────────────
 const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
 const { state, NPC_META, saveUsers, savePlayerProgress } = require('../lib/state');
-const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel, onQuestCompletedByUser } = require('../lib/helpers');
+const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel, onQuestCompletedByUser, awardCurrency, rollLoot, addLootToInventory } = require('../lib/helpers');
 const { requireAuth, requireSelf } = require('../lib/middleware');
+
+// ─── Companion Expeditions data ─────────────────────────────────────────────
+let COMPANION_EXPEDITIONS = { expeditions: [], bondLevelMultiplier: 0.1, cooldownHours: 1 };
+
+function loadCompanionExpeditions() {
+  const filePath = path.join(__dirname, '..', 'public', 'data', 'companionExpeditions.json');
+  try {
+    if (fs.existsSync(filePath)) {
+      COMPANION_EXPEDITIONS = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      state.companionExpeditionsData = COMPANION_EXPEDITIONS;
+      console.log(`[companion-expeditions] Loaded ${COMPANION_EXPEDITIONS.expeditions.length} expeditions`);
+    }
+  } catch (e) {
+    console.warn('[companion-expeditions] Failed to load:', e.message);
+  }
+}
 
 // PATCH /api/player/:name/profile — update profile settings [auth + self]
 router.patch('/api/player/:name/profile', requireAuth, requireSelf('name'), (req, res) => {
@@ -169,6 +187,12 @@ router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'),
   if (!u) return res.status(404).json({ error: 'Player not found' });
   if (!u.companion) return res.status(404).json({ error: 'No companion' });
 
+  // Check if companion is on expedition
+  if (u.companionExpedition && !u.companionExpedition.collected) {
+    const done = Date.now() >= new Date(u.companionExpedition.completesAt).getTime();
+    if (!done) return res.status(400).json({ error: 'Your companion is away on an expedition. Wait for them to return!' });
+  }
+
   const today = todayStr();
   if (u.companion.petDateStr !== today) {
     u.companion.petCountToday = 0;
@@ -178,21 +202,39 @@ router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'),
   const petsToday = u.companion.petCountToday || 0;
   const xpLimitReached = petsToday >= 2;
 
-  // Always allow petting, but only award XP for first 2 per day
-  if (!xpLimitReached) {
+  // Check if companion is on an active expedition (not yet collected)
+  const expedition = u.companionExpedition;
+  const onExpedition = expedition && expedition.completesAt && !expedition.collected;
+
+  // Always allow petting, but no bond XP during active expedition or if limit reached
+  if (!xpLimitReached && !onExpedition) {
     u.companion.petCountToday = petsToday + 1;
     u.companion.bondXp = (u.companion.bondXp || 0) + 0.5;
     u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   }
   u.companion.lastPetted = now();
+  // Battle Pass XP (only when bond XP was awarded)
+  if (!xpLimitReached && !onExpedition) { try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {} }
   saveUsers();
   const bondInfo = getBondLevel(u.companion.bondXp || 0);
+
+  // Build expedition message if on expedition
+  let expeditionMessage = undefined;
+  if (onExpedition) {
+    const remaining = new Date(expedition.completesAt).getTime() - Date.now();
+    if (remaining > 0) {
+      const h = Math.floor(remaining / (1000 * 60 * 60));
+      const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      expeditionMessage = `Your companion is on an expedition! Returns in ${h}h ${m}m`;
+    }
+  }
+
   res.json({
     success: true,
     companion: { ...u.companion, bondInfo },
     petsToday: u.companion.petCountToday || 0,
-    xpAwarded: !xpLimitReached,
-    message: xpLimitReached ? 'Your companion loves the attention! (XP limit reached for today)' : undefined,
+    xpAwarded: !xpLimitReached && !onExpedition,
+    message: onExpedition ? expeditionMessage : (xpLimitReached ? 'Your companion loves the attention! (XP limit reached for today)' : undefined),
   });
 });
 
@@ -202,6 +244,12 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
   if (!u.companion) return res.status(404).json({ error: 'No companion' });
+
+  // Check if companion is on expedition
+  if (u.companionExpedition && !u.companionExpedition.collected) {
+    const done = Date.now() >= new Date(u.companionExpedition.completesAt).getTime();
+    if (!done) return res.status(400).json({ error: 'Your companion is away on an expedition. Wait for them to return!' });
+  }
 
   const bondLevel = u.companion.bondLevel || getBondLevel(u.companion.bondXp || 0).level;
   const ultimateData = state.companionsData?.ultimates;
@@ -491,6 +539,26 @@ router.get('/api/player/:name/public-profile', (req, res) => {
   const msSinceActive = lastActiveAt ? Date.now() - new Date(lastActiveAt).getTime() : Infinity;
   const onlineStatus = agentOnline || msSinceActive < 5 * 60 * 1000 ? 'online' : msSinceActive < 30 * 60 * 1000 ? 'idle' : 'offline';
 
+  // Friendship status (if viewer is authenticated)
+  const { resolveAuth } = require('../lib/auth');
+  const viewerAuth = resolveAuth(req);
+  const viewerId = viewerAuth?.userId?.toLowerCase();
+  let friendshipStatus = 'none'; // none | friends | pending_sent | pending_received
+  if (viewerId && viewerId !== uid) {
+    const sd = state.socialData;
+    const isFriend = sd.friendships.some(f =>
+      (f.player1 === viewerId && f.player2 === uid) || (f.player1 === uid && f.player2 === viewerId)
+    );
+    if (isFriend) {
+      friendshipStatus = 'friends';
+    } else {
+      const pendingSent = sd.friendRequests.some(r => r.from === viewerId && r.to === uid && r.status === 'pending');
+      const pendingReceived = sd.friendRequests.some(r => r.from === uid && r.to === viewerId && r.status === 'pending');
+      if (pendingSent) friendshipStatus = 'pending_sent';
+      else if (pendingReceived) friendshipStatus = 'pending_received';
+    }
+  }
+
   res.json({
     id: uid,
     name: u.name,
@@ -514,12 +582,53 @@ router.get('/api/player/:name/public-profile', (req, res) => {
     onlineStatus,
     lastActiveAt,
     memberSince: u.createdAt || null,
+    friendshipStatus,
   });
 });
 
 // GET /api/npcs — list all NPC profiles
 router.get('/api/npcs', (req, res) => {
   res.json(Object.entries(NPC_META).map(([id, meta]) => ({ id, ...meta })));
+});
+
+// ─── Collection Log (Unique Named Items) ─────────────────────────────────────
+
+// GET /api/player/:name/collection — get unique items collection log
+router.get('/api/player/:name/collection', (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'Player not found' });
+
+  const allUniques = state.uniqueItems || [];
+  const obtained = new Set(u.collectionLog || []);
+
+  const uniques = allUniques.map(item => {
+    const isObtained = obtained.has(item.id);
+    return {
+      id: item.id,
+      name: item.name,
+      slot: item.slot,
+      rarity: item.rarity,
+      tier: item.tier,
+      desc: item.desc,
+      flavorText: item.flavorText,
+      icon: item.icon,
+      legendaryEffect: item.legendaryEffect,
+      source: item.source,
+      obtained: isObtained,
+      obtainedAt: isObtained ? (u.collectionLogDates || {})[item.id] || null : undefined,
+    };
+  });
+
+  const totalFound = obtained.size;
+  const totalPossible = allUniques.length;
+
+  res.json({
+    uniques,
+    totalFound,
+    totalPossible,
+    completionPercent: totalPossible > 0 ? Math.round((totalFound / totalPossible) * 100) : 0,
+  });
 });
 
 // ─── Tavern / Rest Mode ──────────────────────────────────────────────────────
@@ -640,4 +749,237 @@ router.post('/api/tavern/leave', requireAuth, (req, res) => {
   res.json({ ok: true, message: 'Welcome back, adventurer! Your streak and forge temp have been restored.' });
 });
 
+// ─── Companion Expeditions ──────────────────────────────────────────────────
+
+// GET /api/player/:name/companion/expeditions — list available expeditions + active status
+router.get('/api/player/:name/companion/expeditions', requireAuth, requireSelf('name'), (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'Player not found' });
+  if (!u.companion) return res.status(400).json({ error: 'No companion' });
+
+  const bondLevel = u.companion.bondLevel || getBondLevel(u.companion.bondXp || 0).level;
+  const playerLevel = getLevelInfo(u.xp || 0).level;
+  const expedition = u.companionExpedition || null;
+
+  // Active expedition info
+  let active = null;
+  if (expedition && expedition.completesAt && !expedition.collected) {
+    const completesAt = new Date(expedition.completesAt).getTime();
+    const remaining = Math.max(0, completesAt - Date.now());
+    const expDef = COMPANION_EXPEDITIONS.expeditions.find(e => e.id === expedition.expeditionId);
+    active = {
+      expeditionId: expedition.expeditionId,
+      name: expDef?.name || expedition.expeditionId,
+      icon: expDef?.icon || '',
+      sentAt: expedition.sentAt,
+      completesAt: expedition.completesAt,
+      remainingMs: remaining,
+      completed: remaining <= 0,
+    };
+  }
+
+  // Cooldown info
+  let cooldownRemaining = 0;
+  const lastCollectedAt = expedition?.lastCollectedAt;
+  if (lastCollectedAt) {
+    const cooldownMs = (COMPANION_EXPEDITIONS.cooldownHours || 1) * 60 * 60 * 1000;
+    const elapsed = Date.now() - new Date(lastCollectedAt).getTime();
+    cooldownRemaining = Math.max(0, cooldownMs - elapsed);
+  }
+
+  // Available expeditions
+  const available = COMPANION_EXPEDITIONS.expeditions.map(e => ({
+    id: e.id,
+    name: e.name,
+    description: e.description,
+    durationHours: e.durationHours,
+    icon: e.icon,
+    rewards: e.rewards,
+  }));
+
+  res.json({
+    available,
+    active,
+    cooldownRemainingMs: cooldownRemaining,
+    bondLevel,
+    bondMultiplier: 1 + bondLevel * (COMPANION_EXPEDITIONS.bondLevelMultiplier || 0.1),
+  });
+});
+
+// POST /api/player/:name/companion/expedition/send — send companion on expedition
+router.post('/api/player/:name/companion/expedition/send', requireAuth, requireSelf('name'), (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'Player not found' });
+  if (!u.companion) return res.status(400).json({ error: 'No companion' });
+
+  const { expeditionId } = req.body;
+  if (!expeditionId) return res.status(400).json({ error: 'expeditionId required' });
+
+  const expDef = COMPANION_EXPEDITIONS.expeditions.find(e => e.id === expeditionId);
+  if (!expDef) return res.status(404).json({ error: 'Unknown expedition' });
+
+  // Check no active expedition (not yet collected)
+  const existing = u.companionExpedition;
+  if (existing && existing.completesAt && !existing.collected) {
+    return res.status(400).json({ error: 'Companion is already on an expedition' });
+  }
+
+  // Check cooldown (1h since lastCollectedAt)
+  if (existing?.lastCollectedAt) {
+    const cooldownMs = (COMPANION_EXPEDITIONS.cooldownHours || 1) * 60 * 60 * 1000;
+    const elapsed = Date.now() - new Date(existing.lastCollectedAt).getTime();
+    if (elapsed < cooldownMs) {
+      const remaining = Math.ceil((cooldownMs - elapsed) / (1000 * 60));
+      return res.status(429).json({ error: `Expedition on cooldown (${remaining} min remaining)`, cooldownRemainingMs: cooldownMs - elapsed });
+    }
+  }
+
+  const sentAt = now();
+  const completesAt = new Date(Date.now() + expDef.durationHours * 60 * 60 * 1000).toISOString();
+
+  u.companionExpedition = {
+    expeditionId,
+    sentAt,
+    completesAt,
+    collected: false,
+    lastCollectedAt: existing?.lastCollectedAt || null,
+  };
+
+  saveUsers();
+  console.log(`[companion-expedition] ${uid} sent companion on "${expDef.name}" (${expDef.durationHours}h)`);
+  res.json({
+    ok: true,
+    expedition: {
+      expeditionId,
+      name: expDef.name,
+      icon: expDef.icon,
+      sentAt,
+      completesAt,
+      durationHours: expDef.durationHours,
+    },
+    message: `${u.companion.name || 'Your companion'} set off on "${expDef.name}"! Returns in ${expDef.durationHours}h.`,
+  });
+});
+
+// POST /api/player/:name/companion/expedition/collect — collect completed expedition rewards
+router.post('/api/player/:name/companion/expedition/collect', requireAuth, requireSelf('name'), (req, res) => {
+  const uid = req.params.name.toLowerCase();
+  const u = state.users[uid];
+  if (!u) return res.status(404).json({ error: 'Player not found' });
+  if (!u.companion) return res.status(400).json({ error: 'No companion' });
+
+  const expedition = u.companionExpedition;
+  if (!expedition || !expedition.completesAt || expedition.collected) {
+    return res.status(400).json({ error: 'No active expedition to collect' });
+  }
+
+  // Check if expedition has completed
+  if (Date.now() < new Date(expedition.completesAt).getTime()) {
+    const remaining = new Date(expedition.completesAt).getTime() - Date.now();
+    const h = Math.floor(remaining / (1000 * 60 * 60));
+    const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    return res.status(400).json({ error: `Expedition not yet complete (${h}h ${m}m remaining)` });
+  }
+
+  const expDef = COMPANION_EXPEDITIONS.expeditions.find(e => e.id === expedition.expeditionId);
+  if (!expDef) return res.status(500).json({ error: 'Expedition definition not found' });
+
+  // Mark collected FIRST to prevent double-collect race condition
+  expedition.collected = true;
+  expedition.lastCollectedAt = now();
+
+  const bondLevel = u.companion.bondLevel || getBondLevel(u.companion.bondXp || 0).level;
+  const bondMultiplier = 1 + bondLevel * (COMPANION_EXPEDITIONS.bondLevelMultiplier || 0.1);
+  const playerLevel = getLevelInfo(u.xp || 0).level;
+  const rewards = expDef.rewards;
+  const collected = {};
+
+  // Helper: roll a range and apply bond multiplier
+  function rollRange(range) {
+    const [min, max] = range;
+    return Math.floor((Math.floor(Math.random() * (max - min + 1)) + min) * bondMultiplier);
+  }
+
+  // ── Roll gold ──
+  if (rewards.gold) {
+    const gold = rollRange(rewards.gold);
+    if (gold > 0) { awardCurrency(uid, 'gold', gold); collected.gold = gold; }
+  }
+
+  // ── Roll essenz (bond multiplier applied) ──
+  if (rewards.essenz) {
+    const amount = rollRange(rewards.essenz);
+    if (amount > 0) { awardCurrency(uid, 'essenz', amount); collected.essenz = amount; }
+  }
+
+  // ── Roll runensplitter (bond multiplier applied) ──
+  if (rewards.runensplitter) {
+    const amount = rollRange(rewards.runensplitter);
+    if (amount > 0) { awardCurrency(uid, 'runensplitter', amount); collected.runensplitter = amount; }
+  }
+
+  // ── Roll materials (bond multiplier scales count) ──
+  if (rewards.materials && Math.random() < rewards.materials.chance) {
+    const [minCount, maxCount] = rewards.materials.count;
+    const baseCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+    const count = Math.max(1, Math.floor(baseCount * bondMultiplier));
+    const allMaterials = state.professionsData?.materials || [];
+    if (allMaterials.length > 0) {
+      u.craftingMaterials = u.craftingMaterials || {};
+      const droppedMaterials = [];
+      for (let i = 0; i < count; i++) {
+        const mat = allMaterials[Math.floor(Math.random() * allMaterials.length)];
+        if (mat && mat.id) {
+          u.craftingMaterials[mat.id] = (u.craftingMaterials[mat.id] || 0) + 1;
+          droppedMaterials.push({ id: mat.id, name: mat.name, rarity: mat.rarity });
+        }
+      }
+      collected.materials = droppedMaterials;
+    }
+  }
+
+  // ── Roll gems ──
+  if (rewards.gems && Math.random() < rewards.gems.chance) {
+    const maxTier = rewards.gems.maxTier || 1;
+    const allGems = state.gemsData?.gems || [];
+    if (allGems.length > 0) {
+      const gem = allGems[Math.floor(Math.random() * allGems.length)];
+      if (gem && gem.id) {
+        const tier = Math.min(maxTier, Math.floor(Math.random() * maxTier) + 1);
+        const gemKey = `${gem.id}_${tier}`;
+        u.gems = u.gems || {};
+        u.gems[gemKey] = (u.gems[gemKey] || 0) + 1;
+        collected.gem = { type: gem.id, name: gem.name, tier };
+      }
+    }
+  }
+
+  // ── Roll rare item ──
+  if (rewards.rareItem && Math.random() < rewards.rareItem.chance) {
+    const loot = rollLoot(1.0, playerLevel);
+    if (loot) {
+      addLootToInventory(uid, loot);
+      collected.rareItem = { name: loot.name, rarity: loot.rarity, slot: loot.slot, icon: loot.icon };
+    }
+  }
+
+  // Grant Battle Pass XP (companion_pet source — companion activity)
+  try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {}
+
+  saveUsers();
+  const companionName = u.companion.name || 'Your companion';
+  console.log(`[companion-expedition] ${uid} collected rewards from "${expDef.name}"`);
+
+  res.json({
+    ok: true,
+    expedition: expDef.name,
+    bondMultiplier: +bondMultiplier.toFixed(2),
+    rewards: collected,
+    message: `${companionName} returned from "${expDef.name}" with loot!`,
+  });
+});
+
 module.exports = router;
+module.exports.loadCompanionExpeditions = loadCompanionExpeditions;

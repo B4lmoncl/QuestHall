@@ -44,9 +44,11 @@ function isItemEquipped(u, instanceId) {
 /** Validate that a player owns and can trade the specified items. Returns { ok, error, items }. */
 function validateTradeItems(u, uid, itemInstanceIds) {
   if (!Array.isArray(itemInstanceIds) || itemInstanceIds.length === 0) return { ok: true, items: [] };
+  // Deduplicate to prevent trading the same item twice
+  const uniqueIds = [...new Set(itemInstanceIds)];
   const inv = u.inventory || [];
   const resolved = [];
-  for (const instanceId of itemInstanceIds) {
+  for (const instanceId of uniqueIds) {
     const item = inv.find(i => i.id === instanceId);
     if (!item) {
       return { ok: false, error: `Item ${instanceId} not found in ${uid}'s inventory` };
@@ -731,6 +733,17 @@ function executeTrade(trade) {
   }
   if (gold2 > 0 && u2.currencies.gold < gold2) {
     return { ok: false, error: `${trade.recipient} no longer has enough gold (need ${gold2}, have ${u2.currencies.gold})` };
+  }
+
+  // Verify inventory cap — check if receiving player would exceed cap
+  const INVENTORY_CAP = 100;
+  const u1NetGain = items2.length - items1.length;
+  const u2NetGain = items1.length - items2.length;
+  if (u1NetGain > 0 && (u1.inventory || []).length + u1NetGain > INVENTORY_CAP) {
+    return { ok: false, error: `${trade.initiator}'s inventory would exceed ${INVENTORY_CAP} items` };
+  }
+  if (u2NetGain > 0 && (u2.inventory || []).length + u2NetGain > INVENTORY_CAP) {
+    return { ok: false, error: `${trade.recipient}'s inventory would exceed ${INVENTORY_CAP} items` };
   }
 
   // Verify items still in inventory and not equipped

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { state, saveData, saveUsers } = require("../lib/state");
+const { state, saveUsers } = require("../lib/state");
 const { requireAuth } = require("../lib/middleware");
 const bpData = require("../public/data/battlePass.json");
 
@@ -13,16 +13,27 @@ function ensureUserBP(user) {
       xp: 0,
       level: 0,
       claimedLevels: [],
+      seasonStartedAt: new Date().toISOString(),
     };
   }
-  // Reset if new season
+  // Reset if new season — preserve unclaimed level info for reference
   if (user.battlePass.season !== bpData.config.currentSeason) {
     user.battlePass = {
       season: bpData.config.currentSeason,
       xp: 0,
       level: 0,
       claimedLevels: [],
+      seasonStartedAt: new Date().toISOString(),
+      previousSeason: {
+        season: user.battlePass.season,
+        level: getBPLevel(user.battlePass.xp),
+        claimedLevels: user.battlePass.claimedLevels || [],
+      },
     };
+  }
+  // Backfill seasonStartedAt for existing users
+  if (!user.battlePass.seasonStartedAt) {
+    user.battlePass.seasonStartedAt = new Date().toISOString();
   }
 }
 
@@ -33,7 +44,8 @@ function getBPLevel(xp) {
 // ─── GET /api/battlepass — Current pass state for player ─────────────────────
 
 router.get("/", requireAuth, (req, res) => {
-  const user = state.usersByName.get(req.playerName);
+  const uid = req.auth?.userId;
+  const user = uid ? state.users[uid] : null;
   if (!user) return res.status(404).json({ error: "User not found" });
 
   ensureUserBP(user);
@@ -44,8 +56,7 @@ router.get("/", requireAuth, (req, res) => {
   const progress = xpInLevel / bpData.config.xpPerLevel;
 
   // Calculate season end
-  const seasonStart = bp.seasonStartedAt || new Date().toISOString();
-  const seasonEnd = new Date(new Date(seasonStart).getTime() + bpData.config.seasonDurationDays * 86400000).toISOString();
+  const seasonEnd = new Date(new Date(bp.seasonStartedAt).getTime() + bpData.config.seasonDurationDays * 86400000).toISOString();
 
   res.json({
     config: bpData.config,
@@ -66,7 +77,8 @@ router.get("/", requireAuth, (req, res) => {
 // ─── POST /api/battlepass/claim/:level — Claim reward for a level ────────────
 
 router.post("/claim/:level", requireAuth, (req, res) => {
-  const user = state.usersByName.get(req.playerName);
+  const uid = req.auth?.userId;
+  const user = uid ? state.users[uid] : null;
   if (!user) return res.status(404).json({ error: "User not found" });
 
   ensureUserBP(user);

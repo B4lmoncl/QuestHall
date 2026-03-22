@@ -1,0 +1,60 @@
+{
+  "expeditions": [
+    {
+      "id": "quick-forage",
+      "name": "Quick Forage",
+      "description": "A short trip to gather nearby resources.",
+      "durationHours": 4,
+      "icon": "🌿",
+      "rewards": {
+        "gold": [20, 50],
+        "materials": { "chance": 0.6, "count": [1, 2] },
+        "gems": { "chance": 0.1, "maxTier": 1 }
+      }
+    },
+    {
+      "id": "deep-woods",
+      "name": "Deep Woods Patrol",
+      "description": "Venture into the forests beyond the tower walls.",
+      "durationHours": 8,
+      "icon": "🌲",
+      "rewards": {
+        "gold": [50, 120],
+        "materials": { "chance": 0.8, "count": [1, 3] },
+        "gems": { "chance": 0.2, "maxTier": 2 },
+        "essenz": [1, 3]
+      }
+    },
+    {
+      "id": "mountain-pass",
+      "name": "Mountain Pass Trek",
+      "description": "A challenging journey through treacherous mountain passes.",
+      "durationHours": 12,
+      "icon": "⛰️",
+      "rewards": {
+        "gold": [100, 250],
+        "materials": { "chance": 0.9, "count": [2, 4] },
+        "gems": { "chance": 0.35, "maxTier": 3 },
+        "essenz": [2, 5],
+        "runensplitter": [0, 2]
+      }
+    },
+    {
+      "id": "ancient-ruins",
+      "name": "Ancient Ruins Expedition",
+      "description": "Explore forgotten ruins deep beneath the tower. Only the bravest companions dare.",
+      "durationHours": 24,
+      "icon": "🏛️",
+      "rewards": {
+        "gold": [200, 500],
+        "materials": { "chance": 1.0, "count": [3, 6] },
+        "gems": { "chance": 0.5, "maxTier": 4 },
+        "essenz": [3, 8],
+        "runensplitter": [1, 3],
+        "rareItem": { "chance": 0.05 }
+      }
+    }
+  ],
+  "bondLevelMultiplier": 0.1,
+  "cooldownHours": 1
+}

@@ -46,7 +46,7 @@ router.post('/api/currency/:playerId', requireApiKey, (req, res) => {
 
   if (action === 'spend') {
     if (u.currencies[currency] < amt) {
-      return res.status(400).json({ error: `Nicht genug ${currency}. Hast ${u.currencies[currency]}, brauchst ${amt}` });
+      return res.status(400).json({ error: `Not enough ${currency}. Have ${u.currencies[currency]}, need ${amt}` });
     }
     u.currencies[currency] -= amt;
   } else {
@@ -86,7 +86,7 @@ router.post('/api/currency/:playerId/convert', requireApiKey, (req, res) => {
   const amt = Math.abs(Math.floor(amount));
   if (amt <= 0) return res.status(400).json({ error: 'Amount must be positive' });
   if (u.currencies[from] < amt) {
-    return res.status(400).json({ error: `Nicht genug ${from}. Hast ${u.currencies[from]}, brauchst ${amt}` });
+    return res.status(400).json({ error: `Not enough ${from}. Have ${u.currencies[from]}, need ${amt}` });
   }
 
   const taxRate = rules.taxRate || 0.20;
@@ -150,6 +150,9 @@ router.post('/api/daily-bonus/claim', requireApiKey, (req, res) => {
   for (const [currency, amount] of Object.entries(rewards)) {
     awardCurrency(uid, currency, amount);
   }
+
+  // Battle Pass XP
+  try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'login'); } catch {}
 
   saveUsers();
   res.json({

@@ -199,7 +199,7 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
       <canvas
         ref={canvasRef}
         style={{
-          imageRendering: 'auto',
+          imageRendering: 'smooth',
           filter: 'drop-shadow(0 4px 16px rgba(0,0,0,0.5))',
         }}
       />
@@ -209,9 +209,9 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
           style={{ background: "rgba(0,0,0,0.55)", border: "1px solid rgba(255,255,255,0.15)" }}
         >
           {companion.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(companion.type)
-            ? <img src={`/images/portraits/companion-${companion.type}.png`} alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+            ? <img src={`/images/portraits/companion-${companion.type}.png`} alt={companion.name} width={28} height={28} style={{ imageRendering: "smooth", borderRadius: 3, objectFit: "cover" }} />
             : companion.type === "cat" && companion.name?.toLowerCase() === "dobbie"
-              ? <img src="/images/portraits/companion-dobbie.png" alt={companion.name} width={28} height={28} style={{ imageRendering: "auto", borderRadius: 3, objectFit: "cover" }} />
+              ? <img src="/images/portraits/companion-dobbie.png" alt={companion.name} width={28} height={28} style={{ imageRendering: "smooth", borderRadius: 3, objectFit: "cover" }} />
               : <span className="text-xl">{companion.emoji}</span>
           }
           <span className="text-xs font-semibold" style={{ color: "#e8e8e8" }}>{companion.name}</span>
@@ -443,7 +443,7 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
         <div className="flex items-center gap-2.5">
           <div className="flex-shrink-0 flex items-center justify-center" style={{ width: 160, height: 160, background: "rgba(255,255,255,0.04)", borderRadius: 8, border: `1px solid ${rarityColor}40` }}>
             {item.icon
-              ? <img src={item.icon} alt={item.name} width={148} height={148} style={{ imageRendering: "auto" }} />
+              ? <img src={item.icon} alt={item.name} width={148} height={148} style={{ imageRendering: "smooth" }} />
               : <span className="text-6xl" style={{ color: rarityColor }}>◆</span>
             }
           </div>
@@ -454,8 +454,8 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
         </div>
 
         {/* Flavor text */}
-        {(item as any).flavorText && (
-          <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>&ldquo;{(item as any).flavorText}&rdquo;</p>
+        {item.flavorText && (
+          <p className="text-xs italic leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>&ldquo;{item.flavorText}&rdquo;</p>
         )}
 
         {/* Description */}
@@ -464,9 +464,9 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
         )}
 
         {/* Legendary effect */}
-        {(item as any).legendaryEffect && (
+        {item.legendaryEffect && (
           <p className="text-xs font-semibold" style={{ color: "#f59e0b" }}>
-            {(item as any).legendaryEffect.label || (item as any).legendaryEffect.type}
+            {item.legendaryEffect.label || item.legendaryEffect.type}
           </p>
         )}
 
@@ -630,7 +630,7 @@ function InventorySlot({ item, level, idx, onItemClick, onDragStart, onDragOver,
         }}
       >
         {item.icon
-          ? <img src={item.icon} alt={item.name} draggable={false} style={{ width: 44, height: 44, imageRendering: "auto", objectFit: "contain" }} />
+          ? <img src={item.icon} alt={item.name} draggable={false} style={{ width: 44, height: 44, imageRendering: "smooth", objectFit: "contain" }} />
           : <span style={{ fontSize: 14, color: RARITY_COLORS[item.rarity] || "#9ca3af", lineHeight: 1 }}>◆</span>
         }
         {/* Level requirement indicator */}
@@ -676,12 +676,12 @@ function GearSlotRow({ slot, iconSrc, label, item, onUnequip, unequipping }: {
         onMouseLeave={() => setHovered(false)}
       >
         <span className="flex items-center justify-center" style={{ width: 40, height: 40, flexShrink: 0 }}>
-          {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "auto" }} /> : null}
+          {iconSrc ? <img src={iconSrc} alt={label} width={40} height={40} style={{ imageRendering: "smooth" }} /> : null}
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-medium truncate" style={{ color: item ? "#e8e8e8" : "rgba(255,255,255,0.3)" }}>
             {item
-              ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "auto" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
+              ? <span className="inline-flex items-center gap-1">{item.icon ? <img src={item.icon} alt="" width={36} height={36} style={{ imageRendering: "smooth" }} /> : <span style={{ color: RARITY_COLORS[item.rarity] || "#9ca3af" }}>◆</span>} {item.name}</span>
               : <span style={{ color: "rgba(255,255,255,0.2)" }}>Empty</span>}
           </p>
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>{label}</p>
@@ -708,7 +708,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
   const [loading, setLoading] = useState(true);
   const [equipping, setEquipping] = useState<string | null>(null);
   const [unequipping, setUnequipping] = useState<string | null>(null);
-  const [rightTab, setRightTab] = useState<"stats" | "equipment">("stats");
+  const [rightTab, setRightTab] = useState<"stats" | "equipment" | "gems">("stats");
   const [profileSettingsOpen, setProfileSettingsOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ item: CharacterData["inventory"][number]; rect: { x: number; y: number; width: number; height: number } } | null>(null);
   const [statTooltipOpen, setStatTooltipOpen] = useState<string | null>(null);
@@ -725,6 +725,14 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
   const [titlesOpen, setTitlesOpen] = useState(false);
   const [earnedTitles, setEarnedTitles] = useState<{ id: string; name: string; description?: string; rarity: string; earnedAt?: string }[]>([]);
   const [equippedTitleId, setEquippedTitleId] = useState<string | null>(null);
+  // Gem system
+  const [gemData, setGemData] = useState<{ gems: { id: string; name: string; type: string; tier: number; stat: string; value: number }[]; inventory: { gemId: string; count: number }[]; socketedGems: Record<string, { slot: string; sockets: ({ gemId: string; gemName: string; gemType: string } | null)[] }> } | null>(null);
+  const [gemsLoading, setGemsLoading] = useState(false);
+  const [gemAction, setGemAction] = useState<string | null>(null);
+  // Collection log
+  const [collectionOpen, setCollectionOpen] = useState(false);
+  const [collectionData, setCollectionData] = useState<{ items: { id: string; name: string; slot: string; rarity: string; stats?: Record<string, number>; source: string; obtained: boolean }[]; completion: number } | null>(null);
+  const [collectionLoading, setCollectionLoading] = useState(false);
 
   useEffect(() => {
     if (!statTooltipOpen) return;
@@ -865,7 +873,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
   const cls = (charData?.classId && charData.classId !== "null") ? classesList.find(c => c.id === charData.classId) : null;
 
   return (
-    <div>
+    <div className="tab-content-enter">
     <div
       className="relative overflow-hidden rounded-t-2xl"
       style={{
@@ -881,7 +889,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
           backgroundSize: "100% auto",
           backgroundPosition: "center top",
           backgroundRepeat: "no-repeat",
-          imageRendering: "auto" as any,
+          imageRendering: "smooth" as any,
           filter: "brightness(1.3)",
           pointerEvents: "none",
         }}
@@ -908,10 +916,10 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
               opacity: 0,
               "--drift": `${p.drift}px`,
               pointerEvents: "none",
-              imageRendering: "auto",
+              imageRendering: "smooth",
             } as React.CSSProperties}
           >
-            <img src={p.image} alt="" style={{ width: "100%", height: "100%", imageRendering: "auto" }} />
+            <img src={p.image} alt="" style={{ width: "100%", height: "100%", imageRendering: "smooth" }} />
           </div>
         ))}
       </div>
@@ -932,7 +940,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         >
           {/* Header + Sort */}
           <div className="flex items-center justify-between mb-2">
-            <Tip k="inventory"><p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>Inventory</p></Tip>
+            <Tip k="inventory" heading><p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>Inventory</p></Tip>
             <div className="relative" ref={sortDropdownRef}>
               <button
                 onClick={() => setSortDropdownOpen(v => !v)}
@@ -1036,7 +1044,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
             ))}
           </div>
 
-          {loading && <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Lädt...</p>}
+          {loading && <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Loading...</p>}
           {!loading && charData && (() => {
             const equippedIds = new Set(
               Object.values(charData.equipment).filter(Boolean).map(v =>
@@ -1206,10 +1214,20 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         >
           {/* Tab toggle */}
           <div className="flex gap-1 mb-3">
-            {(["stats", "equipment"] as const).map(tab => (
+            {(["stats", "equipment", "gems"] as const).map(tab => (
               <button
                 key={tab}
-                onClick={() => setRightTab(tab)}
+                onClick={() => {
+                  setRightTab(tab);
+                  if (tab === "gems" && !gemData && !gemsLoading) {
+                    setGemsLoading(true);
+                    fetch("/api/gems", { headers: apiKey ? getAuthHeaders(apiKey) : {} })
+                      .then(r => r.ok ? r.json() : null)
+                      .then(d => { if (d) setGemData(d); })
+                      .catch(() => {})
+                      .finally(() => setGemsLoading(false));
+                  }
+                }}
                 className="flex-1 py-1 rounded-lg text-xs font-semibold"
                 style={{
                   background: rightTab === tab ? "rgba(167,139,250,0.15)" : "rgba(255,255,255,0.04)",
@@ -1218,7 +1236,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                   cursor: "pointer",
                 }}
               >
-                {tab === "stats" ? "Stats" : <Tip k="gear">Gear</Tip>}
+                {tab === "stats" ? "Stats" : tab === "equipment" ? <Tip k="gear">Gear</Tip> : "Gems"}
               </button>
             ))}
           </div>
@@ -1266,7 +1284,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                           style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
                         >
                           {item.icon
-                            ? <img src={item.icon} alt={item.name} width={32} height={32} style={{ imageRendering: "auto", flexShrink: 0 }} />
+                            ? <img src={item.icon} alt={item.name} width={32} height={32} style={{ imageRendering: "smooth", flexShrink: 0 }} />
                             : <span style={{ width: 32, height: 32, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: RARITY_COLORS[item.rarity] || "#9ca3af", fontSize: 14 }}>◆</span>
                           }
                           <div className="flex-1 min-w-0" title={item.desc || item.name}>
@@ -1338,7 +1356,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
           )}
 
           {/* Stats tab */}
-          {rightTab === "stats" && loading && <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Lädt...</p>}
+          {rightTab === "stats" && loading && <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Loading...</p>}
           {rightTab === "stats" && !loading && charData && (() => {
             const { kraft, ausdauer, weisheit, glueck, fokus, vitalitaet, charisma, tempo } = charData.stats;
             const base = charData.baseStats;
@@ -1366,7 +1384,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                       <div key={s.label}>
                         <Tip k={registryKey}>
                           <div className="flex items-center gap-2" style={{ cursor: "help" }}>
-                            <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "auto" }} className="w-4 h-4" />
+                            <img src={s.iconSrc} alt={s.label} width={16} height={16} style={{ imageRendering: "smooth" }} className="w-4 h-4" />
                             <span className="text-xs flex-1" style={{ color: "rgba(255,255,255,0.65)" }}>{s.label}</span>
                             <span className="text-xs font-mono font-bold" style={{ color: "#e8e8e8" }}>{s.val}</span>
                             {bonus > 0 && (
@@ -1556,7 +1574,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                         width={16}
                         height={16}
                         style={{
-                          imageRendering: "auto",
+                          imageRendering: "smooth",
                           filter: charData.forgeTemp >= 70
                             ? "brightness(1.2) sepia(1) saturate(3) hue-rotate(-10deg)"
                             : charData.forgeTemp >= 40
@@ -1581,6 +1599,140 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
               </>
             );
           })()}
+
+          {/* Gems tab */}
+          {rightTab === "gems" && gemsLoading && <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Loading gems...</p>}
+          {rightTab === "gems" && !gemsLoading && gemData && (() => {
+            const GEM_COLORS: Record<string, string> = { Ruby: "#ef4444", Sapphire: "#3b82f6", Emerald: "#22c55e", Topaz: "#f59e0b", Amethyst: "#a855f7", Diamond: "#e2e8f0" };
+            // Group inventory by type
+            const gemMap = new Map(gemData.gems.map((g: { id: string }) => [g.id, g]));
+            const grouped: Record<string, { gemKey: string; gem: typeof gemData.gems[0]; tier: number; count: number; name: string; statBonus: number }[]> = {};
+            for (const [gemKey, inv] of Object.entries(gemData.inventory || {})) {
+              const invData = inv as { count: number; gemType: string; tier: number; name: string; statBonus: number };
+              if (!invData || invData.count <= 0) continue;
+              const gem = gemMap.get(invData.gemType);
+              if (!gem) continue;
+              const gemName = (gem as { name: string }).name || invData.gemType;
+              if (!grouped[gemName]) grouped[gemName] = [];
+              grouped[gemName].push({ gemKey, gem, tier: invData.tier, count: invData.count, name: invData.name, statBonus: invData.statBonus });
+            }
+            const doGemAction = async (action: string, body: Record<string, unknown>) => {
+              if (!apiKey || gemAction) return;
+              setGemAction(action);
+              try {
+                const r = await fetch(`/api/gems/${action}`, { method: "POST", headers: { ...getAuthHeaders(apiKey), "Content-Type": "application/json" }, body: JSON.stringify(body) });
+                const d = await r.json();
+                if (r.ok) {
+                  addToast?.({ type: "purchase", message: d.message || "Done" });
+                  // Refresh gem data
+                  const gr = await fetch("/api/gems", { headers: getAuthHeaders(apiKey) });
+                  if (gr.ok) setGemData(await gr.json());
+                } else {
+                  addToast?.({ type: "error", message: d.error || "Failed" });
+                }
+              } catch { addToast?.({ type: "error", message: "Network error" }); }
+              setGemAction(null);
+            };
+            return (
+              <div className="space-y-3">
+                {/* Gem Inventory */}
+                <p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.35)" }}>Gem Inventory</p>
+                {Object.keys(grouped).length === 0 && (
+                  <p className="text-xs text-w20">No gems found.</p>
+                )}
+                {Object.entries(grouped).map(([type, entries]) => (
+                  <div key={type}>
+                    <p className="text-xs font-semibold mb-1" style={{ color: GEM_COLORS[type] || "#9ca3af" }}>{type}</p>
+                    <div className="space-y-0.5">
+                      {entries.sort((a, b) => a.gem.tier - b.gem.tier).map(({ gemKey, gem, count }) => (
+                        <div key={gemKey} className="flex items-center justify-between px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.03)" }}>
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: GEM_COLORS[gem.type] || "#9ca3af" }} />
+                            <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{gem.name}</span>
+                            <span className="text-xs text-w20">T{gem.tier}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-mono" style={{ color: GEM_COLORS[gem.type] || "#9ca3af" }}>x{count}</span>
+                            {count >= 3 && (
+                              <button
+                                onClick={() => doGemAction("upgrade", { gemKey })}
+                                disabled={!!gemAction}
+                                className="text-xs px-1.5 py-0.5 rounded"
+                                style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: gemAction ? "not-allowed" : "pointer", fontSize: 12 }}
+                              >
+                                Upgrade
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Socketed Items */}
+                {Object.keys(gemData.socketedGems || {}).length > 0 && (
+                  <>
+                    <p className="text-xs font-bold uppercase tracking-wider mt-3" style={{ color: "rgba(255,255,255,0.35)" }}>Sockets</p>
+                    {Object.entries(gemData.socketedGems).map(([instanceId, data]) => (
+                      <div key={instanceId} className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>{(data as { itemName?: string; slot: string }).itemName || (data as { slot: string }).slot}</p>
+                        <div className="flex gap-1.5">
+                          {data.sockets.map((socket, si) => (
+                            <div key={si} className="flex flex-col items-center gap-1">
+                              <div
+                                className="w-6 h-6 rounded-full flex items-center justify-center"
+                                style={{
+                                  background: socket ? `${GEM_COLORS[socket.gemType] || "#9ca3af"}20` : "rgba(255,255,255,0.04)",
+                                  border: `2px solid ${socket ? `${GEM_COLORS[socket.gemType] || "#9ca3af"}60` : "rgba(255,255,255,0.1)"}`,
+                                }}
+                                title={socket ? socket.gemName : "Empty socket"}
+                              >
+                                {socket ? (
+                                  <span className="w-2 h-2 rounded-full" style={{ background: GEM_COLORS[socket.gemType] || "#9ca3af" }} />
+                                ) : (
+                                  <span style={{ color: "rgba(255,255,255,0.15)", fontSize: 8 }}>+</span>
+                                )}
+                              </div>
+                              <div className="flex gap-0.5">
+                                {!socket ? (
+                                  <button
+                                    onClick={() => {
+                                      // Pick first available gem from inventory for quick socket
+                                      const firstGem = Object.entries(gemData.inventory || {}).find(([, v]) => (v as { count: number }).count > 0);
+                                      if (!firstGem) { addToast?.({ type: "error", message: "No gems available" }); return; }
+                                      doGemAction("socket", { instanceId, socketIndex: si, gemKey: firstGem[0] });
+                                    }}
+                                    disabled={!!gemAction || Object.keys(gemData.inventory || {}).length === 0}
+                                    className="text-xs px-1 py-0.5 rounded"
+                                    style={{ fontSize: 12, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
+                                  >
+                                    Socket
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => doGemAction("unsocket", { instanceId, socketIndex: si })}
+                                    disabled={!!gemAction}
+                                    className="text-xs px-1 py-0.5 rounded"
+                                    style={{ fontSize: 12, background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
+                                  >
+                                    Unsocket {gemData.unsocketCost || 50}g
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </div>
+            );
+          })()}
+          {rightTab === "gems" && !gemsLoading && !gemData && (
+            <p className="text-xs text-w20">Could not load gem data.</p>
+          )}
         </div>
       </div>
 
@@ -1646,6 +1798,23 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
           </div>
         </div>
       )}
+      <button
+        onClick={async () => {
+          setCollectionOpen(true);
+          if (!collectionData && !collectionLoading && playerName) {
+            setCollectionLoading(true);
+            try {
+              const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/collection`);
+              if (r.ok) setCollectionData(await r.json());
+            } catch { /* ignore */ }
+            setCollectionLoading(false);
+          }
+        }}
+        className="shrink-0 text-xs px-2.5 py-1.5 rounded-lg font-semibold"
+        style={{ background: "rgba(96,165,250,0.06)", border: "1px solid rgba(96,165,250,0.15)", color: "rgba(96,165,250,0.55)", cursor: "pointer" }}
+      >
+        Collection
+      </button>
       {onNavigate && (
         <button
           onClick={() => onNavigate("forge")}
@@ -1667,9 +1836,9 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         return (
           <Tip k="bond_level"><div className="flex items-center gap-2 shrink-0">
             {comp.type && ["dragon","owl","phoenix","wolf","fox","bear"].includes(comp.type)
-              ? <img src={`/images/portraits/companion-${comp.type}.png`} alt={comp.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+              ? <img src={`/images/portraits/companion-${comp.type}.png`} alt={comp.name} width={32} height={32} style={{ imageRendering: "smooth", borderRadius: 4, objectFit: "cover" }} />
               : comp.type === "cat" && comp.name?.toLowerCase() === "dobbie"
-                ? <img src="/images/portraits/companion-dobbie.png" alt={comp.name} width={32} height={32} style={{ imageRendering: "auto", borderRadius: 4, objectFit: "cover" }} />
+                ? <img src="/images/portraits/companion-dobbie.png" alt={comp.name} width={32} height={32} style={{ imageRendering: "smooth", borderRadius: 4, objectFit: "cover" }} />
                 : <span className="text-xl">{comp.emoji}</span>
             }
             <div>
@@ -1686,6 +1855,101 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         );
       })()}
     </div>
+
+    {/* Collection Log Modal */}
+    {collectionOpen && createPortal(
+      <div
+        className="fixed inset-0 flex items-center justify-center"
+        style={{ zIndex: 9999, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)" }}
+        onClick={e => { if (e.target === e.currentTarget) setCollectionOpen(false); }}
+      >
+        <div
+          className="rounded-2xl overflow-hidden"
+          style={{ width: 560, maxHeight: "80vh", background: "#0f1117", border: "1px solid rgba(96,165,250,0.2)", boxShadow: "0 8px 32px rgba(0,0,0,0.6)" }}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)", background: "rgba(96,165,250,0.04)" }}>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">📖</span>
+              <div>
+                <p className="text-sm font-bold" style={{ color: "#60a5fa" }}>Collection Log</p>
+                {collectionData && (
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    {Math.round(collectionData.completion * 100)}% complete
+                  </p>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => setCollectionOpen(false)}
+              className="text-sm px-2 py-1 rounded-lg"
+              style={{ color: "rgba(255,255,255,0.4)", cursor: "pointer", background: "rgba(255,255,255,0.04)" }}
+            >
+              ESC
+            </button>
+          </div>
+
+          {/* Completion bar */}
+          {collectionData && (
+            <div className="px-5 pt-3">
+              <div className="rounded-full overflow-hidden" style={{ height: 6, background: "rgba(255,255,255,0.06)" }}>
+                <div className="h-full rounded-full" style={{ width: `${collectionData.completion * 100}%`, background: "linear-gradient(90deg, #3b82f6, #60a5fa)", transition: "width 0.3s" }} />
+              </div>
+              <p className="text-xs text-right mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                {collectionData.items.filter(i => i.obtained).length}/{collectionData.items.length} items
+              </p>
+            </div>
+          )}
+
+          {/* Items grid */}
+          <div className="p-5 overflow-y-auto" style={{ maxHeight: "calc(80vh - 120px)" }}>
+            {collectionLoading && <p className="text-xs text-center py-8" style={{ color: "rgba(255,255,255,0.3)" }}>Loading collection...</p>}
+            {!collectionLoading && !collectionData && <p className="text-xs text-center py-8" style={{ color: "rgba(255,255,255,0.3)" }}>Could not load collection data.</p>}
+            {collectionData && (
+              <div className="grid grid-cols-3 gap-2">
+                {collectionData.items.map(item => {
+                  const rarityColors: Record<string, string> = { common: "#9ca3af", uncommon: "#22c55e", rare: "#60a5fa", epic: "#a855f7", legendary: "#f97316" };
+                  const color = rarityColors[item.rarity] || "#9ca3af";
+                  return (
+                    <div
+                      key={item.id}
+                      className="rounded-lg p-2.5"
+                      style={{
+                        background: item.obtained ? "rgba(255,255,255,0.03)" : "rgba(255,255,255,0.01)",
+                        border: `1px solid ${item.obtained ? `${color}30` : "rgba(255,255,255,0.04)"}`,
+                        opacity: item.obtained ? 1 : 0.45,
+                        filter: item.obtained ? "none" : "grayscale(1)",
+                      }}
+                    >
+                      {item.obtained ? (
+                        <>
+                          <p className="text-xs font-semibold truncate" style={{ color }}>{item.name}</p>
+                          <p className="text-xs text-w20 truncate">{item.slot}</p>
+                          {item.stats && Object.keys(item.stats).length > 0 && (
+                            <div className="mt-1 space-y-0.5">
+                              {Object.entries(item.stats).slice(0, 3).map(([k, v]) => (
+                                <p key={k} className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>+{v} {k}</p>
+                              ))}
+                            </div>
+                          )}
+                          <p className="text-xs mt-1 truncate" style={{ color: "rgba(255,255,255,0.2)", fontSize: 12 }}>{item.source}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs font-semibold" style={{ color: "rgba(255,255,255,0.25)" }}>???</p>
+                          <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.15)", fontSize: 12 }}>{item.source}</p>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>,
+      document.body
+    )}
     </div>
   );
 }

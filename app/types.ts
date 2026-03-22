@@ -435,13 +435,18 @@ export interface GearInstance {
   slot: string;
   tier: number;
   rarity: string;
-  reqLevel: number;
+  reqLevel?: number;
+  minLevel?: number;
   desc?: string;
+  flavorText?: string;
   icon?: string | null;
   stats: Record<string, number>;
   legendaryEffect?: { type: string; value: number; label?: string } | null;
+  passiveEffect?: string | null;
+  passiveDesc?: string | null;
   setId?: string;
   rolledAt: string;
+  affixes?: { primary: { pool: { stat: string; min: number; max: number }[]; count: [number, number] }; minor: { pool: { stat: string; min: number; max: number }[]; count: [number, number] } } | null;
   affixRolls?: { primary: { stat: string; value: number }[]; minor: { stat: string; value: number }[] };
 }
 
@@ -460,7 +465,7 @@ export interface CharacterData {
   equipment: Record<string, GearInstance | string | null>;
   stats: { kraft: number; ausdauer: number; weisheit: number; glueck: number; fokus?: number; vitalitaet?: number; charisma?: number; tempo?: number; _setBonus?: number };
   baseStats: { kraft: number; ausdauer: number; weisheit: number; glueck: number };
-  inventory: { id: string; slot: string; name: string; emoji?: string; icon?: string; tier: number; minLevel: number; stats: Record<string, number>; rarity: string; desc?: string; type?: string; effect?: any }[];
+  inventory: { id: string; slot: string; name: string; emoji?: string; icon?: string; tier: number; minLevel: number; stats: Record<string, number>; rarity: string; desc?: string; flavorText?: string; type?: string; effect?: { type: string; amount?: number }; legendaryEffect?: { type: string; value: number; label?: string } | null; passiveEffect?: string | null; passiveDesc?: string | null; setId?: string; templateId?: string }[];
   forgeTemp: number;
   season: string;
   setBonusInfo: { name: string; count: number; total: number } | null;
@@ -645,4 +650,76 @@ export interface Trade {
   recipientAccepted: boolean;
   createdAt: string;
   completedAt: string | null;
+}
+
+// ─── Dungeon System Types ─────────────────────────────────────────────────
+
+export interface DungeonTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  accent: string;
+  tier: "normal" | "hard" | "legendary";
+  minLevel: number;
+  minPlayers: number;
+  maxPlayers: number;
+  durationHours: number;
+  cooldownDays: number;
+  gearScoreThreshold: number;
+  rewards: {
+    gold: [number, number];
+    essenz: [number, number];
+    runensplitter: [number, number];
+    sternentaler?: [number, number];
+    materials: { count: [number, number] };
+    gems: { chance: number; maxTier: number };
+    gearDrop: { chance: number; minRarity: string };
+  };
+  bonusRewards: {
+    title: string;
+    frame: { id: string; name: string; color: string; glow: boolean };
+  };
+}
+
+export interface DungeonParticipant {
+  name: string;
+  avatar: string;
+  color: string;
+  gearScore: number;
+  bondLevel: number;
+}
+
+export interface DungeonRun {
+  runId: string;
+  dungeonId: string;
+  dungeonName: string;
+  dungeonIcon: string;
+  dungeonAccent: string;
+  tier: string;
+  createdBy: string;
+  createdAt: string;
+  status: "forming" | "active";
+  participants: DungeonParticipant[];
+  invitedPlayers: { name: string; avatar: string; color: string }[];
+  startedAt: string | null;
+  completesAt: string | null;
+  collected: string[];
+  minPlayers: number;
+  maxPlayers: number;
+  gearScoreThreshold: number;
+}
+
+export interface DungeonHistory {
+  runId: string;
+  dungeonId: string;
+  dungeonName: string;
+  tier: string;
+  participants: string[];
+  startedAt: string;
+  completedAt: string;
+  success: boolean;
+  effectivePower: number;
+  threshold: number;
+  successChance: number;
 }

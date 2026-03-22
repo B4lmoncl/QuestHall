@@ -168,7 +168,7 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
                 <div className="mt-4 flex items-center gap-3 flex-wrap">
                   <span className="text-xs" style={{ color: "rgba(167,139,250,0.5)" }}>Completion Rewards:</span>
                   {expandedCampaign.rewards.xp > 0 && <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(99,102,241,0.15)", color: "#818cf8", border: "1px solid rgba(99,102,241,0.25)" }}>+{expandedCampaign.rewards.xp} XP</span>}
-                  {expandedCampaign.rewards.gold > 0 && <span className="text-xs px-2 py-0.5 rounded inline-flex items-center gap-1" style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.25)" }}><img src="/images/icons/currency-gold.png" alt="" width={14} height={14} style={{ imageRendering: "auto" }} onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> {expandedCampaign.rewards.gold}</span>}
+                  {expandedCampaign.rewards.gold > 0 && <span className="text-xs px-2 py-0.5 rounded inline-flex items-center gap-1" style={{ background: "rgba(251,191,36,0.12)", color: "#fbbf24", border: "1px solid rgba(251,191,36,0.25)" }}><img src="/images/icons/currency-gold.png" alt="" width={14} height={14} style={{ imageRendering: "smooth" }} onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> {expandedCampaign.rewards.gold}</span>}
                   {expandedCampaign.rewards.title && <span className="text-xs px-2 py-0.5 rounded" style={{ background: "rgba(232,121,249,0.1)", color: "#e879f9", border: "1px solid rgba(232,121,249,0.25)" }}>★ &quot;{expandedCampaign.rewards.title}&quot;</span>}
                 </div>
               )}
@@ -194,13 +194,13 @@ export default function CampaignHub({ campaigns, quests, reviewApiKey, onRefresh
 
   // ── Campaign cards grid ──────────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 tab-content-enter">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span style={{ fontSize: 28 }}>◆</span>
           <div>
-            <Tip k="campaigns" accent="#e9d5ff"><h2 className="text-lg font-bold">Campaign Hub</h2></Tip>
+            <Tip k="campaigns" heading accent="#e9d5ff"><h2 className="text-lg font-bold">Campaign Hub</h2></Tip>
             <p className="text-xs" style={{ color: "rgba(167,139,250,0.5)" }}>Long-form quest chains and story arcs</p>
           </div>
         </div>

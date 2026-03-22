@@ -55,7 +55,7 @@ function GachaInfoModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <Tip k="pity"><h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#a855f7", cursor: "help" }}>Pity System</h4></Tip>
+            <Tip k="pity" heading><h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#a855f7", cursor: "help" }}>Pity System</h4></Tip>
             <p>Every pull without a Legendary increases your <span style={{ color: "#f97316" }}>pity counter</span>. The Wheel remembers your devotion.</p>
             <ul className="mt-2 space-y-1 list-disc list-inside">
               <li><span style={{ color: "#f97316" }}>Soft Pity</span> begins at <strong>55 pulls</strong> — your Legendary drop rate increases significantly with each subsequent pull.</li>
@@ -244,7 +244,7 @@ function BannerPreviewCard({
       <div className="relative space-y-4" style={{ zIndex: 1 }}>
         {/* Banner type badge */}
         <div className="flex items-center justify-between">
-          <span className="text-[9px] uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
+          <span className="text-xs uppercase tracking-[0.2em] font-semibold px-2 py-1 rounded" style={{
             color: accentColor,
             background: `${accentColor}35`,
             border: `1px solid ${accentColor}30`,
@@ -256,7 +256,7 @@ function BannerPreviewCard({
 
         {/* Banner name — large, dramatic */}
         <div>
-          <Tip k="gacha_banners"><h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
+          <Tip k="gacha_banners" heading><h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
             {banner.name}
           </h3></Tip>
           <div className="mt-1 h-px w-16" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
@@ -489,12 +489,12 @@ function BannerPullModal({
           <div className="p-5 pb-0 relative" style={{ zIndex: 1 }}>
             <div className="flex items-start justify-between mb-1">
               <div style={{ maxWidth: portraitSrc ? "60%" : undefined }}>
-                <span className="text-[9px] uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
+                <span className="text-xs uppercase tracking-[0.15em] font-semibold px-2 py-0.5 rounded" style={{
                   color: accentColor, background: `${accentColor}35`, border: `1px solid ${accentColor}30`,
                 }}>
                   {isFeatured ? "Featured Banner" : "Standard Banner"}
                 </span>
-                <Tip k="gacha_banners"><h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3></Tip>
+                <Tip k="gacha_banners" heading><h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3></Tip>
               </div>
               <button onClick={onClose} className="btn-close" style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>×</button>
             </div>
@@ -706,7 +706,7 @@ export default function GachaView({ onRefresh, onPullComplete }: {
     return (
       <div className="space-y-4">
         <div className="text-center py-16 space-y-3">
-          <img src="/images/icons/vault-of-fate.png" alt="" style={{ width: 96, height: 96, imageRendering: "auto", margin: "0 auto", display: "block", filter: "drop-shadow(0 0 12px rgba(167,139,250,0.6)) drop-shadow(0 0 30px rgba(167,139,250,0.3))" }} />
+          <img src="/images/icons/vault-of-fate.png" alt="" style={{ width: 96, height: 96, imageRendering: "smooth", margin: "0 auto", display: "block", filter: "drop-shadow(0 0 12px rgba(167,139,250,0.6)) drop-shadow(0 0 30px rgba(167,139,250,0.3))" }} />
           <p className="text-base font-semibold" style={{ color: "rgba(255,255,255,0.5)" }}>The Vault of Fate</p>
           <p className="text-sm italic max-w-md mx-auto" style={{ color: "rgba(255,255,255,0.25)" }}>
             A circular chamber with a single, floating astrolabe at its center. Sign in to step before the Wheel of Stars.
@@ -717,7 +717,7 @@ export default function GachaView({ onRefresh, onPullComplete }: {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 tab-content-enter">
       {/* Pull animation overlay */}
       {pullResults && (
         <GachaPull
@@ -760,11 +760,11 @@ export default function GachaView({ onRefresh, onPullComplete }: {
         <div className="flex items-center gap-5 mb-3">
           <div className="flex-shrink-0" style={{ animation: "vault-fate-glow 5s ease-in-out infinite alternate" }}>
             <img src="/images/icons/vault-of-fate.png" alt="" style={{
-              width: 128, height: 128, imageRendering: "auto", display: "block",
+              width: 128, height: 128, imageRendering: "smooth", display: "block",
               filter: "drop-shadow(0 0 12px rgba(167,139,250,0.5)) drop-shadow(0 0 30px rgba(167,139,250,0.25))",
             }} />
           </div>
-          <Tip k="vault_of_fate"><h2 className="text-xl font-bold" style={{ color: "#e8e8e8", cursor: "pointer" }} onClick={() => setInfoOpen(true)}>The Vault of Fate</h2></Tip>
+          <Tip k="vault_of_fate" heading><h2 className="text-xl font-bold" style={{ color: "#e8e8e8", cursor: "pointer" }} onClick={() => setInfoOpen(true)}>The Vault of Fate</h2></Tip>
         </div>
         <p className="text-xs italic leading-relaxed max-w-2xl" style={{ color: "rgba(255,255,255,0.3)" }}>
           A circular chamber with a single, floating astrolabe structure at its center: the Wheel of Stars. Here, heroes draw items, companions, and artifacts from the Aetherstream. The Vault remembers every pull — and rewards persistence.
@@ -816,10 +816,10 @@ export default function GachaView({ onRefresh, onPullComplete }: {
                 const cfg = RARITY_CONFIG[h.rarity] || RARITY_CONFIG.common;
                 return (
                   <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                    {(h as any).icon && (h as any).icon.startsWith("/") ? <img src={(h as any).icon} alt="" width={24} height={24} style={{ imageRendering: "auto" }} /> : <span className="text-base">{h.emoji || "?"}</span>}
+                    {(h as any).icon && (h as any).icon.startsWith("/") ? <img src={(h as any).icon} alt="" width={24} height={24} style={{ imageRendering: "smooth" }} /> : <span className="text-base">{h.emoji || "?"}</span>}
                     <span className="text-xs font-semibold flex-1" style={{ color: cfg.color }}>{h.name}</span>
-                    <span className="text-[9px] uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
-                    {h.isDuplicate && <span className="text-[9px] px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
+                    <span className="text-xs uppercase font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{cfg.label}</span>
+                    {h.isDuplicate && <span className="text-xs px-1.5 py-0.5 rounded" style={{ color: "#a78bfa", background: "rgba(167,139,250,0.15)" }}>DUP</span>}
                   </div>
                 );
               })}
@@ -859,13 +859,13 @@ export default function GachaView({ onRefresh, onPullComplete }: {
                         >
                           {hasGlow && <div className="absolute inset-0 rounded-xl pointer-events-none" style={{ boxShadow: `inset 0 0 10px ${cfg.glow}, 0 0 12px ${cfg.glow}`, animation: "pool-glow-breathe 3.5s ease-in-out infinite" }} />}
                           {(item as any).icon && (item as any).icon.startsWith("/")
-                            ? <img src={(item as any).icon} alt="" width={52} height={52} style={{ imageRendering: "auto", filter: `drop-shadow(0 0 8px ${cfg.glow})`, position: "relative", zIndex: 1 }} />
+                            ? <img src={(item as any).icon} alt="" width={52} height={52} style={{ imageRendering: "smooth", filter: `drop-shadow(0 0 8px ${cfg.glow})`, position: "relative", zIndex: 1 }} />
                             : item.emoji
                               ? <span className="text-4xl relative z-10">{item.emoji}</span>
                               : <span className="text-sm font-medium relative z-10" style={{ color: "rgba(255,255,255,0.4)" }}>{item.name?.slice(0, 2)}</span>
                           }
                           <span className="text-sm font-semibold leading-tight relative z-10" style={{ color: cfg.color }}>{item.name}</span>
-                          <span className="text-[9px] uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
+                          <span className="text-xs uppercase font-medium relative z-10" style={{ color: "rgba(255,255,255,0.3)" }}>
                             {item.type === "weapon" ? "Weapon" : item.type === "armor" ? "Armor" : item.type === "consumable" ? "Consumable" : "Artifact"}
                           </span>
                           {(item as any).desc && (

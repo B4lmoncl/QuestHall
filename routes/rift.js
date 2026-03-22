@@ -2,6 +2,7 @@
  * Rift / Dungeon System — "The Rift"
  * Timed quest chains with escalating difficulty.
  * 3 tiers: Normal (3 quests/72h), Hard (5 quests/48h), Legendary (7 quests/36h).
+ * Mythic+ tiers: Infinite scaling after Legendary completion (7 quests, tighter time, scaling rewards).
  * Fail cooldown: 3/5/7 days. Rewards scale with progress.
  */
 const router = require('express').Router();
@@ -51,6 +52,20 @@ const RIFT_TIERS = {
     icon: '⚡',
     minLevel: 10,
   },
+  mythic: {
+    name: 'Mythic Rift',
+    questCount: 7,
+    timeLimitHours: 30,
+    failCooldownDays: 7,
+    color: '#ff4444',
+    questTypes: ['personal', 'learning', 'fitness', 'social', 'boss'],
+    baseXp: 50,
+    baseGold: 40,
+    completionBonus: { gold: 1000, essenz: 25, runensplitter: 15, sternentaler: 5 },
+    icon: '💀',
+    minLevel: 15,
+    isMythic: true,
+  },
 };
 
 // Difficulty labels per quest position
@@ -58,19 +73,23 @@ const DIFFICULTY_NAMES = ['Entrance', 'Corridor', 'Chamber', 'Sanctum', 'Abyss',
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function generateRiftQuests(tier, questCount) {
+function generateRiftQuests(tier, questCount, mythicLevel = 0) {
   const types = tier.questTypes;
   const quests = [];
+  const xpMultiplier = mythicLevel > 0 ? (1 + mythicLevel * 0.15) : 1;
+  const goldMultiplier = mythicLevel > 0 ? (1 + mythicLevel * 0.1) : 1;
   for (let i = 0; i < questCount; i++) {
     const type = types[i % types.length];
-    const difficultyScale = 1 + (i * 0.5); // 1x, 1.5x, 2x, 2.5x...
+    const difficultyScale = mythicLevel > 0
+      ? 1 + (i * 0.5) + (mythicLevel * 0.3)  // Mythic: extra scaling per level
+      : 1 + (i * 0.5);                         // Normal tiers: 1x, 1.5x, 2x...
     quests.push({
       stage: i + 1,
       name: DIFFICULTY_NAMES[i] || `Stage ${i + 1}`,
       type,
-      difficulty: difficultyScale,
-      xpReward: Math.round(tier.baseXp * difficultyScale),
-      goldReward: Math.round(tier.baseGold * difficultyScale),
+      difficulty: Math.round(difficultyScale * 100) / 100,
+      xpReward: Math.round(tier.baseXp * difficultyScale * xpMultiplier),
+      goldReward: Math.round(tier.baseGold * difficultyScale * goldMultiplier),
       completed: false,
       completedAt: null,
     });
@@ -86,7 +105,8 @@ function getRiftStatus(u) {
   const startedAt = new Date(rift.startedAt).getTime();
   const tier = RIFT_TIERS[rift.tier];
   if (!tier) return null;
-  const expiresAt = startedAt + tier.timeLimitHours * 3600000;
+  const effectiveTimeLimit = rift.timeLimitHours || tier.timeLimitHours;
+  const expiresAt = startedAt + effectiveTimeLimit * 3600000;
 
   if (Date.now() > expiresAt && !rift.completed) {
     // Rift expired — mark as failed
@@ -139,27 +159,51 @@ router.get('/api/rift', (req, res) => {
   // Rift history
   const history = (u.riftHistory || []).slice(-10);
 
+  // Mythic status
+  const hasLegendaryCompletion = (u.riftHistory || []).some(h => h.tier === 'legendary' && h.success);
+  const highestMythicCleared = u.highestMythicCleared || 0;
+
+  // Mythic leaderboard — top 10 players by highestMythicCleared
+  const mythicLeaderboard = Object.values(state.users)
+    .filter(p => (p.highestMythicCleared || 0) > 0)
+    .map(p => ({
+      name: p.name,
+      highestMythicCleared: p.highestMythicCleared || 0,
+      level: getLevelInfo(p.xp || 0).level,
+    }))
+    .sort((a, b) => b.highestMythicCleared - a.highestMythicCleared)
+    .slice(0, 10);
+
+  // Compute effective time limit for active rift (accounts for mythic scaling)
+  const effectiveTimeLimit = rift?.timeLimitHours || RIFT_TIERS[rift?.tier]?.timeLimitHours || 72;
+
   res.json({
     tiers,
     activeRift: rift?.active ? {
       tier: rift.tier,
-      tierName: RIFT_TIERS[rift.tier]?.name || rift.tier,
+      tierName: rift.mythicLevel ? `${RIFT_TIERS[rift.tier]?.name || 'Mythic Rift'} +${rift.mythicLevel}` : (RIFT_TIERS[rift.tier]?.name || rift.tier),
       tierColor: RIFT_TIERS[rift.tier]?.color || '#888',
       tierIcon: RIFT_TIERS[rift.tier]?.icon || '🌀',
       startedAt: rift.startedAt,
-      expiresAt: new Date(new Date(rift.startedAt).getTime() + (RIFT_TIERS[rift.tier]?.timeLimitHours || 72) * 3600000).toISOString(),
+      expiresAt: new Date(new Date(rift.startedAt).getTime() + effectiveTimeLimit * 3600000).toISOString(),
       quests: rift.quests,
       currentStage: rift.quests.filter(q => q.completed).length + 1,
       totalStages: rift.quests.length,
       completed: rift.completed || false,
+      ...(rift.mythicLevel && { mythicLevel: rift.mythicLevel }),
     } : rift?.failed ? {
       tier: rift.tier,
       failed: true,
       failedAt: rift.failedAt,
       reachedStage: rift.quests.filter(q => q.completed).length,
+      ...(rift.mythicLevel && { mythicLevel: rift.mythicLevel }),
     } : null,
     cooldowns,
     history,
+    mythicUnlocked: hasLegendaryCompletion,
+    highestMythicCleared,
+    nextMythicLevel: highestMythicCleared + 1,
+    mythicLeaderboard,
   });
 });
 
@@ -169,7 +213,7 @@ router.post('/api/rift/enter', requireAuth, (req, res) => {
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'User not found' });
 
-  const { tier: tierId } = req.body;
+  const { tier: tierId, mythicLevel: rawMythicLevel } = req.body;
   if (!tierId || !RIFT_TIERS[tierId]) return res.status(400).json({ error: 'Invalid rift tier' });
 
   const tier = RIFT_TIERS[tierId];
@@ -179,8 +223,27 @@ router.post('/api/rift/enter', requireAuth, (req, res) => {
   // Check active rift
   if (u.activeRift?.active) return res.status(400).json({ error: 'Already in a rift. Complete or let it expire first.' });
 
+  // Mythic tier validation
+  let mythicLevel = 0;
+  if (tierId === 'mythic') {
+    mythicLevel = Math.max(1, parseInt(rawMythicLevel, 10) || 1);
+
+    // Must have completed a Legendary Rift first
+    const hasLegendaryCompletion = (u.riftHistory || []).some(h => h.tier === 'legendary' && h.success);
+    if (!hasLegendaryCompletion) {
+      return res.status(400).json({ error: 'Must complete a Legendary Rift before entering Mythic.' });
+    }
+
+    // Can't skip levels: mythicLevel <= highestMythicCleared + 1
+    const highestCleared = u.highestMythicCleared || 0;
+    if (mythicLevel > highestCleared + 1) {
+      return res.status(400).json({ error: `Cannot skip Mythic levels. Highest cleared: ${highestCleared}, max entry: ${highestCleared + 1}` });
+    }
+  }
+
   // Check cooldown
-  const cd = (u.riftCooldowns || {})[tierId];
+  const cooldownKey = tierId === 'mythic' ? 'mythic' : tierId;
+  const cd = (u.riftCooldowns || {})[cooldownKey];
   if (cd) {
     const failedAt = new Date(cd.failedAt).getTime();
     const cooldownMs = (cd.cooldownDays || 3) * 24 * 3600000;
@@ -189,8 +252,12 @@ router.post('/api/rift/enter', requireAuth, (req, res) => {
     }
   }
 
-  // Generate rift
-  const quests = generateRiftQuests(tier, tier.questCount);
+  // Generate rift (mythic gets scaled time limit)
+  const timeLimitHours = tierId === 'mythic'
+    ? Math.max(18, 30 - mythicLevel * 1.5)
+    : tier.timeLimitHours;
+  const quests = generateRiftQuests(tier, tier.questCount, mythicLevel);
+
   u.activeRift = {
     active: true,
     tier: tierId,
@@ -198,11 +265,13 @@ router.post('/api/rift/enter', requireAuth, (req, res) => {
     quests,
     completed: false,
     failed: false,
+    ...(mythicLevel > 0 && { mythicLevel, timeLimitHours }),
   };
 
   saveUsers();
-  console.log(`[rift] ${uid} entered ${tier.name}`);
-  res.json({ ok: true, rift: u.activeRift, message: `Entered ${tier.name}! Complete ${tier.questCount} quests in ${tier.timeLimitHours}h.` });
+  const displayName = mythicLevel > 0 ? `${tier.name} +${mythicLevel}` : tier.name;
+  console.log(`[rift] ${uid} entered ${displayName}`);
+  res.json({ ok: true, rift: u.activeRift, message: `Entered ${displayName}! Complete ${tier.questCount} quests in ${timeLimitHours}h.` });
 });
 
 // POST /api/rift/complete-stage — mark current stage as completed
@@ -232,7 +301,7 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
   // crafting materials, recipe discovery, activity feed, daily missions
   const syntheticQuest = {
     id: `rift-${rift.tier}-stage-${nextStage.stage}`,
-    title: `${RIFT_TIERS[rift.tier]?.name || 'Rift'}: ${nextStage.name}`,
+    title: `${rift.mythicLevel ? `Mythic Rift +${rift.mythicLevel}` : (RIFT_TIERS[rift.tier]?.name || 'Rift')}: ${nextStage.name}`,
     type: nextStage.type,
     priority: nextStage.difficulty >= 2.5 ? 'high' : nextStage.difficulty >= 1.5 ? 'medium' : 'low',
     rarity: stageRarity,
@@ -249,14 +318,28 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
 
     // Award completion bonus currencies (raw — these are bonus on top of quest rewards)
     const tier = RIFT_TIERS[rift.tier];
+    const mythicLvl = rift.mythicLevel || 0;
     if (tier?.completionBonus) {
       for (const [currency, amount] of Object.entries(tier.completionBonus)) {
-        awardCurrency(uid, currency, amount);
+        // Scale mythic completion bonuses
+        let scaled = amount;
+        if (mythicLvl > 0) {
+          if (currency === 'gold') scaled = amount + mythicLvl * 200;
+          else if (currency === 'essenz') scaled = amount + mythicLvl * 5;
+          else scaled = amount;
+        }
+        awardCurrency(uid, currency, scaled);
       }
     }
 
     // Clear cooldown for this tier (successful completion removes fail penalty)
-    if (u.riftCooldowns?.[rift.tier]) delete u.riftCooldowns[rift.tier];
+    const cooldownKey = rift.tier === 'mythic' ? 'mythic' : rift.tier;
+    if (u.riftCooldowns?.[cooldownKey]) delete u.riftCooldowns[cooldownKey];
+
+    // Track highest mythic level cleared
+    if (mythicLvl > 0) {
+      u.highestMythicCleared = Math.max(u.highestMythicCleared || 0, mythicLvl);
+    }
 
     // Add to history
     u.riftHistory = u.riftHistory || [];
@@ -266,6 +349,7 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
       completedAt: rift.completedAt,
       stages: rift.quests.length,
       success: true,
+      ...(mythicLvl > 0 && { mythicLevel: mythicLvl }),
     });
     if (u.riftHistory.length > 20) u.riftHistory = u.riftHistory.slice(-20);
   }
@@ -289,9 +373,14 @@ router.post('/api/rift/complete-stage', requireAuth, (req, res) => {
     goldEarned,
     loot,
     riftCompleted: allDone,
-    completionBonus: allDone ? RIFT_TIERS[rift.tier]?.completionBonus : null,
+    completionBonus: allDone ? (() => {
+      const base = RIFT_TIERS[rift.tier]?.completionBonus;
+      if (!base || !rift.mythicLevel) return base;
+      return { ...base, gold: base.gold + rift.mythicLevel * 200, essenz: base.essenz + rift.mythicLevel * 5 };
+    })() : null,
+    ...(rift.mythicLevel && { mythicLevel: rift.mythicLevel }),
     message: allDone
-      ? `Rift Complete! ${RIFT_TIERS[rift.tier]?.name} conquered!`
+      ? `Rift Complete! ${rift.mythicLevel ? `Mythic Rift +${rift.mythicLevel}` : RIFT_TIERS[rift.tier]?.name} conquered!`
       : `Stage ${stageNum} cleared! ${rift.quests.length - stageNum} remaining.`,
   });
 });
@@ -306,13 +395,15 @@ router.post('/api/rift/abandon', requireAuth, (req, res) => {
   if (!rift?.active) return res.status(400).json({ error: 'No active rift' });
 
   const tier = RIFT_TIERS[rift.tier];
+  const mythicLvl = rift.mythicLevel || 0;
   rift.active = false;
   rift.failed = true;
   rift.failedAt = now();
 
   // Apply cooldown
   u.riftCooldowns = u.riftCooldowns || {};
-  u.riftCooldowns[rift.tier] = { failedAt: rift.failedAt, cooldownDays: tier?.failCooldownDays || 3 };
+  const cooldownKey = rift.tier === 'mythic' ? 'mythic' : rift.tier;
+  u.riftCooldowns[cooldownKey] = { failedAt: rift.failedAt, cooldownDays: tier?.failCooldownDays || 3 };
 
   // Add to history
   u.riftHistory = u.riftHistory || [];
@@ -323,11 +414,13 @@ router.post('/api/rift/abandon', requireAuth, (req, res) => {
     stages: rift.quests.filter(q => q.completed).length,
     totalStages: rift.quests.length,
     success: false,
+    ...(mythicLvl > 0 && { mythicLevel: mythicLvl }),
   });
   if (u.riftHistory.length > 20) u.riftHistory = u.riftHistory.slice(-20);
 
   saveUsers();
-  console.log(`[rift] ${uid} abandoned ${tier?.name || rift.tier} rift`);
+  const displayName = mythicLvl > 0 ? `${tier?.name || 'Mythic Rift'} +${mythicLvl}` : (tier?.name || rift.tier);
+  console.log(`[rift] ${uid} abandoned ${displayName} rift`);
   res.json({ ok: true, message: `Rift abandoned. ${tier?.failCooldownDays || 3}-day cooldown applied.` });
 });
 

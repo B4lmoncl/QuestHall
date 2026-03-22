@@ -35,7 +35,7 @@ const TITLE_COLORS: Record<string, string> = {
 function SmartIcon({ src, alt, size = 16, style }: { src: string; alt?: string; size?: number; style?: React.CSSProperties }) {
   if (!src) return null;
   if (src.startsWith("/")) {
-    return <img src={src} alt={alt ?? ""} width={size} height={size} style={{ imageRendering: "auto", ...style }} onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} />;
+    return <img src={src} alt={alt ?? ""} width={size} height={size} style={{ imageRendering: "smooth", ...style }} onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} />;
   }
   return <span style={{ fontSize: size, lineHeight: 1, ...style }}>{src}</span>;
 }
@@ -108,7 +108,7 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
               src="/images/portraits/hero-male.png"
               alt={user.name}
               className="w-full h-full object-cover"
-              style={{ imageRendering: "auto" }}
+              style={{ imageRendering: "smooth" }}
               onError={e => {
                 // Fallback to colored letter avatar
                 const t = e.currentTarget;
@@ -135,7 +135,7 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
               background: "#1a1a1e",
               color: lvl.color,
               border: `1px solid ${lvl.color}50`,
-              fontSize: 10,
+              fontSize: 12,
               lineHeight: 1,
             }}
           >
@@ -200,19 +200,19 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
           <Tip k="forge_temp">
             <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
               <p className="text-xs font-mono font-bold" style={{ color: forgeTier.color }}>{temp}%</p>
-              <p className="text-xs" style={{ color: forgeTier.color, opacity: 0.7, fontSize: 10 }}>{forgeTier.label}</p>
+              <p className="text-xs" style={{ color: forgeTier.color, opacity: 0.7, fontSize: 12 }}>{forgeTier.label}</p>
             </div>
           </Tip>
           {/* Quests */}
           <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
             <p className="text-xs font-mono font-bold" style={{ color: "#8b5cf6" }}>{user.questsCompleted ?? 0}</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Quests</p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Quests</p>
           </div>
           {/* Achievement Points */}
           <Tip k="achievements">
             <div className="rounded-lg px-2 py-1.5 text-center" style={{ background: "rgba(255,255,255,0.03)" }}>
               <p className="text-xs font-mono font-bold" style={{ color: "#d4a64a" }}>{user.achievementPoints ?? 0}</p>
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 10 }}>Points</p>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)", fontSize: 12 }}>Points</p>
             </div>
           </Tip>
         </div>
@@ -227,7 +227,7 @@ export function UserCard({ user, classes = [], onClick }: { user: User; classes?
               <Tip k="bond_level">
                 <div className="flex items-center gap-1.5">
                   {companionSrc ? (
-                    <img src={companionSrc} alt={comp.name} width={18} height={18} className="rounded" style={{ imageRendering: "auto" }} />
+                    <img src={companionSrc} alt={comp.name} width={18} height={18} className="rounded" style={{ imageRendering: "smooth" }} />
                   ) : comp.emoji && comp.emoji !== "x" ? (
                     <span style={{ fontSize: 14 }}>{comp.emoji}</span>
                   ) : null}

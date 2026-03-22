@@ -74,13 +74,13 @@ export default function HonorsView({ catalogue, highlightedAchievementId, onHigh
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 tab-content-enter">
       {/* Header */}
       <div className="rounded-2xl p-5" style={{ background: "linear-gradient(135deg, #110d04 0%, #0f0f0f 100%)", border: "1px solid rgba(245,158,11,0.18)", boxShadow: "0 0 30px rgba(245,158,11,0.04)" }}>
         <div className="flex items-center gap-3 mb-1">
           <span style={{ fontSize: 28 }}>—</span>
           <div>
-            <Tip k="achievements"><h2 className="text-lg font-bold" style={{ color: "#d4a64a" }}>Hall of Honors</h2></Tip>
+            <Tip k="achievements" heading><h2 className="text-lg font-bold" style={{ color: "#d4a64a" }}>Hall of Honors</h2></Tip>
             <p className="text-xs" style={{ color: "rgba(212,166,74,0.4)" }}>
               {loggedInUser ? `${loggedInUser.name} — ${playerEarnedIds.size} / ${catalogue.length} achievements` : "Log in to track your achievements"}
             </p>
@@ -198,7 +198,7 @@ export default function HonorsView({ catalogue, highlightedAchievementId, onHigh
                               boxShadow: myEarned ? `inset 0 0 12px ${isHidden ? "rgba(138,43,226,0.15)" : "rgba(245,158,11,0.1)"}` : "none",
                             }}
                           >
-                            {ach.icon && ach.icon.startsWith("/") ? <img src={ach.icon} alt="" width={48} height={48} style={{ imageRendering: "auto", filter: highlight || (!playerName && anyEarned) ? "none" : "grayscale(1) brightness(0.5)" }} /> : <span className="text-2xl" style={{ filter: highlight || (!playerName && anyEarned) ? "none" : "grayscale(1) brightness(0.5)" }}>{ach.icon}</span>}
+                            {ach.icon && ach.icon.startsWith("/") ? <img src={ach.icon} alt="" width={48} height={48} style={{ imageRendering: "smooth", filter: highlight || (!playerName && anyEarned) ? "none" : "grayscale(1) brightness(0.5)" }} /> : <span className="text-2xl" style={{ filter: highlight || (!playerName && anyEarned) ? "none" : "grayscale(1) brightness(0.5)" }}>{ach.icon}</span>}
                           </div>
 
                           <div className="flex-1 min-w-0">

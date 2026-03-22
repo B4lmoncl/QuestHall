@@ -66,7 +66,7 @@ function mkParticle(w: number, h: number, season: Season, scatter = false): Part
     y: scatter ? Math.random() * h : -10 - Math.random() * 80,
     vx: (Math.random() - 0.5) * (isSummer ? 0.25 : 0.65),
     vy: isSummer ? Math.random() * 0.35 + 0.1 : Math.random() * 0.75 + 0.22,
-    size: isSummer ? Math.random() * 2 + 1.5 : Math.random() * 4 + 1.8,
+    size: isSummer ? Math.random() * 2 + 1.5 : Math.random() * 2.5 + 1.2,
     opacity: scatter ? Math.random() * 0.3 : 0,
     maxOpacity: Math.random() * 0.42 + 0.22,
     rotation: Math.random() * Math.PI * 2,
@@ -87,13 +87,22 @@ function drawParticle(ctx: CanvasRenderingContext2D, p: Particle, season: Season
   ctx.globalAlpha = p.opacity;
 
   if (season === "spring") {
-    ctx.fillStyle = p.colorBase + "1)";
+    // Cherry blossom petal — 5-petal flower shape with soft glow
+    const petalCount = 5;
+    const petalR = p.size * 1.1;
+    ctx.fillStyle = p.colorBase + "0.7)";
+    for (let i = 0; i < petalCount; i++) {
+      const a = (i / petalCount) * Math.PI * 2;
+      const px = Math.cos(a) * petalR * 0.5;
+      const py = Math.sin(a) * petalR * 0.5;
+      ctx.beginPath();
+      ctx.arc(px, py, petalR * 0.45, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Center dot
+    ctx.fillStyle = p.colorBase + "0.9)";
     ctx.beginPath();
-    ctx.ellipse(0, 0, p.size * 0.75, p.size * 1.4, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = p.colorBase + "0.55)";
-    ctx.beginPath();
-    ctx.ellipse(0, p.size * 0.85, p.size * 0.28, p.size * 0.32, 0, 0, Math.PI * 2);
+    ctx.arc(0, 0, p.size * 0.25, 0, Math.PI * 2);
     ctx.fill();
   } else if (season === "summer") {
     const pulse = Math.sin(t * 0.003 + p.pulsePhase) * 0.45 + 0.55;
@@ -628,7 +637,7 @@ export default function GuildHallBackground() {
             height: "100%",
             objectFit: "cover",
             objectPosition: "center bottom",
-            imageRendering: "auto",
+            imageRendering: "smooth",
             opacity: bgOpacity,
             userSelect: "none",
             transition: "opacity 2s ease",

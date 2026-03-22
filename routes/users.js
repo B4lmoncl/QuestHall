@@ -190,40 +190,45 @@ router.get('/api/auth/check', (req, res) => {
 
 // POST /api/auth/login — validate name + password, return JWT tokens
 router.post('/api/auth/login', authLimiter, async (req, res) => {
-  const { name, password } = req.body;
-  if (!name || !password) return res.status(400).json({ success: false, error: 'Name and password required' });
+  try {
+    const { name, password } = req.body;
+    if (!name || !password) return res.status(400).json({ error: 'Name and password required' });
 
-  const bcrypt = require('bcryptjs');
-  const nameLower = name.toLowerCase();
-  const user = state.usersByName.get(nameLower);
+    const bcrypt = require('bcryptjs');
+    const nameLower = name.toLowerCase();
+    const user = state.usersByName.get(nameLower);
 
-  if (!user) return res.json({ success: false, error: 'Invalid name or password' });
+    if (!user) return res.json({ error: 'Invalid name or password' });
 
-  // Support both new password login and legacy API-key-as-password login
-  if (user.passwordHash) {
-    const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) return res.json({ success: false, error: 'Invalid name or password' });
-  } else {
-    // Legacy: user has no password yet, check if password matches apiKey
-    if (password !== user.apiKey) return res.json({ success: false, error: 'Invalid name or password' });
+    // Support both new password login and legacy API-key-as-password login
+    if (user.passwordHash) {
+      const match = await bcrypt.compare(password, user.passwordHash);
+      if (!match) return res.json({ error: 'Invalid name or password' });
+    } else {
+      // Legacy: user has no password yet, check if password matches apiKey
+      if (password !== user.apiKey) return res.json({ error: 'Invalid name or password' });
+    }
+
+    const admin = isUserAdmin(user);
+    // Tag admin status for token generation
+    user._isAdmin = admin;
+
+    const { accessToken, refreshToken } = generateTokenPair(user);
+    setRefreshCookie(res, refreshToken);
+
+    return res.json({
+      success: true,
+      accessToken,
+      // Keep apiKey in response for backward compat (agents, Electron app)
+      apiKey: user.apiKey,
+      userId: user.id,
+      name: user.name,
+      isAdmin: admin,
+    });
+  } catch (err) {
+    console.error('[login] Error:', err.message);
+    return res.status(500).json({ error: 'Login failed' });
   }
-
-  const admin = isUserAdmin(user);
-  // Tag admin status for token generation
-  user._isAdmin = admin;
-
-  const { accessToken, refreshToken } = generateTokenPair(user);
-  setRefreshCookie(res, refreshToken);
-
-  return res.json({
-    success: true,
-    accessToken,
-    // Keep apiKey in response for backward compat (agents, Electron app)
-    apiKey: user.apiKey,
-    userId: user.id,
-    name: user.name,
-    isAdmin: admin,
-  });
 });
 
 // POST /api/auth/refresh — exchange refresh token for new access token
@@ -257,24 +262,30 @@ router.post('/api/auth/logout', (req, res) => {
 
 // POST /api/auth/set-password — migration: set password for existing user
 router.post('/api/auth/set-password', async (req, res) => {
-  const auth = resolveAuth(req);
-  if (!auth || !auth.userId) return res.status(401).json({ error: 'Unauthorized' });
+  try {
+    const auth = resolveAuth(req);
+    if (!auth || !auth.userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const user = state.users[auth.userId];
-  if (!user) return res.status(401).json({ error: 'User not found' });
+    const user = state.users[auth.userId];
+    if (!user) return res.status(401).json({ error: 'User not found' });
 
-  const { password } = req.body;
-  if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+    const { password } = req.body;
+    if (!password || password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
 
-  const bcrypt = require('bcryptjs');
-  user.passwordHash = await bcrypt.hash(password, 10);
-  saveUsers();
+    const bcrypt = require('bcryptjs');
+    user.passwordHash = await bcrypt.hash(password, 10);
+    saveUsers();
 
-  return res.json({ success: true, message: 'Password set' });
+    return res.json({ success: true, message: 'Password set' });
+  } catch (err) {
+    console.error('[set-password] Error:', err.message);
+    return res.status(500).json({ error: 'Failed to set password' });
+  }
 });
 
 // POST /api/register — register a new player (returns JWT tokens)
 router.post('/api/register', authLimiter, async (req, res) => {
+  try {
   const { name, password, age, goals, pronouns, classId, companion, relationshipStatus, partnerName } = req.body;
   if (!name || !String(name).trim()) return res.status(400).json({ error: 'name is required' });
   if (!password) return res.status(400).json({ error: 'password is required' });
@@ -363,6 +374,10 @@ router.post('/api/register', authLimiter, async (req, res) => {
   setRefreshCookie(res, refreshToken);
 
   res.json({ name: trimmedName, accessToken, apiKey, userId: finalId });
+  } catch (err) {
+    console.error('[register] Error:', err.message);
+    return res.status(500).json({ error: 'Registration failed' });
+  }
 });
 
 module.exports = router;

@@ -215,6 +215,9 @@ router.post('/api/daily-missions/claim', requireAuth, (req, res) => {
     delete u.dailyMilestonesClaimed[dates.shift()];
   }
 
+  // Battle Pass XP
+  try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'daily_mission_milestone', { points: threshold }); } catch {}
+
   saveUsers();
   res.json({ success: true, reward, earned });
 });

@@ -1,0 +1,148 @@
+{
+  "uniques": [
+    {
+      "id": "wyrm-scale-shield",
+      "name": "Wyrm-Scale Aegis",
+      "slot": "shield",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "Forged from the scales of the Procrastination Wyrm. Its bearer never delays.",
+      "flavorText": "Every task you postpone feeds the wyrm.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "ausdauer", "min": 14, "max": 22 },
+          { "stat": "kraft", "min": 6, "max": 12 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "vitalitaet", "min": 8, "max": 16 },
+          { "stat": "tempo", "min": 4, "max": 10 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "decay_reduction", "min": 18, "max": 28, "label": "Wyrm's Resolve: -{value}% forge decay" },
+      "source": "world_boss:procrastination-wyrm",
+      "dropChance": 0.10,
+      "isUnique": true
+    },
+    {
+      "id": "colossus-ember-amulet",
+      "name": "Ember of the Colossus",
+      "slot": "amulet",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "A shard of living flame from the heart of the Burnout Colossus.",
+      "flavorText": "Rest is not weakness. It is the fuel for greater fire.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "kraft", "min": 10, "max": 18 },
+          { "stat": "weisheit", "min": 10, "max": 18 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "vitalitaet", "min": 8, "max": 16 },
+          { "stat": "tempo", "min": 6, "max": 14 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "xp_bonus", "min": 8, "max": 15, "label": "Colossus Heart: +{value}% XP" },
+      "source": "world_boss:burnout-colossus",
+      "dropChance": 0.10,
+      "isUnique": true
+    },
+    {
+      "id": "hydra-focus-helm",
+      "name": "Crown of Clarity",
+      "slot": "helm",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "Worn by those who silenced the Chaos Hydra's many voices.",
+      "flavorText": "Focus is the blade that cuts through chaos.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "weisheit", "min": 12, "max": 20 },
+          { "stat": "glueck", "min": 8, "max": 14 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "fokus", "min": 10, "max": 22 },
+          { "stat": "charisma", "min": 4, "max": 10 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "variety_bonus", "min": 5, "max": 10, "label": "Hydra's Focus: +{value}% variety XP bonus" },
+      "source": "world_boss:chaos-hydra",
+      "dropChance": 0.10,
+      "isUnique": true
+    },
+    {
+      "id": "archive-codex",
+      "name": "Codex of the Deep",
+      "slot": "armor",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "Bound in waterlogged leather, this tome-armor hums with preserved knowledge.",
+      "flavorText": "The archive remembers what the world has forgotten.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "ausdauer", "min": 16, "max": 26 },
+          { "stat": "weisheit", "min": 8, "max": 14 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "vitalitaet", "min": 10, "max": 18 },
+          { "stat": "fokus", "min": 6, "max": 12 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "decay_reduction", "min": 15, "max": 24, "label": "Preserved Knowledge: -{value}% forge decay" },
+      "source": "dungeon:sunken-archive",
+      "dropChance": 0.08,
+      "isUnique": true
+    },
+    {
+      "id": "spire-edge",
+      "name": "Spire's Edge",
+      "slot": "weapon",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "A blade pulled from the rubble of the collapsed spire. Still crackling with residual energy.",
+      "flavorText": "What was broken can still cut deep.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "kraft", "min": 18, "max": 28 },
+          { "stat": "glueck", "min": 6, "max": 12 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "fokus", "min": 8, "max": 16 },
+          { "stat": "tempo", "min": 8, "max": 16 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "xp_bonus", "min": 10, "max": 18, "label": "Spire Charge: +{value}% XP" },
+      "source": "dungeon:shattered-spire",
+      "dropChance": 0.06,
+      "isUnique": true
+    },
+    {
+      "id": "void-pendant",
+      "name": "Pendant of the Hollow",
+      "slot": "amulet",
+      "rarity": "legendary",
+      "tier": 5,
+      "desc": "A dark stone pendant that seems to absorb light. Found at the tower's deepest point.",
+      "flavorText": "Stare into the hollow and it stares back.",
+      "icon": null,
+      "affixes": {
+        "primary": { "pool": [
+          { "stat": "glueck", "min": 14, "max": 24 },
+          { "stat": "weisheit", "min": 10, "max": 18 }
+        ], "count": [2, 2] },
+        "minor": { "pool": [
+          { "stat": "charisma", "min": 10, "max": 20 },
+          { "stat": "fokus", "min": 6, "max": 14 }
+        ], "count": [1, 2] }
+      },
+      "legendaryEffect": { "type": "gold_bonus", "min": 12, "max": 22, "label": "Void's Bargain: +{value}% Gold" },
+      "source": "dungeon:hollow-core",
+      "dropChance": 0.04,
+      "isUnique": true
+    }
+  ]
+}

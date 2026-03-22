@@ -664,8 +664,9 @@ router.get('/api/quests', (req, res) => {
   });
 });
 
-// POST /api/quest/:id/approve — approve a suggested quest → open
+// POST /api/quest/:id/approve — approve a suggested quest → open (admin only)
 router.post('/api/quest/:id/approve', requireApiKey, (req, res) => {
+  if (!req.auth?.isAdmin) return res.status(403).json({ error: 'Admin access required' });
   const quest = state.questsById.get(req.params.id);
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
   if (quest.status !== 'suggested') return res.status(409).json({ error: `Quest is not in suggested state (current: ${quest.status})` });
@@ -676,8 +677,9 @@ router.post('/api/quest/:id/approve', requireApiKey, (req, res) => {
   res.json({ ok: true, quest });
 });
 
-// POST /api/quest/:id/reject — reject any non-completed quest → rejected
+// POST /api/quest/:id/reject — reject any non-completed quest → rejected (admin only)
 router.post('/api/quest/:id/reject', requireApiKey, (req, res) => {
+  if (!req.auth?.isAdmin) return res.status(403).json({ error: 'Admin access required' });
   const quest = state.questsById.get(req.params.id);
   if (!quest) return res.status(404).json({ error: 'Quest not found' });
   if (quest.status === 'completed') return res.status(409).json({ error: 'Cannot reject a completed quest' });

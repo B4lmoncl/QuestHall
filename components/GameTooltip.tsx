@@ -350,6 +350,33 @@ const TOOLTIP_REGISTRY: Record<string, TooltipEntry> = {
       </>
     ),
   },
+  dungeons: {
+    title: "The Undercroft (Dungeons)",
+    icon: "🏰",
+    accent: "#3b82f6",
+    body: (
+      <>
+        <p>Cooperative group dungeons for 2-4 friends. Send your party into the depths, wait 8 hours, then collect rewards based on combined Gear Score + companion bond.</p>
+        <div className="gt-stat-row"><span>Success</span><span>100% / 70% / 40% / 15% based on power vs threshold</span></div>
+        <div className="gt-stat-row"><span>Cooldown</span><span>7 days per dungeon</span></div>
+        <div className="gt-stat-row"><span>Tiers</span><span>Normal (Lv10) · Hard (Lv20) · Legendary (Lv35)</span></div>
+        <p className="gt-source">Dungeons can drop unique named items, gems, gear, materials, and currencies. Bonus title + frame on first clear.</p>
+      </>
+    ),
+  },
+  world_boss: {
+    title: "The Colosseum (World Boss)",
+    icon: "⚔️",
+    accent: "#ef4444",
+    body: (
+      <>
+        <p>Community-wide boss encounters. All players deal damage by completing quests. <GTRef k="xp">Gear Score</GTRef> multiplies your damage.</p>
+        <div className="gt-stat-row"><span>Duration</span><span>7 days active</span></div>
+        <div className="gt-stat-row"><span>Spawn</span><span>Every 21 days</span></div>
+        <p className="gt-source">Top 3 contributors earn exclusive titles. #1 gets a unique frame. All contributors receive <GTRef k="gold">Gold</GTRef>, <GTRef k="essenz">Essenz</GTRef>, and a chance at unique item drops.</p>
+      </>
+    ),
+  },
   hearth: {
     title: "The Hearth (Rest Mode)",
     icon: "🏠",
@@ -1053,9 +1080,13 @@ interface GameTooltipProps {
   children: React.ReactNode;
   /** Preferred position */
   align?: "left" | "right" | "center";
+  /** Is this a heading-level tooltip? (gets loading bar + dotted underline) */
+  heading?: boolean;
+  /** Custom hover delay in ms (default 800, use 1500 for buttons) */
+  hoverDelay?: number;
 }
 
-export function GameTooltip({ k, entry: directEntry, children, align = "left" }: GameTooltipProps) {
+export function GameTooltip({ k, entry: directEntry, children, align = "left", heading, hoverDelay }: GameTooltipProps) {
   const resolvedEntry = directEntry || (k ? TOOLTIP_REGISTRY[k] : null);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1100,12 +1131,13 @@ export function GameTooltip({ k, entry: directEntry, children, align = "left" }:
   const handleMouseEnter = useCallback(() => {
     if (visible) return; // already pinned
     setLoading(true);
+    const delay = hoverDelay || HOVER_DELAY;
     timerRef.current = setTimeout(() => {
       computePos();
       setLoading(false);
       setVisible(true);
-    }, HOVER_DELAY);
-  }, [visible, computePos]);
+    }, delay);
+  }, [visible, computePos, hoverDelay]);
 
   const handleMouseLeave = useCallback(() => {
     // Cancel loading bar if still in delay phase
@@ -1195,7 +1227,7 @@ export function GameTooltip({ k, entry: directEntry, children, align = "left" }:
   return (
     <span
       ref={triggerRef}
-      className={`gt-trigger${loading ? " gt-loading" : ""}`}
+      className={`gt-trigger${loading ? " gt-loading" : ""}${heading ? " gt-heading" : ""}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -1209,14 +1241,14 @@ export function GameTooltip({ k, entry: directEntry, children, align = "left" }:
 // Use this to wrap any text/element with a tooltip from the registry.
 // <Tip k="kraft">Kraft</Tip> → hoverable "Kraft" text that shows tooltip
 
-export function Tip({ k, children, accent }: { k: string; children: React.ReactNode; accent?: string }) {
+export function Tip({ k, children, accent, heading }: { k: string; children: React.ReactNode; accent?: string; heading?: boolean }) {
   const entry = TOOLTIP_REGISTRY[k];
   if (!entry) return <>{children}</>;
   return (
-    <GameTooltip k={k}>
-      <span className="gt-ref" style={{
+    <GameTooltip k={k} heading={heading}>
+      <span className={heading ? "gt-ref-heading" : "gt-ref"} style={{
         color: accent || entry.accent || "inherit",
-        borderBottomColor: accent || entry.accent || "rgba(255,255,255,0.2)",
+        ...(heading ? { borderBottomColor: accent || entry.accent || "rgba(255,255,255,0.2)" } : {}),
       }}>{children}</span>
     </GameTooltip>
   );
@@ -1224,11 +1256,11 @@ export function Tip({ k, children, accent }: { k: string; children: React.ReactN
 
 // ─── Convenience: Ad-hoc tooltip (no registry) ─────────────────────────────
 
-export function TipCustom({ title, icon, accent, body, children }: {
-  title: string; icon?: string; accent?: string; body: React.ReactNode; children: React.ReactNode;
+export function TipCustom({ title, icon, accent, body, children, heading, hoverDelay }: {
+  title: string; icon?: string; accent?: string; body: React.ReactNode; children: React.ReactNode; heading?: boolean; hoverDelay?: number;
 }) {
   return (
-    <GameTooltip entry={{ title, icon, accent, body }}>
+    <GameTooltip entry={{ title, icon, accent, body }} heading={heading} hoverDelay={hoverDelay}>
       {children}
     </GameTooltip>
   );

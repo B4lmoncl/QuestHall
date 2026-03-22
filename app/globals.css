@@ -29,9 +29,8 @@ body {
 }
 
 /* Default: smooth rendering for all images (icons, portraits, UI) */
-/* "auto" = bilinear filtering (standard, universally supported) */
 img {
-  image-rendering: auto !important;
+  image-rendering: smooth;
 }
 
 /* Skip rendering for offscreen cards — browser resumes paint when scrolled into view */
@@ -138,24 +137,6 @@ img {
   0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.7); opacity: 1; }
   50% { box-shadow: 0 0 0 4px rgba(245,158,11,0); opacity: 0.75; }
 }
-@keyframes pulse-amber-border {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,0.4); }
-  50% { box-shadow: 0 0 0 3px rgba(245,158,11,0.15); }
-}
-
-@keyframes star-float-0 {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-  50% { transform: translateY(-8px) scale(1.2); opacity: 1; }
-}
-@keyframes star-float-1 {
-  0%, 100% { transform: translateY(0) scale(0.9); opacity: 0.5; }
-  50% { transform: translateY(6px) scale(1.1); opacity: 0.9; }
-}
-@keyframes star-float-2 {
-  0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.6; }
-  50% { transform: translateY(-5px) rotate(20deg); opacity: 1; }
-}
-
 /* ─── Star Rating Animations ────────────────────────────────────── */
 @keyframes star-earn {
   0% { transform: scale(0); opacity: 0; }
@@ -171,19 +152,6 @@ img {
   animation: star-earn 0.5s ease-out both, star-glow 2s ease-in-out infinite 0.5s;
 }
 
-/* ─── Banner Particle Animations ─────────────────────────────────────── */
-@keyframes rune-drift-0 {
-  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.3; }
-  50% { transform: translateY(-12px) rotate(15deg) scale(1.15); opacity: 0.7; }
-}
-@keyframes rune-drift-1 {
-  0%, 100% { transform: translateY(0) rotate(-5deg) scale(0.9); opacity: 0.2; }
-  50% { transform: translateY(8px) rotate(10deg) scale(1.1); opacity: 0.6; }
-}
-@keyframes rune-drift-2 {
-  0%, 100% { transform: translateY(0) rotate(5deg); opacity: 0.25; }
-  50% { transform: translateY(-6px) rotate(-12deg); opacity: 0.55; }
-}
 @keyframes fogDrift1 {
   0%   { transform: translate(-10%, 4%) scale(1.02); }
   25%  { transform: translate(8%, -2%) scale(0.99); }
@@ -263,11 +231,6 @@ img {
 @keyframes btn-glow-pink {
   0%, 100% { box-shadow: 0 0 4px rgba(236,72,153,0.4); }
   50%       { box-shadow: 0 0 14px rgba(236,72,153,0.7), 0 0 24px rgba(236,72,153,0.3); }
-}
-
-@keyframes float-particle {
-  0%   { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(-28px) scale(0.5); }
 }
 
 /* ─── Interactive button — nav tabs, header buttons ─────────────────────── */
@@ -588,10 +551,6 @@ img {
   0%   { opacity: 0; transform: translateX(40px); }
   100% { opacity: 1; transform: translateX(0); }
 }
-@keyframes fadeOutRight {
-  0%   { opacity: 1; transform: translateX(0); }
-  100% { opacity: 0; transform: translateX(40px); }
-}
 .purchase-toast {
   animation: slideInFromRight 0.28s cubic-bezier(0.34,1.56,0.64,1) forwards;
 }
@@ -894,7 +853,7 @@ img {
 }
 
 /* Image rendering — auto (bilinear, non-pixelated for all images)           */
-.img-render-auto { image-rendering: auto !important; }
+.img-render-auto { image-rendering: smooth; }
 
 /* Common input field styling                                                */
 .input-dark {
@@ -979,16 +938,6 @@ img {
   animation: stage-complete-check 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
-/* ─── Challenge Progress Toast ──────────────────────────────────────────── */
-@keyframes challenge-toast-in {
-  from { opacity: 0; transform: translateX(20px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes challenge-toast-out {
-  from { opacity: 1; transform: translateX(0); }
-  to   { opacity: 0; transform: translateX(20px); }
-}
-
 /* ─── Activity Feed Enhancements ────────────────────────────────────────── */
 @keyframes feed-legendary-glow {
   0%, 100% { box-shadow: 0 0 0 rgba(255,140,0,0); }
@@ -1026,12 +975,12 @@ img {
 
 .gt-trigger {
   position: relative;
-  cursor: help;
+  cursor: inherit;
   display: inline;
 }
 
-/* Loading bar — golden line fills under trigger during hover delay */
-.gt-trigger.gt-loading::after {
+/* Loading bar — golden line fills under trigger during hover delay (headings only) */
+.gt-trigger.gt-loading.gt-heading::after {
   content: "";
   position: absolute;
   bottom: -2px;
@@ -1049,14 +998,26 @@ img {
   100% { width: 100%; opacity: 0; }
 }
 
-.gt-ref {
+/* Heading-level tooltips: dotted underline + loading bar */
+.gt-ref-heading {
   font-weight: inherit;
   border-bottom: 1px dotted rgba(255,215,0,0.35);
   cursor: help;
   transition: opacity 0.15s;
 }
-.gt-ref:hover {
+.gt-ref-heading:hover {
+  opacity: 0.9;
+}
+
+/* Inline-level tooltips: subtle opacity shift only, no underline */
+.gt-ref {
+  font-weight: inherit;
+  cursor: help;
   opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.gt-ref:hover {
+  opacity: 1;
 }
 
 /* ─── Tooltip Panel ─────────────────────────────────────────────────────── */

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
+import { useModalBehavior } from "@/components/ModalPortal";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -18,14 +19,15 @@ interface CalendarDay {
 // ─── Streak milestone rewards preview ────────────────────────────────────────
 
 const MILESTONES = [
-  { days: 7,  label: "7-Tage Bonus",  reward: "+1 Runensplitter, +1 Essenz" },
-  { days: 14, label: "14-Tage Bonus", reward: "+2 Runensplitter, +2 Essenz" },
-  { days: 30, label: "30-Tage Bonus", reward: "+3 Runensplitter, +5 Essenz" },
+  { days: 7,  label: "7-Day Bonus",  reward: "+1 Runensplitter, +1 Essenz" },
+  { days: 14, label: "14-Day Bonus", reward: "+2 Runensplitter, +2 Essenz" },
+  { days: 30, label: "30-Day Bonus", reward: "+3 Runensplitter, +5 Essenz" },
 ];
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function DailyLoginCalendar({ onClose }: { onClose: () => void }) {
+  useModalBehavior(true, onClose);
   const { playerName, reviewApiKey: apiKey } = useDashboard();
   const [claimHistory, setClaimHistory] = useState<string[]>([]);
   const [streakDays, setStreakDays] = useState(0);
@@ -83,17 +85,17 @@ export default function DailyLoginCalendar({ onClose }: { onClose: () => void })
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold" style={{ color: "#fbbf24" }}>Login-Kalender</h2>
+            <h2 className="text-base font-bold" style={{ color: "#fbbf24" }}>Login Calendar</h2>
             <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{monthNames[month]} {year}</p>
           </div>
           <div className="text-right">
             <p className="text-sm font-bold" style={{ color: "#fbbf24" }}>{streakDays} Day Streak</p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{claimedThisMonth}/{daysInMonth} diesen Monat</p>
+            <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>{claimedThisMonth}/{daysInMonth} this month</p>
           </div>
         </div>
 
         {loading ? (
-          <p className="text-xs text-center py-8" style={{ color: "rgba(255,255,255,0.3)" }}>Lädt...</p>
+          <p className="text-xs text-center py-8" style={{ color: "rgba(255,255,255,0.3)" }}>Loading...</p>
         ) : (
           <>
             {/* Calendar Grid */}

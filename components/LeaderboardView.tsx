@@ -17,7 +17,7 @@ const agentMetaLb: Record<string, { avatar: string; color: string }> = {
 
 const RANK_ICONS = ["/images/icons/ui-rank-gold.png", "/images/icons/ui-rank-silver.png", "/images/icons/ui-rank-bronze.png"];
 const RankMedal = ({ rank }: { rank: number }) => rank <= 3
-  ? <img src={RANK_ICONS[rank - 1]} alt={`#${rank}`} width={24} height={24} style={{ imageRendering: "auto" as const }} />
+  ? <img src={RANK_ICONS[rank - 1]} alt={`#${rank}`} width={24} height={24} style={{ imageRendering: "smooth" as const }} />
   : <span>#{rank}</span>;
 
 // ─── Forge Temperature tiers ─────────────────────────────────────────────────
@@ -110,7 +110,7 @@ export default function LeaderboardView({ entries, agents, mode = "agents", onOp
   const isPlayerMode = mode === "players";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 tab-content-enter">
       {/* ── Podium ── */}
       <div className="flex items-end justify-center gap-4">
         {[top3[1], top3[0], top3[2]].filter(Boolean).map((entry) => {

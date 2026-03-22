@@ -23,7 +23,7 @@ export const RARITY_COLORS: Record<string, string> = {
   uncommon: "#22c55e",
   rare: "#3b82f6",
   epic: "#a855f7",
-  legendary: "#FFD700",
+  legendary: "#f97316",
   companion: "#ff6b9d",
 };
 
@@ -193,7 +193,7 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
                 alt=""
                 width={27}
                 height={27}
-                style={{ imageRendering: "auto" }}
+                style={{ imageRendering: "smooth" }}
                 onError={(e) => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; const next = t.nextElementSibling as HTMLElement; if (next) next.style.display = "inline"; }}
               />
               <span style={{ display: "none" }}>{typeCfg.icon?.startsWith("/") ? typeCfg.label : typeCfg.icon}</span>

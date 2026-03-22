@@ -232,12 +232,15 @@ router.post('/api/expedition/claim', requireAuth, (req, res) => {
     }
   }
 
+  // Battle Pass XP
+  try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'expedition_checkpoint'); } catch {}
+
   exp.claimedRewards[uid].push(cpNum);
   saveExpeditionState();
   saveUsers();
 
   res.json({
-    message: `Checkpoint ${cpNum} Belohnung beansprucht!`,
+    message: `Checkpoint ${cpNum} reward claimed!`,
     checkpoint: cpNum,
     rewards,
   });
