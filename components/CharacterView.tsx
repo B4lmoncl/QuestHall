@@ -1804,7 +1804,10 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
             setCollectionLoading(true);
             try {
               const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/collection`);
-              if (r.ok) setCollectionData(await r.json());
+              if (r.ok) {
+                const d = await r.json();
+                setCollectionData({ items: d.uniques || [], completion: (d.completionPercent ?? 0) / 100 });
+              }
             } catch { /* ignore */ }
             setCollectionLoading(false);
           }

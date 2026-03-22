@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ReactNode } from "react";
 import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
 import { Tip, TipCustom } from "@/components/GameTooltip";
@@ -316,6 +316,8 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
   const [sendError, setSendError] = useState("");
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [showNewMsg, setShowNewMsg] = useState(false);
+  const [friendsList, setFriendsList] = useState<{ id: string; name: string; avatar: string; color: string }[]>([]);
 
   const fetchConversations = useCallback(async () => {
     try {
@@ -436,9 +438,56 @@ function MessagesTab({ apiKey, playerName }: { apiKey: string; playerName: strin
     );
   }
 
+  const startNewConvo = async () => {
+    try {
+      const r = await fetch(`/api/social/${encodeURIComponent(playerName)}/friends`, { headers: getAuthHeaders(apiKey) });
+      if (r.ok) {
+        const data = await r.json();
+        const existing = new Set(conversations.map(c => c.playerId));
+        setFriendsList((data.friends || []).filter((f: { id: string }) => !existing.has(f.id)));
+      }
+    } catch { /* ignore */ }
+    setShowNewMsg(true);
+  };
+
   return (
     <div className="space-y-3">
-      {conversations.length === 0 ? (
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wider text-w35">Messages</p>
+        <button
+          onClick={startNewConvo}
+          className="btn-interactive text-xs font-semibold px-3 py-1.5 rounded-lg"
+          style={{ background: "rgba(168,85,247,0.12)", color: "#a855f7", border: "1px solid rgba(168,85,247,0.25)" }}
+        >
+          + New Message
+        </button>
+      </div>
+      {showNewMsg && (
+        <div className="rounded-lg p-3 space-y-2" style={{ background: "rgba(168,85,247,0.04)", border: "1px solid rgba(168,85,247,0.15)" }}>
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-semibold" style={{ color: "#a855f7" }}>Start conversation with:</p>
+            <button onClick={() => setShowNewMsg(false)} className="text-xs text-w30 btn-interactive px-1">✕</button>
+          </div>
+          {friendsList.length === 0 ? (
+            <p className="text-xs text-w20 py-2">No friends available to message.</p>
+          ) : (
+            <div className="grid grid-cols-2 gap-1.5">
+              {friendsList.map(f => (
+                <button
+                  key={f.id}
+                  onClick={() => { setShowNewMsg(false); openConvo(f.id); }}
+                  className="btn-interactive flex items-center gap-2 rounded-lg px-2.5 py-2 text-left"
+                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}
+                >
+                  <PlayerBadge name={f.name} avatar={f.avatar} color={f.color} size={24} />
+                  <span className="text-xs font-semibold truncate" style={{ color: "#e8e8e8" }}>{f.name}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+      {conversations.length === 0 && !showNewMsg ? (
         <p className="text-xs text-w20 text-center py-8">No conversations yet. Add friends and start chatting!</p>
       ) : (
         conversations.map(c => (
@@ -523,6 +572,67 @@ function TradeOfferDisplay({ offer, label, color }: { offer: TradeOffer; label: 
 }
 
 // ─── Trades Tab ─────────────────────────────────────────────────────────────
+
+// ─── Trade Item Grid (inventory-style) ────────────────────────────────────────
+
+function TradeItemGrid({ items, selectedIds, onToggle }: {
+  items: { id: string; name: string; rarity: string; slot?: string; icon?: string; emoji?: string; stats?: Record<string, number> }[];
+  selectedIds: string[];
+  onToggle: (id: string) => void;
+}) {
+  return (
+    <div className="rounded-lg p-2 max-h-[180px] overflow-y-auto" style={{ background: "rgba(0,0,0,0.25)", border: "1px solid rgba(255,255,255,0.06)", scrollbarWidth: "thin" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, 52px)", gap: 3 }}>
+        {items.map(item => {
+          const selected = selectedIds.includes(item.id);
+          const rc = RARITY_COLORS[item.rarity] || "#888";
+          return (
+            <TipCustom
+              key={item.id}
+              title={item.name}
+              icon={item.emoji || "📦"}
+              accent={rc}
+              hoverDelay={300}
+              body={<>
+                <p className="text-xs capitalize" style={{ color: rc }}>{item.rarity}{item.slot ? ` · ${item.slot}` : ""}</p>
+                {item.stats && Object.entries(item.stats).filter(([, v]) => v > 0).length > 0 && (
+                  <div className="mt-1 space-y-0.5">
+                    {Object.entries(item.stats).filter(([, v]) => v > 0).map(([k, v]) => (
+                      <p key={k} className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{k}: +{v}</p>
+                    ))}
+                  </div>
+                )}
+              </>}
+            >
+              <button
+                onClick={() => onToggle(item.id)}
+                className="relative flex items-center justify-center rounded-lg transition-all"
+                style={{
+                  width: 52, height: 52,
+                  background: selected ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
+                  border: `2px solid ${selected ? "#a855f7" : `${rc}30`}`,
+                  cursor: "pointer",
+                }}
+              >
+                {item.icon ? (
+                  <img src={item.icon} alt={item.name} width={36} height={36} style={{ imageRendering: "smooth", objectFit: "contain" }} />
+                ) : (
+                  <span style={{ fontSize: 22 }}>{item.emoji || "📦"}</span>
+                )}
+                {/* Rarity dot */}
+                <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full" style={{ background: rc }} />
+                {/* Selection checkmark */}
+                {selected && (
+                  <span className="absolute bottom-0.5 right-0.5 w-4 h-4 rounded-full flex items-center justify-center" style={{ background: "#a855f7", fontSize: 9, color: "#fff", lineHeight: 1 }}>✓</span>
+                )}
+              </button>
+            </TipCustom>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string }) {
   const { users, loggedInUser } = useDashboard();
@@ -749,30 +859,11 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
                   />
                 </div>
               </div>
-              {/* Counter-offer item picker */}
+              {/* Counter-offer item picker — inventory grid */}
               {tradeableItems.length > 0 && (
                 <div className="mb-3">
                   <label className="text-xs text-w25 block mb-1">Items to offer ({counterItems.length} selected)</label>
-                  <div className="max-h-[120px] overflow-y-auto space-y-1 rounded-lg p-2" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", scrollbarWidth: "thin" }}>
-                    {tradeableItems.map(item => {
-                      const selected = counterItems.includes(item.id);
-                      const rarityColor = item.rarity === "legendary" ? "#ff8c00" : item.rarity === "epic" ? "#a855f7" : item.rarity === "rare" ? "#3b82f6" : item.rarity === "uncommon" ? "#22c55e" : "#888";
-                      return (
-                        <button
-                          key={item.id}
-                          onClick={() => toggleTradeItem(item.id, "counter")}
-                          className="btn-interactive w-full flex items-center gap-2 text-xs px-2 py-1.5 rounded text-left"
-                          style={{ background: selected ? "rgba(251,191,36,0.1)" : "transparent", border: `1px solid ${selected ? "rgba(251,191,36,0.3)" : "transparent"}` }}
-                        >
-                          <span className="w-3 h-3 rounded border flex items-center justify-center flex-shrink-0" style={{ borderColor: selected ? "#fbbf24" : "#555", background: selected ? "#fbbf24" : "transparent" }}>
-                            {selected && <span style={{ color: "#000", fontSize: 8, lineHeight: 1 }}>&#10003;</span>}
-                          </span>
-                          <span style={{ color: rarityColor }}>{item.name}</span>
-                          <span className="text-w15 capitalize ml-auto">{item.rarity} {item.slot}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
+                  <TradeItemGrid items={tradeableItems} selectedIds={counterItems} onToggle={id => toggleTradeItem(id, "counter")} />
                 </div>
               )}
               <label className="text-xs text-w25 block mb-1">Message</label>
@@ -842,30 +933,11 @@ function TradesTab({ apiKey, playerName }: { apiKey: string; playerName: string 
               className="input-dark w-full text-xs px-3 py-2 rounded-lg"
             />
           </div>
-          {/* Item picker */}
+          {/* Item picker — inventory grid */}
           {tradeableItems.length > 0 && (
             <div>
               <label className="text-xs text-w25 block mb-1">Items to offer ({newTradeItems.length} selected)</label>
-              <div className="max-h-[140px] overflow-y-auto space-y-1 rounded-lg p-2" style={{ background: "rgba(0,0,0,0.2)", border: "1px solid rgba(255,255,255,0.05)", scrollbarWidth: "thin" }}>
-                {tradeableItems.map(item => {
-                  const selected = newTradeItems.includes(item.id);
-                  const rarityColor = item.rarity === "legendary" ? "#ff8c00" : item.rarity === "epic" ? "#a855f7" : item.rarity === "rare" ? "#3b82f6" : item.rarity === "uncommon" ? "#22c55e" : "#888";
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => toggleTradeItem(item.id, "new")}
-                      className="btn-interactive w-full flex items-center gap-2 text-xs px-2 py-1.5 rounded text-left"
-                      style={{ background: selected ? "rgba(168,85,247,0.12)" : "transparent", border: `1px solid ${selected ? "rgba(168,85,247,0.3)" : "transparent"}` }}
-                    >
-                      <span className="w-3 h-3 rounded border flex items-center justify-center flex-shrink-0" style={{ borderColor: selected ? "#a855f7" : "#555", background: selected ? "#a855f7" : "transparent" }}>
-                        {selected && <span style={{ color: "#fff", fontSize: 8, lineHeight: 1 }}>&#10003;</span>}
-                      </span>
-                      <span style={{ color: rarityColor }}>{item.name}</span>
-                      <span className="text-w15 capitalize ml-auto">{item.rarity} {item.slot}</span>
-                    </button>
-                  );
-                })}
-              </div>
+              <TradeItemGrid items={tradeableItems} selectedIds={newTradeItems} onToggle={id => toggleTradeItem(id, "new")} />
             </div>
           )}
           <div>
@@ -1021,41 +1093,43 @@ function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: s
         const icon = EVENT_ICONS[event.type] || "📌";
         const isOwn = event.player === playerName.toLowerCase();
         const name = isOwn ? "You" : event.playerName;
-        let description = "";
         const d = event.data as Record<string, string>;
+        const rarityColor = d.rarity ? (RARITY_COLORS[d.rarity] || "#e8e8e8") : "#e8e8e8";
+
+        // Build description as JSX with tooltips for items/achievements
+        let descriptionNode: ReactNode;
         switch (event.type) {
           case "quest_complete":
-            description = `completed "${d.quest}"`;
+            descriptionNode = <>completed <TipCustom title={d.quest} icon="📜" accent={rarityColor} body={<><p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{d.rarity} quest</p>{d.xp && <p className="text-xs" style={{ color: "#fbbf24" }}>+{d.xp} XP</p>}{d.gold && <p className="text-xs" style={{ color: "#f59e0b" }}>+{d.gold} Gold</p>}</>}><span className="gt-ref" style={{ color: rarityColor }}>{d.quest}</span></TipCustom></>;
             break;
           case "level_up":
-            description = `reached Level ${d.level} — ${d.title}`;
+            descriptionNode = <>reached <TipCustom title={`Level ${d.level}`} icon="⬆️" accent="#fbbf24" body={<p className="text-xs" style={{ color: "#fbbf24" }}>{d.title}</p>}><span className="gt-ref" style={{ color: "#fbbf24" }}>Level {d.level}</span></TipCustom> — {d.title}</>;
             break;
           case "achievement":
-            description = `unlocked "${d.name}"`;
+            descriptionNode = <>unlocked <TipCustom title={d.name} icon="🏆" accent={rarityColor} body={<><p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>{d.rarity} achievement</p>{d.points && <p className="text-xs" style={{ color: "#fbbf24" }}>+{d.points} AP</p>}</>}><span className="gt-ref" style={{ color: rarityColor }}>{d.name}</span></TipCustom></>;
             break;
           case "gacha_pull":
-            description = `pulled ${d.rarity} "${d.item}"`;
+            descriptionNode = <>pulled <TipCustom title={d.item} icon="✨" accent={rarityColor} body={<><p className="text-xs" style={{ color: rarityColor }}>{d.rarity}</p>{d.banner && <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>from {d.banner}</p>}</>}><span className="gt-ref" style={{ color: rarityColor }}>{d.item}</span></TipCustom></>;
             break;
           case "rare_drop":
-            description = `found ${d.rarity} "${d.item}"`;
+            descriptionNode = <>found <TipCustom title={d.item} icon="💎" accent={rarityColor} body={<p className="text-xs" style={{ color: rarityColor }}>{d.rarity} drop</p>}><span className="gt-ref" style={{ color: rarityColor }}>{d.item}</span></TipCustom></>;
             break;
           case "trade_complete":
-            description = `completed a trade`;
+            descriptionNode = <>completed a trade{d.summary && <> — <span className="text-w30">{d.summary}</span></>}</>;
             break;
           case "streak_milestone":
-            description = `hit a ${d.days}-day streak`;
+            descriptionNode = <>hit a <span className="font-semibold" style={{ color: "#f59e0b" }}>{d.days}-day</span> streak</>;
             break;
           default:
-            description = (event.type as string).replace(/_/g, " ");
+            descriptionNode = <>{(event.type as string).replace(/_/g, " ")}</>;
         }
-        const rarityColor = d.rarity ? (RARITY_COLORS[d.rarity] || "#e8e8e8") : "#e8e8e8";
 
         if (compactView) {
           return (
             <div key={event.id} className="flex items-center gap-2 text-xs px-2 py-1 rounded" style={{ background: d.rarity === "legendary" ? "rgba(255,140,0,0.04)" : "rgba(255,255,255,0.015)", borderLeft: `2px solid ${d.rarity ? (RARITY_COLORS[d.rarity] || "rgba(255,255,255,0.06)") : "rgba(255,255,255,0.06)"}` }}>
               <span style={{ fontSize: 12 }}>{icon}</span>
               <span className="font-semibold truncate" style={{ color: isOwn ? "#a855f7" : event.playerColor }}>{name}</span>
-              <span className="text-w30 truncate flex-1">{description}</span>
+              <span className="text-w30 truncate flex-1">{descriptionNode}</span>
               <span className="text-w15 flex-shrink-0">{timeAgo(event.at)}</span>
             </div>
           );
@@ -1068,7 +1142,7 @@ function ActivityFeedTab({ apiKey, playerName }: { apiKey: string; playerName: s
               <p className="text-xs">
                 <span className="font-semibold" style={{ color: isOwn ? "#a855f7" : event.playerColor }}>{name}</span>
                 {" "}
-                <span className="text-w40">{description}</span>
+                <span className="text-w40">{descriptionNode}</span>
                 {d.rarity && ["epic", "legendary"].includes(d.rarity) && (
                   <span className="ml-1 text-xs font-semibold uppercase" style={{ color: rarityColor }}>{d.rarity}</span>
                 )}
