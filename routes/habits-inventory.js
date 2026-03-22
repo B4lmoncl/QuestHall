@@ -488,8 +488,9 @@ router.post('/api/player/:name/equip/:itemId', requireAuth, requireSelf('name'),
     if (!u.purchases) u.purchases = [];
     u.purchases.push({ type: 'equipment', item: shopItem.id, cost: shopItem.cost, at: now() });
     const stats = getUserStats(uid);
+    const legendaryEffects = getLegendaryEffects(uid);
     saveUsers();
-    return res.json({ ok: true, equipment: u.equipment, stats, gold: u.gold, rolledItem: instance });
+    return res.json({ ok: true, equipment: u.equipment, stats, legendaryEffects, gold: u.gold, rolledItem: instance });
   }
 
   // 2. Check user.inventory[] for equipment-type items (already owned — no gold cost)
@@ -551,8 +552,9 @@ router.post('/api/player/:name/equip/:itemId', requireAuth, requireSelf('name'),
   u.equipment[slot] = instance;
 
   const stats = getUserStats(uid);
+  const legendaryEffects = getLegendaryEffects(uid);
   saveUsers();
-  res.json({ ok: true, equipment: u.equipment, stats, gold: u.gold || 0, fromInventory: true });
+  res.json({ ok: true, equipment: u.equipment, stats, legendaryEffects, gold: u.gold || 0, fromInventory: true });
 });
 
 router.get('/api/player/:name/stats', (req, res) => {
@@ -860,7 +862,8 @@ router.post('/api/player/:name/unequip/:slot', requireAuth, requireSelf('name'),
   delete u.equipment[slot];
   saveUsers();
   const stats = getUserStats(uid);
-  res.json({ ok: true, equipment: u.equipment, stats });
+  const legendaryEffects = getLegendaryEffects(uid);
+  res.json({ ok: true, equipment: u.equipment, stats, legendaryEffects });
 });
 
 module.exports = router;
