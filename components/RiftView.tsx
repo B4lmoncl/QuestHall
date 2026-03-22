@@ -443,8 +443,13 @@ export default function RiftView({ onRefresh }: { onRefresh?: () => void }) {
           {tiers.mythic && (
             <div className="space-y-1 text-xs text-w35">
               <div className="flex justify-between"><span>Stages</span><span className="font-mono text-w50">{tiers.mythic.questCount}</span></div>
-              <div className="flex justify-between"><span>Time Limit</span><span className="font-mono text-w50">{Math.max(18, 30 - selectedMythicLevel * 1.5)}h</span></div>
-              <div className="flex justify-between"><span>Fail Cooldown</span><span className="font-mono text-w50">{tiers.mythic.failCooldownDays}d</span></div>
+              <TipCustom title="Mythic Time Scaling" icon="⏱️" accent="#ff4444" body={<p>Time limit decreases by 1.5h per Mythic level (minimum 18h). Higher levels demand faster completion.</p>}>
+                <div className="flex justify-between cursor-help"><span>Time Limit</span><span className="font-mono text-w50">{Math.max(18, 30 - selectedMythicLevel * 1.5)}h</span></div>
+              </TipCustom>
+              <TipCustom title="Mythic Difficulty" icon="⚔️" accent="#ff4444" body={<p>Each Mythic level adds +0.25× difficulty and +0.3× per stage. At M+{selectedMythicLevel}: base difficulty {(1 + selectedMythicLevel * 0.3).toFixed(1)}× → {(1 + 6 * 0.5 + selectedMythicLevel * 0.3).toFixed(1)}× on final stage. No fail cooldown — retry immediately.</p>}>
+                <div className="flex justify-between cursor-help"><span>Difficulty</span><span className="font-mono text-w50">{(1 + selectedMythicLevel * 0.3).toFixed(1)}× – {(1 + 6 * 0.5 + selectedMythicLevel * 0.3).toFixed(1)}×</span></div>
+              </TipCustom>
+              <div className="flex justify-between"><span>Fail Cooldown</span><span className="font-mono text-w50">None</span></div>
             </div>
           )}
 

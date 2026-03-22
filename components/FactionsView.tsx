@@ -222,19 +222,22 @@ export default function FactionsView() {
                     const isReached = f.playerRep >= s.minRep;
                     const isClaimed = f.claimedRewards.includes(s.id);
                     const isCurrent = f.standing === s.id;
+                    const sReward = f.rewards?.[s.id];
+                    const rewardDesc = sReward ? (sReward.title || sReward.recipeDesc || sReward.frameDesc || sReward.effectDesc || "") : "";
                     return (
-                      <div
-                        key={s.id}
-                        className="flex-1 text-center py-1 rounded text-xs"
-                        style={{
-                          background: isReached ? `${s.color}15` : "rgba(255,255,255,0.02)",
-                          color: isReached ? s.color : "rgba(255,255,255,0.15)",
-                          border: isCurrent ? `1px solid ${s.color}50` : "1px solid transparent",
-                          fontWeight: isCurrent ? 700 : 400,
-                        }}
-                      >
-                        {isClaimed ? "✓" : isReached ? "●" : "○"}
-                      </div>
+                      <TipCustom key={s.id} title={s.name} icon={isClaimed ? "✓" : "◆"} accent={s.color} body={<p>{s.minRep} Rep{rewardDesc ? ` — ${rewardDesc}` : ""}{isClaimed ? " (Claimed)" : isReached ? " (Ready!)" : ""}</p>}>
+                        <div
+                          className="flex-1 text-center py-1 rounded text-xs cursor-help"
+                          style={{
+                            background: isReached ? `${s.color}15` : "rgba(255,255,255,0.02)",
+                            color: isReached ? s.color : "rgba(255,255,255,0.15)",
+                            border: isCurrent ? `1px solid ${s.color}50` : "1px solid transparent",
+                            fontWeight: isCurrent ? 700 : 400,
+                          }}
+                        >
+                          {isClaimed ? "✓" : isReached ? "●" : "○"}
+                        </div>
+                      </TipCustom>
                     );
                   })}
                 </div>
