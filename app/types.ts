@@ -651,3 +651,75 @@ export interface Trade {
   createdAt: string;
   completedAt: string | null;
 }
+
+// ─── Dungeon System Types ─────────────────────────────────────────────────
+
+export interface DungeonTemplate {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  accent: string;
+  tier: "normal" | "hard" | "legendary";
+  minLevel: number;
+  minPlayers: number;
+  maxPlayers: number;
+  durationHours: number;
+  cooldownDays: number;
+  gearScoreThreshold: number;
+  rewards: {
+    gold: [number, number];
+    essenz: [number, number];
+    runensplitter: [number, number];
+    sternentaler?: [number, number];
+    materials: { count: [number, number] };
+    gems: { chance: number; maxTier: number };
+    gearDrop: { chance: number; minRarity: string };
+  };
+  bonusRewards: {
+    title: string;
+    frame: { id: string; name: string; color: string; glow: boolean };
+  };
+}
+
+export interface DungeonParticipant {
+  name: string;
+  avatar: string;
+  color: string;
+  gearScore: number;
+  bondLevel: number;
+}
+
+export interface DungeonRun {
+  runId: string;
+  dungeonId: string;
+  dungeonName: string;
+  dungeonIcon: string;
+  dungeonAccent: string;
+  tier: string;
+  createdBy: string;
+  createdAt: string;
+  status: "forming" | "active";
+  participants: DungeonParticipant[];
+  invitedPlayers: { name: string; avatar: string; color: string }[];
+  startedAt: string | null;
+  completesAt: string | null;
+  collected: string[];
+  minPlayers: number;
+  maxPlayers: number;
+  gearScoreThreshold: number;
+}
+
+export interface DungeonHistory {
+  runId: string;
+  dungeonId: string;
+  dungeonName: string;
+  tier: string;
+  participants: string[];
+  startedAt: string;
+  completedAt: string;
+  success: boolean;
+  effectivePower: number;
+  threshold: number;
+  successChance: number;
+}
