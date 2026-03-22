@@ -4,7 +4,7 @@
 const router = require('express').Router();
 const { state, saveGachaState, logActivity } = require('../lib/state');
 const { requireApiKey } = require('../lib/middleware');
-const { spendCurrency, awardCurrency, hasPassiveEffect, rollAffixStats } = require('../lib/helpers');
+const { spendCurrency, awardCurrency, hasPassiveEffect, rollAffixStats, INVENTORY_CAP } = require('../lib/helpers');
 
 // ─── Player-level pull lock (prevents concurrent pulls for same player) ────
 const _pullLocks = new Map(); // playerId → true
@@ -255,6 +255,11 @@ router.post('/api/gacha/pull', requireApiKey, (req, res) => {
     const banner = state.bannerTemplates.find(b => b.id === bannerId && b.active !== false);
     if (!banner) return res.status(404).json({ error: 'Banner not found or inactive' });
 
+    // Inventory cap check — prevent pull if inventory is full
+    if ((u.inventory || []).length >= INVENTORY_CAP) {
+      return res.status(400).json({ error: `Inventory full (${INVENTORY_CAP} items). Dismantle or discard items first.` });
+    }
+
     const currency = banner.currency || 'runensplitter';
     const cost = banner.costSingle || 10;
 
@@ -295,6 +300,11 @@ router.post('/api/gacha/pull10', requireApiKey, (req, res) => {
   try {
   const banner = state.bannerTemplates.find(b => b.id === bannerId && b.active !== false);
   if (!banner) return res.status(404).json({ error: 'Banner not found or inactive' });
+
+  // Inventory cap check — need space for up to 10 items
+  if ((u.inventory || []).length + 10 > INVENTORY_CAP) {
+    return res.status(400).json({ error: `Inventory too full for 10-pull (need at least 10 free slots). Dismantle or discard items first.` });
+  }
 
   const currency = banner.currency || 'runensplitter';
   const cost = banner.cost10 || 90;

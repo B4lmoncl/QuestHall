@@ -733,6 +733,17 @@ function executeTrade(trade) {
     return { ok: false, error: `${trade.recipient} no longer has enough gold (need ${gold2}, have ${u2.currencies.gold})` };
   }
 
+  // Verify inventory cap — check if receiving player would exceed cap
+  const INVENTORY_CAP = 100;
+  const u1NetGain = items2.length - items1.length;
+  const u2NetGain = items1.length - items2.length;
+  if (u1NetGain > 0 && (u1.inventory || []).length + u1NetGain > INVENTORY_CAP) {
+    return { ok: false, error: `${trade.initiator}'s inventory would exceed ${INVENTORY_CAP} items` };
+  }
+  if (u2NetGain > 0 && (u2.inventory || []).length + u2NetGain > INVENTORY_CAP) {
+    return { ok: false, error: `${trade.recipient}'s inventory would exceed ${INVENTORY_CAP} items` };
+  }
+
   // Verify items still in inventory and not equipped
   const v1 = validateTradeItems(u1, trade.initiator, items1);
   if (!v1.ok) return { ok: false, error: v1.error };
