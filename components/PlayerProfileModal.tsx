@@ -79,7 +79,8 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
 
   const fetchProfile = useCallback(async () => {
     try {
-      const r = await fetch(`/api/player/${encodeURIComponent(playerId)}/public-profile`);
+      const headers = reviewApiKey ? getAuthHeaders(reviewApiKey) : {};
+      const r = await fetch(`/api/player/${encodeURIComponent(playerId)}/public-profile`, { headers });
       if (r.ok) {
         setProfile(await r.json());
       } else {
@@ -89,7 +90,7 @@ export default function PlayerProfileModal({ playerId, onClose, onAddFriend, onM
       setError("Failed to load profile");
     }
     setLoading(false);
-  }, [playerId]);
+  }, [playerId, reviewApiKey]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
