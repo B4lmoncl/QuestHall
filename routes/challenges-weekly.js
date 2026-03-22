@@ -331,6 +331,9 @@ router.post('/api/weekly-challenge/claim', requireAuth, (req, res) => {
     if (newLevel > prevLevel) awardCurrency(uid, 'stardust', 5 + newLevel);
   }
 
+  // Battle Pass XP — award per star earned
+  try { const { grantBattlePassXP } = require('./battlepass'); for (let s = 0; s < stageStars; s++) grantBattlePassXP(u, 'sternenpfad_star'); } catch {}
+
   // Advance stage
   u.weeklyChallenge.completedStages.push(nextStage);
   u.weeklyChallenge.currentStage = nextStage;

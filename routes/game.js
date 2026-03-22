@@ -300,6 +300,12 @@ router.post('/api/rituals/:id/complete', requireApiKey, (req, res) => {
 
     newAchievements = checkAndAwardAchievements(uid);
     saveUsers();
+
+    // Battle Pass XP
+    try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'ritual_complete'); } catch {}
+    if (ritual.isAntiRitual) {
+      try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'vow_clean_day'); } catch {}
+    }
   }
   saveRituals();
 

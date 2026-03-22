@@ -680,6 +680,9 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       return res.status(400).json({ error: `Unknown recipe: ${recipeId}` });
   }
 
+  // Battle Pass XP
+  try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'crafting'); } catch {}
+
   saveUsers();
   res.json({
     ...result,

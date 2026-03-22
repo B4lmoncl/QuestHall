@@ -185,6 +185,8 @@ router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'),
     u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   }
   u.companion.lastPetted = now();
+  // Battle Pass XP (only when bond XP was awarded)
+  if (!xpLimitReached) { try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {} }
   saveUsers();
   const bondInfo = getBondLevel(u.companion.bondXp || 0);
   res.json({
