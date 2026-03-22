@@ -2637,4 +2637,70 @@ The codebase is now in a clean, production-ready state. All systems verified:
 
 ---
 
+## 36. Infrastructure & Data Integrity Audit — Session 20 (2026-03-22)
+
+### 36.1 Methodology
+
+Four parallel audit agents covering previously unaudited areas:
+- Agent 1: lib/auth.js, lib/middleware.js, lib/state.js, server.js, lib/helpers.js (security + correctness)
+- Agent 2: All 11 game data templates in public/data/ (cross-reference integrity)
+- Agent 3: app/page.tsx, app/types.ts, app/utils.ts, hooks/useQuestActions.ts, app/DashboardContext.tsx
+- Agent 4: CSS, performance, accessibility, Docker
+
+### 36.2 Critical Data Integrity Issues Found & Fixed
+
+| # | Bug | Severity | Fix | Commit |
+|---|-----|----------|-----|--------|
+| 1 | **BattlePass material IDs used English names** — professions.json uses German IDs (eisenerz, kraeuterbuendel, etc.); BP levels 4,8,13,18,24,34 silently gave no materials | **CRITICAL** | Mapped all 6 material IDs to German equivalents | `1ad69ef` |
+| 2 | **3 BattlePass milestone titles missing** — bp_s1_10, bp_s1_25, bp_s1_40 referenced but didn't exist in titles.json | **CRITICAL** | Added all 3 titles with battlepass_level conditions | `1ad69ef` |
+| 3 | **4 faction Honored recipes missing** — flask_of_embers, scholars_ink, artisans_whetstone, resonance_charm didn't exist in professions.json | **CRITICAL** | Added all 4 as faction-exclusive recipes with balanced materials/costs | `1ad69ef` |
+| 4 | **Timing attack in master key comparison** — Length check before timingSafeEqual() leaked key length via timing | **HIGH** | Pad both buffers to equal length before comparison | `f935bca` |
+| 5 | **JSON corruption risk** — writeFileSync to users.json/quests.json not atomic; crash mid-write = corrupted file | **HIGH** | Added atomicWriteSync() helper (write .tmp then rename) for critical files | `f935bca` |
+| 6 | **Buff filter loose equality** — `== null` allowed questsRemaining: 0 to slip through filter | **MEDIUM** | Changed to explicit `=== null || === undefined` | `f935bca` |
+
+### 36.3 Data Template Verification
+
+| File | Status | Issues |
+|------|--------|--------|
+| gearTemplates.json | ✓ PASS | All 55 items, 6 slots covered |
+| uniqueItems.json | ✓ PASS | All 6 unique items, drop sources match routes |
+| gems.json | ✓ PASS | 6 types, 5 tiers, stat scaling correct |
+| worldBosses.json | ✓ PASS | 3 bosses, unique drops cross-referenced |
+| dungeons.json | ✓ PASS | 3 tiers, GS thresholds match frontend |
+| companionExpeditions.json | ✓ PASS | 4 tiers, reward ranges balanced |
+| achievementTemplates.json | ✓ PASS | Point values correct per rarity |
+| professions.json | ✓ FIXED | Now includes 4 faction recipes |
+| battlePass.json | ✓ FIXED | Material IDs corrected to German |
+| factions.json | ✓ PASS | 4 factions, rewards now valid |
+| titles.json | ✓ FIXED | Now includes 3 BP milestone titles |
+
+### 36.4 Security Audit Summary
+
+| Finding | Severity | Status |
+|---------|----------|--------|
+| Timing attack on master key length | HIGH | **FIXED** |
+| CORS accepts any origin | MEDIUM | By design — single-user app behind Docker; no public API |
+| JWT secret auto-generated on first boot | MEDIUM | Acceptable — persisted in appState.json |
+| No refresh token rotation | MEDIUM | Trade-off — acceptable for single-user scope |
+| Debounced save race condition | HIGH | **FIXED** (atomic writes for critical files) |
+
+### 36.5 Frontend Architecture Findings (Non-Critical)
+
+| Finding | Severity | Notes |
+|---------|----------|-------|
+| Race condition in refresh() interval | MEDIUM | Stable via useCallback + playerNameRef pattern |
+| Missing gearScore in User type | LOW | Calculated on demand; not stored on User interface |
+| Icon-only buttons missing aria-label | LOW | Has title attributes; full a11y not prioritized |
+| No focus trap in modals | LOW | ESC + backdrop click provide adequate closing |
+| text-w20/text-w25 fail WCAG AA contrast | LOW | Intentional design for tertiary info; primary text is text-w50+ |
+
+### 36.6 Changelog (Session 20)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `1ad69ef` | 2026-03-22 | Fix: BattlePass material IDs, titles, faction recipes |
+| `f935bca` | 2026-03-22 | Security: Timing attack, atomic writes, buff filter |
+
+---
+
 *End of Audit Report — Updated 2026-03-22*
