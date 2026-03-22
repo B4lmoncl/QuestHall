@@ -620,6 +620,13 @@ export default function ChallengesView({
   const [claimError, setClaimError] = useState<string | null>(null);
   const { reviewApiKey, playerName } = useDashboard();
 
+  // Auto-dismiss claim error after 5 seconds
+  useEffect(() => {
+    if (!claimError) return;
+    const t = setTimeout(() => setClaimError(null), 5000);
+    return () => clearTimeout(t);
+  }, [claimError]);
+
   const handleClaimStage = useCallback(async () => {
     if (!reviewApiKey) return;
     setClaimingStage(true);
