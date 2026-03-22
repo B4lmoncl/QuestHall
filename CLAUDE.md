@@ -295,10 +295,15 @@ Quest system (pool of ~10 open + ~25 max in-progress per player), XP/leveling (5
 
 ## Documentation
 
-- `README.md` — API endpoints, deployment, agents
-- `ARCHITECTURE.md` — System architecture for LLMs and developers
-- `LYRA-PLAYBOOK.md` — Content creation guide (NPCs, items, quests, gear, gacha)
-- `BACKLOG.md` — Bugs, features, tech debt
-- `ITEM-SYSTEM-SPEC.md` — Gear & equipment design
-- `SCALABILITY-AUDIT.md` — Performance analysis
-- `TEMPLATES.md` — Quest template formats
+| File | Purpose | When to use |
+|------|---------|-------------|
+| `CLAUDE.md` | **Primary reference** — Tech stack, code conventions, UI design guidelines, game systems overview | Read FIRST in every session. Contains rules that override defaults. |
+| `ARCHITECTURE.md` | System architecture — data flow, component tree, route structure, state management | When you need to understand HOW the system works technically |
+| `LYRA-PLAYBOOK.md` | **Content creation guide** — JSON schemas for NPCs, quests, items, gear, gacha banners, gems, world bosses, dungeons, achievements, titles, recipes. Includes backend formulas (XP, damage, pity, drop rates). | When ADDING NEW CONTENT to `public/data/*.json` files. Shows exact field schemas, valid values, and examples for every content type. |
+| `AUDIT_REPORT.md` | Codebase audit history — fix log, known non-issues (Appendix A), remaining issues | Read Appendix A before any audit to avoid re-investigating verified non-issues |
+| `AUDIT_PROMPT.md` | Reusable audit prompt template | Copy-paste to start a new audit session |
+| `README.md` | API endpoints, deployment, agents | External documentation |
+| `BACKLOG.md` | Bugs, features, tech debt | Planning reference |
+| `ITEM-SYSTEM-SPEC.md` | Gear & equipment design spec | When working on item/gear system |
+| `SCALABILITY-AUDIT.md` | Performance analysis | When optimizing |
+| `TEMPLATES.md` | Quest template formats | When creating quest templates |
