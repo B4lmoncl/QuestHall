@@ -24,7 +24,7 @@ const {
   loadLootTables, loadGearTemplates, loadNpcGivers, loadNpcState,
   loadAppState, loadFeedback,
   loadCurrencyTemplates, loadGachaPool, loadBannerTemplates, loadGachaState,
-  loadItemTemplates, loadTitles,
+  loadItemTemplates, loadTitles, loadUniqueItems,
   loadSocialData,
   saveAppState,
   flushPendingSaves,
@@ -190,6 +190,7 @@ loadBannerTemplates();
 loadGachaState();
 loadItemTemplates();
 loadTitles();
+loadUniqueItems();
 loadSocialData();
 require('./routes/crafting').loadProfessions();
 require('./routes/challenges-weekly').loadWeeklyChallenges();

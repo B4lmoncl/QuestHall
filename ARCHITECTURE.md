@@ -16,7 +16,7 @@ Browser → Express (port 3001) → lib/state.js (in-memory) → /data/*.json (d
 | Directory | Purpose | Language |
 |-----------|---------|----------|
 | `lib/` | Backend business logic (state, helpers, engines) | JS (CommonJS) |
-| `routes/` | Express route handlers (21 files) | JS (CommonJS) |
+| `routes/` | Express route handlers (23 files) | JS (CommonJS) |
 | `app/` | Next.js app directory (page, types, utils, context) | TypeScript |
 | `components/` | React UI components (47 files) | TypeScript |
 | `public/data/` | Read-only game templates (JSON) | JSON |
@@ -117,6 +117,8 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 | `rift.js` | Rift/Dungeon: timed quest chains with 3 tiers (Normal/Hard/Legendary), full reward pipeline | API key |
 | `battlepass.js` | Season Pass: 40-level reward track with XP from quests/rituals/missions | API key |
 | `factions.js` | Die Vier Zirkel: 4 factions with 6 rep tiers, auto-rep from quests | API key |
+| `world-boss.js` | World Boss: community bosses, contribution damage, unique drops, spawn cycle | API key |
+| `gems.js` | Gem/Socket system: 6 gem types, 5 tiers, socket/unsocket/upgrade/salvage | API key |
 | `npcs-misc.js` | NPC rotation, feedback (admin-only), SPA fallback | Master key (feedback) |
 | `docs.js` | OpenAPI spec, HTML docs | Public |
 
@@ -172,7 +174,7 @@ Use `paginate(array, req.query)` helper from `lib/helpers.js`.
 ## Gear & Equipment System
 
 - **6 Slots**: weapon, shield, helm, armor, amulet, boots
-- **4 Tiers**: Abenteurer (L1-8), Veteranen (L9-16), Meister (L17-24), Legendär (L25-30)
+- **5 Tiers**: Abenteurer (L1-8), Veteranen (L9-16), Meister (L17-24), Legendär (L25-35), Mythisch (L36-50)
 - **Stats**: kraft, ausdauer, weisheit, glueck — summed from equipped items
 - **Tier Set Bonuses**: 3/6 = +5% all stats, 6/6 = +10% all stats (auto-detected by tier)
 - **Named Set Bonuses**: Defined in `gearTemplates.json → namedSets[]`. Support partial (2/3 threshold) and full bonuses.
@@ -236,7 +238,7 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - Per-player pull lock prevents race conditions
 
 ### XP & Leveling
-- 30 levels defined in `levels.json`
+- 50 levels defined in `levels.json` (levels 31-50 are prestige levels with unique titles)
 - XP multiplied by: forge temp, kraft stat, gear bonus, companion bonus, bond level, hoarding malus
 - Gold multiplied by: forge temp, weisheit stat, streak bonus
 
