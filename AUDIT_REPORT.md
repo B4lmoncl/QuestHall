@@ -2700,7 +2700,63 @@ Four parallel audit agents covering previously unaudited areas:
 |--------|-----------|-------------|
 | `1ad69ef` | 2026-03-22 | Fix: BattlePass material IDs, titles, faction recipes |
 | `f935bca` | 2026-03-22 | Security: Timing attack, atomic writes, buff filter |
+| `c63420a` | 2026-03-22 | Fix: 5 route-level bugs (auth, loot, habits, gacha, battlepass) |
 
 ---
+
+## 37. Route Handler Deep Audit — Session 21 (2026-03-22)
+
+### 37.1 Methodology
+
+Four parallel audit agents covering ALL 24 route files:
+- Agent 1: routes/quests.js, routes/gacha.js
+- Agent 2: routes/crafting.js, routes/shop.js, routes/currency.js, routes/habits-inventory.js
+- Agent 3: routes/social.js, routes/rift.js, routes/dungeons.js, routes/battlepass.js
+- Agent 4: routes/factions.js, routes/world-boss.js, routes/gems.js, routes/players.js
+
+### 37.2 Issues Found & Fixed
+
+| # | Bug | Severity | Route | Fix | Commit |
+|---|-----|----------|-------|-----|--------|
+| 1 | **Quest approve/reject no admin check** — any authenticated user could approve/reject quests | **HIGH** | quests.js | Added `req.auth.isAdmin` check | `c63420a` |
+| 2 | **Dungeon loot rarity relabeled but stats unchanged** — common items relabeled as rare kept common-level stats | **HIGH** | dungeons.js | Re-roll up to 5× to get correct rarity item | `c63420a` |
+| 3 | **Habit XP/loot farming unlimited daily** — no per-day gate on habit scoring; XP+loot awarded every click | **HIGH** | habits-inventory.js | Added per-habit per-day tracking via `_habitCompletedToday` | `c63420a` |
+| 4 | **Gacha pity_minus_5 applied 10× in pull10** — passive effect reduced pity by 50 total instead of 5 | **MEDIUM** | gacha.js | Added `skipPityPassive` flag; only applied on first pull | `c63420a` |
+| 5 | **BattlePass season wipes unclaimed rewards** — all progress lost including unclaimed level rewards | **MEDIUM** | battlepass.js | Preserve `previousSeason` info (level + claimed levels) | `c63420a` |
+
+### 37.3 Documented but Not Fixed (Acceptable for Single-User Scope)
+
+| Finding | Severity | Route | Rationale |
+|---------|----------|-------|-----------|
+| Daily bonus claim race condition | MEDIUM | currency.js | Node.js single-threaded; concurrent requests extremely unlikely |
+| Currency double-spend race condition | MEDIUM | currency.js | Same — serialized by event loop |
+| Profession slot race condition | MEDIUM | crafting.js | Same — single-threaded |
+| Trade item validation timing | MEDIUM | social.js | Already re-validated in `executeTrade()` with `validateTradeItems()` |
+| Co-op quests allow null coopPartners | MEDIUM | quests.js | Quests created via API/admin only; not user-exploitable |
+| Gacha inventory cap not checked in guarantee | MEDIUM | gacha.js | Rare edge case; cap is 100, guarantee replaces existing item |
+| No message rate limiting | MEDIUM | social.js | Single-user app; self-DoS not a concern |
+| Rift timer per-stage enforcement | MEDIUM | rift.js | Timer checked on each `/complete-stage` call; sufficient |
+| Dungeon gear score snapshot timing | MEDIUM | dungeons.js | Snapshot at join is design choice; prevents last-minute swaps |
+| BP XP not capped daily | MEDIUM | battlepass.js | No daily cap by design — play more = progress more |
+
+### 37.4 Key Observations
+
+**Quest System**: 20 issues found across quests.js and gacha.js. Critical: approve/reject auth bypass. Gacha pity system had calculation issues with passive effects.
+
+**Economy System**: Crafting, shop, and currency routes generally well-guarded. Node.js single-threaded nature mitigates most race conditions.
+
+**Social System**: Trading system has robust validation in `executeTrade()`. Message length limits present (500 chars). Activity feed capped at 500 events.
+
+**Dungeon/Rift System**: Main issue was loot rarity stat mismatch. Rift timer enforcement is adequate via per-endpoint checks.
+
+### 37.5 Changelog (Session 21)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `c63420a` | 2026-03-22 | Fix: 5 route-level bugs (auth, loot, habits, gacha, battlepass) |
+
+---
+
+*End of Audit Report — Updated 2026-03-22*
 
 *End of Audit Report — Updated 2026-03-22*
