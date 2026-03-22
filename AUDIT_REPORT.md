@@ -2702,6 +2702,15 @@ Four parallel audit agents covering previously unaudited areas:
 | `f935bca` | 2026-03-22 | Security: Timing attack, atomic writes, buff filter |
 | `c63420a` | 2026-03-22 | Fix: 5 route-level bugs (auth, loot, habits, gacha, battlepass) |
 
+### 36.7 Agent 4 Review: factions.js, world-boss.js, gems.js, players.js
+
+23 findings reported, verified manually. Results:
+- **5 "No Bug"** (correctly implemented): gem inventory lowercasing, collection log idempotency, gem stat bonuses, faction weekly bonus calculation, currency ensured
+- **12 False Positives after manual review**: weekly bonus reset (ensureUserFactions called in all code paths), world-boss contribution % (Math.max guard correct for impossible case), expedition cooldown (collected flag prevents re-send without collection)
+- **6 Real but Low-Priority**: gem upgrade key validation, unsocket cost hardcoded, companion ultimate race condition (single-threaded Node.js mitigates), tavern cooldown trusts server-set field (acceptable), rest auto-expire is lazy (UX choice), bond level consistency (getter pattern)
+
+No code changes needed — all real issues are either single-threaded-safe or acceptable design decisions.
+
 ---
 
 ## 37. Route Handler Deep Audit — Session 21 (2026-03-22)
