@@ -165,6 +165,14 @@ export default function DungeonView({ onRefresh }: { onRefresh?: () => void }) {
 
   useEffect(() => { fetchDungeons(); }, [fetchDungeons]);
 
+  // ESC key to close create modal
+  useEffect(() => {
+    if (!showCreate) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setShowCreate(false); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [showCreate]);
+
   // Auto-refresh for active runs
   useEffect(() => {
     if (!activeRun) return;
