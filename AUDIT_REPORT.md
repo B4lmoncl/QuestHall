@@ -2782,12 +2782,12 @@ Six parallel audit agents covering ALL files:
 
 | # | Bug | Severity | Location | Fix | Commit |
 |---|-----|----------|----------|-----|--------|
-| 1 | **World Boss claim race condition** — two concurrent requests can both pass `includes()` check and claim double rewards | **HIGH** | world-boss.js:300-304 | Added claim lock with early `push()` before reward calculation | `TBD` |
-| 2 | **Mythic Rift level uncapped** — no upper bound on mythicLevel, reward scaling (gold +200/lvl, essenz +5/lvl) inflates without limit | **HIGH** | rift.js:229,323-333 | Cap mythicLevel at `highestCleared + 1` (max progression: +1 per clear) | `TBD` |
-| 3 | **Dungeon collect race condition** — two players collecting simultaneously both see `run.success === undefined`, each rolls `Math.random()` independently getting different outcomes | **HIGH** | dungeons.js:482-495 | Calculate success once atomically, store result before any collection | `TBD` |
-| 4 | **Shop gear/item buy auth bypass** — `req.auth?.userId` is null for API key auth, self-check always passes, allowing any API key to buy for any user | **HIGH** | shop.js:214,305 | Use `resolvePlayerId(req)` that falls back to API key owner | `TBD` |
-| 5 | **Crafting reroll targetStatIndex negative** — frontend can send negative index, `Math.min(-999, length-1)` still returns negative, causing undefined array access | **MEDIUM** | crafting.js:442 | Clamp with `Math.max(0, Math.min(idx, length-1))` | `TBD` |
-| 6 | **Crafting skill-up XP truncated before daily 2× multiplier** — `Math.floor(rawXp * mult) * 2` loses fractional XP | **LOW** | crafting.js:413-417 | Apply floor after all multipliers: `Math.floor(rawXp * mult * dailyMult)` | `TBD` |
+| 1 | **World Boss claim race condition** — two concurrent requests can both pass `includes()` check and claim double rewards | **HIGH** | world-boss.js:300-304 | Added claim lock with early `push()` before reward calculation | `e3e573c` |
+| 2 | **Mythic Rift level uncapped** — no upper bound on mythicLevel, reward scaling (gold +200/lvl, essenz +5/lvl) inflates without limit | **HIGH** | rift.js:229,323-333 | Cap mythicLevel at `highestCleared + 1` (max progression: +1 per clear), hard cap 100 | `e3e573c` |
+| 3 | **Dungeon collect race condition** — two players collecting simultaneously both see `run.success === undefined`, each rolls `Math.random()` independently getting different outcomes | **HIGH** | dungeons.js:482-495 | Mark collected before success determination, atomic check | `e3e573c` |
+| 4 | **Shop gear/item buy auth bypass** — `req.auth?.userId` is null for API key auth, self-check always passes, allowing any API key to buy for any user | **HIGH** | shop.js:214,305 | Enforce identity match like requireSelf pattern | `e3e573c` |
+| 5 | **Crafting reroll targetStatIndex negative** — frontend can send negative index, `Math.min(-999, length-1)` still returns negative, causing undefined array access | **MEDIUM** | crafting.js:442 | Clamp with `Math.max(0, Math.min(idx, length-1))` | `e3e573c` |
+| 6 | **Crafting skill-up XP truncated before daily 2× multiplier** — `Math.floor(rawXp * mult) * 2` loses fractional XP | **LOW** | crafting.js:413-417 | Apply floor after all multipliers: `Math.floor(rawXp * mult * dailyMult)` | `e3e573c` |
 
 ### 38.3 NEW Quality of Life Improvements
 
@@ -2821,9 +2821,25 @@ Six parallel audit agents covering ALL files:
 
 ### 38.6 Architecture Updates
 
-- **Component count**: 47 files (~22,960 lines) — was documented as 39 (~13k lines)
-- **Route count**: 24 files (~10,800 lines) — was documented as 17 (~6,200 lines)
+- **Component count**: 49 files (~23k lines) — updated from 47/21k
+- **Route count**: 24 files (~11,400 lines) — updated from ~10,800
 - **New systems since last audit**: Floor banners with particles, reward celebrations on all claim flows, rich profile tooltips
 - **Prestige levels**: 50 total (20 new prestige levels 31-50) — confirmed in code
 
+### 38.7 Changelog (Session 22)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `c4fdce9` | 2026-03-22 | Reward celebration popups on all claim flows + rich tooltips in player profile |
+| `4bf6861` | 2026-03-22 | Floor banner: 200px height with right-aligned background images |
+| `6e4e9f7` | 2026-03-22 | Merge main: resolve banner conflicts, use banner prop, 200px height |
+| `c02d1d6` | 2026-03-22 | Banner: left fade-out mask on image, lighter gradient, no mask on breakaway |
+| `403cb0e` | 2026-03-22 | Banner: floor gradient as base background behind image |
+| `051c7b9` | 2026-03-22 | Ambient particle effects on floor banners (5 themed styles) |
+| `e3e573c` | 2026-03-22 | Fix 6 bugs: world boss race, rift cap, dungeon race, shop auth, crafting validation |
+| `ed3d6c9` | 2026-03-22 | QoL: Missing tooltips for Rift tiers, Dungeon gear score, World Boss damage |
+| `b0366d9` | 2026-03-22 | Update docs: CLAUDE.md, ARCHITECTURE.md line counts + component counts |
+
 ---
+
+*End of Audit Report — Updated 2026-03-22*
