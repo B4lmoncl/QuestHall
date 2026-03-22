@@ -16,7 +16,7 @@ function ensureUserBP(user) {
       seasonStartedAt: new Date().toISOString(),
     };
   }
-  // Reset if new season
+  // Reset if new season — preserve unclaimed level info for reference
   if (user.battlePass.season !== bpData.config.currentSeason) {
     user.battlePass = {
       season: bpData.config.currentSeason,
@@ -24,6 +24,11 @@ function ensureUserBP(user) {
       level: 0,
       claimedLevels: [],
       seasonStartedAt: new Date().toISOString(),
+      previousSeason: {
+        season: user.battlePass.season,
+        level: getBPLevel(user.battlePass.xp),
+        claimedLevels: user.battlePass.claimedLevels || [],
+      },
     };
   }
   // Backfill seasonStartedAt for existing users

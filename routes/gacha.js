@@ -77,13 +77,13 @@ function pickItemFromPool(pool, rarity, bannerId) {
 
 const DUPLICATE_REFUND = { common: 1, uncommon: 3, rare: 8, epic: 20, legendary: 50 };
 
-function executePull(playerId, banner) {
+function executePull(playerId, banner, { skipPityPassive = false } = {}) {
   const u = state.users[playerId];
   if (!u) return null;
   const gs = getPlayerGachaState(playerId);
 
-  // Passive: pity_minus_5 — reduce pity counter by 5
-  if (hasPassiveEffect(playerId, 'pity_minus_5')) {
+  // Passive: pity_minus_5 — reduce pity counter by 5 (once per pull session, not per item)
+  if (!skipPityPassive && hasPassiveEffect(playerId, 'pity_minus_5')) {
     gs.pityCounter = Math.max(0, gs.pityCounter - 5);
   }
 
@@ -317,7 +317,7 @@ router.post('/api/gacha/pull10', requireApiKey, (req, res) => {
   let hasEpicOrBetter = false;
 
   for (let i = 0; i < 10; i++) {
-    const result = executePull(uid, banner);
+    const result = executePull(uid, banner, { skipPityPassive: i > 0 });
     if (!result) {
       // Refund remaining pulls
       awardCurrency(uid, currency, Math.floor(cost * (10 - i) / 10));

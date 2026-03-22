@@ -503,13 +503,20 @@ router.post('/api/dungeons/:runId/collect', requireAuth, (req, res) => {
   // ── Actual gear drop: roll a real item via rollLoot ──
   if (isSuccess && rewards.gearDrop) {
     const playerLevel = getLevelInfo(u.xp || 0).level;
-    const gearItem = rollLoot(1.0, playerLevel); // guaranteed roll since we already passed chance check
+    // Enforce minimum rarity: re-roll up to 5 times if below dungeon minimum
+    const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+    const minIdx = RARITY_ORDER.indexOf(rewards.gearMinRarity || 'rare');
+    let gearItem = null;
+    for (let attempt = 0; attempt < 5; attempt++) {
+      gearItem = rollLoot(1.0, playerLevel);
+      if (!gearItem) break;
+      if (RARITY_ORDER.indexOf(gearItem.rarity || 'common') >= minIdx) break;
+    }
+    // Final fallback: force rarity if still too low (keeps stats from last roll)
+    if (gearItem && RARITY_ORDER.indexOf(gearItem.rarity || 'common') < minIdx) {
+      gearItem.rarity = rewards.gearMinRarity || 'rare';
+    }
     if (gearItem) {
-      // Enforce minimum rarity from dungeon config
-      const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
-      const minIdx = RARITY_ORDER.indexOf(rewards.gearMinRarity || 'rare');
-      const itemIdx = RARITY_ORDER.indexOf(gearItem.rarity || 'common');
-      if (itemIdx < minIdx) gearItem.rarity = rewards.gearMinRarity || 'rare';
       addLootToInventory(uid, gearItem);
       rewards.gearDropItem = { name: gearItem.name, rarity: gearItem.rarity, slot: gearItem.slot };
     }

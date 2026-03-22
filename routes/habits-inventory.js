@@ -10,6 +10,7 @@ const {
   now, getLevelInfo, getUserStats, getUserEquipment, getUserDropBonus,
   rollLoot, resetLootPity, addLootToInventory, calcDynamicForgeTemp,
   getBondLevel, getLegendaryEffects, createGearInstance, migrateUserEquipment, getGearScore,
+  getTodayBerlin,
 } = require('../lib/helpers');
 const { requireAuth, requireSelf } = require('../lib/middleware');
 const { rebuildCatalogMeta } = require('../lib/quest-catalog');
@@ -65,18 +66,28 @@ router.post('/api/habits/:id/score', requireAuth, (req, res) => {
   const uid = (playerId || '').toLowerCase();
   const u = state.users[uid];
   if (u && direction === 'up') {
-    const bondLevel = u.companion?.bondLevel ?? 1;
-    const bondBonus = 1 + 0.01 * Math.max(0, bondLevel - 1);
-    u.xp = (u.xp || 0) + Math.round(3 * bondBonus);
-    const dropBonus = getUserDropBonus(uid);
-    const { level: habitPlayerLevel } = getLevelInfo(u.xp || 0);
-    const dropped = rollLoot(0.05 + dropBonus, habitPlayerLevel);
-    if (dropped) {
-      resetLootPity(uid);
-      addLootToInventory(uid, dropped);
-      lootDrop = dropped;
+    // Daily gate: XP + loot only on first completion per habit per day
+    const today = getTodayBerlin();
+    if (!u._habitCompletedToday) u._habitCompletedToday = {};
+    const habitKey = req.params.id;
+    if (u._habitCompletedToday._date !== today) {
+      u._habitCompletedToday = { _date: today }; // Reset daily tracking
     }
-    saveUsers();
+    if (!u._habitCompletedToday[habitKey]) {
+      u._habitCompletedToday[habitKey] = true;
+      const bondLevel = u.companion?.bondLevel ?? 1;
+      const bondBonus = 1 + 0.01 * Math.max(0, bondLevel - 1);
+      u.xp = (u.xp || 0) + Math.round(3 * bondBonus);
+      const dropBonus = getUserDropBonus(uid);
+      const { level: habitPlayerLevel } = getLevelInfo(u.xp || 0);
+      const dropped = rollLoot(0.05 + dropBonus, habitPlayerLevel);
+      if (dropped) {
+        resetLootPity(uid);
+        addLootToInventory(uid, dropped);
+        lootDrop = dropped;
+      }
+      saveUsers();
+    }
   }
   saveHabits();
   res.json({ ok: true, habit, lootDrop });
