@@ -2238,6 +2238,50 @@ Both `POST /:factionId/claim` (faction reward claiming) and `resetWeeklyBonuses(
 | `c158738` | 2026-03-22 | Feat: Wire up all 10 Battle Pass XP sources |
 | `71d45e2` | 2026-03-22 | Fix: translate German error in currency spend |
 
+## 30. Phase 2026-03-22 — Perfectionist Audit (Session 14)
+
+### 30.1 Fixes Applied
+
+| # | Issue | Severity | Commit |
+|---|-------|----------|--------|
+| 1 | Last 2 `imageRendering: "auto"` in CharacterView + QuestToasts | LOW | `e289543` |
+| 2 | `GearInstance` type missing `flavorText`, `passiveEffect`, `affixes`, `minLevel` | MEDIUM | `8bb6aab` |
+| 3 | `CharacterData.inventory` type missing 6 backend-provided fields | MEDIUM | `8bb6aab` |
+| 4 | 6 unnecessary `as any` casts removed (CharacterView, ItemActionPopup) | LOW | `8bb6aab` |
+| 5 | 11 dead CSS animations (pulse-amber-border, star-float-*, rune-drift-*, float-particle, fadeOutRight, challenge-toast-*) | LOW | `31dd3b1` |
+| 6 | "Lädt..." → "Loading..." (CharacterView 2x, DailyLoginCalendar 1x) | LOW | `fd519f4` |
+| 7 | "Login-Kalender" → "Login Calendar" | LOW | `fd519f4` |
+| 8 | **No inventory cap** — 13 push sites without limit | **HIGH** | `b5b58bd` |
+
+### 30.2 Inventory Cap Implementation
+
+**Cap:** 100 items (inspired by Diablo inventory slots)
+
+**Protected paths:**
+- `addLootToInventory()` — Skips loot if inventory >= 100 (auto-consumed effects like gold/xp/streak still apply, sets `_inventoryFull` flag)
+- Gacha single pull — Rejects with "Inventory full" error before spending currency
+- Gacha 10-pull — Requires at least 10 free slots before spending currency
+- Trade execution — Validates net item gain won't exceed cap for either player
+
+### 30.3 Remaining `as any` Casts (4 — Acceptable)
+
+| Location | Reason |
+|----------|--------|
+| `CharacterView.tsx:522` | `_playerLevel` temp display prop not in GearInstance type |
+| `CharacterView.tsx:884` | `imageRendering: "smooth"` not in TS CSSProperties enum |
+| `WandererRest.tsx:570` | NPC finalReward.item `icon` field not typed |
+| `GachaView.tsx:819,861` | Gacha history/pool item `icon`/`desc` fields not typed |
+
+### 30.4 Changelog (Session 14)
+
+| Commit | Timestamp | Description |
+|--------|-----------|-------------|
+| `fd519f4` | 2026-03-22 | Fix: translate remaining German UI text |
+| `e289543` | 2026-03-22 | Fix: last 2 imageRendering auto → smooth |
+| `8bb6aab` | 2026-03-22 | Improve type safety: GearInstance + inventory types |
+| `31dd3b1` | 2026-03-22 | Cleanup: remove 11 dead CSS animations |
+| `b5b58bd` | 2026-03-22 | Feat: Inventory cap at 100 items |
+
 ---
 
 *End of Audit Report — Updated 2026-03-22*
