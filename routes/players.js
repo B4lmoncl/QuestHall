@@ -1,8 +1,26 @@
 // ─── Player API ────────────────────────────────────────────────────────────────
 const router = require('express').Router();
+const fs = require('fs');
+const path = require('path');
 const { state, NPC_META, saveUsers, savePlayerProgress } = require('../lib/state');
-const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel, onQuestCompletedByUser } = require('../lib/helpers');
+const { now, todayStr, getLevelInfo, getPlayerProgress, calcDynamicForgeTemp, getBondLevel, onQuestCompletedByUser, awardCurrency, rollLoot, addLootToInventory } = require('../lib/helpers');
 const { requireAuth, requireSelf } = require('../lib/middleware');
+
+// ─── Companion Expeditions data ─────────────────────────────────────────────
+let COMPANION_EXPEDITIONS = { expeditions: [], bondLevelMultiplier: 0.1, cooldownHours: 1 };
+
+function loadCompanionExpeditions() {
+  const filePath = path.join(__dirname, '..', 'public', 'data', 'companionExpeditions.json');
+  try {
+    if (fs.existsSync(filePath)) {
+      COMPANION_EXPEDITIONS = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+      state.companionExpeditionsData = COMPANION_EXPEDITIONS;
+      console.log(`[companion-expeditions] Loaded ${COMPANION_EXPEDITIONS.expeditions.length} expeditions`);
+    }
+  } catch (e) {
+    console.warn('[companion-expeditions] Failed to load:', e.message);
+  }
+}
 
 // PATCH /api/player/:name/profile — update profile settings [auth + self]
 router.patch('/api/player/:name/profile', requireAuth, requireSelf('name'), (req, res) => {
@@ -178,23 +196,39 @@ router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'),
   const petsToday = u.companion.petCountToday || 0;
   const xpLimitReached = petsToday >= 2;
 
-  // Always allow petting, but only award XP for first 2 per day
-  if (!xpLimitReached) {
+  // Check if companion is on an active expedition (not yet collected)
+  const expedition = u.companionExpedition;
+  const onExpedition = expedition && expedition.completesAt && !expedition.collected;
+
+  // Always allow petting, but no bond XP during active expedition or if limit reached
+  if (!xpLimitReached && !onExpedition) {
     u.companion.petCountToday = petsToday + 1;
     u.companion.bondXp = (u.companion.bondXp || 0) + 0.5;
     u.companion.bondLevel = getBondLevel(u.companion.bondXp).level;
   }
   u.companion.lastPetted = now();
   // Battle Pass XP (only when bond XP was awarded)
-  if (!xpLimitReached) { try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {} }
+  if (!xpLimitReached && !onExpedition) { try { const { grantBattlePassXP } = require('./battlepass'); grantBattlePassXP(u, 'companion_pet'); } catch {} }
   saveUsers();
   const bondInfo = getBondLevel(u.companion.bondXp || 0);
+
+  // Build expedition message if on expedition
+  let expeditionMessage = undefined;
+  if (onExpedition) {
+    const remaining = new Date(expedition.completesAt).getTime() - Date.now();
+    if (remaining > 0) {
+      const h = Math.floor(remaining / (1000 * 60 * 60));
+      const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+      expeditionMessage = `Your companion is on an expedition! Returns in ${h}h ${m}m`;
+    }
+  }
+
   res.json({
     success: true,
     companion: { ...u.companion, bondInfo },
     petsToday: u.companion.petCountToday || 0,
-    xpAwarded: !xpLimitReached,
-    message: xpLimitReached ? 'Your companion loves the attention! (XP limit reached for today)' : undefined,
+    xpAwarded: !xpLimitReached && !onExpedition,
+    message: onExpedition ? expeditionMessage : (xpLimitReached ? 'Your companion loves the attention! (XP limit reached for today)' : undefined),
   });
 });
 

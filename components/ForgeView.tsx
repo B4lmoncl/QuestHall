@@ -207,10 +207,10 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
     }
   }, [professions, selectedNpc]);
 
-  // Reset craft count when switching NPC or modal tab
-  useEffect(() => { setCraftCount(1); }, [selectedNpc, npcModalTab]);
-
   const [selectedRerollStat, setSelectedRerollStat] = useState<number | null>(null);
+
+  // Reset craft count and reroll selection when switching NPC, tab, or slot
+  useEffect(() => { setCraftCount(1); setSelectedRerollStat(null); }, [selectedNpc, npcModalTab, selectedSlot]);
 
   const handleCraft = async (recipeId: string, count = 1) => {
     if (crafting || !reviewApiKey) return;

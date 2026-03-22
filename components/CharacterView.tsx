@@ -1605,13 +1605,16 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
           {rightTab === "gems" && !gemsLoading && gemData && (() => {
             const GEM_COLORS: Record<string, string> = { Ruby: "#ef4444", Sapphire: "#3b82f6", Emerald: "#22c55e", Topaz: "#f59e0b", Amethyst: "#a855f7", Diamond: "#e2e8f0" };
             // Group inventory by type
-            const gemMap = new Map(gemData.gems.map(g => [g.id, g]));
-            const grouped: Record<string, { gem: typeof gemData.gems[0]; count: number }[]> = {};
-            for (const inv of gemData.inventory) {
-              const gem = gemMap.get(inv.gemId);
+            const gemMap = new Map(gemData.gems.map((g: { id: string }) => [g.id, g]));
+            const grouped: Record<string, { gemKey: string; gem: typeof gemData.gems[0]; tier: number; count: number; name: string; statBonus: number }[]> = {};
+            for (const [gemKey, inv] of Object.entries(gemData.inventory || {})) {
+              const invData = inv as { count: number; gemType: string; tier: number; name: string; statBonus: number };
+              if (!invData || invData.count <= 0) continue;
+              const gem = gemMap.get(invData.gemType);
               if (!gem) continue;
-              if (!grouped[gem.type]) grouped[gem.type] = [];
-              grouped[gem.type].push({ gem, count: inv.count });
+              const gemName = (gem as { name: string }).name || invData.gemType;
+              if (!grouped[gemName]) grouped[gemName] = [];
+              grouped[gemName].push({ gemKey, gem, tier: invData.tier, count: invData.count, name: invData.name, statBonus: invData.statBonus });
             }
             const doGemAction = async (action: string, body: Record<string, unknown>) => {
               if (!apiKey || gemAction) return;

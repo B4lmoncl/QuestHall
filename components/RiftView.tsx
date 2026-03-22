@@ -122,15 +122,17 @@ export default function RiftView({ onRefresh }: { onRefresh?: () => void }) {
     return () => clearInterval(interval);
   }, [activeRift, fetchRift]);
 
-  const enterRift = async (tierId: string) => {
+  const enterRift = async (tierId: string, mythicLevel?: number) => {
     if (!reviewApiKey || actionLoading) return;
     setActionLoading(true);
     setMessage(null);
     try {
+      const body: Record<string, unknown> = { tier: tierId };
+      if (mythicLevel != null) body.mythicLevel = mythicLevel;
       const r = await fetch("/api/rift/enter", {
         method: "POST",
         headers: { ...getAuthHeaders(reviewApiKey), "Content-Type": "application/json" },
-        body: JSON.stringify({ tier: tierId }),
+        body: JSON.stringify(body),
       });
       const d = await r.json();
       if (!r.ok) setMessage({ text: d.error || "Failed", type: "error" });
@@ -448,7 +450,7 @@ export default function RiftView({ onRefresh }: { onRefresh?: () => void }) {
 
           {/* Enter button */}
           <button
-            onClick={() => enterRift(`mythic:${selectedMythicLevel}`)}
+            onClick={() => enterRift("mythic", selectedMythicLevel)}
             disabled={actionLoading || (tiers.mythic?.onCooldown ?? false)}
             className="btn-interactive w-full text-xs font-bold py-2.5 rounded-lg"
             style={{
