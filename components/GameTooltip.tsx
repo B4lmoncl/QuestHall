@@ -1086,7 +1086,8 @@ interface GameTooltipProps {
   hoverDelay?: number;
 }
 
-export function GameTooltip({ k, entry: directEntry, children, align = "left", heading, hoverDelay }: GameTooltipProps) {
+export function GameTooltip({ k, entry: directEntry, children, align: alignProp, heading, hoverDelay }: GameTooltipProps) {
+  const align = alignProp || (heading ? "center" : "left");
   const resolvedEntry = directEntry || (k ? TOOLTIP_REGISTRY[k] : null);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1201,7 +1202,7 @@ export function GameTooltip({ k, entry: directEntry, children, align = "left", h
               position: "absolute",
               top: pos.top,
               left: pos.left,
-              zIndex: 9950 + depth * 10,
+              zIndex: 10100 + depth * 10,
               borderColor: resolvedEntry.accent ? `${resolvedEntry.accent}30` : undefined,
             }}
             onMouseEnter={handleTooltipEnter}

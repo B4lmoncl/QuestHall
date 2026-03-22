@@ -388,7 +388,7 @@ const RARITY_BORDER_30: Record<string, string> = {
 
 type InventoryItem = CharacterData["inventory"][number];
 
-function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: InventoryItem; mousePosRef: React.RefObject<{ x: number; y: number }>; equippedItem?: InventoryItem | null }) {
+function InventoryTooltip({ item, mousePosRef, equippedItem, playerLevel }: { item: InventoryItem; mousePosRef: React.RefObject<{ x: number; y: number }>; equippedItem?: InventoryItem | null; playerLevel?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
   const hasStats = item.stats && Object.keys(item.stats).length > 0;
@@ -485,9 +485,9 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
                     <span className="font-mono font-semibold" style={{ color: val > 0 ? "#4ade80" : "rgba(255,255,255,0.4)" }}>
                       {val > 0 ? `+${val}` : val}
                     </span>
-                    {showDiff && diff !== 0 && (
-                      <span className="font-mono font-bold" style={{ color: diff > 0 ? "#4ade80" : "#ef4444", fontSize: 12 }}>
-                        {diff > 0 ? `▲${diff}` : `▼${Math.abs(diff)}`}
+                    {showDiff && (
+                      <span className="font-mono font-bold" style={{ color: diff > 0 ? "#4ade80" : diff < 0 ? "#ef4444" : "rgba(255,255,255,0.2)", fontSize: 12 }}>
+                        {diff > 0 ? `▲${diff}` : diff < 0 ? `▼${Math.abs(diff)}` : "="}
                       </span>
                     )}
                   </span>
@@ -497,20 +497,30 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
           </div>
         )}
 
-        {/* Comparison summary */}
+        {/* Comparison summary — equipped item info */}
         {equippedItem && equippedItem.id !== item.id && (() => {
           const totalDiff = [...allStatKeys].reduce((sum, stat) => {
             return sum + ((item.stats?.[stat] as number) || 0) - ((eqStats[stat] as number) || 0);
           }, 0);
+          const eqRarityColor = RARITY_COLORS[equippedItem.rarity] || "#9ca3af";
           return (
-            <div className="pt-1 space-y-1" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+            <div className="pt-1.5 space-y-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>vs {equippedItem.name}</span>
-                {totalDiff !== 0 && (
-                  <span className="text-xs font-bold font-mono" style={{ color: totalDiff > 0 ? "#4ade80" : "#ef4444" }}>
-                    {totalDiff > 0 ? `+${totalDiff}` : totalDiff} total
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>vs</span>
+                  <span className="text-xs font-semibold truncate" style={{ color: eqRarityColor }}>{equippedItem.name}</span>
+                </div>
+                <span className="text-xs font-bold font-mono flex-shrink-0" style={{ color: totalDiff > 0 ? "#4ade80" : totalDiff < 0 ? "#ef4444" : "rgba(255,255,255,0.3)" }}>
+                  {totalDiff > 0 ? `+${totalDiff}` : totalDiff === 0 ? "=" : totalDiff} total
+                </span>
+              </div>
+              {/* Equipped item mini-stats */}
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                {Object.entries(eqStats).filter(([, v]) => (v as number) > 0).map(([k, v]) => (
+                  <span key={k} className="text-xs" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    {STAT_LABELS[k] || k}: +{v as number}
                   </span>
-                )}
+                ))}
               </div>
             </div>
           );
@@ -519,7 +529,7 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
         {/* Level requirement + Slot type */}
         <div className="text-xs pt-1 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           {item.minLevel && item.minLevel > 1 && (
-            <p style={{ color: item.minLevel > (item as any)._playerLevel ? "#ef4444" : "rgba(255,255,255,0.4)" }}>
+            <p style={{ color: playerLevel != null && item.minLevel > playerLevel ? "#ef4444" : "rgba(255,255,255,0.4)" }}>
               Requires Level {item.minLevel}
             </p>
           )}
@@ -640,7 +650,7 @@ function InventorySlot({ item, level, idx, onItemClick, onDragStart, onDragOver,
           </span>
         )}
       </button>
-      {hovered && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} equippedItem={equippedForSlot} />, document.body)}
+      {hovered && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} equippedItem={equippedForSlot} playerLevel={level} />, document.body)}
     </>
   );
 }
@@ -1749,10 +1759,18 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
 
       {/* Item Action Popup */}
       {selectedItem && charData && (() => {
-        const equippedIds = Object.values(charData.equipment).filter(Boolean);
-        const isEquipped = equippedIds.includes(selectedItem.item.id);
+        const equippedIdSet = new Set(
+          Object.values(charData.equipment).filter(Boolean).map(v =>
+            typeof v === 'object' && v !== null ? ((v as { instanceId?: string; templateId?: string }).instanceId || (v as { instanceId?: string; templateId?: string }).templateId) : v
+          )
+        );
+        const isEquipped = equippedIdSet.has(selectedItem.item.id);
         const equippedSlot = isEquipped
-          ? Object.entries(charData.equipment).find(([, v]) => v === selectedItem.item.id)?.[0]
+          ? Object.entries(charData.equipment).find(([, v]) => {
+              if (!v) return false;
+              const id = typeof v === 'object' ? ((v as { instanceId?: string; templateId?: string }).instanceId || (v as { instanceId?: string; templateId?: string }).templateId) : v;
+              return id === selectedItem.item.id;
+            })?.[0]
           : undefined;
         return (
           <ItemActionPopup
@@ -1804,7 +1822,10 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
             setCollectionLoading(true);
             try {
               const r = await fetch(`/api/player/${encodeURIComponent(playerName)}/collection`);
-              if (r.ok) setCollectionData(await r.json());
+              if (r.ok) {
+                const d = await r.json();
+                setCollectionData({ items: d.uniques || [], completion: (d.completionPercent ?? 0) / 100 });
+              }
             } catch { /* ignore */ }
             setCollectionLoading(false);
           }

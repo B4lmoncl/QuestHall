@@ -952,21 +952,26 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                                 {[1, 2, 3, 5, 10].map(n => <option key={n} value={n}>x{n}</option>)}
                               </select>
                             )}
-                            {needsLearn ? (
+                            {needsLearn ? (() => {
+                              const playerGold = currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0;
+                              const canAfford = playerGold >= (recipe.trainerCost ?? 0);
+                              return (
                               <button
                                 onClick={() => handleLearnRecipe(recipe.id)}
-                                disabled={crafting || (currencies.gold ?? loggedInUser?.currencies?.gold ?? loggedInUser?.gold ?? 0) < (recipe.trainerCost ?? 0)}
+                                disabled={crafting || !canAfford}
                                 className="forge-btn text-sm px-4 py-2 rounded-lg font-semibold"
                                 style={{
-                                  background: `${selectedNpc.color}15`,
-                                  color: "#facc15",
-                                  border: "1px solid rgba(250,204,21,0.3)",
+                                  background: canAfford ? `${selectedNpc.color}15` : "rgba(255,255,255,0.03)",
+                                  color: canAfford ? "#facc15" : "rgba(255,255,255,0.2)",
+                                  border: canAfford ? "1px solid rgba(250,204,21,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                                  cursor: canAfford && !crafting ? "pointer" : "not-allowed",
                                 }}
-                                title={`Learn from ${selectedNpc.npcName} for ${recipe.trainerCost}g`}
+                                title={!canAfford ? `Need ${(recipe.trainerCost ?? 0) - playerGold} more gold` : `Learn from ${selectedNpc.npcName} for ${recipe.trainerCost}g`}
                               >
                                 {crafting ? "..." : `Learn (${recipe.trainerCost}g)`}
                               </button>
-                            ) : (
+                              );
+                            })() : (
                               <button
                                 onClick={() => canDo && handleCraft(recipe.id, effectiveCount)}
                                 disabled={!canDo || crafting}

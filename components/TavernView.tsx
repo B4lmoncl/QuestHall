@@ -260,7 +260,11 @@ export default function TavernView({ onRefresh }: { onRefresh?: () => void }) {
           <p className="text-sm font-semibold text-w40 mb-2">Rest on Cooldown</p>
           <p className="text-xs text-w25">You recently rested. Next rest available:</p>
           <p className="text-sm font-mono font-bold mt-1" style={{ color: "#d97706" }}>
-            {new Date(status.cooldownEndsAt).toLocaleDateString()}
+            {(() => {
+              const ms = new Date(status.cooldownEndsAt).getTime() - Date.now();
+              const days = Math.max(0, Math.ceil(ms / 86400000));
+              return days > 0 ? `in ${days} day${days !== 1 ? "s" : ""}` : "Available now";
+            })()}
           </p>
         </div>
       )}

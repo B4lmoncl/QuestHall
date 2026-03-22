@@ -549,7 +549,7 @@ function ExpeditionView({
             Your contribution: {expedition.playerContribution} Quests
           </span>
         </div>
-        {expedition.contributions.length > 0 ? (() => {
+        {expedition.contributions?.length > 0 ? (() => {
           const topCount = expedition.contributions[0]?.count || 1;
           const fairShare = expedition.playerCount > 0 ? Math.ceil(maxRequired / expedition.playerCount) : 1;
           return (
@@ -619,6 +619,13 @@ export default function ChallengesView({
   const [claimingCheckpoint, setClaimingCheckpoint] = useState<number | null>(null);
   const [claimError, setClaimError] = useState<string | null>(null);
   const { reviewApiKey, playerName } = useDashboard();
+
+  // Auto-dismiss claim error after 5 seconds
+  useEffect(() => {
+    if (!claimError) return;
+    const t = setTimeout(() => setClaimError(null), 5000);
+    return () => clearTimeout(t);
+  }, [claimError]);
 
   const handleClaimStage = useCallback(async () => {
     if (!reviewApiKey) return;
