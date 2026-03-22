@@ -218,19 +218,6 @@ function grantReputation(user, questType, questRarity) {
   return results;
 }
 
-// ─── Weekly reset (called from server.js midnight cron) ──────────────────────
-
-function resetWeeklyBonuses() {
-  for (const [, user] of state.usersByName) {
-    if (!user.factions) continue;
-    for (const fid of Object.keys(user.factions)) {
-      user.factions[fid].weeklyBonusUsed = 0;
-    }
-  }
-  saveUsers();
-}
-
 module.exports = router;
 module.exports.grantReputation = grantReputation;
-module.exports.resetWeeklyBonuses = resetWeeklyBonuses;
 module.exports.ensureUserFactions = ensureUserFactions;
