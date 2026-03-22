@@ -1110,19 +1110,20 @@ export default function Dashboard() {
 
               {/* Floor header banner */}
               <div className="floor-banner relative overflow-hidden" style={{ background: "#0b0d11", borderRadius: 0, height: 200 }}>
-                {/* Banner background image (right-aligned, 792x200) */}
+                {/* Banner background image (right-aligned, 792x200) with left fade-out via mask */}
                 {currentFloor.banner && (
                   <img
                     src={currentFloor.banner}
                     alt=""
                     className="absolute top-0 right-0 h-full w-auto max-w-none pointer-events-none img-render-auto"
+                    style={currentFloor.id === "breakaway" ? {} : { maskImage: "linear-gradient(to right, transparent 0%, black 30%)", WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 30%)" }}
                     onError={e => { e.currentTarget.style.display = "none"; }}
                   />
                 )}
-                {/* Gradient overlay (floor color → transparent) */}
-                <div className="absolute inset-0" style={{ background: currentFloor.gradient, opacity: 0.7 }} />
+                {/* Gradient overlay (floor color, fades out quickly to the right so image shows through) */}
+                <div className="absolute inset-0" style={{ background: `linear-gradient(90deg, ${currentFloor.color}cc 0%, ${currentFloor.color}55 25%, transparent 50%)` }} />
                 {/* Dark scrim for text legibility (left-heavy) */}
-                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.3) 40%, transparent 70%)" }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.2) 30%, transparent 50%)" }} />
                 {/* Text */}
                 <div className="absolute bottom-5 left-5 z-10">
                   <span className="text-base font-black uppercase tracking-widest" style={{ color: currentFloor.color, textShadow: `0 1px 12px rgba(0,0,0,0.8), 0 0 20px ${currentFloor.color}30` }}>{currentFloor.name}</span>
