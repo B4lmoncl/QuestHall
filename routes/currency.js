@@ -46,7 +46,7 @@ router.post('/api/currency/:playerId', requireApiKey, (req, res) => {
 
   if (action === 'spend') {
     if (u.currencies[currency] < amt) {
-      return res.status(400).json({ error: `Nicht genug ${currency}. Hast ${u.currencies[currency]}, brauchst ${amt}` });
+      return res.status(400).json({ error: `Not enough ${currency}. Have ${u.currencies[currency]}, need ${amt}` });
     }
     u.currencies[currency] -= amt;
   } else {
