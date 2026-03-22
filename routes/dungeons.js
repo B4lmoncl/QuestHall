@@ -176,8 +176,29 @@ function applyDungeonRewards(userId, rewards) {
 
 // ─── Endpoints ──────────────────────────────────────────────────────────────
 
+// ─── Stale Run Cleanup ───────────────────────────────────────────────────────
+// Called lazily on GET — prunes forming runs older than 24h
+function pruneStaleRuns() {
+  const MAX_FORMING_AGE_MS = 24 * 3600000; // 24 hours
+  let pruned = 0;
+  for (const [runId, run] of Object.entries(dungeonState.activeRuns)) {
+    if (run.status === 'forming' && run.createdAt) {
+      const age = Date.now() - new Date(run.createdAt).getTime();
+      if (age > MAX_FORMING_AGE_MS) {
+        delete dungeonState.activeRuns[runId];
+        pruned++;
+      }
+    }
+  }
+  if (pruned > 0) {
+    saveDungeonState();
+    console.log(`[dungeons] Pruned ${pruned} stale forming runs`);
+  }
+}
+
 // GET /api/dungeons — list dungeons with player status
 router.get('/api/dungeons', (req, res) => {
+  pruneStaleRuns();
   const playerName = (req.query.player || '').toLowerCase();
   const u = playerName ? state.usersByName.get(playerName) : null;
   const uid = u ? (u.id || playerName) : null;
@@ -257,14 +278,29 @@ router.get('/api/dungeons', (req, res) => {
   res.json({ dungeons, activeRun, history });
 });
 
+// POST /api/dungeons/cancel — cancel a forming run (creator only)
+router.post('/api/dungeons/cancel', requireAuth, (req, res) => {
+  const uid = (req.auth?.userId || '').toLowerCase();
+  const { runId } = req.body;
+  if (!runId) return res.status(400).json({ error: 'runId required' });
+  const run = dungeonState.activeRuns[runId];
+  if (!run) return res.status(404).json({ error: 'Run not found' });
+  if (run.createdBy !== uid) return res.status(403).json({ error: 'Only the creator can cancel' });
+  if (run.status !== 'forming') return res.status(400).json({ error: 'Can only cancel forming runs' });
+  delete dungeonState.activeRuns[runId];
+  saveDungeonState();
+  console.log(`[dungeons] ${uid} cancelled forming run ${runId}`);
+  res.json({ ok: true, message: 'Dungeon run cancelled.' });
+});
+
 // POST /api/dungeons/create — create a dungeon run and invite friends
 router.post('/api/dungeons/create', requireAuth, (req, res) => {
-  const uid = req.auth?.userId;
+  const uid = (req.auth?.userId || '').toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'User not found' });
 
   const { dungeonId, invitePlayers } = req.body;
-  if (!dungeonId) return res.status(400).json({ error: 'dungeonId required' });
+  if (!dungeonId || typeof dungeonId !== 'string') return res.status(400).json({ error: 'dungeonId required' });
 
   const dungeon = getDungeon(dungeonId);
   if (!dungeon) return res.status(400).json({ error: 'Unknown dungeon' });
@@ -287,8 +323,10 @@ router.post('/api/dungeons/create', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'You already have an active dungeon run', runId: existing.runId });
   }
 
-  // Validate invites
-  const invited = Array.isArray(invitePlayers) ? invitePlayers.map(p => p.toLowerCase()).filter(Boolean) : [];
+  // Validate invites: deduplicate, prevent self-invite
+  const invited = [...new Set(
+    Array.isArray(invitePlayers) ? invitePlayers.map(p => String(p).toLowerCase()).filter(Boolean) : []
+  )].filter(n => n !== uid);
   if (invited.length === 0) {
     return res.status(400).json({ error: 'Must invite at least 1 friend' });
   }
@@ -339,7 +377,7 @@ router.post('/api/dungeons/create', requireAuth, (req, res) => {
 
 // POST /api/dungeons/:runId/join — accept dungeon invite
 router.post('/api/dungeons/:runId/join', requireAuth, (req, res) => {
-  const uid = req.auth?.userId;
+  const uid = (req.auth?.userId || '').toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'User not found' });
 
@@ -408,7 +446,7 @@ router.post('/api/dungeons/:runId/join', requireAuth, (req, res) => {
 
 // POST /api/dungeons/:runId/collect — collect rewards after dungeon completes
 router.post('/api/dungeons/:runId/collect', requireAuth, (req, res) => {
-  const uid = req.auth?.userId;
+  const uid = (req.auth?.userId || '').toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'User not found' });
 

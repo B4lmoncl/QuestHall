@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const router = require('express').Router();
-const { state, saveUsers } = require('../lib/state');
+const { state, saveUsers, ensureUserCurrencies } = require('../lib/state');
 const { now, getLevelInfo } = require('../lib/helpers');
 const { requireAuth } = require('../lib/middleware');
 
@@ -213,6 +213,7 @@ router.post('/api/gems/socket', requireAuth, (req, res) => {
       statBonus: tierDef?.statBonus,
     },
   });
+  console.log(`[gems] ${userId} socketed ${gKey} into ${item.name} (socket ${idx})`);
 });
 
 // ─── POST /api/gems/unsocket — Remove gem from gear (costs gold) ───────────
@@ -247,18 +248,14 @@ router.post('/api/gems/unsocket', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'Socket is already empty' });
   }
 
-  // Check gold
-  const gold = u.currencies?.gold ?? u.gold ?? 0;
-  if (gold < UNSOCKET_COST) {
-    return res.status(400).json({ error: `Not enough gold — need ${UNSOCKET_COST}, have ${gold}` });
+  // Check gold (normalize currency format first)
+  ensureUserCurrencies(u);
+  if ((u.currencies.gold || 0) < UNSOCKET_COST) {
+    return res.status(400).json({ error: `Not enough gold — need ${UNSOCKET_COST}, have ${u.currencies.gold || 0}` });
   }
 
   // Deduct gold
-  if (u.currencies) {
-    u.currencies.gold = (u.currencies.gold || 0) - UNSOCKET_COST;
-  } else {
-    u.gold = (u.gold || 0) - UNSOCKET_COST;
-  }
+  u.currencies.gold -= UNSOCKET_COST;
 
   // Return gem to inventory
   u.gems = u.gems || {};
@@ -314,18 +311,14 @@ router.post('/api/gems/upgrade', requireAuth, (req, res) => {
     });
   }
 
-  // Check gold
-  const gold = u.currencies?.gold ?? u.gold ?? 0;
-  if (gold < UPGRADE_COST) {
-    return res.status(400).json({ error: `Not enough gold — need ${UPGRADE_COST}, have ${gold}` });
+  // Check gold (normalize currency format first)
+  ensureUserCurrencies(u);
+  if ((u.currencies.gold || 0) < UPGRADE_COST) {
+    return res.status(400).json({ error: `Not enough gold — need ${UPGRADE_COST}, have ${u.currencies.gold || 0}` });
   }
 
   // Deduct gold
-  if (u.currencies) {
-    u.currencies.gold = (u.currencies.gold || 0) - UPGRADE_COST;
-  } else {
-    u.gold = (u.gold || 0) - UPGRADE_COST;
-  }
+  u.currencies.gold -= UPGRADE_COST;
 
   // Remove source gems, add upgraded gem
   u.gems[gKey] = owned - GEMS_REQUIRED;

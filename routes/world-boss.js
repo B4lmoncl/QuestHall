@@ -57,7 +57,13 @@ function getActiveBoss() {
   if (!ab.defeated && new Date(ab.expiresAt) < new Date()) {
     // Boss expired undefeated — move to history
     ab.expired = true;
-    worldBossState.history.push({ ...ab });
+    // Strip large contributions map before archiving to keep history lean
+    const archived = { ...ab, contributorCount: Object.keys(ab.contributions).length };
+    delete archived.contributions;
+    delete archived.rewardsClaimed;
+    worldBossState.history.push(archived);
+    // Cap history at 50 entries
+    if (worldBossState.history.length > 50) worldBossState.history = worldBossState.history.slice(-50);
     worldBossState.activeBoss = null;
     saveWorldBossState();
     return null;
@@ -260,7 +266,7 @@ router.post('/api/world-boss/damage', requireAuth, (req, res) => {
 // ─── POST /api/world-boss/claim — Claim rewards after defeat ────────────────
 
 router.post('/api/world-boss/claim', requireAuth, (req, res) => {
-  const uid = req.auth?.userId;
+  const uid = (req.auth?.userId || '').toLowerCase();
   const user = uid ? state.users[uid] : null;
   if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -273,15 +279,17 @@ router.post('/api/world-boss/claim', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'You did not contribute to this boss fight' });
   }
 
+  // Double-claim guard: mark claimed FIRST (before reward calculation) to prevent race conditions
   if (boss.rewardsClaimed.includes(uid)) {
     return res.status(400).json({ error: 'Rewards already claimed' });
   }
+  boss.rewardsClaimed.push(uid);
 
   const template = getBossTemplate(boss.bossId);
   const leaderboard = getContributionLeaderboard(boss, 999);
   const rank = leaderboard.findIndex(e => e.playerId === uid) + 1;
   const contribution = boss.contributions[uid];
-  const totalDamage = boss.maxHp - boss.currentHp || boss.maxHp; // avoid /0
+  const totalDamage = Math.max(boss.maxHp - boss.currentHp, 1); // avoid /0
   const contributionPercent = contribution.damage / totalDamage;
 
   const rewards = [];
@@ -372,7 +380,7 @@ router.post('/api/world-boss/claim', requireAuth, (req, res) => {
     rewards.push({ type: 'stardust', amount: bonusStardust });
   }
 
-  boss.rewardsClaimed.push(uid);
+  // rewardsClaimed already pushed at top of endpoint (race condition guard)
   saveWorldBossState();
   saveUsers();
 
