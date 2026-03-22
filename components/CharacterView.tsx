@@ -1644,8 +1644,8 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                   <div key={type}>
                     <p className="text-xs font-semibold mb-1" style={{ color: GEM_COLORS[type] || "#9ca3af" }}>{type}</p>
                     <div className="space-y-0.5">
-                      {entries.sort((a, b) => a.gem.tier - b.gem.tier).map(({ gem, count }) => (
-                        <div key={gem.id} className="flex items-center justify-between px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.03)" }}>
+                      {entries.sort((a, b) => a.gem.tier - b.gem.tier).map(({ gemKey, gem, count }) => (
+                        <div key={gemKey} className="flex items-center justify-between px-2 py-1 rounded" style={{ background: "rgba(255,255,255,0.03)" }}>
                           <div className="flex items-center gap-1.5">
                             <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: GEM_COLORS[gem.type] || "#9ca3af" }} />
                             <span className="text-xs" style={{ color: "rgba(255,255,255,0.6)" }}>{gem.name}</span>
@@ -1655,7 +1655,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                             <span className="text-xs font-mono" style={{ color: GEM_COLORS[gem.type] || "#9ca3af" }}>x{count}</span>
                             {count >= 3 && (
                               <button
-                                onClick={() => doGemAction("upgrade", { gemId: gem.id })}
+                                onClick={() => doGemAction("upgrade", { gemKey })}
                                 disabled={!!gemAction}
                                 className="text-xs px-1.5 py-0.5 rounded"
                                 style={{ background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: gemAction ? "not-allowed" : "pointer", fontSize: 12 }}
@@ -1674,9 +1674,9 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                 {Object.keys(gemData.socketedGems || {}).length > 0 && (
                   <>
                     <p className="text-xs font-bold uppercase tracking-wider mt-3" style={{ color: "rgba(255,255,255,0.35)" }}>Sockets</p>
-                    {Object.entries(gemData.socketedGems).map(([itemId, data]) => (
-                      <div key={itemId} className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
-                        <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>{data.slot}</p>
+                    {Object.entries(gemData.socketedGems).map(([instanceId, data]) => (
+                      <div key={instanceId} className="rounded-lg p-2" style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                        <p className="text-xs font-semibold mb-1.5" style={{ color: "rgba(255,255,255,0.55)" }}>{(data as { itemName?: string; slot: string }).itemName || (data as { slot: string }).slot}</p>
                         <div className="flex gap-1.5">
                           {data.sockets.map((socket, si) => (
                             <div key={si} className="flex flex-col items-center gap-1">
@@ -1697,8 +1697,13 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                               <div className="flex gap-0.5">
                                 {!socket ? (
                                   <button
-                                    onClick={() => doGemAction("socket", { itemId, socketIndex: si })}
-                                    disabled={!!gemAction}
+                                    onClick={() => {
+                                      // Pick first available gem from inventory for quick socket
+                                      const firstGem = Object.entries(gemData.inventory || {}).find(([, v]) => (v as { count: number }).count > 0);
+                                      if (!firstGem) { addToast?.({ type: "error", message: "No gems available" }); return; }
+                                      doGemAction("socket", { instanceId, socketIndex: si, gemKey: firstGem[0] });
+                                    }}
+                                    disabled={!!gemAction || Object.keys(gemData.inventory || {}).length === 0}
                                     className="text-xs px-1 py-0.5 rounded"
                                     style={{ fontSize: 12, background: "rgba(167,139,250,0.1)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
                                   >
@@ -1706,12 +1711,12 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                                   </button>
                                 ) : (
                                   <button
-                                    onClick={() => doGemAction("unsocket", { itemId, socketIndex: si })}
+                                    onClick={() => doGemAction("unsocket", { instanceId, socketIndex: si })}
                                     disabled={!!gemAction}
                                     className="text-xs px-1 py-0.5 rounded"
                                     style={{ fontSize: 12, background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", cursor: gemAction ? "not-allowed" : "pointer" }}
                                   >
-                                    Unsocket 50g
+                                    Unsocket {gemData.unsocketCost || 50}g
                                   </button>
                                 )}
                               </div>

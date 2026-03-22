@@ -246,6 +246,24 @@ router.get('/api/world-boss', (req, res) => {
   });
 });
 
+// ─── GET /api/world-boss/history — Past boss encounters ─────────────────────
+
+router.get('/api/world-boss/history', (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit, 10) || 20, 50);
+  const history = (worldBossState.history || []).slice(-limit).reverse();
+  const enriched = history.map(h => {
+    const template = getBossTemplate(h.bossId);
+    return {
+      ...h,
+      name: template?.name || h.bossId,
+      title: template?.title || '',
+      icon: template?.icon || '',
+      accent: template?.accent || '#888',
+    };
+  });
+  res.json({ history: enriched });
+});
+
 // ─── POST /api/world-boss/damage — Record quest damage ─────────────────────
 
 router.post('/api/world-boss/damage', requireAuth, (req, res) => {

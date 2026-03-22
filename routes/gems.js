@@ -100,11 +100,30 @@ router.get('/api/gems', requireAuth, (req, res) => {
     };
   }
 
+  // Build socketedGems from equipped gear for the UI
+  const socketedGems = {};
+  if (u && u.equipment) {
+    for (const [slot, item] of Object.entries(u.equipment)) {
+      if (!item || typeof item !== 'object' || !item.sockets || !Array.isArray(item.sockets)) continue;
+      const sockets = item.sockets.map(gKey => {
+        if (!gKey) return null;
+        const p = parseGemKey(gKey);
+        if (!p) return null;
+        const d = getGemDef(p.type);
+        const td = getGemTier(p.type, p.tier);
+        return { gemKey: gKey, gemType: p.type, gemName: td?.name || gKey, tier: p.tier, stat: d?.stat, statBonus: td?.statBonus, color: d?.color };
+      });
+      socketedGems[item.instanceId || slot] = { slot, itemName: item.name || slot, sockets };
+    }
+  }
+
   res.json({
     gems: GEMS_DATA.gems,
     socketsByRarity: GEMS_DATA.socketsByRarity,
     dropConfig: GEMS_DATA.dropConfig,
     inventory: enriched,
+    socketedGems,
+    unsocketCost: 50,
   });
 });
 
