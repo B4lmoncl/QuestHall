@@ -267,4 +267,37 @@ Quest completion, daily bonus, rituals, vows, battle pass, factions, world boss,
 
 ---
 
+## 6. Session 24 — Visual Overhaul & UI Consistency (2026-03-22)
+
+### Visual Changes Applied
+
+| Change | Files | Description |
+|--------|-------|-------------|
+| Quest card emboss | `QuestCards.tsx`, `globals.css` | Inset shadows, grain overlay, 4px rarity accent with glow |
+| Diablo progress bars | `globals.css`, `UserCard.tsx`, `FactionsView.tsx`, `BattlePassView.tsx`, `CampaignHub.tsx` | 7px, beveled, segment marks, pulse at >90% |
+| Stat card depth | `StatBar.tsx`, `globals.css` | Radial gradient highlight + inset shadows |
+| Atmospheric modal backdrops | `ModalPortal.tsx`, `globals.css` | Radial gradient vignette + blur (system-wide via ModalPortal) |
+| Reward burst animation | `RewardCelebration.tsx`, `globals.css` | Scale bounce-in + atmospheric backdrop |
+| Enhanced tab transitions | `globals.css` | 10px translateY, 0.3s cubic-bezier |
+
+### Tooltip Registry Completed
+
+Added 3 missing entries: `gear_score`, `collection_log`, `mythic_rift`. All displayed game mechanics now have tooltip coverage.
+
+### UI Design Guidelines
+
+Added comprehensive design rules to `CLAUDE.md`: typography, colors, interactions, feedback, tooltips, modals, visual depth, animations, 8-point consistency checklist.
+
+### Changelog
+
+| Commit | Description |
+|--------|-------------|
+| `4ef0663` | Visual overhaul: quest emboss, Diablo bars, stat depth, atmospheric modals |
+| `0db1930` | UI Design Guidelines in CLAUDE.md |
+| `e6a60f9` | Compress AUDIT_REPORT.md (2938 → 270 lines) |
+| `be52d3e` | System-wide atmospheric modals + Diablo bars on factions/battlepass/campaigns |
+| `4ddacac` | Missing tooltip registry entries: gear_score, collection_log, mythic_rift |
+
+---
+
 *End of Audit Report*
