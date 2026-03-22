@@ -388,7 +388,7 @@ const RARITY_BORDER_30: Record<string, string> = {
 
 type InventoryItem = CharacterData["inventory"][number];
 
-function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: InventoryItem; mousePosRef: React.RefObject<{ x: number; y: number }>; equippedItem?: InventoryItem | null }) {
+function InventoryTooltip({ item, mousePosRef, equippedItem, playerLevel }: { item: InventoryItem; mousePosRef: React.RefObject<{ x: number; y: number }>; equippedItem?: InventoryItem | null; playerLevel?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const rarityColor = RARITY_COLORS[item.rarity] || "#9ca3af";
   const hasStats = item.stats && Object.keys(item.stats).length > 0;
@@ -519,7 +519,7 @@ function InventoryTooltip({ item, mousePosRef, equippedItem }: { item: Inventory
         {/* Level requirement + Slot type */}
         <div className="text-xs pt-1 space-y-0.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
           {item.minLevel && item.minLevel > 1 && (
-            <p style={{ color: item.minLevel > (item as any)._playerLevel ? "#ef4444" : "rgba(255,255,255,0.4)" }}>
+            <p style={{ color: playerLevel != null && item.minLevel > playerLevel ? "#ef4444" : "rgba(255,255,255,0.4)" }}>
               Requires Level {item.minLevel}
             </p>
           )}
@@ -640,7 +640,7 @@ function InventorySlot({ item, level, idx, onItemClick, onDragStart, onDragOver,
           </span>
         )}
       </button>
-      {hovered && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} equippedItem={equippedForSlot} />, document.body)}
+      {hovered && createPortal(<InventoryTooltip item={item} mousePosRef={mousePosRef} equippedItem={equippedForSlot} playerLevel={level} />, document.body)}
     </>
   );
 }
@@ -1749,10 +1749,18 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
 
       {/* Item Action Popup */}
       {selectedItem && charData && (() => {
-        const equippedIds = Object.values(charData.equipment).filter(Boolean);
-        const isEquipped = equippedIds.includes(selectedItem.item.id);
+        const equippedIdSet = new Set(
+          Object.values(charData.equipment).filter(Boolean).map(v =>
+            typeof v === 'object' && v !== null ? ((v as { instanceId?: string; templateId?: string }).instanceId || (v as { instanceId?: string; templateId?: string }).templateId) : v
+          )
+        );
+        const isEquipped = equippedIdSet.has(selectedItem.item.id);
         const equippedSlot = isEquipped
-          ? Object.entries(charData.equipment).find(([, v]) => v === selectedItem.item.id)?.[0]
+          ? Object.entries(charData.equipment).find(([, v]) => {
+              if (!v) return false;
+              const id = typeof v === 'object' ? ((v as { instanceId?: string; templateId?: string }).instanceId || (v as { instanceId?: string; templateId?: string }).templateId) : v;
+              return id === selectedItem.item.id;
+            })?.[0]
           : undefined;
         return (
           <ItemActionPopup
