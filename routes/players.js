@@ -187,6 +187,12 @@ router.post('/api/player/:name/companion/pet', requireAuth, requireSelf('name'),
   if (!u) return res.status(404).json({ error: 'Player not found' });
   if (!u.companion) return res.status(404).json({ error: 'No companion' });
 
+  // Check if companion is on expedition
+  if (u.companionExpedition && !u.companionExpedition.collected) {
+    const done = Date.now() >= new Date(u.companionExpedition.completesAt).getTime();
+    if (!done) return res.status(400).json({ error: 'Your companion is away on an expedition. Wait for them to return!' });
+  }
+
   const today = todayStr();
   if (u.companion.petDateStr !== today) {
     u.companion.petCountToday = 0;
@@ -238,6 +244,12 @@ router.post('/api/player/:name/companion/ultimate', requireAuth, requireSelf('na
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
   if (!u.companion) return res.status(404).json({ error: 'No companion' });
+
+  // Check if companion is on expedition
+  if (u.companionExpedition && !u.companionExpedition.collected) {
+    const done = Date.now() >= new Date(u.companionExpedition.completesAt).getTime();
+    if (!done) return res.status(400).json({ error: 'Your companion is away on an expedition. Wait for them to return!' });
+  }
 
   const bondLevel = u.companion.bondLevel || getBondLevel(u.companion.bondXp || 0).level;
   const ultimateData = state.companionsData?.ultimates;
