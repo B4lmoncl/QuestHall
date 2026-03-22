@@ -544,7 +544,31 @@ export default function DungeonView({ onRefresh }: { onRefresh?: () => void }) {
             )}
 
             {activeRun.status === "forming" && activeRun.createdBy === playerName && (
-              <p className="text-xs text-w20 py-2.5">Waiting for invited friends to join. Dungeon starts when minimum players join.</p>
+              <div className="flex items-center gap-3 py-2.5">
+                <p className="text-xs text-w20 flex-1">Waiting for invited friends to join. Dungeon starts when minimum players join.</p>
+                <button
+                  onClick={async () => {
+                    if (!reviewApiKey || actionLoading) return;
+                    setActionLoading(true);
+                    try {
+                      const r = await fetch("/api/dungeons/cancel", {
+                        method: "POST",
+                        headers: { ...getAuthHeaders(reviewApiKey), "Content-Type": "application/json" },
+                        body: JSON.stringify({ runId: activeRun.runId }),
+                      });
+                      const d = await r.json();
+                      if (!r.ok) setMessage({ text: d.error || "Failed to cancel", type: "error" });
+                      else { setMessage({ text: d.message || "Run cancelled", type: "success" }); fetchDungeons(); onRefresh?.(); }
+                    } catch { setMessage({ text: "Network error", type: "error" }); }
+                    setActionLoading(false);
+                  }}
+                  disabled={actionLoading}
+                  className="btn-interactive text-xs font-semibold px-3 py-1.5 rounded-lg shrink-0"
+                  style={{ background: "rgba(239,68,68,0.08)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", opacity: actionLoading ? 0.5 : 1 }}
+                >
+                  {actionLoading ? "..." : "Cancel Run"}
+                </button>
+              </div>
             )}
           </div>
         </div>
