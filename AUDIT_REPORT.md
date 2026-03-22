@@ -2151,6 +2151,17 @@ Both `POST /:factionId/claim` (faction reward claiming) and `resetWeeklyBonuses(
 | `e9e40e9` | 2026-03-22 | Fix CRITICAL: battlepass+factions req.playerName, factions saveData, weekly bonus auto-reset |
 | `9628fbe` | 2026-03-22 | QoL: tab animations for 9 views, translate DailyLoginCalendar German text, update CLAUDE.md+ARCHITECTURE.md |
 | `8b16a4b` | 2026-03-22 | Cleanup: remove unused saveData import from battlepass.js |
+| `36a5ead` | 2026-03-22 | Fix: add useModalBehavior to DailyLoginCalendar modal (ESC + scroll lock) |
+
+### 28.7 Agent-Verified Non-Issues (Session 12)
+
+| Reported Issue | Actual Status |
+|----------------|---------------|
+| ShopModal missing useModalBehavior | **False alarm** — Already uses `useModalBehavior` (line 19) |
+| BattlePassView season end not displayed | **False alarm** — Shows `{daysLeft}d remaining` (line 146) |
+| ItemActionPopup missing useModalBehavior | **Not a bug** — Positioned popup (not full modal), already handles ESC + click-outside |
+| FeedbackOverlay missing useModalBehavior | **Not a bug** — Special overlay mode for feedback collection, not a standard modal |
+| StatBar STAT_LABELS in German | **Intentional** — German stat names (Kraft, Weisheit etc.) are game world proper nouns per A.4 |
 
 ---
 
