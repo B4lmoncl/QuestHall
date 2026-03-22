@@ -1111,12 +1111,11 @@ export default function Dashboard() {
               {/* Floor header banner */}
               <div className="floor-banner relative overflow-hidden" style={{ background: "#0b0d11", borderRadius: 0, height: 200 }}>
                 {/* Banner background image (right-aligned, 792x200) */}
-                {currentFloor.bannerImage && (
+                {currentFloor.banner && (
                   <img
-                    src={currentFloor.bannerImage}
+                    src={currentFloor.banner}
                     alt=""
                     className="absolute top-0 right-0 h-full w-auto max-w-none pointer-events-none img-render-auto"
-                    style={{ imageRendering: "smooth" }}
                     onError={e => { e.currentTarget.style.display = "none"; }}
                   />
                 )}

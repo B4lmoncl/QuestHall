@@ -49,7 +49,7 @@ export interface Floor {
   color: string;
   gradient: string;
   /** Optional 792x200 banner image (right-aligned behind gradient overlay) */
-  bannerImage?: string;
+  banner?: string;
   rooms: FloorRoom[];
 }
 
@@ -61,7 +61,7 @@ export const FLOORS: Floor[] = [
     icon: "▲",
     color: "#fbbf24",
     gradient: "linear-gradient(135deg, #fbbf24 0%, #1a1a3a 100%)",
-    bannerImage: "/images/banners/turmspitze-banner.png",
+    banner: "/images/banners/turmspitze-banner.png",
     rooms: [
       { key: "campaign",    label: "The Observatory",      iconSrc: "/images/icons/nav-observatory.png", tutorialKey: "campaign-tab" },
       { key: "leaderboard", label: "The Proving Grounds",  iconSrc: "/images/icons/nav-proving.png",     tutorialKey: "leaderboard-tab" },
@@ -77,7 +77,7 @@ export const FLOORS: Floor[] = [
     icon: "●",
     color: "#f97316",
     gradient: "linear-gradient(135deg, #f97316 0%, #1a0f0a 100%)",
-    bannerImage: "/images/banners/haupthalle-banner.png",
+    banner: "/images/banners/haupthalle-banner.png",
     rooms: [
       { key: "questBoard", label: "The Great Hall",        iconSrc: "/images/icons/nav-great-hall.png",  tutorialKey: "quest-board-tab" },
       { key: "npcBoard",   label: "The Wanderer's Rest",   iconSrc: "/images/icons/nav-wanderer.png",    tutorialKey: "npc-board-tab" },
@@ -94,7 +94,7 @@ export const FLOORS: Floor[] = [
     icon: "■",
     color: "#a855f7",
     gradient: "linear-gradient(135deg, #a855f7 0%, #1a0a2e 100%)",
-    bannerImage: "/images/banners/gewerbeviertel-banner.png",
+    banner: "/images/banners/gewerbeviertel-banner.png",
     rooms: [
       { key: "shop",   label: "The Bazaar",           iconSrc: "/images/icons/nav-bazaar.png",       tutorialKey: "bazaar-tab" },
       { key: "forge",  label: "Artisan's Quarter",     iconSrc: "/images/icons/prof-schmied.png",     requiresLogin: true },
@@ -108,7 +108,7 @@ export const FLOORS: Floor[] = [
     icon: "✦",
     color: "#3b82f6",
     gradient: "linear-gradient(135deg, #3b82f6 0%, #0a1a2e 100%)",
-    bannerImage: "/images/banners/charakterturm-banner.png",
+    banner: "/images/banners/charakterturm-banner.png",
     rooms: [
       { key: "character",     label: "Character",        iconSrc: "/images/icons/nav-character.png",    requiresLogin: true, tutorialKey: "character-tab" },
       { key: "klassenquests", label: "The Arcanum",      iconSrc: "/images/icons/nav-arcanum.png",      tutorialKey: null },
@@ -123,7 +123,7 @@ export const FLOORS: Floor[] = [
     icon: "⬡",
     color: "#ec4899",
     gradient: "linear-gradient(135deg, #ec4899 0%, #1a0a1e 100%)",
-    bannerImage: "/images/banners/breakaway-banner.png",
+    banner: "/images/banners/breakaway-banner.png",
     rooms: [
       { key: "social", label: "The Breakaway", iconSrc: "/images/icons/nav-breakaway.png", requiresLogin: true, tutorialKey: null },
       { key: "tavern", label: "The Hearth", iconSrc: "/images/icons/nav-tavern.png", requiresLogin: true, tutorialKey: null },
