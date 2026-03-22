@@ -932,7 +932,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
         >
           {/* Header + Sort */}
           <div className="flex items-center justify-between mb-2">
-            <Tip k="inventory"><p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>Inventory</p></Tip>
+            <Tip k="inventory" heading><p className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.5)" }}>Inventory</p></Tip>
             <div className="relative" ref={sortDropdownRef}>
               <button
                 onClick={() => setSortDropdownOpen(v => !v)}

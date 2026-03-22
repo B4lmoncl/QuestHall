@@ -1105,7 +1105,7 @@ export default function SocialView() {
     <div className="space-y-4">
       {/* Section header */}
       <div className="flex items-center gap-2">
-        <Tip k="breakaway"><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Breakaway</span></Tip>
+        <Tip k="breakaway" heading><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Breakaway</span></Tip>
       </div>
 
       {/* Tab navigation */}

@@ -157,7 +157,7 @@ export function WandererRest({
         <div className="mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
-            <Tip k="npc_quest_board" accent="rgba(255,215,0,0.6)"><span style={{ fontSize: "0.85rem", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ The Wanderer&#39;s Rest ◆</span></Tip>
+            <Tip k="npc_quest_board" heading accent="rgba(255,215,0,0.6)"><span style={{ fontSize: "0.85rem", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ The Wanderer&#39;s Rest ◆</span></Tip>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
           </div>
           <p className="text-xs mt-2 italic text-center" style={{ color: "rgba(255,255,255,0.3)" }}>They come. They go. They always return.</p>
@@ -616,7 +616,7 @@ export function WandererRest({
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <div className="flex items-center gap-1.5">
-                    <Tip k="npc_quest_board"><h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>NPC Quest Board</h2></Tip>
+                    <Tip k="npc_quest_board" heading><h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#8b5cf6" }}>NPC Quest Board</h2></Tip>
                   </div>
                   <p className="text-xs mt-0.5" style={{ color: "rgba(255,255,255,0.25)" }}>{devVisibleOpen.length} open · {devVisibleInProgress.length} in progress</p>
                 </div>

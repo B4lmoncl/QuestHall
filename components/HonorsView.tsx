@@ -80,7 +80,7 @@ export default function HonorsView({ catalogue, highlightedAchievementId, onHigh
         <div className="flex items-center gap-3 mb-1">
           <span style={{ fontSize: 28 }}>—</span>
           <div>
-            <Tip k="achievements"><h2 className="text-lg font-bold" style={{ color: "#d4a64a" }}>Hall of Honors</h2></Tip>
+            <Tip k="achievements" heading><h2 className="text-lg font-bold" style={{ color: "#d4a64a" }}>Hall of Honors</h2></Tip>
             <p className="text-xs" style={{ color: "rgba(212,166,74,0.4)" }}>
               {loggedInUser ? `${loggedInUser.name} — ${playerEarnedIds.size} / ${catalogue.length} achievements` : "Log in to track your achievements"}
             </p>

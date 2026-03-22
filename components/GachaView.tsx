@@ -55,7 +55,7 @@ function GachaInfoModal({ onClose }: { onClose: () => void }) {
           </div>
 
           <div>
-            <Tip k="pity"><h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#a855f7", cursor: "help" }}>Pity System</h4></Tip>
+            <Tip k="pity" heading><h4 className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "#a855f7", cursor: "help" }}>Pity System</h4></Tip>
             <p>Every pull without a Legendary increases your <span style={{ color: "#f97316" }}>pity counter</span>. The Wheel remembers your devotion.</p>
             <ul className="mt-2 space-y-1 list-disc list-inside">
               <li><span style={{ color: "#f97316" }}>Soft Pity</span> begins at <strong>55 pulls</strong> — your Legendary drop rate increases significantly with each subsequent pull.</li>
@@ -256,7 +256,7 @@ function BannerPreviewCard({
 
         {/* Banner name — large, dramatic */}
         <div>
-          <Tip k="gacha_banners"><h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
+          <Tip k="gacha_banners" heading><h3 className="text-xl font-bold tracking-wide" style={{ color: "#f0ece4" }}>
             {banner.name}
           </h3></Tip>
           <div className="mt-1 h-px w-16" style={{ background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
@@ -494,7 +494,7 @@ function BannerPullModal({
                 }}>
                   {isFeatured ? "Featured Banner" : "Standard Banner"}
                 </span>
-                <Tip k="gacha_banners"><h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3></Tip>
+                <Tip k="gacha_banners" heading><h3 className="text-lg font-bold mt-2" style={{ color: "#f0ece4" }}>{banner.name}</h3></Tip>
               </div>
               <button onClick={onClose} className="btn-close" style={{ position: "absolute", top: 12, right: 12, zIndex: 10 }}>×</button>
             </div>
@@ -764,7 +764,7 @@ export default function GachaView({ onRefresh, onPullComplete }: {
               filter: "drop-shadow(0 0 12px rgba(167,139,250,0.5)) drop-shadow(0 0 30px rgba(167,139,250,0.25))",
             }} />
           </div>
-          <Tip k="vault_of_fate"><h2 className="text-xl font-bold" style={{ color: "#e8e8e8", cursor: "pointer" }} onClick={() => setInfoOpen(true)}>The Vault of Fate</h2></Tip>
+          <Tip k="vault_of_fate" heading><h2 className="text-xl font-bold" style={{ color: "#e8e8e8", cursor: "pointer" }} onClick={() => setInfoOpen(true)}>The Vault of Fate</h2></Tip>
         </div>
         <p className="text-xs italic leading-relaxed max-w-2xl" style={{ color: "rgba(255,255,255,0.3)" }}>
           A circular chamber with a single, floating astrolabe structure at its center: the Wheel of Stars. Here, heroes draw items, companions, and artifacts from the Aetherstream. The Vault remembers every pull — and rewards persistence.

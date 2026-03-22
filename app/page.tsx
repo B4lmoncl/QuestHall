@@ -1151,7 +1151,7 @@ export default function Dashboard() {
         {dashView === "leaderboard" && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <Tip k="proving_grounds"><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Proving Grounds</span></Tip>
+              <Tip k="proving_grounds" heading><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Proving Grounds</span></Tip>
             </div>
             {/* Player cards */}
             {users.filter(u => !agents.some(a => a.id === u.id)).length > 0 && (
@@ -1175,7 +1175,7 @@ export default function Dashboard() {
         {dashView === "campaign" && (
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Tip k="campaigns"><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Observatory</span></Tip>
+              <Tip k="campaigns" heading><span className="text-xs font-semibold uppercase tracking-widest text-w35">The Observatory</span></Tip>
             </div>
             <div className="rounded-xl px-6 py-16 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
               <p className="text-lg font-bold mb-2 text-w25">Coming Soon</p>
@@ -1338,7 +1338,7 @@ export default function Dashboard() {
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <div className="flex items-center gap-1.5">
-                          <Tip k="quest_board"><h2 className="text-xs font-semibold uppercase tracking-widest text-w40">Quest Board</h2></Tip>
+                          <Tip k="quest_board" heading><h2 className="text-xs font-semibold uppercase tracking-widest text-w40">Quest Board</h2></Tip>
                         </div>
                         <p className="text-xs mt-0.5 text-w25">
                           {playerName
@@ -1382,7 +1382,7 @@ export default function Dashboard() {
                   {dailyMissions && playerName && (
                     <div className="rounded-xl p-3 mb-3" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.04) 100%)", border: "1px solid rgba(99,102,241,0.15)" }}>
                       <div className="flex items-center justify-between mb-2">
-                        <Tip k="daily_missions"><span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(99,102,241,0.7)", cursor: "help" }}>Daily Missions</span></Tip>
+                        <Tip k="daily_missions" heading><span className="text-xs font-bold uppercase tracking-wider" style={{ color: "rgba(99,102,241,0.7)", cursor: "help" }}>Daily Missions</span></Tip>
                         <span className="text-xs font-mono font-bold" style={{ color: dailyMissions.earned >= dailyMissions.total ? "#4ade80" : "#818cf8" }}>
                           {dailyMissions.earned}/{dailyMissions.total}
                         </span>
@@ -1408,7 +1408,12 @@ export default function Dashboard() {
                                           headers: { ...getAuthHeaders(reviewApiKey!), "Content-Type": "application/json" },
                                           body: JSON.stringify({ threshold: ms.threshold }),
                                         });
-                                        if (r.ok) refresh();
+                                        if (r.ok) {
+                                          const data = await r.json();
+                                          const rewardText = Object.entries(data.reward || ms.reward).map(([k, v]) => `+${v} ${k[0].toUpperCase() + k.slice(1)}`).join(", ");
+                                          addToast({ type: "success", message: `Milestone ${ms.threshold} claimed! ${rewardText}` });
+                                          refresh();
+                                        }
                                       } catch { /* ignore */ }
                                     }}
                                     className="btn-interactive text-xs px-1.5 py-0.5 rounded font-bold badge-enter"
@@ -1596,7 +1601,7 @@ export default function Dashboard() {
         {dashView === "klassenquests" && (
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <Tip k="classes"><h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#60a5fa" }}>The Arcanum</h2></Tip>
+              <Tip k="classes" heading><h2 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#60a5fa" }}>The Arcanum</h2></Tip>
             </div>
             <div className="rounded-xl px-6 py-16 text-center border-w6" style={{ background: "rgba(255,255,255,0.02)" }}>
               <p className="text-lg font-bold mb-2 text-w25">Coming Soon</p>

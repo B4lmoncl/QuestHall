@@ -1026,12 +1026,12 @@ img {
 
 .gt-trigger {
   position: relative;
-  cursor: help;
+  cursor: inherit;
   display: inline;
 }
 
-/* Loading bar — golden line fills under trigger during hover delay */
-.gt-trigger.gt-loading::after {
+/* Loading bar — golden line fills under trigger during hover delay (headings only) */
+.gt-trigger.gt-loading.gt-heading::after {
   content: "";
   position: absolute;
   bottom: -2px;
@@ -1049,14 +1049,26 @@ img {
   100% { width: 100%; opacity: 0; }
 }
 
-.gt-ref {
+/* Heading-level tooltips: dotted underline + loading bar */
+.gt-ref-heading {
   font-weight: inherit;
   border-bottom: 1px dotted rgba(255,215,0,0.35);
   cursor: help;
   transition: opacity 0.15s;
 }
-.gt-ref:hover {
+.gt-ref-heading:hover {
+  opacity: 0.9;
+}
+
+/* Inline-level tooltips: subtle opacity shift only, no underline */
+.gt-ref {
+  font-weight: inherit;
+  cursor: help;
   opacity: 0.8;
+  transition: opacity 0.15s;
+}
+.gt-ref:hover {
+  opacity: 1;
 }
 
 /* ─── Tooltip Panel ─────────────────────────────────────────────────────── */

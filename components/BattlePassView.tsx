@@ -132,7 +132,7 @@ export default function BattlePassView() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">{config.seasonIcon}</span>
             <div>
-              <Tip k="battle_pass">
+              <Tip k="battle_pass" heading>
                 <h2 className="text-lg font-bold" style={{ color: config.seasonAccent }}>{config.seasonName}</h2>
               </Tip>
               <p className="text-xs" style={{ color: `${config.seasonAccent}60` }}>{config.seasonTheme}</p>

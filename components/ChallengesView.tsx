@@ -699,7 +699,7 @@ export default function ChallengesView({
       {/* Section header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <Tip k="weekly_challenges"><span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span></Tip>
+          <Tip k="weekly_challenges" heading><span className="text-xs font-semibold uppercase tracking-widest text-w35">Weekly Challenges</span></Tip>
         </div>
         <WeeklyResetTimer />
       </div>

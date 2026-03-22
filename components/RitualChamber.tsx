@@ -252,7 +252,7 @@ export default function RitualChamber({ rituals, setRituals, setRewardCelebratio
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <h3 className="font-bold uppercase tracking-widest" style={{ color: "#f59e0b", fontSize: "1rem" }}><Tip k="rituals">Ritual Chamber</Tip></h3>
+                <h3 className="font-bold uppercase tracking-widest" style={{ color: "#f59e0b", fontSize: "1rem" }}><Tip k="rituals" heading>Ritual Chamber</Tip></h3>
                 <p style={{ color: "rgba(245,158,11,0.6)", fontSize: "1rem", fontWeight: 600, marginTop: 2 }}>Seraine Ashwell</p>
               </div>
               {playerName && reviewApiKey && (

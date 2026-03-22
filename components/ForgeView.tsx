@@ -410,7 +410,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
     <div className="space-y-4 tab-content-enter">
       {/* ─── Header with currencies + info ─────────────────────────────── */}
       <div className="flex items-center gap-4 flex-wrap">
-        <Tip k="artisans_quarter"><span className="text-base font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{"Artisan's Quarter"}</span></Tip>
+        <Tip k="artisans_quarter" heading><span className="text-base font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>{"Artisan's Quarter"}</span></Tip>
         <div className="flex items-center gap-4 ml-auto text-sm">
           <Tip k="professions"><span className="font-mono font-medium" style={{ color: "rgba(255,255,255,0.35)" }}>{chosenCount}/{maxProfSlots} Professions</span></Tip>
           {dailyBonusAvailable && (
@@ -439,7 +439,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
       {/* ─── All Materials Bar ─────────────────────────────────────────── */}
       {Object.keys(materials).length > 0 && (
         <div className="rounded-xl p-3" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)" }}>
-          <Tip k="materials"><p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materials</p></Tip>
+          <Tip k="materials" heading><p className="text-xs font-semibold uppercase tracking-widest mb-2" style={{ color: "rgba(255,255,255,0.25)" }}>Materials</p></Tip>
           <div className="flex flex-wrap gap-2">
             {materialDefs.filter(m => materials[m.id]).map(m => (
               <div key={m.id} className="flex items-center gap-1.5 px-2 py-1 rounded-lg" style={{ background: "rgba(255,255,255,0.04)", border: `1px solid ${RARITY_COLORS[m.rarity] || "#555"}30` }} title={m.desc}>
@@ -470,7 +470,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
             {/* Location header */}
             <div className="px-4 pt-3 pb-1">
               <div className="flex items-center gap-2">
-                <Tip k="professions"><span className="text-sm font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70` }}>{loc.label}</span></Tip>
+                <Tip k="professions" heading><span className="text-sm font-semibold uppercase tracking-widest" style={{ color: `${loc.color}70` }}>{loc.label}</span></Tip>
                 <span className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>{loc.desc}</span>
                 <div className="ml-auto flex items-center gap-1.5">
                   {isChosen && <span className="text-xs px-2 py-0.5 rounded font-semibold" style={{ background: `${prof.color}18`, color: prof.color }}>Active</span>}
@@ -577,7 +577,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
 
         return (
           <div className="space-y-2">
-            <Tip k="workshop_upgrades"><p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.6)", cursor: "help" }}>Workshop Tools</p></Tip>
+            <Tip k="workshop_upgrades" heading><p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "rgba(99,102,241,0.6)", cursor: "help" }}>Workshop Tools</p></Tip>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.25)" }}>Permanent XP upgrades. Each tier must be unlocked sequentially.</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {WORKSHOP_TIERS.filter(t => t.tier > 0).map(gear => {
@@ -824,7 +824,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
                 {/* Recipes list */}
                 <div className="px-5 py-3 space-y-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
                   <div className="flex items-center justify-between mb-1">
-                    <Tip k="recipes"><p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p></Tip>
+                    <Tip k="recipes" heading><p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.25)" }}>Recipes</p></Tip>
                     <div className="flex items-center gap-3">
                       {Object.entries(SKILL_UP_COLORS).map(([key, sc]) => (
                         <TipCustom key={key} title={`${sc.label} Skill-Up`} icon="📊" accent={sc.color} body={<p>{key === "orange" ? "100% chance to gain XP" : key === "yellow" ? "75% chance to gain XP" : key === "green" ? "25% chance to gain XP" : "0% XP — level up to unlock XP from higher recipes"}</p>}>

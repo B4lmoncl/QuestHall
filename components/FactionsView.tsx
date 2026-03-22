@@ -117,7 +117,7 @@ export default function FactionsView() {
       {/* Header */}
       <div className="text-center space-y-2">
         <p className="text-3xl">🜂</p>
-        <Tip k="factions">
+        <Tip k="factions" heading>
           <h2 className="text-lg font-bold" style={{ color: "#e8e8e8" }}>The Four Circles</h2>
         </Tip>
         <p className="text-xs text-w35" style={{ maxWidth: 440, margin: "0 auto" }}>
