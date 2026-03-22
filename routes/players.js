@@ -740,7 +740,7 @@ router.post('/api/tavern/leave', requireAuth, (req, res) => {
 // ─── Companion Expeditions ──────────────────────────────────────────────────
 
 // GET /api/player/:name/companion/expeditions — list available expeditions + active status
-router.get('/api/player/:name/companion/expeditions', (req, res) => {
+router.get('/api/player/:name/companion/expeditions', requireAuth, requireSelf('name'), (req, res) => {
   const uid = req.params.name.toLowerCase();
   const u = state.users[uid];
   if (!u) return res.status(404).json({ error: 'Player not found' });
