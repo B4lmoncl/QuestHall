@@ -477,6 +477,9 @@ router.post('/api/dungeons/:runId/collect', requireAuth, (req, res) => {
   const dungeon = getDungeon(run.dungeonId);
   if (!dungeon) return res.status(500).json({ error: 'Dungeon template not found' });
 
+  // Mark collected BEFORE success determination to prevent duplicate collection
+  run.collected.push(uid);
+
   // ── Determine run success ONCE (first collector calculates, subsequent reuse) ──
   const participantCount = run.participants.length;
   if (run.success === undefined) {
@@ -555,9 +558,6 @@ router.post('/api/dungeons/:runId/collect', requireAuth, (req, res) => {
   // Set cooldown
   if (!dungeonState.cooldowns[uid]) dungeonState.cooldowns[uid] = {};
   dungeonState.cooldowns[uid][run.dungeonId] = now();
-
-  // Mark collected
-  run.collected.push(uid);
 
   // Award bonus rewards on first success — title + frame
   let bonusAwarded = null;

@@ -297,11 +297,12 @@ router.post('/api/world-boss/claim', requireAuth, (req, res) => {
     return res.status(400).json({ error: 'You did not contribute to this boss fight' });
   }
 
-  // Double-claim guard: mark claimed FIRST (before reward calculation) to prevent race conditions
-  if (boss.rewardsClaimed.includes(uid)) {
+  // Double-claim guard: push FIRST, then check — truly atomic in single-threaded Node.js
+  boss.rewardsClaimed.push(uid);
+  if (boss.rewardsClaimed.filter(id => id === uid).length > 1) {
+    boss.rewardsClaimed.pop();
     return res.status(400).json({ error: 'Rewards already claimed' });
   }
-  boss.rewardsClaimed.push(uid);
 
   const template = getBossTemplate(boss.bossId);
   const leaderboard = getContributionLeaderboard(boss, 999);

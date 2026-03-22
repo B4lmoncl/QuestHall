@@ -411,10 +411,9 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
   u.professions[recipe.profession] = u.professions[recipe.profession] || { level: 0, xp: 0 };
   const rawXp = (recipe.xpGain || profDef.xpPerCraft || 10) * effectiveCount;
   const skillUpMultiplier = getSkillUpXpMultiplier(profProgress.level, recipe.reqProfLevel);
-  const baseXp = Math.floor(rawXp * skillUpMultiplier);
   const { dailyBonusAvailable } = getDailyBonusInfo(u);
   const xpMultiplier = dailyBonusAvailable ? 2 : 1;
-  const totalXpGained = baseXp * xpMultiplier;
+  const totalXpGained = Math.floor(rawXp * skillUpMultiplier * xpMultiplier);
   const skillUpColor = getSkillUpColor(profProgress.level, recipe.reqProfLevel);
   u.professions[recipe.profession].xp += totalXpGained;
   u.professions[recipe.profession].lastCraftAt = now();
@@ -439,7 +438,8 @@ router.post('/api/professions/craft', requireAuth, (req, res) => {
       const eq = u.equipment[targetSlot];
       const template = state.gearById.get(eq.templateId) || state.itemTemplates?.get(eq.templateId);
       const primaryStats = Object.keys(eq.stats || {}).filter(s => PRIMARY_STATS.includes(s));
-      const statIdx = targetStatIndex != null ? Math.min(targetStatIndex, primaryStats.length - 1) : Math.floor(Math.random() * primaryStats.length);
+      const rawIdx = targetStatIndex != null ? targetStatIndex : Math.floor(Math.random() * primaryStats.length);
+      const statIdx = Math.max(0, Math.min(rawIdx, primaryStats.length - 1));
       const statToReroll = primaryStats[statIdx];
       const poolEntry = template.affixes.primary.pool.find(p => p.stat === statToReroll);
       if (poolEntry) {

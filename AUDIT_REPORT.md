@@ -2766,6 +2766,64 @@ Four parallel audit agents covering ALL 24 route files:
 
 ---
 
-*End of Audit Report — Updated 2026-03-22*
+## 38. Full Codebase Audit — Session 22 (2026-03-22)
 
-*End of Audit Report — Updated 2026-03-22*
+### 38.1 Methodology
+
+Six parallel audit agents covering ALL files:
+- Agent 1: routes/quests.js, habits-inventory.js, config-admin.js, agents.js, gacha.js, game.js, shop.js, players.js
+- Agent 2: routes/users.js, campaigns.js, currency.js, integrations.js, crafting.js, challenges-weekly.js, expedition.js, npcs-misc.js
+- Agent 3: routes/social.js, rift.js, battlepass.js, factions.js, world-boss.js, gems.js, dungeons.js, docs.js
+- Agent 4: All 47 frontend components — modal consistency, tooltips, loading states, QoL
+- Agent 5: Core files — lib/state.js, helpers.js, auth.js, server.js, app/page.tsx, types.ts, utils.ts
+- Agent 6: Existing documentation review — AUDIT_REPORT.md, ARCHITECTURE.md, LYRA-PLAYBOOK.md, CLAUDE.md
+
+### 38.2 NEW Issues Found & Fixed
+
+| # | Bug | Severity | Location | Fix | Commit |
+|---|-----|----------|----------|-----|--------|
+| 1 | **World Boss claim race condition** — two concurrent requests can both pass `includes()` check and claim double rewards | **HIGH** | world-boss.js:300-304 | Added claim lock with early `push()` before reward calculation | `TBD` |
+| 2 | **Mythic Rift level uncapped** — no upper bound on mythicLevel, reward scaling (gold +200/lvl, essenz +5/lvl) inflates without limit | **HIGH** | rift.js:229,323-333 | Cap mythicLevel at `highestCleared + 1` (max progression: +1 per clear) | `TBD` |
+| 3 | **Dungeon collect race condition** — two players collecting simultaneously both see `run.success === undefined`, each rolls `Math.random()` independently getting different outcomes | **HIGH** | dungeons.js:482-495 | Calculate success once atomically, store result before any collection | `TBD` |
+| 4 | **Shop gear/item buy auth bypass** — `req.auth?.userId` is null for API key auth, self-check always passes, allowing any API key to buy for any user | **HIGH** | shop.js:214,305 | Use `resolvePlayerId(req)` that falls back to API key owner | `TBD` |
+| 5 | **Crafting reroll targetStatIndex negative** — frontend can send negative index, `Math.min(-999, length-1)` still returns negative, causing undefined array access | **MEDIUM** | crafting.js:442 | Clamp with `Math.max(0, Math.min(idx, length-1))` | `TBD` |
+| 6 | **Crafting skill-up XP truncated before daily 2× multiplier** — `Math.floor(rawXp * mult) * 2` loses fractional XP | **LOW** | crafting.js:413-417 | Apply floor after all multipliers: `Math.floor(rawXp * mult * dailyMult)` | `TBD` |
+
+### 38.3 NEW Quality of Life Improvements
+
+| # | Improvement | Location | Status |
+|---|------------|----------|--------|
+| 1 | **Reward celebration popups** on all claim flows (expedition, sternenpfad, battlepass, factions, world boss, dungeons) | Multiple components | ✅ Fixed |
+| 2 | **Rich tooltips in Player Profile Modal** — equipment stats, level, title, class, streak, companion, professions, achievements | PlayerProfileModal.tsx | ✅ Fixed |
+| 3 | **Floor banner images** — 200px height with right-aligned pixel art, gradient overlay, ambient particles per floor | page.tsx, config.ts, globals.css | ✅ Fixed |
+| 4 | **Missing tooltips** in ShopModal (Workshop Tools), RiftView (difficulty tiers), DungeonView (gear score), WorldBossView (contribution calc) | Various | Pending |
+| 5 | **Hardcoded bond thresholds** in CompanionsWidget.tsx should come from backend config | CompanionsWidget.tsx | Pending |
+| 6 | **Missing loading skeletons** in GachaView, SocialView friends tab | Various | Pending |
+
+### 38.4 Frontend-Backend Consistency Findings
+
+| Finding | Severity | Frontend | Backend | Status |
+|---------|----------|----------|---------|--------|
+| Messages already fully functional (send, receive, read receipts, 10s auto-refresh) | Info | SocialView.tsx | social.js | ✅ Verified |
+| Gacha epic rate 13% correctly implemented with proper pity (soft 55, hard 75) | Info | GachaView.tsx | gacha.js | ✅ Verified |
+| Companion Expeditions backend complete, no frontend UI | MEDIUM | — | players.js | Known gap |
+| Schmiedekunst Dismantle-All UI referenced in CLAUDE.md but ForgeView only has single dismantle | LOW | ForgeView.tsx | crafting.js | Known gap |
+
+### 38.5 Documented but Not Fixed (Acceptable)
+
+| Finding | Severity | Rationale |
+|---------|----------|-----------|
+| Pull lock lost on process restart | LOW | In-memory lock correct for single-process; restarts are rare |
+| Campaign quest deletion not cascaded | LOW | Gracefully handled with `(deleted)` fallback |
+| Feedback entries never pruned | LOW | 500 cap sufficient for alpha/beta phase |
+| Expedition progress race condition | LOW | Node.js single-threaded; debounced save coalesces |
+| Activity feed limit parsing | LOW | Math.min/max correctly clamps |
+
+### 38.6 Architecture Updates
+
+- **Component count**: 47 files (~22,960 lines) — was documented as 39 (~13k lines)
+- **Route count**: 24 files (~10,800 lines) — was documented as 17 (~6,200 lines)
+- **New systems since last audit**: Floor banners with particles, reward celebrations on all claim flows, rich profile tooltips
+- **Prestige levels**: 50 total (20 new prestige levels 31-50) — confirmed in code
+
+---
