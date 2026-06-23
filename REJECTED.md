@@ -30,14 +30,14 @@
 - REJ-015 UI Pinned Objective Tracker (Floating Widget)
 - REJ-016 UI Activity Log / Event Feed
 - REJ-017 UI Modal ESC Stack (globaler Modal-Stack fuer gestapelte ESC-Handler) — Architektur-Overhead fuer seltenen Edge Case
-- REJ-017 UI Weekly Statistics Page
-- REJ-018 UI Achievement Kategorien mit Sub-Tabs
-- REJ-019 UI Keyboard Shortcuts (I/C/P/R/M)
-- REJ-020 UI Companion Expedition History Log
-- REJ-021 UI Achievement Fast-Fertig Section (>75% complete)
-- REJ-022 UI Watched Faction Rep (Pin im Header)
-- REJ-023 UI Failure Recap (Rift/Dungeon Post-Mortem)
-- REJ-024 UI TodayDrawer Inline Claim (Daily Bonus / Pet etc. direkt im Drawer claimen) — Drawer ist Navigations-Fläche, nicht Action-Fläche
+- REJ-018 UI Weekly Statistics Page
+- REJ-019 UI Achievement Kategorien mit Sub-Tabs
+- REJ-020 UI Keyboard Shortcuts (I/C/P/R/M)
+- REJ-021 UI Companion Expedition History Log
+- REJ-022 UI Achievement Fast-Fertig Section (>75% complete)
+- REJ-023 UI Watched Faction Rep (Pin im Header)
+- REJ-024 UI Failure Recap (Rift/Dungeon Post-Mortem)
+- REJ-025 UI TodayDrawer Inline Claim (Daily Bonus / Pet etc. direkt im Drawer claimen) — Drawer ist Navigations-Fläche, nicht Action-Fläche
 
 ---
 

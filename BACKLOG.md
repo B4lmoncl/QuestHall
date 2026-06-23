@@ -28,7 +28,7 @@
 ## Tech Debt
 
 - [x] **REMOVE PRIORITY SYSTEM** — Completed 2026-04-02. ~139 refs in 30+ files replaced with rarity.
-- [ ] page.tsx monolith (~2350 lines) — extract into feature modules
+- [ ] page.tsx monolith (~3640 lines) — extract into feature modules
 - [ ] Missing JSON Schema validation for template files
 
 ## Completed (archived)

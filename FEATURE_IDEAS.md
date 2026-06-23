@@ -79,7 +79,7 @@
 - **Quelle:** Original (React Best Practices)
 - **Aufwand:** XL (8h+)
 - **Bereich:** Frontend
-- **Beschreibung:** page.tsx hat 90 useState Calls. State in Context/Reducer aufteilen (Dashboard, Player, UI). Reduziert Re-Renders.
+- **Beschreibung:** page.tsx hat 92 useState Calls. State in Context/Reducer aufteilen (Dashboard, Player, UI). Reduziert Re-Renders.
 - **Warum:** Performance: Jeder State-Update rendert den gesamten Component Tree neu. Splitting wuerde nur betroffene Subtrees re-rendern.
 
 ### [FI-009] Unique Named Items Content
@@ -241,7 +241,7 @@
 - **Aufwand:** S (1h)
 - **Bereich:** Data
 - **Beschreibung:** recipe-koch-gap-130, recipe-koch-gap-140, recipe-vz-gap-135 haben keine description. Brauchen Skulduggery Pleasant Humor.
-- **Warum:** Content Completeness: 878/881 Recipes haben Descriptions.
+- **Warum:** Content Completeness: 863/866 Recipes haben Descriptions.
 
 ### [FI-035] Missing Image onError Handlers (6)
 - **Quelle:** CLAUDE.md UI Guidelines
@@ -275,7 +275,7 @@
 - **Quelle:** Diablo 3 (Achievement Browser)
 - **Aufwand:** M (2-4h)
 - **Bereich:** Frontend
-- **Beschreibung:** HonorsView hat keine Filter/Suche. 165 Achievements werden alle gleichzeitig gerendert. Braucht: Filter nach earned/unearned, Rarity-Filter, Category-Tabs, Suchfeld.
+- **Beschreibung:** HonorsView hat keine Filter/Suche. 168 Achievements werden alle gleichzeitig gerendert. Braucht: Filter nach earned/unearned, Rarity-Filter, Category-Tabs, Suchfeld.
 - **Warum:** D3 hat einen vollen Achievement-Browser mit Kategorie-Tabs + Fortschrittsbalken pro Kategorie. Aktuell ist alles ein langer Scroll.
 
 ### [FI-040] Achievement Points Display

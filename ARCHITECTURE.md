@@ -15,10 +15,10 @@ Browser → Express (port 3001) → lib/state.js (in-memory) → /data/*.json (d
 
 | Directory | Purpose | Language |
 |-----------|---------|----------|
-| `lib/` | Backend business logic (state, helpers, engines) | JS (CommonJS) |
-| `routes/` | Express route handlers (24 files) | JS (CommonJS) |
+| `lib/` | Backend business logic (state, helpers, engines) — 9 files | JS (CommonJS) |
+| `routes/` | Express route handlers (32 files, ~18,950 lines) | JS (CommonJS) |
 | `app/` | Next.js app directory (page, types, utils, context) | TypeScript |
-| `components/` | React UI components (49 files) | TypeScript |
+| `components/` | React UI components (58 files, ~37,100 lines) | TypeScript |
 | `public/data/` | Read-only game templates (JSON) | JSON |
 | `data/` | Runtime persistent data (Docker volume) | JSON |
 | `server.js` | Express entry point, boot sequence | JS |
@@ -32,7 +32,7 @@ public/data/  (DATA_DIR)     → Read-only templates shipped with the image
 data/         (RUNTIME_DIR)  → Mutable runtime state (Docker volume mount)
 ```
 
-Files in `public/data/` are **templates** — they define what items, NPCs, quests etc. exist (43 JSON files including `worldBosses.json`, `gems.json`, `uniqueItems.json`).
+Files in `public/data/` are **templates** — they define what items, NPCs, quests etc. exist (56 JSON files including `worldBosses.json`, `gems.json`, `uniqueItems.json`, `talentTree.json`).
 Files in `data/` are **runtime state** — they track what players have done, their inventory, quest progress, etc.
 
 On first boot, `ensureRuntimeFiles()` seeds `data/` with empty defaults. `seedMutableFiles()` copies templates that need to be mutable (questCatalog, classes, roadmap) from `public/data/` to `data/`.
@@ -120,6 +120,14 @@ All routes are mounted in `server.js` in order. The last route file (`npcs-misc.
 | `world-boss.js` | World Boss: community bosses, contribution damage, unique drops, spawn cycle | API key |
 | `gems.js` | Gem/Socket system: 6 gem types, 5 tiers, socket/unsocket/upgrade/salvage | API key |
 | `dungeons.js` | Dungeon system: create/join runs, collect rewards, unique item drops | API key |
+| `talent-tree.js` | Passive Talent Tree "Schicksalsbaum": allocate/deallocate/reset, effect aggregation | API key |
+| `sworn-bonds.js` | Sworn Bonds: 1-on-1 pact, weekly objectives, chest claims, contribution tracking | API key |
+| `adventure-tome.js` | Adventure Tome "Abenteuerbuch": per-floor completionist tracker, milestone claims | API key |
+| `codex.js` | Codex: knowledge entries, unlockable lore | API key |
+| `enchanting.js` | Enchanting (D3 Mystic): targeted stat reroll with escalating cost | API key |
+| `kanais-cube.js` | Kanai's Cube: extract/equip legendary powers | API key |
+| `mail.js` | In-game mail system | API key |
+| `schmiedekunst.js` | Schmiedekunst: salvage (dismantle/Salvage All), transmute | API key |
 | `npcs-misc.js` | NPC rotation, feedback (admin-only), SPA fallback | Master key (feedback) |
 | `docs.js` | OpenAPI spec, HTML docs | Public |
 
@@ -174,13 +182,15 @@ Use `paginate(array, req.query)` helper from `lib/helpers.js`.
 
 ## Gear & Equipment System
 
-- **6 Slots**: weapon, shield, helm, armor, amulet, boots
-- **5 Tiers**: Abenteurer (L1-8), Veteranen (L9-16), Meister (L17-24), Legendär (L25-35), Mythisch (L36-50)
-- **Stats**: kraft, ausdauer, weisheit, glueck — summed from equipped items
-- **Tier Set Bonuses**: 3/6 = +5% all stats, 6/6 = +10% all stats (auto-detected by tier)
+- **7 Slots**: weapon, shield, helm, armor, amulet, ring, boots
+- **4 Tiers**: T1 Abenteurer (L1-8), T2 Veteranen (L9-16), T3 Meister (L17-24), T4 Legendär (L25-50). T5 is reserved exclusively for unique named items (not a generic gear tier).
+- **Stats**: Primary — kraft, weisheit, ausdauer, glueck. Minor — fokus, vitalitaet, charisma, tempo. All summed from equipped items.
+- **Affix rolling** (D3-style): rarity determines affix *count*, level determines stat *value ranges*. A level-30 common and a level-30 legendary roll from the same ranges — the legendary just has more affix slots.
+- **Tier Set Bonuses**: auto-detected by tier (flat / small % stat bonuses)
 - **Named Set Bonuses**: Defined in `gearTemplates.json → namedSets[]`. Support partial (2/3 threshold) and full bonuses.
-- **Legendary Effects**: Items with `rarity: "legendary"` can have a `legendaryEffect` field. Types: `xp_bonus`, `gold_bonus`, `drop_bonus`, `decay_reduction`, `streak_protection`. Applied via `getLegendaryModifiers()` in `lib/helpers.js`.
-- **Stat effects**: Kraft → +0.5% XP (max +30%), Weisheit → +0.5% Gold (max +30%), Ausdauer → -0.5% forge decay (min 10% of base), Glück → +0.5% drop chance (max 20%)
+- **Legendary Effects**: Items with `rarity: "legendary"` can have a `legendaryEffect` field. ~22 effect types now exist — the full list is documented in CLAUDE.md (`xp_bonus`, `gold_bonus`, `drop_bonus`, `decay_reduction`, `streak_protection`, `variety_bonus`, `material_double`, `night_double_gold`, `every_nth_bonus`, `auto_streak_shield`, `crit_chance`, `companion_bond_boost`, `cooldown_reduction`, `salvage_bonus`, `faction_rep_boost`, `challenge_score_bonus`, `dungeon_loot_bonus`, `forge_temp_flat`, `pity_reduction`, `expedition_speed`, `gem_preserve`, `ritual_streak_bonus`). Applied via `getLegendaryModifiers()` in `lib/helpers.js`.
+- **Primary stat effects**: Kraft → +0.5% XP per point, Weisheit → +0.5% Gold per point, Ausdauer → -0.5% forge decay per point, Glück → +0.5% drop chance per point. Soft caps are managed by the D3-style bucket system (additive within a bucket, multiplicative between buckets), not a flat per-stat cap.
+- **Minor stat effects**: Fokus → +1 flat XP per point, Vitalität → +1% streak protection per point, Charisma → +5% bond XP per point, Tempo → +1 forge temp recovery per point.
 
 ## Title System
 
@@ -235,21 +245,28 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 
 ### Gacha system
 - Two banner types: Standard, Featured
-- Pity system: soft pity at 55 pulls, hard pity at 75 (legendary guaranteed)
+- Pity system: soft pity at 60 pulls (+2.5% legendary rate per pull thereafter), hard pity at 75 (legendary guaranteed)
 - Epic pity: guaranteed every 10 pulls
 - Duplicate items refund currency (Runensplitter)
 - Per-player pull lock prevents race conditions
 
 ### XP & Leveling
 - 50 levels defined in `levels.json` (levels 31-50 are prestige levels with unique titles)
-- XP multiplied by: forge temp, kraft stat, gear bonus, companion bonus, bond level, hoarding malus
-- Gold multiplied by: forge temp, weisheit stat, streak bonus
+- XP/Gold use D3-style **buckets** (additive within a bucket, multiplicative between buckets) — see CLAUDE.md "Multiplier Stacking Rules" for the canonical formula
+- XP buckets include: forge (forge temp + kraft), gear, companion + bond, equipment effects, buffs, situational, procs (crit/double-quest), penalties (hoarding malus × daily diminishing returns); plus a flat rested-XP bonus
+- Gold buckets include: forge (forge temp + weisheit + workshop), streak gold, legendary gold bonuses
 
 ### Currency system
+
+7 currencies: gold, stardust, essenz, runensplitter, gildentaler, mondstaub, sternentaler.
+
 - **Gold**: Primary currency (quest rewards, shop purchases, crafting costs)
 - **Stardust**: Premium currency (level-up rewards, season rewards)
 - **Essenz**: Crafting currency
 - **Runensplitter**: Gacha currency
+- **Gildentaler**: Guild/cooperative currency
+- **Mondstaub**: Special/event currency
+- **Sternentaler**: Sternenpfad weekly challenge currency
 - Conversion between currencies with 20% tax
 
 ### Bazaar Shop System
@@ -277,25 +294,25 @@ Quests can be: player-created, NPC-generated, GitHub webhook-generated, daily ro
 - Frame renders as colored border + optional glow on UserCard
 
 ### Artisan's Quarter (Crafting System)
-- **4 Professions** (2-limit per player): Blacksmith/Grimvar (gear rerolling, rarity upgrade, reinforcing), Alchemist/Ysolde (buff potions, flasks), Enchanter/Eldric (temp+permanent enchants, arcane infusions), Cook/Bruna (meals, streak shields, champion's feast)
-- **18 recipes** across 4 professions with recipe-specific XP (8-50 XP per craft)
-- **Recipe discovery**: High-level recipes hidden until `discovery.profLevel` reached (e.g. Rarity Upgrade unlocks at Lv.7)
-- **Batch crafting**: Buff/meal recipes support `count` param (1-10), costs multiplied accordingly
+- **8 Professions** (2-slot limit per player; Koch + Verzauberer are secondary and don't consume a slot): Schmied/Grimvar, Schneider/Selina, Lederverarbeiter/Roderic, Waffenschmied/Varn, Juwelier/Selindra, Alchemist/Ysolde, Verzauberer/Eldric, Koch/Bruna
+- **300 max skill** (WoW Classic 1:1 model), **4 ranks**: Apprentice → Journeyman → Expert → Artisan
+- **~866 recipes** total, each tied to a unique named item template, with recipe-specific XP
+- **Recipe discovery**: Higher-skill recipes hidden until the required skill is reached
+- **Batch crafting**: Recipes support `count` param (1-10), costs multiplied accordingly
 - **Daily crafting bonus**: First craft each day grants 2x profession XP, tracked via `u.lastCraftDate`
-- **Profession ranks** (WoW-style): Novice→Apprentice→Journeyman→Expert→Artisan→Master, mapped to levels 0-10
-- **Skill-up colors** (WoW-style): Orange (guaranteed XP), Yellow (likely), Green (rare), Gray (no XP) based on diff between profLevel and reqProfLevel
-- **Per-recipe cooldowns**: Tracked in `u.professions[id].recipeCooldowns[recipeId]` (60min-48h), independent per recipe
-- **13 materials** (common→legendary): Drop from quest completion, rates defined in `professions.json → materialDropRates`
-- **Schmiedekunst** (Blacksmith tab): Dismantle items → essenz + material drops; D3-style Salvage All per rarity (legendary excluded); Transmute 3 same-slot epics + 500g → random legendary
+- **Skill-up colors** (WoW-style): Orange (guaranteed skill-up), Yellow (likely), Green (rare), Gray (no skill-up) based on diff between current skill and recipe requirement
+- **Per-recipe cooldowns**: Tracked in `u.professions[id].recipeCooldowns[recipeId]`, independent per recipe
+- **91 materials** (common→legendary, includes intermediate mats like bars/bolts/cured leather): Drop from quest completion, rates defined in `professions.json → materialDropRates`
+- **Schmiedefieber / Forge Fever**: Every 48h a random profession enters a 4h fever (-50% material cost, 2x skill XP); 5+ crafts during the window earns a bonus material cache — see dedicated section below
+- **Schmiedekunst** (salvage tab, `routes/schmiedekunst.js`): Dismantle items → essenz + material drops; D3-style Salvage All per rarity (legendary excluded); Transmute 3 same-slot epics + 500g → random legendary
 - **Workshop Tools**: 4-tier permanent XP upgrades (Sturdy 2% → Mythic 10%), sequential unlock via gold/essenz
-- **Synergy hints**: Blacksmith+Enchanter = "Gear Mastery", Alchemist+Cook = "Sustenance"
+- **Profession synergy hints**: paired professions surface detailed synergy explanations
 - **Cross-navigation**: Character ↔ Artisan's Quarter links via `onNavigate` prop
-- **NPC evolution**: Card border glow/opacity intensifies with rank; portrait border evolves with level
-- **Pre-validation**: Reroll template/stats checks run BEFORE cost deduction to prevent resource loss on failure
-- **Unlock conditions**: Cook at level 3, Blacksmith/Alchemist at level 5, Enchanter at level 8
-- **Frontend**: `ForgeView.tsx` — Artisan's Quarter tab with NPC grid, Workshop Tools, NPC popout modals (createPortal)
+- **NPC evolution**: Card border glow/opacity intensifies with rank; portrait border evolves with skill
+- **Pre-validation**: Cost/eligibility checks run BEFORE cost deduction to prevent resource loss on failure
+- **Frontend**: `ForgeView.tsx` — Artisan's Quarter tab with 2-panel WoW-style crafting modal (left = recipe list color-coded by skill-up, right = detail with materials + create), Workshop Tools, NPC popout modals (createPortal)
 - **Endpoints**: `GET /api/professions?player=X` (with dailyBonus), `POST /api/professions/craft` (with count), `POST /api/professions/choose`, `POST /api/professions/switch`, `POST /api/schmiedekunst/dismantle`, `POST /api/schmiedekunst/dismantle-all`, `POST /api/schmiedekunst/transmute`
-- **Data**: `public/data/professions.json` (4 professions, 13 materials, 18 recipes, drop rates)
+- **Data**: `public/data/professions.json` (8 professions, 91 materials, ~866 recipes, drop rates)
 
 ### Challenges System
 
@@ -393,7 +410,7 @@ Rest area within "The Breakaway" floor, inspired by Urithiru's gathering halls.
 
 4 factions with reputation tiers, auto-gained from quest completion.
 
-- **Factions**: Orden der Klinge (combat), Zirkel der Sterne (knowledge), Pakt der Wildnis (nature), Bund der Schatten (stealth)
+- **Factions**: Zirkel der Glut (`glut`, fitness), Zirkel der Tinte (`tinte`, learning), Zirkel des Amboss (`amboss`, development + personal), Zirkel des Echos (`echo`, social)
 - **6 rep tiers**: Neutral → Friendly → Honored → Revered → Exalted → Paragon
 - **Auto-rep**: Quest completions grant +10-30 rep to matching faction based on quest type
 - **Tier rewards**: Titles, recipes, frames, shop discounts, legendary effects
@@ -462,7 +479,7 @@ Idle mechanic for companions — send your companion on timed expeditions for re
 - **Cooldown**: 1 hour between expeditions
 - **No bond XP while on expedition** (petting still allowed, just no XP)
 - **Files**: `routes/players.js` (endpoints), `public/data/companionExpeditions.json` (templates)
-- **Frontend**: Not yet implemented — backend-only
+- **Frontend**: `components/CompanionsWidget.tsx` — tier selection, countdown timer, reward collection
 
 ### Unique Named Items
 
@@ -482,7 +499,94 @@ Targeted stat rerolling at the Enchanter (Eldric), replacing the old blanket rer
 - **Other stats preserved**: Only the selected stat changes
 - **Escalating cost**: Each successive reroll on the same item costs more
 - **Locked stat**: Visually marked — once you pick a stat to reroll, that slot is locked for future rerolls
-- **Files**: `routes/crafting.js` (enchanter recipes updated)
+- **Files**: `routes/enchanting.js`
+
+### Kanai's Cube
+
+D3-style power extraction — store and equip legendary effects independently of the item.
+
+- **Extract**: Destroy a legendary item to permanently learn its legendary power
+- **Equip**: Slot an extracted power so its effect applies without wearing the source item
+- **Files**: `routes/kanais-cube.js`
+
+### Schmiedekunst (Salvage & Transmute)
+
+Standalone salvage/transmute system surfaced in the Artisan's Quarter.
+
+- **Dismantle**: Break items down → essenz + material drops; slot-locked selection UI
+- **Salvage All**: D3-style bulk dismantle per rarity (legendary excluded)
+- **Transmute**: 3 same-slot epics + 500g → one random legendary
+- **Files**: `routes/schmiedekunst.js`
+
+### Passive Talent Tree (Schicksalsbaum)
+
+Wolcen Gate-of-Fates-inspired circular passive tree.
+
+- **44 nodes** across **3 concentric rings**: Inner/Grundstein (12 foundational), Middle/Zwielicht (18 specialization with tradeoffs), Outer/Aszension (14 capstone)
+- **Unlock**: Level 5; 1 point per 2 levels; max 23 points
+- **Mutually exclusive choice groups** (e.g. Blutzoll vs Gierige Flamme); multi-rank nodes; 5 build archetypes
+- **Respec**: 500g + 50 essenz
+- **Effects**: forge decay reduction, streak grace period, quest pool expansion, companion bond boost, variety chain bonus, rift stage skip, friend XP echo, tavern passive gold, codex permanent XP — aggregated via `getUserTalentEffects()`
+- **Files**: `routes/talent-tree.js`, `components/TalentTreeView.tsx`, `public/data/talentTree.json`
+
+### Adventure Tome (Abenteuerbuch)
+
+Lost Ark-inspired per-floor completionist tracker.
+
+- **5 floors**, each with 8-12 objectives tracking quests, rifts, dungeons, crafts, companions, streaks, factions
+- **Milestone rewards** at 25% / 50% / 75% / 100% per floor — gold, currencies, exclusive titles, cosmetic frames
+- **Total completion percentage** aggregated across all floors
+- **Files**: `routes/adventure-tome.js`, `components/AdventureTomeView.tsx`
+
+### Sworn Bonds
+
+1-on-1 friendship pact with shared weekly objectives.
+
+- **Flow**: propose → accept → shared weekly objectives
+- **4 objective types**: combined quests, combined XP, individual quests, type variety
+- **Bond Level 1-10** (Bekannte → Ewiger Bund) with scaling Bond Chest rewards (gold + essenz + 5-15% Duo Frame chance)
+- **Duo Streak** for consecutive completed weeks; 7-day break cooldown; auto-break on unfriend
+- **Integrations**: per-banner gacha pity, 3 achievements, codex entry, Adventure Tome objective, activity feed events, Battle Pass XP on claim
+- **Files**: `routes/sworn-bonds.js`
+
+### Codex
+
+Unlockable in-world knowledge/lore.
+
+- **Knowledge entries** unlock as players progress; some grant small permanent bonuses (e.g. permanent XP from talent-tree synergy)
+- **Files**: `routes/codex.js`
+
+### In-game Mail
+
+Asynchronous in-game mail system.
+
+- **Send/receive** messages and (where applicable) attachments between players/systems
+- **Files**: `routes/mail.js`
+
+### Schmiedefieber (Forge Fever)
+
+Time-limited profession buff event, rotated at midnight (Berlin time).
+
+- **Rotation**: Every 48h a random profession enters Fever for exactly 4h (cannot repeat the same profession consecutively)
+- **Buffs during Fever**: -50% material cost (gold cost unchanged), 2x skill XP (stacks with daily first-craft bonus)
+- **Bonus cache**: 5+ crafts during the window → cache of 2-4 random uncommon-rare materials for that profession, claimable once per event
+- **Per-player tracking**: craft count tracked per player per fever event
+- **Files**: `routes/crafting.js`, `components/ForgeView.tsx`, state in `state.forgeFever`, rotation in `lib/rotation.js`
+
+### Rested XP Pool
+
+WoW Classic-style offline XP accumulation.
+
+- **Accumulation**: +5% of level XP per 8h offline, capped at 150% of the current level's XP
+- **Effect**: Doubles XP gains until the pool is depleted
+- **Display**: Shown as a blue zone in the XP bar
+
+### Daily Diminishing Returns
+
+Smooth 6-tier curve that discourages mass-completing quests for full value.
+
+- **Curve** (quests completed today → multiplier): 1-5 = 100%, 6-7 = 90%, 8-10 = 75%, 11-15 = 60%, 16-20 = 50%, 21+ = 25%
+- Applied as a multiplicative penalty in the XP/Gold formulas (see CLAUDE.md "Multiplier Stacking Rules")
 
 ## Security measures
 

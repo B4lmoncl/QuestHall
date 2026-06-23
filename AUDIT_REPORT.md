@@ -1,6 +1,6 @@
 # Quest Hall — Codebase Audit Report
 
-> Last updated: 2026-03-27 · v1.6.0 · Sessions 1–31
+> Last updated: 2026-06-23 · v2.0.0 · Sessions 1–30
 
 ---
 
@@ -28,19 +28,19 @@ React → fetch(/api/*) → Express Routes → lib/state.js (in-memory Maps)
 
 - **Batch endpoint**: `GET /api/dashboard?player=X` replaces 14 fetches
 - **O(1) lookups**: `questsById`, `usersByName`, `usersByApiKey`, `questCatalogById`, `gearById`, `itemTemplates`
-- **Templates** (read-only): `public/data/*.json` — 43 files
+- **Templates** (read-only): `public/data/*.json` — 56 files
 - **Runtime** (mutable): `data/*.json` — debounced writes (200ms)
 - **Atomic writes**: Critical files (users, quests) use write-tmp-then-rename
 
 ### Folder Structure
 
 ```
-app/                  # Next.js (page.tsx ~2350 lines, types ~725, utils ~350, config, context)
-components/           # 49 React components (~23k lines)
+app/                  # Next.js (page.tsx ~3640 lines, types ~725, utils ~350, config, context)
+components/           # 58 React components (~23k lines)
 hooks/                # useQuestActions
-lib/                  # 8 backend files (~3950 lines) + frontend auth-client
-routes/               # 24 Express route files (~11,400 lines)
-public/data/          # 43 JSON template files
+lib/                  # 9 backend files (~3950 lines) + frontend auth-client
+routes/               # 32 Express route files (~11,400 lines)
+public/data/          # 56 JSON template files
 data/                 # Runtime JSON (Docker volume, git-ignored)
 electron-quest-app/   # Electron desktop companion
 scripts/              # Asset generation, data validation
@@ -56,7 +56,7 @@ server.js             # Express entry point (~322 lines)
 | 1 | **Quest System** | `routes/quests.js`, `lib/quest-catalog.js`, `lib/rotation.js`, `QuestCards.tsx` | ~10 open pool + ~25 in-progress cap, 5 types, rarity scaling, NPC chains, co-op |
 | 2 | **Player System** | `routes/users.js`, `routes/players.js`, `lib/auth.js` | JWT + API key auth, 50 levels, 7 currencies, titles, achievements, equipment |
 | 3 | **Companion System** | `routes/players.js`, `CompanionsWidget.tsx` | Real/virtual companions, bond levels 1-5, ultimates, companion expeditions (backend-only) |
-| 4 | **Gacha** | `routes/gacha.js`, `GachaView.tsx` | Standard/featured banners, pity (soft 55, hard 75), pull lock, duplicate refund |
+| 4 | **Gacha** | `routes/gacha.js`, `GachaView.tsx` | Standard/featured banners, pity (soft 60, hard 75), pull lock, duplicate refund |
 | 5 | **Crafting** | `routes/crafting.js`, `ForgeView.tsx`, `professions.json` | 4 NPCs, 2-profession limit, 10 levels, trainer/drop recipes, Schmiedekunst |
 | 6 | **Weekly Challenges** | `routes/challenges-weekly.js`, `routes/expedition.js`, `ChallengesView.tsx` | Star Path (solo, 9 stars), Expedition (cooperative, shared progress) |
 | 7 | **NPC System** | `routes/npcs-misc.js`, `lib/npc-engine.js`, `WandererRest.tsx` | 12+ NPCs, rotation, multi-chain quests |
@@ -96,9 +96,9 @@ server.js             # Express entry point (~322 lines)
 | XP multipliers (Kraft, forge temp, companion, gear, hoarding) | ✓ Match |
 | Gold multipliers (Weisheit, streak, forge temp, legendary) | ✓ Match |
 | Drop chance (Glück, luck buff, pity, workshop) | ✓ Match |
-| Gacha pity (soft 55, hard 75, +2.5%/pull) | ✓ Match |
+| Gacha pity (soft 60, hard 75, +2.5%/pull) | ✓ Match |
 | Quest XP/Gold tables by rarity | ✓ Match |
-| Streak bonus (+1.5%/day, cap 45%) | ✓ Match |
+| Streak bonus (+1.5%/day, soft cap ~20% via diminishing returns) | ✓ Match |
 | Hoarding penalty (-10%/quest over 20, soft -50% at 25, hard -80% at 30) | ✓ Match |
 | Forge temp XP/Gold tiers | ✓ Match |
 | Vow difficulty multipliers | ✓ Match |
@@ -259,7 +259,7 @@ Quest completion, daily bonus, rituals, vows, battle pass, factions, world boss,
 | JSON file persistence | Intentional for <50 user app |
 | TutorialModal in German | Target audience is German-speaking |
 | No CSRF protection | JWT/API key on all mutating endpoints |
-| No test suite | Validation via `verify-items.js` + ESLint |
+| No test suite | Validation via `verify-items.js` + ESLint, plus edge-case test scripts in `scripts/` (`test-*.js`) |
 | `@next/next/no-img-element` | Static export with pixel art |
 
 ### A.4 Translation Rules
@@ -276,7 +276,7 @@ Quest completion, daily bonus, rituals, vows, battle pass, factions, world boss,
 ### A.5 Agent Mistakes to Avoid
 
 1. Always search codebase before claiming a feature is missing
-2. Routes span 24 files — check all before reporting missing endpoints
+2. Routes span 32 files — check all before reporting missing endpoints
 3. Don't report single-process race conditions as bugs
 4. Don't translate German lore/flavor text
 5. Don't suggest adding a database or `next/image`
@@ -544,7 +544,7 @@ WoW/Diablo/HSR-inspired cross-linking — feature cards, rewards, and stats link
 
 ---
 
-## 11. Session 29 — UI/UX Consistency & Type Safety Audit (2026-03-23)
+## 12. Session 29 — UI/UX Consistency & Type Safety Audit (2026-03-23)
 
 ### Audit Scope
 
@@ -571,7 +571,7 @@ Also fixed: Turbopack parse error in ForgeView (IIFE in JSX replaced with condit
 | `88dad38` | CRITICAL | Fix Turbopack parse error in ForgeView cost preview IIFE |
 | `41df85a` | CRITICAL | 17 font size fixes, 9 `as any` removals, null safety, disabled buttons, silent catches |
 
-## 12. Session 30 — Auth Self-Checks, Data Integrity, UI Polish (2026-03-24)
+## 13. Session 30 — Auth Self-Checks, Data Integrity, UI Polish (2026-03-24)
 
 ### Audit Scope
 

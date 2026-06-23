@@ -40,7 +40,7 @@ Set `API_KEY=your-secret` in `.env` (see `.env.example`).
 - **Quest Board** with pool rotation, rarity tiers, daily diminishing returns
 - **8 Crafting Professions** (WoW Classic 300-skill system)
 - **Diablo 3 Loot** — affix rolling, legendary effects, set bonuses, Kanai's Cube
-- **Gacha** with soft pity (55) and hard pity (75)
+- **Gacha** with soft pity (60) and hard pity (75)
 - **World Bosses** — community-wide HP pool, contribution tracking
 - **Dungeons** — async cooperative 2-4 player, 3 tiers
 - **The Rift** — timed quest chains, Normal/Hard/Legendary + Mythic+
@@ -56,10 +56,10 @@ Set `API_KEY=your-secret` in `.env` (see `.env.example`).
 
 ```
 app/            # Next.js frontend (page.tsx, types, config)
-components/     # 55 React components
+components/     # 58 React components
 hooks/          # Custom React hooks
 lib/            # Backend core (state, helpers, auth, NPC engine)
-routes/         # 31 Express API route files
+routes/         # 32 Express API route files
 public/data/    # 56 JSON game data files
 public/images/  # Pixel art assets
 electron-quest-app/  # Desktop companion
@@ -95,7 +95,7 @@ Full API docs: `GET /api/docs` (OpenAPI/Swagger).
 | `CLAUDE.md` | Primary reference — tech stack, code rules, UI guidelines, balancing |
 | `LYRA-PLAYBOOK.md` | Content creation guide + Lore Bible |
 | `ARCHITECTURE.md` | Technical architecture deep-dive |
-| `WOW-PROFESSION-REFACTOR.md` | Profession system design spec |
+| `docs/archive/WOW-PROFESSION-REFACTOR.md` | Profession system design spec (implemented) |
 | `AUTOPILOT_AUDIT.md` | Autonomous audit protocol |
 | `FEATURE_IDEAS.md` | Proposed features (not implemented) |
 | `REJECTED.md` | Feature blocklist |

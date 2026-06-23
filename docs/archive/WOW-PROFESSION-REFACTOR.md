@@ -1,5 +1,7 @@
 # WoW Classic Profession Refactor — Complete Implementation Plan
 
+> **STATUS: IMPLEMENTED & ARCHIVED (2026-06-23).** This plan is fully realized in the live codebase. **Final state: 8 professions, 7 equipment slots (ring added in Session 8), 866 recipes, 91 materials.** The "Design-Entscheidungen (Final)" table further down still reflects the original design-phase decision of *6 professions / 6 slots / no ring* — that was superseded by Sessions 7 (Waffenschmied) and 8 (Juwelier + ring slot). Kept as a historical record of how the system was built. For current facts, see CLAUDE.md.
+
 ## Phase 1: Done ✅
 
 ### System Changes (Implemented)

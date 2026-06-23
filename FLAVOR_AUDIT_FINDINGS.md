@@ -260,8 +260,8 @@ UI/UX Improvements, AAA-Feinschliff, Polishing
 ## Typos & Kleine Textfehler
 
 100. **[Typo]** npcQuestGivers.json — Strategin Athena title: "Die Schlachtenkdenkerin" → sollte "Die Schlachtendenkerin" sein
-109. **[Typo]** config.ts:148 — Navigation label "Wanderers Rest" fehlt Apostroph. Überall sonst "Wanderer's Rest" (mit ').
-110. **[Kontrast]** TowerMap.tsx — Tower Map Navigation hat zu schlechten Kontrast. (User-reported)
+101. **[Typo]** config.ts:148 — Navigation label "Wanderers Rest" fehlt Apostroph. Überall sonst "Wanderer's Rest" (mit ').
+102. **[Kontrast]** TowerMap.tsx — Tower Map Navigation hat zu schlechten Kontrast. (User-reported)
     - :159 Floor-Subtitle/Flavor `rgba(255,255,255,0.15)` = 15% Opacity, quasi unsichtbar
     - :164 Room-Count `rgba(255,255,255,0.1)` = 10% Opacity, noch schlimmer
     - :218 Locked-Room-Labels `rgba(255,255,255,0.12)` = 12%, quasi unsichtbar
@@ -269,32 +269,32 @@ UI/UX Improvements, AAA-Feinschliff, Polishing
     - Fix: Subtitle auf mindestens 0.3, Room-Count auf 0.2, Locked-Rooms auf 0.25, Room-Icons auf 0.5
 
 ### Systemisches Kontrast-Problem: Inline-Styles umgehen Utility-Boost
-111. **[Kontrast]** Die `text-w15` etc. Utility-Klassen wurden gebootsted, aber **50+ Stellen** in Components nutzen inline `style={{ color: "rgba(255,255,255,0.12-0.15)" }}` direkt. Diese umgehen den Boost komplett. Betroffen: ForgeView (20+ Stellen), ChallengesView (4), NotificationCenter (1), TowerMap (5), RoadmapView (1). Ein globaler Search-Replace von inline `0.12` → `0.22` und `0.15` → `0.25` für Text-Color-Contexts wäre nötig.
+103. **[Kontrast]** Die `text-w15` etc. Utility-Klassen wurden gebootsted, aber **50+ Stellen** in Components nutzen inline `style={{ color: "rgba(255,255,255,0.12-0.15)" }}` direkt. Diese umgehen den Boost komplett. Betroffen: ForgeView (20+ Stellen), ChallengesView (4), NotificationCenter (1), TowerMap (5), RoadmapView (1). Ein globaler Search-Replace von inline `0.12` → `0.22` und `0.15` → `0.25` für Text-Color-Contexts wäre nötig.
 
 ## CSS / Technisches
 
-101. **[Dead Code]** globals.css:1470-1477 — `@keyframes today-card-enter` und `today-urgent-pulse` sind doppelt definiert. Die ersten (Zeile 1470/1474) werden von den zweiten (Zeile 1505/1510) überschrieben. Erste Definition ist toter Code.
-102. **[Animation Count]** globals.css — 155 `@keyframes` Animationen. Beeindruckend, aber möglicherweise Performance-Impact auf schwächeren Geräten. Keine davon scheint überflüssig (außer die Duplicates).
+104. **[Dead Code]** globals.css:1470-1477 — `@keyframes today-card-enter` und `today-urgent-pulse` sind doppelt definiert. Die ersten (Zeile 1470/1474) werden von den zweiten (Zeile 1505/1510) überschrieben. Erste Definition ist toter Code.
+105. **[Animation Count]** globals.css — 155 `@keyframes` Animationen. Beeindruckend, aber möglicherweise Performance-Impact auf schwächeren Geräten. Keine davon scheint überflüssig (außer die Duplicates).
 
 ## Game Balance Edge Cases
 
 ### Crafting Material Access
-103. **[Balance]** Neue Verzauberer-Spieler (Lv8) können kein erstes Rezept craften ohne magiestaub/runenstein Drops — die hängen von Quest-Rarity ab. Bei Common-Quests ~1-3% Dropchance pro Material. Kann 20+ Quests dauern bis 1 Material droppt. "Locked out" Gefühl.
+106. **[Balance]** Neue Verzauberer-Spieler (Lv8) können kein erstes Rezept craften ohne magiestaub/runenstein Drops — die hängen von Quest-Rarity ab. Bei Common-Quests ~1-3% Dropchance pro Material. Kann 20+ Quests dauern bis 1 Material droppt. "Locked out" Gefühl.
 
 ### Battle Pass Erreichbarkeit
-104. **[Balance]** 90-Tage-Season braucht ~10.000 XP für Lv40. Casual-Spieler (2 Quests/Tag) = ~3.150 XP = Lv12. Man braucht 5-6 Quests/Tag für Lv40 — aber Daily Diminishing Returns strafen ab Quest 6. Battle Pass ist für Casuals quasi unmöglich komplett.
+107. **[Balance]** 90-Tage-Season braucht ~10.000 XP für Lv40. Casual-Spieler (2 Quests/Tag) = ~3.150 XP = Lv12. Man braucht 5-6 Quests/Tag für Lv40 — aber Daily Diminishing Returns strafen ab Quest 6. Battle Pass ist für Casuals quasi unmöglich komplett.
 
 ### Diminishing Returns Cliff
-105. **[Balance]** Quest 1-5 = 100%, Quest 6 = sofort 75%. Es gibt keinen Übergang. Die 5→6 Grenze fühlt sich künstlich an und erzeugt "hör bei 5 auf"-Incentive. Besser: sanfterer Curve (5 = 100%, 6-7 = 90%, 8-10 = 75%).
+108. **[Balance]** Quest 1-5 = 100%, Quest 6 = sofort 75%. Es gibt keinen Übergang. Die 5→6 Grenze fühlt sich künstlich an und erzeugt "hör bei 5 auf"-Incentive. Besser: sanfterer Curve (5 = 100%, 6-7 = 90%, 8-10 = 75%).
 
-### Gacha Soft-Pity Zone zu lang
-106. **[Balance]** Soft Pity ab 55, Hard Pity bei 75. Das sind 20 Pulls "vielleicht" ohne Garantie. Genshin hat Soft ab 75, Hard bei 90 — nur 15 Pulls Unsicherheit. QuestHall's Soft-Zone fühlt sich zu lange frustrierend an.
+### Gacha Soft-Pity Zone
+109. **[Balance]** Soft Pity ab 60, Hard Pity bei 75. Das sind 15 Pulls "vielleicht" ohne Garantie (60→75). Genshin hat Soft ab 75, Hard bei 90 — ebenfalls 15 Pulls Unsicherheit. QuestHall's Soft-Zone ist damit vergleichbar mit Genshin, kein Ausreißer.
 
 ### Pity-Display Verwirrung
-107. **[UX]** GET /api/gacha/pity zeigt `maxPity` (höchster Wert über alle Banner) für Rückwärtskompatibilität. Spieler sieht 40 Pity, denkt er ist nah an 75, wechselt den Banner und hat dort nur 30. Irreführend.
+110. **[UX]** GET /api/gacha/pity zeigt `maxPity` (höchster Wert über alle Banner) für Rückwärtskompatibilität. Spieler sieht 40 Pity, denkt er ist nah an 75, wechselt den Banner und hat dort nur 30. Irreführend.
 
 ### Professions-Plateau
-108. **[Balance]** Bei Skill 200+ sind Rezepte auf dem Level grau (0% Skillup). Spieler braucht neuen Rank (Artisan bei 200+), aber dann fehlen Rezepte die noch Orange/Yellow sind. "Proficiency Plateau" bis neuer Content kommt.
+111. **[Balance]** Bei Skill 200+ sind Rezepte auf dem Level grau (0% Skillup). Spieler braucht neuen Rank (Artisan bei 200+), aber dann fehlen Rezepte die noch Orange/Yellow sind. "Proficiency Plateau" bis neuer Content kommt.
 
 ---
 
