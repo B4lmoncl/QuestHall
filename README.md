@@ -97,7 +97,6 @@ Full API docs: `GET /api/docs` (OpenAPI/Swagger).
 | `ARCHITECTURE.md` | Technical architecture deep-dive |
 | `docs/archive/WOW-PROFESSION-REFACTOR.md` | Profession system design spec (implemented) |
 | `AUTOPILOT_AUDIT.md` | Autonomous audit protocol |
-| `FEATURE_IDEAS.md` | Proposed features (not implemented) |
 | `REJECTED.md` | Feature blocklist |
 
 ## License
