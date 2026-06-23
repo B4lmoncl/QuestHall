@@ -421,7 +421,7 @@ Diese Entscheidungen sind verbindlich für alle zukünftigen Implementierungs-Se
 - [x] Trainer recipe learning cost UI (Learn button + gold in ForgeView)
 - [x] Unlearn profession UI (2-step confirm in ForgeView)
 - [x] Material drops gate: only with profession + only affinity mats (backend + tested)
-- [ ] Synergy hints update for 8 professions (FI-045 in FEATURE_IDEAS.md)
+- [ ] Synergy hints update for 8 professions (FI-045 in AUDIT_REPORT.md Appendix B)
 
 ---
 

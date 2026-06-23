@@ -655,8 +655,9 @@ All pixel art assets are generated via the Pixellab API v2 (`https://api.pixella
 - `TEMPLATES.md` — Quest template format reference.
 - `AUTOPILOT_AUDIT.md` — Autonomous audit protocol. Endlosschleife mit Scope/Fokus-Rotation. Sag "Lies AUTOPILOT_AUDIT.md" um den Autopilot zu starten.
 - `REJECTED.md` — **Feature-Blocklist.** Alles hier wurde vorgeschlagen und abgelehnt. MUSS vor jedem Feature-Vorschlag gelesen werden. Nicht erneut vorschlagen.
-- `FEATURE_IDEAS.md` — 65 Feature-Vorschlaege aus Autopilot-Audit. Nicht implementiert — nur Diskussionsgrundlage. Mit Quelle (WoW/D3/HSR), Aufwand (S/M/L/XL) und Begruendung.
-- `BALANCE_CONTENT_AUDIT.md` — Content-Dichte-Analyse + technische Scalability-Notes. Zeigt wo Content fehlt und wo das System stark ist.
+- `AUDIT_REPORT.md` Appendix B — 65 Feature-Vorschlaege aus Autopilot-Audit (ehemals FEATURE_IDEAS.md). Nicht implementiert — nur Diskussionsgrundlage.
+- `AUDIT_REPORT.md` Appendix C — AAA Polish Findings (ehemals FLAVOR_AUDIT_FINDINGS.md). UI/UX-Feinschliff-Items.
+- `AUDIT_REPORT.md` Appendix D — Content-Dichte-Analyse + technische Scalability-Notes (ehemals BALANCE_CONTENT_AUDIT.md).
 - `ASSET_BACKLOG.md` — Master-Liste aller fehlenden Pixel-Art-Assets mit Pfaden, Groessen und Kontext. Wird von Pixellab-Generierung referenziert.
 - `REFACTOR-TASK.md` — Offene Data-Consolidation-Tasks (redundante Datenquellen zusammenfuehren). Von 2026-03-14, teilweise erledigt.
 - `docs/archive/` — Archivierte Specs: GEAR-CONTENT-EXPANSION.md (1074 Items, 6 Phasen komplett), ITEM-SYSTEM-EXPANSION.md (BoP/BoE/Kanai implementiert).
