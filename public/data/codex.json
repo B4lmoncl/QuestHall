@@ -1220,7 +1220,7 @@
       "id": "fraktions-taegliche",
       "category": "systems",
       "title": "Tägliche Fraktionsaufgaben",
-      "text": "Jede der vier Fraktionen hat täglich Aufgaben, die Ruf einbringen. Zehn bis dreißig Punkte pro Quest, abhängig davon, ob die Quest zur Fraktion passt. Kampfquests für den Orden der Klinge, Wissensquests für den Zirkel der Sterne, und so weiter. Das System ist transparent. Die Fraktionen nicht. Jede behauptet, die wichtigste zu sein. Jede hat Unrecht. Jede hat trotzdem Recht, was das eigentliche Problem ist. Ruf akkumuliert sich automatisch. Vertrauen nicht. Aber Ruf reicht für die Händler-Rabatte, und Vertrauen war noch nie im Angebot.",
+      "text": "Jede der vier Fraktionen hat täglich Aufgaben, die Ruf einbringen. Zehn bis dreißig Punkte pro Quest, abhängig davon, ob die Quest zur Fraktion passt. Fitnessquests für den Zirkel der Glut, Wissensquests für den Zirkel der Tinte, und so weiter. Das System ist transparent. Die Fraktionen nicht. Jede behauptet, die wichtigste zu sein. Jede hat Unrecht. Jede hat trotzdem Recht, was das eigentliche Problem ist. Ruf akkumuliert sich automatisch. Vertrauen nicht. Aber Ruf reicht für die Händler-Rabatte, und Vertrauen war noch nie im Angebot.",
       "unlockedBy": {
         "type": "faction_rank",
         "value": 2
