@@ -4,6 +4,7 @@
 ## Open Bugs
 
 ### UI/UX visual pass (2026-06-23)
+- **[FIXED]** Character view crashed with `t.startsWith is not a function`. `CharacterView.getTier()` called `.startsWith()` directly on equipment slot values, which at runtime can be `GearInstance` objects (`{ templateId, ... }`), not plain id strings. Now resolves the template id from string-or-object before tier checks.
 - **[FIXED]** Currency bar glow rendered as a ring around the square icon box (`box-shadow` + `border-radius:50%`). Switched `.currency-infused` to alpha-aware `drop-shadow` so the glow traces the icon silhouette (`app/globals.css`).
 - **[FIXED]** Currency numbers vertically offset / "below-right" of icons — icon + number sat inside one inline `gt-ref` span (baseline-aligned). Wrapped them in an `inline-flex items-center` group (`app/page.tsx` currency bar).
 - **[FIXED]** Footer barely legible over the bright Guild Hall background — added a translucent blurred backdrop pill; anchored footer to the bottom via flex-column + `mt-auto` so it no longer floats mid-screen.
