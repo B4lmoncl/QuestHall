@@ -924,7 +924,7 @@ export default function ForgeView({ onRefresh, onNavigate }: { onRefresh?: () =>
   const chosenCount = professions.filter(p => p.chosen).length;
 
   return (
-    <div data-feedback-id="forge-view" className="space-y-4 tab-content-enter" style={{ position: "relative" }}>
+    <div data-feedback-id="forge-view" className="space-y-5 tab-content-enter" style={{ position: "relative" }}>
       <TutorialMomentBanner viewId="forge" />
       {fetchError && (
         <div role="alert" className="rounded-lg px-3 py-2 flex items-center justify-between gap-3" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)", color: "#fecaca" }}>
