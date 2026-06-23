@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useModalBehavior } from "./ModalPortal";
 
 interface ClassDef {
@@ -95,6 +95,11 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
 
   // Step 5 result
   const [loading, setLoading] = useState(false);
+  // Synchronous double-submit guard — the disabled button + loading state
+  // are not enough: React state is async, so a fast double-click can fire
+  // /api/register twice before the re-render disables the button. A ref
+  // blocks the second call synchronously (mirrors loadingRef in useQuestActions).
+  const submittingRef = useRef(false);
   const [error, setError] = useState("");
   const [generatedKey, setGeneratedKey] = useState("");
   const [generatedAccessToken, setGeneratedAccessToken] = useState("");
@@ -158,6 +163,8 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
   };
 
   const handleFinalSubmit = async () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     setLoading(true);
     setError("");
     try {
@@ -199,7 +206,6 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
       const data = await r.json();
       if (!r.ok) {
         setError(data.error || "Registration failed");
-        setLoading(false);
         return;
       }
       setGeneratedKey(data.apiKey);
@@ -207,8 +213,10 @@ export default function OnboardingWizard({ onComplete, onClose }: OnboardingWiza
       setStep(5);
     } catch {
       setError("Connection error. Please try again.");
+    } finally {
+      setLoading(false);
+      submittingRef.current = false;
     }
-    setLoading(false);
   };
 
 
