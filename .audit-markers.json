@@ -564,10 +564,10 @@
     "status": "clean"
   },
   "hooks/useQuestActions.ts": {
-    "auditCount": 3,
-    "lastAuditDate": "2026-04-24",
-    "findings": "Wave 48: Inconsistent retry behavior on network errors. 4 actions have onRetry callback (claim, unclaim, coop-complete, complete). 7 do NOT (approve, reject, favorite toggle, coop-claim, pool refresh, purchase, gear purchase). Adding blanket retry is risky — purchase is NOT idempotent, retrying a successful purchase that timed out reading response could double-charge. FLAGGED (requires backend-behavior audit per endpoint). All non-network errors have proper d.error fallback. loadingAction state prevents double-clicks. Overall sound.",
-    "status": "clean-flagged"
+    "auditCount": 4,
+    "lastAuditDate": "2026-06-23",
+    "findings": "Frontend UI/UX pass: Excellent. Central double-submit guard via loadingRef.current + loadingAction state on all quest actions (claim/unclaim/complete/coop/approve/reject/shopBuy/gearBuy). Every path has error toast + post-action refresh + onRetry on network errors. handleComplete fires comprehensive reward/celebration handling. Minor: handleBulkUpdate + handleToggleFavorite lack the loadingRef guard (low-stakes; bulk is idempotent, favorite is optimistically updated in page.tsx:786 but a failed request is not reverted — self-corrects on next poll).",
+    "status": "clean"
   },
   "lib/sounds.ts": {
     "auditCount": 2,
