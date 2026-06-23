@@ -1,5 +1,7 @@
 # Item System Overhaul — Full Spec
 
+> **STATUS: IMPLEMENTED & ARCHIVED (2026-06-23).** The item-template system, equip-from-inventory unification, consumable effect handlers, discard flow, and stat effects described here are all live (`itemTemplates.json`, `resolveItem()`, `createGearInstance()`). Two drafting-era numbers below are now stale: stat effects are **+0.5% per point** (not +1% as drafted here), and there are **7 equipment slots** + **8 stats** (4 primary kraft/ausdauer/weisheit/glueck + 4 minor fokus/vitalitaet/charisma/tempo). For current facts, see CLAUDE.md.
+
 ## Problem Statement
 Two completely separate item systems exist that don't talk to each other:
 1. **Shop/Gear** (`gearTemplates.json` → `FULL_GEAR_ITEMS[]`) — equippable via `/api/player/:name/equip/:itemId`, has slots/stats

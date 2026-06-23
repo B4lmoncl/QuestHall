@@ -131,3 +131,20 @@ Alle 87 NPC-Quest-Chain-Reward-Items haben `icon: null`. Brauchen individuelle I
 | 5 | Crafting Recipe Icons | ~30 | 128×128 |
 | 6 | Intermediate Material Icons | 21 | 128×128 |
 | **Total** | | **~248** | |
+
+---
+
+## Icon Generation Reference
+
+> Consolidated 2026-06-23 from the former `ICON_GENERATION_GUIDE.md` (deleted — its counts were stale and contradicted this file, e.g. it listed `currency-sternentaler` as missing although it now exists).
+
+This file (the tables above) is the **single source of truth** for *which* icons are missing. The per-icon **display names + Skulduggery-tone flavor** to use in generation prompts are not duplicated here — they live in the source JSON the icon belongs to:
+
+| Icon group | Filename pattern | Name + flavor source |
+|------------|------------------|----------------------|
+| Achievements | `ach-*.png` | `public/data/achievementTemplates.json` → `name` + `description` |
+| Shop items | `shop-*.png` | `public/data/shopItems.json` → `name` + `desc` |
+| NPC reward items | `unique-npc-*-reward.png` | `public/data/npcQuestGivers.json` → `givers[].finalReward.item.name` + `.desc` |
+| Materials | `mat-*.png` | `public/data/professions.json` → `materials[].name` + `desc` |
+
+Generation rules (sizes, style refs, `no_background`, batching) live in CLAUDE.md § "Pixellab Asset Generation Rules".

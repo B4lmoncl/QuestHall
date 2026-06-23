@@ -11,7 +11,7 @@ This file documents how to add new wandering NPC quest givers to `npcQuestGivers
   "id": "unique-kebab-case-id",
   "name": "Display Name",
   "title": "Short subtitle shown under the name",
-  "emoji": "🧙",
+  "emoji": null,
   "portrait": "/images/npcs/your-npc-portrait.png",
   "rarity": "common",
   "greeting": "Spoken intro line shown in the speech bubble.",
@@ -47,17 +47,17 @@ Each item in `questChain` is unlocked in order — the player must complete ques
 ```json
 "questChain": [
   {
-    "title": "📦 Quest Title",
+    "title": "Quest Title",
     "description": "What the player needs to do in real life. Be specific and fun.",
     "type": "personal",
-    "priority": "low",
+    "rarity": "common",
     "rewards": { "xp": 20, "gold": 10 }
   },
   {
-    "title": "🗺️ Second Quest",
+    "title": "Second Quest",
     "description": "Follow-up task. Escalate difficulty slightly.",
     "type": "social",
-    "priority": "medium",
+    "rarity": "uncommon",
     "rewards": { "xp": 30, "gold": 15 }
   }
 ]
@@ -65,22 +65,24 @@ Each item in `questChain` is unlocked in order — the player must complete ques
 
 ### Quest Types
 
-| type        | Emoji | Description                          |
-|-------------|-------|--------------------------------------|
-| personal    | 🧘    | Self-improvement, habits, reflection |
-| learning    | 📚    | Study, research, skill-building      |
-| fitness     | 💪    | Exercise, movement, health           |
-| social      | 🤝    | Connection, communication, giving    |
-| development | ⚙     | Technical / coding tasks             |
-| boss        | 🐉    | Major challenge (used sparingly)     |
+| type        | Description                          |
+|-------------|--------------------------------------|
+| personal    | Self-improvement, habits, reflection |
+| learning    | Study, research, skill-building      |
+| fitness     | Exercise, movement, health           |
+| social      | Connection, communication, giving    |
+| development | Technical / coding tasks             |
+| boss        | Major challenge (used sparingly)     |
 
 ### XP / Gold Guidelines
 
-| Priority | Base XP | Base Gold |
-|----------|---------|-----------|
-| low      | 15–25   | 8–15      |
-| medium   | 25–40   | 12–20     |
-| high     | 40–60   | 20–30     |
+| Rarity    | Base XP | Base Gold |
+|-----------|---------|-----------|
+| common    | 15–25   | 8–15      |
+| uncommon  | 25–35   | 12–18     |
+| rare      | 35–45   | 18–24     |
+| epic      | 45–55   | 24–30     |
+| legendary | 55–70   | 30–40     |
 
 ---
 
@@ -94,7 +96,7 @@ Awarded when the player completes the entire quest chain.
   "item": {
     "id": "unique-item-id",
     "name": "Item Display Name",
-    "emoji": "🗡️",
+    "emoji": null,
     "rarity": "rare",
     "slot": "weapon",
     "stats": { "kraft": 3, "glueck": 2 },
@@ -103,8 +105,10 @@ Awarded when the player completes the entire quest chain.
 }
 ```
 
-### Item Slots: `weapon`, `helm`, `amulet`, `ring`
-### Stat Keys: `kraft` (strength), `ausdauer` (endurance), `glueck` (luck), `weisheit` (wisdom)
+### Item Slots: `weapon`, `shield`, `helm`, `armor`, `amulet`, `ring`, `boots`
+### Stat Keys
+- **Primary:** `kraft` (strength), `ausdauer` (endurance), `weisheit` (wisdom), `glueck` (luck)
+- **Minor:** `fokus` (focus), `vitalitaet` (vitality), `charisma` (charisma), `tempo` (speed)
 
 ---
 
@@ -117,24 +121,24 @@ Awarded when the player completes the entire quest chain.
   "rarity": "uncommon",
   "greeting": "Oh! You startled me. I was just fixing... everything.",
   "name": "Tinker Vera",
-  "emoji": "🔧",
+  "emoji": null,
   "title": "Wandering Inventor",
   "description": "An eccentric engineer who travels with a cart full of half-finished gadgets.",
   "stayDays": 3,
   "cooldownDays": 16,
   "questChain": [
     {
-      "title": "🔩 Screw Loose",
+      "title": "Screw Loose",
       "description": "Vera needs a hand. (Tidy your workspace or fix one small thing that's been broken for a while)",
       "type": "personal",
-      "priority": "low",
+      "rarity": "common",
       "rewards": { "xp": 20, "gold": 12 }
     },
     {
-      "title": "💡 The Prototype",
+      "title": "The Prototype",
       "description": "'Every great invention starts with a sketch.' (Brainstorm or plan a project for 20 minutes)",
       "type": "learning",
-      "priority": "medium",
+      "rarity": "uncommon",
       "rewards": { "xp": 35, "gold": 18 }
     }
   ],
@@ -143,7 +147,7 @@ Awarded when the player completes the entire quest chain.
     "item": {
       "id": "vera-wrench",
       "name": "Vera's Lucky Wrench",
-      "emoji": "🔧",
+      "emoji": null,
       "rarity": "uncommon",
       "slot": "weapon",
       "stats": { "kraft": 2, "weisheit": 3 },
@@ -157,7 +161,7 @@ Awarded when the player completes the entire quest chain.
 
 ## Notes
 
-- Portraits should be pixel-art style, 148×148px PNG, placed in `/public/images/npcs/`.
+- Portraits should be pixel-art style, 128×128px PNG, placed in `/public/images/npcs/`.
 - The `greeting` is shown in the speech bubble — keep it in character and under ~100 chars.
 - Chain length of 2–3 quests is ideal; avoid more than 4.
 - NPCs are spawned by the server (`server.js`) based on rarity weights and cooldowns — no code changes needed to add a new NPC, just add to this JSON file and restart the server.

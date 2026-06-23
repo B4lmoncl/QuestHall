@@ -23,9 +23,9 @@ Lies diese Dateien **komplett und gruendlich** bevor du irgendetwas tust:
 4. **`LYRA-PLAYBOOK.md`** — Content-Schemas, Lore Bible (READ-ONLY Lore-Sektion nicht aendern!), Ton & Stimme.
 5. **`REJECTED.md`** — Blockliste. Alles was hier steht, darfst du NICHT vorschlagen oder implementieren.
 6. **`ARCHITECTURE.md`** — Technische Architektur, Datenfluesse, Component Tree.
-6. **`AUDIT_REPORT.md`** — Bestehende Audit-Ergebnisse. Appendix A lesen (verified non-issues).
+7. **`AUDIT_REPORT.md`** — Bestehende Audit-Ergebnisse. Appendix A lesen (verified non-issues).
 
-> **Wenn du nicht alle 6 Dateien gelesen hast, darfst du nicht anfangen. Punkt.**
+> **Wenn du nicht alle 7 Dateien gelesen hast, darfst du nicht anfangen. Punkt.**
 
 ---
 
@@ -161,8 +161,8 @@ Rotiere durch verschiedene Bereiche der Codebase. Vermeide es, denselben Bereich
 - `components/CountUp.tsx` — Animated number counter
 
 **Core Logic:**
-- `lib/state.js` — State management, Maps, persistence (~1430 lines)
-- `lib/helpers.js` — Utility functions, legendary modifiers, level system (~2380 lines)
+- `lib/state.js` — State management, Maps, persistence (~1427 lines)
+- `lib/helpers.js` — Utility functions, legendary modifiers, level system (~2440 lines)
 - `lib/auth.js` — JWT, refresh tokens, API key auth
 - `lib/middleware.js` — Express middleware (auth, master key)
 - `lib/quest-catalog.js` — Quest template seeding
@@ -174,11 +174,11 @@ Rotiere durch verschiedene Bereiche der Codebase. Vermeide es, denselben Bereich
 - `lib/auth-client.ts` + `lib/sounds.ts` — Frontend auth + SFX
 
 **App / Routing:**
-- `app/page.tsx` — Main dashboard, room routing, state (~3300 lines)
+- `app/page.tsx` — Main dashboard, room routing, state (~3640 lines)
 - `app/types.ts` — TypeScript interfaces (~764 lines)
 - `app/utils.ts` — Fetch helpers, `fetchDashboard()` batch, level system
 - `app/config.ts` — Floor/room navigation config
-- `app/globals.css` — Tailwind + utilities + animations (~2150 lines)
+- `app/globals.css` — Tailwind + utilities + animations (~2321 lines)
 - `app/layout.tsx` — Root layout wrapper
 - `app/DashboardContext.tsx` — React context for shared state
 - `hooks/useQuestActions.ts` — Quest action handlers
@@ -414,7 +414,7 @@ Bei jedem Audit-Zyklus pruefe auch:
 - Salvage: D3-Style Salvage All per Rarity?
 
 ### HSR/Genshin Referenzen
-- Gacha: Pity-System (Soft 55, Hard 75) korrekt?
+- Gacha: Pity-System (Soft 60, Hard 75) korrekt?
 - Daily Missions: HSR-Style Checklist mit Milestone-Rewards?
 - Banner-Rotation funktional?
 
@@ -486,7 +486,7 @@ Fund: Keine visuellen Skill-Up Farben (Orange/Yellow/Green/Gray) pro Rezept → 
 
 ## Abschluss-Regel
 
-**Du hoerst NICHT auf.** Du machst Zyklus um Zyklus um Zyklus. Wenn du einen Bereich durchhast, nimmst du den naechsten. Wenn du alle Bereiche einmal hattest, fange von vorne an — mit anderem Fokus. Die Codebase hat ~50 Komponenten, ~24 Routes, ~43 Datendateien, ~8 Core-Libs. Es gibt IMMER etwas zu finden.
+**Du hoerst NICHT auf.** Du machst Zyklus um Zyklus um Zyklus. Wenn du einen Bereich durchhast, nimmst du den naechsten. Wenn du alle Bereiche einmal hattest, fange von vorne an — mit anderem Fokus. Die Codebase hat ~58 Komponenten, ~32 Routes, ~56 Datendateien, ~9 Core-Libs. Es gibt IMMER etwas zu finden.
 
 Einzige Stopp-Bedingungen:
 1. Der User sagt explizit "Stopp" oder "Genug" oder "Aufhoeren"

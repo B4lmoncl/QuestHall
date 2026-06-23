@@ -11,7 +11,7 @@ All data files live in `public/data/`. The backend loads them on startup via `li
 
 | File | Purpose | Key Fields |
 |------|---------|------------|
-| `questCatalog.json` | Quest templates for rotation/pool system | `id`, `title`, `description`, `type`, `priority`, `category`, `product`, `tags` |
+| `questCatalog.json` | Quest templates for rotation/pool system | `id`, `title`, `description`, `type`, `rarity`, `category`, `product`, `tags` |
 | `questFlavor.json` | Flavor text shown on quest board | Array of strings |
 | `npcQuestGivers.json` | NPC quest givers with full quest chains | `id`, `name`, `emoji`, `title`, `questChains[]`, `spawnWeight`, `cooldownHours` |
 | `dobbieCompanion.json` | Dobbie companion quests and mood quotes | `quests[]`, `moodQuotes{}` |
@@ -23,7 +23,7 @@ All data files live in `public/data/`. The backend loads them on startup via `li
   "title": "Quest Title",
   "description": "What to do",
   "type": "personal",
-  "priority": "medium",
+  "rarity": "uncommon",
   "category": "general",
   "xp": 20,
   "gold": 5
@@ -59,7 +59,7 @@ All data files live in `public/data/`. The backend loads them on startup via `li
 
 | File | Purpose |
 |------|---------|
-| `gearTemplates.json` | Full gear catalog (70+ items, 4 tiers) |
+| `gearTemplates*.json` | Full gear catalog (~2275 items across 11 `gearTemplates*.json` files, 4 tiers) |
 | `shopItems.json` | Shop reward items + gear tier summary (used by frontend) |
 | `lootTables.json` | Loot drop tables by rarity |
 | `itemTemplates.json` | Item system schema (slots, types, tiers, stats) |
@@ -82,9 +82,9 @@ All data files live in `public/data/`. The backend loads them on startup via `li
 
 | File | Purpose |
 |------|---------|
-| `gameConfig.json` | Core constants: XP/gold by priority, streak milestones, rarity weights/colors, forge temp settings |
+| `gameConfig.json` | Core constants: rarity-scaled XP/gold, streak milestones, rarity weights/colors, forge temp settings |
 
-**To adjust XP rewards:** Edit `gameConfig.json` — change values in `xpByPriority`, `goldByPriority`, etc.
+**To adjust XP rewards:** Edit `gameConfig.json` — change the rarity-scaled XP/gold values (keyed by `common`/`uncommon`/`rare`/`epic`/`legendary`), etc.
 
 ### Runtime State (auto-managed, don't edit manually)
 
@@ -99,11 +99,10 @@ All data files live in `public/data/`. The backend loads them on startup via `li
 | `habits.json` | Habit tracking |
 | `rituals.json` | Active rituals |
 | `appState.json` | App-level state |
-| `achievementTemplates.json` | Earned achievements |
 
 ## Frontend Config
 
-`app/config.ts` contains visual styling config (colors, icons) for quest types, categories, products, and priorities. To add a new quest type that renders correctly, add an entry to `typeConfig` in this file.
+`app/config.ts` contains visual styling config (colors, icons) for quest types, categories, products, and rarities. To add a new quest type that renders correctly, add an entry to `typeConfig` in this file.
 
 ## Architecture Overview
 
@@ -112,7 +111,7 @@ public/data/*.json          ← Content lives here (edit these)
   ↓
 lib/state.js                ← Loads all JSON at startup
   ↓
-routes/*.js (12 files)      ← REST API serves loaded data
+routes/*.js (32 files)      ← REST API serves loaded data
   ↓
 components/*.tsx             ← UI renders from API responses + JSON imports
 ```

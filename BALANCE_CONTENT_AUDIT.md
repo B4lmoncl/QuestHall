@@ -1,6 +1,6 @@
 # Quest Hall — Balance & Content Density Audit
 
-> Date: 2026-03-27 · v1.6.0 · Session 31
+> Date: 2026-06-23 · v2.0.0 (counts re-verified)
 
 ---
 
@@ -10,17 +10,17 @@
 
 | System | Count | Verdict |
 |--------|-------|---------|
-| **Gear Items** | 1,074 across 11 files | RICH |
-| **Crafting Recipes** | 839 across 8 professions | RICH |
-| **Crafting Materials** | 55 types | RICH |
+| **Gear Items** | 2,275 across 11 files | RICH |
+| **Crafting Recipes** | 866 across 8 professions | RICH |
+| **Crafting Materials** | 91 types | RICH |
 | **Unique Named Items** | 14 handcrafted legendaries | GOOD |
 | **Suffixes** | 10 types (WoW-style random suffix) | GOOD |
-| **Achievements** | 65 with diverse unlock conditions | RICH |
-| **Titles** | 39 across multiple categories | RICH |
+| **Achievements** | 168 with diverse unlock conditions | RICH |
+| **Titles** | 145 across multiple categories | RICH |
 | **Weekly Challenge Templates** | 32 unique challenges | RICH |
 | **Weekly Modifiers** | 18 rotational modifiers | RICH |
 | **Expedition Templates** | 20 cooperative missions | GOOD |
-| **World Bosses** | 9 with unique lore + drops | RICH |
+| **World Bosses** | 15 with unique lore + drops | RICH |
 | **Mythic+ Affixes** | 10 weekly rotating | GOOD |
 | **Battle Pass Seasons** | 3 x 40 levels | GOOD |
 | **Factions** | 4 with 6 rep tiers each | ADEQUATE |
@@ -39,6 +39,8 @@
 ---
 
 ### Gear Distribution by Slot
+
+> Note: the per-slot, per-rarity and per-source breakdowns below are a distribution snapshot from 2026-03-27; the gear pool has since grown to 2,275 items, so absolute counts are stale (proportions remain indicative).
 
 | Slot | Items | % | Verdict |
 |------|-------|---|---------|
@@ -93,20 +95,20 @@ Good pyramid — most items are rare/epic (mid-game), fewest are legendary (aspi
 | Verzauberer | 71 | Enchants (temp buffs + vellums) |
 | Koch | 62 | Consumables (meals) |
 
-Good split: ~630 gear recipes vs ~209 consumable recipes (75/25 ratio).
+Good split: ~75/25 gear vs consumable recipes. (Per-profession counts are a 2026-03-27 snapshot; the recipe pool now totals 866.)
 
 ---
 
 ## 2. Content Density Analysis
 
 ### Content-Rich Systems (Well-Populated)
-1. **Gear/Loot** — 1,074 items, excellent source diversity, proper power hierarchy
-2. **Crafting** — 839 recipes, 8 professions, WoW Classic 300-skill system
+1. **Gear/Loot** — 2,275 items, excellent source diversity, proper power hierarchy
+2. **Crafting** — 866 recipes, 8 professions, WoW Classic 300-skill system
 3. **Weekly Challenges** — 32 templates + 18 modifiers = months of variety
-4. **World Bosses** — 9 unique bosses with lore, themed drops, tier progression
-5. **Achievements** — 65 with diverse categories (milestones, streaks, speed, variety)
+4. **World Bosses** — 15 unique bosses with lore, themed drops, tier progression
+5. **Achievements** — 168 with diverse categories (milestones, streaks, speed, variety)
 6. **Gems** — Complete 6x5 matrix with clear upgrade paths
-7. **Titles** — 39 across level/streak/quest/season/dungeon categories
+7. **Titles** — 145 across level/streak/quest/season/dungeon categories
 
 ### Adequately Populated
 8. **Factions** — 4 factions, 6 tiers each, auto-rep from quests — functional but could expand
@@ -198,11 +200,11 @@ Only 1 class defined. The class system (routes/game.js, classes.json) is built b
 8. Add 2 more factions (total 6) for broader rep gameplay
 
 ### Already Strong — Don't Touch
-- Gear system (1,074 items, well-distributed)
-- Crafting (839 recipes, balanced across professions)
+- Gear system (2,275 items, well-distributed)
+- Crafting (866 recipes, balanced across professions)
 - Weekly challenges (32 templates, 18 modifiers)
-- Achievement system (65 diverse achievements)
-- World bosses (9 with excellent lore integration)
+- Achievement system (168 diverse achievements)
+- World bosses (15 with excellent lore integration)
 
 ---
 
@@ -215,5 +217,5 @@ Only 1 class defined. The class system (routes/game.js, classes.json) is built b
 - **Debounced saves** have 2s max-delay ceiling to prevent indefinite deferral
 - **All save functions** use atomicWriteSync (write-to-temp-then-rename)
 - **Per-request caching** for getTalentEffects + getLegendaryModifiers
-- **page.tsx** has 90 useState calls — potential state management refactor target
-- **gearTemplates.json** is 1.6MB — largest data file, loaded once at boot
+- **page.tsx** has 92 useState calls — potential state management refactor target
+- **gearTemplates.json** is 1.7MB — largest data file, loaded once at boot

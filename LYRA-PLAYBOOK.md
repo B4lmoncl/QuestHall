@@ -254,7 +254,7 @@ Jeder Quest-Hall-Text folgt diesem Muster:
         "template": "npc-quest",
         "title": "Quest Titel Chain 1, Teil 1",
         "type": "social",
-        "priority": "medium",
+        "rarity": "common",
         "lore": "Quest von NPC Name · Kette 1/1 · 1/2",
         "rewards": { "xp": 25, "gold": 10 },
         "vars": {
@@ -268,7 +268,7 @@ Jeder Quest-Hall-Text folgt diesem Muster:
         "template": "npc-quest",
         "title": "Quest Titel Chain 1, Teil 2",
         "type": "social",
-        "priority": "medium",
+        "rarity": "uncommon",
         "lore": "Quest von NPC Name · Kette 1/1 · 2/2",
         "rewards": { "xp": 35, "gold": 15 },
         "vars": {
@@ -294,7 +294,7 @@ Jeder Quest-Hall-Text folgt diesem Muster:
 | `maxChainsPerVisit` | Wie viele Quest-Ketten pro Besuch | 1-3 |
 | `questChains` | Array von Arrays — jedes innere Array ist eine Quest-Kette | Quests werden sequenziell freigeschaltet |
 | `type` | Quest-Typ | `development`, `personal`, `learning`, `fitness`, `social`, `boss` |
-| `priority` | Schwierigkeit & Belohnung | `low`, `medium`, `high` |
+| `rarity` | Seltenheit & Belohnungsumfang (ersetzt das alte `priority`-System) | `common`, `uncommon`, `rare`, `epic`, `legendary` |
 
 ### Portrait
 
@@ -459,8 +459,10 @@ Items haben **keine festen Stats** mehr. Stattdessen definiert jedes Item einen 
 | 1 | Abenteurer | 1-8 |
 | 2 | Veteranen | 9-16 |
 | 3 | Meister | 17-24 |
-| 4 | Legendär | 25-35 |
-| 5 | Mythisch | 36-50 |
+| 4 | Legendär | 25-50 |
+| 5 | (unique items only) | — |
+
+> Normale Gear-Items nutzen **nur** die 4 Tiers oben. T5 ist ausschließlich den handgefertigten Unique Named Items vorbehalten — es gibt kein normales "Mythisch"-Tier.
 
 ### Set-Boni
 
@@ -495,6 +497,8 @@ Für feste Effekte (z.B. streak_protection) verwende `"value": 1` ohne min/max.
 | `decay_reduction` | 8-12% | Reduziert Forge-Decay |
 | `streak_protection` | 1 (fix) | Streak-Schilde pro Woche |
 
+> Dies sind nur 5 Beispiele. Es gibt insgesamt **~22 Legendary-Effekt-Typen** (inkl. Gameplay-Changer wie `night_double_gold`, `crit_chance`, `material_double`, `cooldown_reduction` usw.). Die **vollständige, verbindliche Liste** steht in **CLAUDE.md → Item & Gear Balancing Rules → "All legendary effect types"**. Dort nachschlagen, nicht hier duplizieren.
+
 ---
 
 ## 3b. Titel erstellen
@@ -526,7 +530,7 @@ Für feste Effekte (z.B. streak_protection) verwende `"value": 1` ohne min/max.
 | `npc_chains` | Zahl | Abgeschlossene NPC-Quests >= value |
 | `forge_temp` | Zahl | Forge-Temperatur >= value |
 | `gacha_legendary` | Zahl | Legendäre Gacha-Pulls >= value |
-| `full_equipment` | 1 | Alle 6 Slots gefüllt |
+| `full_equipment` | 1 | Alle 7 Slots gefüllt |
 
 Titel werden automatisch bei Quest-Abschluss geprüft und vergeben. Spieler können sie im Character-Screen auswählen.
 
@@ -799,7 +803,7 @@ Neue Achievements können direkt in `achievementTemplates.json` hinzugefügt wer
   "id": "neue-companion-quest",
   "title": "{name} verwöhnen",
   "description": "Tu etwas Nettes für deinen Companion.",
-  "priority": "medium"
+  "rarity": "common"
 }
 ```
 
@@ -880,7 +884,7 @@ Kein Code nötig für bestehende Effekt-Typen. Neue Effekt-Typen brauchen Anpass
 
 ## 12. Artisan's Quarter — Crafting Recipes & Materials
 
-> **Definitive Spec:** See [`WOW-PROFESSION-REFACTOR.md`](./WOW-PROFESSION-REFACTOR.md) for the complete profession refactor plan: 300 max skill, 6 professions (incl. Lederverarbeiter), ~100 recipes per profession (~600 total), material specialization, WoW recipe source distribution. **Always consult WOW-PROFESSION-REFACTOR.md before any profession/crafting work.**
+> **Definitive Spec:** See [`docs/archive/WOW-PROFESSION-REFACTOR.md`](./docs/archive/WOW-PROFESSION-REFACTOR.md) for the complete profession refactor plan: 300 max skill, 8 professions (incl. Lederverarbeiter), ~866 recipes total, material specialization, WoW recipe source distribution. **Always consult WOW-PROFESSION-REFACTOR.md before any profession/crafting work.**
 
 **Data**: `public/data/professions.json`
 **Frontend**: `components/ForgeView.tsx`

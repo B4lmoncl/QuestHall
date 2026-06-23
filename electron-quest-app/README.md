@@ -4,7 +4,7 @@ A minimal desktop app to post quests to Quest Hall.
 
 ## Requirements
 
-- Node.js 18+
+- Node.js 20+
 - npm
 
 ## Setup
@@ -52,7 +52,7 @@ Settings are saved locally and persist across sessions.
 
 1. Fill in **Quest Title** (required)
 2. Optionally add a **Description**
-3. Select **Priority** (low / medium / high)
+3. Select **Rarity** (common / uncommon / rare / epic / legendary)
 4. Tick one or more **Categories** (multi-select checkboxes)
 5. Check **Human Input Required** if Leon needs to be involved
 6. Click **Post Quest**
