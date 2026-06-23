@@ -4,6 +4,8 @@
 ## Open Bugs
 
 ### UI/UX visual pass (2026-06-23)
+- **[FIXED]** Views had inconsistent widths. Root cause: hard internal width caps — `TavernView` rest history (`maxWidth:600`) and `WandererRest` (5× `maxWidth:1000`). Removed so all views fill the `<main>` `max-w-7xl` (1280px) width. Audited all 18 views; only these two had hard caps (others use full-width grids/flex).
+- **[FIXED]** Inconsistent root vertical rhythm (`space-y-4/5/6` mixed) and two views (`SocialView`, `ChallengesView`) missing the mandatory `tab-content-enter` view-transition animation. Standardized roots to `space-y-5` + added the entrance animation.
 - **[FIXED]** Character view crashed with `t.startsWith is not a function`. `CharacterView.getTier()` called `.startsWith()` directly on equipment slot values, which at runtime can be `GearInstance` objects (`{ templateId, ... }`), not plain id strings. Now resolves the template id from string-or-object before tier checks.
 - **[FIXED]** Currency bar glow rendered as a ring around the square icon box (`box-shadow` + `border-radius:50%`). Switched `.currency-infused` to alpha-aware `drop-shadow` so the glow traces the icon silhouette (`app/globals.css`).
 - **[FIXED]** Currency numbers vertically offset / "below-right" of icons — icon + number sat inside one inline `gt-ref` span (baseline-aligned). Wrapped them in an `inline-flex items-center` group (`app/page.tsx` currency bar).
