@@ -62,7 +62,7 @@ function CompanionHearthPanel({ petName, companionType, companionEmoji, reviewAp
   const cc = getCC(companionType);
   const portraitSrc = getCompanionPortraitWR(companionType, petName);
   return (
-    <div data-feedback-id="wanderers-rest.companion-hearth" style={{ maxWidth: 1000, margin: "32px auto 0", padding: 8 }}>
+    <div data-feedback-id="wanderers-rest.companion-hearth" style={{ marginTop: 32, padding: 8 }}>
       <div style={{
         background: "#0c0e14",
         border: "2px solid #2a2a3e",
@@ -155,7 +155,7 @@ export function WandererRest({
       )}
 
       {/* ── SECTION 1: Wandering Visitors (TOP) ── */}
-      <section data-feedback-id="wanderers-rest" className="mb-8" style={{ maxWidth: 1000, margin: "0 auto" }}>
+      <section data-feedback-id="wanderers-rest" className="mb-8">
         <div className="mb-4">
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
@@ -292,7 +292,7 @@ export function WandererRest({
       {/* ── Companion Hearth ── */}
       {user?.companion && reviewApiKey && playerName && (
         <>
-          <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 40, display: "flex", alignItems: "center", gap: 12 }}>
+          <div style={{ marginTop: 40, display: "flex", alignItems: "center", gap: 12 }}>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,107,157,0.25), transparent)" }} />
             <span style={{ fontSize: "0.85rem", color: "rgba(255,107,157,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ Companion Hearth ◆</span>
             <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,107,157,0.25), transparent)" }} />
@@ -312,14 +312,14 @@ export function WandererRest({
       )}
 
       {/* ── Divider: Starweaver Chamber ── */}
-      <div style={{ maxWidth: 1000, margin: "0 auto", marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
+      <div style={{ marginTop: 48, display: "flex", alignItems: "center", gap: 12 }}>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
         <span style={{ fontSize: "0.85rem", color: "rgba(255,215,0,0.6)", letterSpacing: "0.15em", textTransform: "uppercase" }}>◆ Chamber ◆</span>
         <div style={{ flex: 1, height: 1, background: "linear-gradient(90deg, transparent, rgba(255,215,0,0.25), transparent)" }} />
       </div>
 
       {/* ── SECTION 3: The Starweaver's Chamber Portal (BOTTOM) ── */}
-      <section data-feedback-id="starweaver-portal" style={{ maxWidth: 1000, margin: "0 auto", marginTop: 24 }}>
+      <section data-feedback-id="starweaver-portal" style={{ marginTop: 24 }}>
         <button
           onClick={() => setSelectedNpc({ id: "lyra-permanent", name: "The Starweaver", title: "Guardian of Quests", rarity: "legendary", emoji: "", greeting: "Guardian of Quests. Forged in starlight.", questChain: lyraAllQuests.map(q => ({ ...q, status: q.status as "open" | "in_progress" | "completed" | "claimed" })), hoursLeft: 9999, daysLeft: 999, portrait: "/images/npcs/starweaver-final.png", finalReward: undefined } as unknown as ActiveNpc)}
           className="w-full relative overflow-hidden rounded-2xl"

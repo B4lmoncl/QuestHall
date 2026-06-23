@@ -366,7 +366,7 @@ export default function TavernView({ onRefresh }: { onRefresh?: () => void }) {
 
       {/* Rest history */}
       {status?.history && status.history.length > 0 && (
-        <div className="mx-auto" style={{ maxWidth: 600 }}>
+        <div>
           <p className="text-xs font-semibold uppercase tracking-wider text-w25 mb-2">Rest History</p>
           <div className="space-y-1">
             {status.history.map((h, i) => (
