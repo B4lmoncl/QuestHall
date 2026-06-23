@@ -493,7 +493,6 @@ export default function Dashboard() {
   const [feedbackMode, setFeedbackMode] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [gameVersion, setGameVersion] = useState<string>(CURRENT_VERSION);
-  const [versionPopupOpen, setVersionPopupOpen] = useState(false);
   const [changelogData, setChangelogData] = useState<{ version: string; date: string; title: string; changes: string[] }[]>([]);
   const [changelogExpanded, setChangelogExpanded] = useState<string | null>(null);
 
@@ -570,42 +569,13 @@ export default function Dashboard() {
     if (newQuestIds.length + newNpcIds.length > 0) setSeenVersion(v => v + 1);
   }, [dashView, quests.open, activeNpcs, persistSeen]);
 
-  // ─── New Version popup check ────────────────────────────────────────────
-  const versionCheckedRef = useRef(false);
-  useEffect(() => {
-    if (!playerName || !reviewApiKey || !gameVersion || versionCheckedRef.current) return;
-    versionCheckedRef.current = true;
-    (async () => {
-      try {
-        const r = await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/seen-version`, { signal: AbortSignal.timeout(2000) });
-        if (r.ok) {
-          const d = await r.json();
-          if (d.lastSeenVersion !== gameVersion) {
-            // Don't show version popup if What's New popup will open OR already dismissed.
-            // whatsNewOpen check handles the in-memory flag even when localStorage write fails.
-            try {
-              if (localStorage.getItem("whatsNewSeen") !== CURRENT_VERSION && !whatsNewOpen) setVersionPopupOpen(true);
-            } catch {
-              if (!whatsNewOpen) setVersionPopupOpen(true);
-            }
-          }
-        }
-      } catch { /* ignore */ }
-    })();
-  }, [playerName, reviewApiKey, gameVersion]);
-
-  const dismissVersionPopup = useCallback(async () => {
-    setVersionPopupOpen(false);
-    if (playerName && reviewApiKey) {
-      try {
-        await fetch(`/api/player/${encodeURIComponent(playerName.toLowerCase())}/seen-version`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", ...getAuthHeaders(reviewApiKey) },
-          body: JSON.stringify({ version: gameVersion }),
-        });
-      } catch { /* ignore */ }
-    }
-  }, [playerName, reviewApiKey, gameVersion]);
+  // ─── What's New splash refs ─────────────────────────────────────────────
+  // autoShownRef guards the auto-open effect: the dashboard poll hands us a new
+  // loggedInUser object reference every cycle, which would otherwise re-fire the
+  // open-timer every few seconds and yank the splash back to the hero stage.
+  // timerRef holds the pending open so we can cancel it on logout/account switch.
+  const whatsNewAutoShownRef = useRef(false);
+  const whatsNewTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // ─── apiFetch wrapper ─────────────────────────────────────────────────────
   const [apiError, setApiError] = useState<string | null>(null);
@@ -863,7 +833,9 @@ export default function Dashboard() {
     seenNpcIdsRef.current.clear();
     seenRoomsRef.current.clear();
     prevLevelRef.current = 0;
-    versionCheckedRef.current = false;
+    // Reset What's New auto-popup guard + cancel any pending open on account switch
+    whatsNewAutoShownRef.current = false;
+    if (whatsNewTimerRef.current) { clearTimeout(whatsNewTimerRef.current); whatsNewTimerRef.current = null; }
     refresh();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [playerName]);
@@ -982,12 +954,19 @@ export default function Dashboard() {
   useEffect(() => {
     try {
       if (!playerName) return;
+      // Fire at most once per session. Without this guard the dashboard poll's
+      // fresh loggedInUser reference re-runs the effect every few seconds and the
+      // splash keeps snapping back to the hero image. Reset happens on logout.
+      if (whatsNewAutoShownRef.current) return;
       if (localStorage.getItem("whatsNewSeen") === CURRENT_VERSION) return;
       const completedCount = loggedInUser?.questsCompleted ?? 0;
       const level = loggedInUser ? getUserLevel(loggedInUser.xp || 0).level : 1;
       if (completedCount < 3 && level < 2) return; // first-timer guard
-      const t = setTimeout(() => { setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true); }, 1500);
-      return () => clearTimeout(t);
+      whatsNewAutoShownRef.current = true;
+      whatsNewTimerRef.current = setTimeout(() => {
+        setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true);
+        whatsNewTimerRef.current = null;
+      }, 1500);
     } catch { /* ignore */ }
   }, [playerName, loggedInUser]);
   useEffect(() => { playerLevelRef.current = currentPlayerLevel ?? 1; }, [currentPlayerLevel]);
@@ -2959,7 +2938,14 @@ export default function Dashboard() {
         {/* Gradient separator */}
         <div style={{ height: 1, background: `linear-gradient(90deg, transparent 0%, ${currentFloorColor}18 30%, ${currentFloorColor}25 50%, ${currentFloorColor}18 70%, transparent 100%)`, marginBottom: 16 }} />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-3 text-xs font-mono" style={{ color: "rgba(255,255,255,0.35)" }}>
-          <span>Quest Hall v{gameVersion}</span>
+          <span
+            role="button"
+            tabIndex={0}
+            title="Was ist neu in dieser Version?"
+            onClick={() => { setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true); }}
+            onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true); } }}
+            style={{ cursor: "pointer" }}
+          >Quest Hall v{gameVersion}</span>
           <span style={{ color: "rgba(255,255,255,0.18)" }}>·</span>
           <span style={{ color: `${currentFloorColor}40` }}>{CURRENT_SEASON.name}</span>
           {reviewApiKey && playerName && (
@@ -3356,7 +3342,7 @@ export default function Dashboard() {
                   <span className="relative">{ringLockStep > 0 ? "Sealing…" : "What changed"}</span>
                   <span className="relative" style={{ fontSize: 14, opacity: ringLockStep > 0 ? 0.4 : 1 }}>→</span>
                 </button>
-                <p className="text-xs mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>oder weitermachen — das Update ist eh schon installiert.</p>
+                <p className="text-xs mt-4" style={{ color: "rgba(255,255,255,0.3)" }}>oder einfach schließen — du findest die Neuigkeiten jederzeit unten im Footer wieder.</p>
               </div>
             </div>
           ) : (
@@ -3550,49 +3536,6 @@ export default function Dashboard() {
             >
               Let&apos;s go!
             </button>
-          </div>
-        </ModalOverlay>
-      )}
-
-      {/* Version Update Popup */}
-      {versionPopupOpen && (
-        <ModalOverlay isOpen={versionPopupOpen} onClose={dismissVersionPopup} zIndex={70}>
-          <div
-            className="w-full max-w-sm rounded-2xl p-6 space-y-4 bg-surface"
-            style={{
-              border: "1px solid rgba(255,68,68,0.35)",
-              boxShadow: "0 0 60px rgba(255,68,68,0.12)",
-            }}
-          >
-            <div className="text-center space-y-2">
-              <h2 className="text-lg font-bold text-bright">
-                Version {gameVersion} is live!
-              </h2>
-              {changelogData[0] && (
-                <p className="text-sm text-w50">
-                  {changelogData[0].title}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                onClick={() => {
-                  setVersionPopupOpen(false);
-                  setInfoOverlayOpen(true);
-                  setInfoOverlayTab("changelog");
-                }}
-                className="flex-1 py-2.5 rounded-xl font-semibold text-sm"
-                style={{ background: "rgba(255,68,68,0.15)", color: "#ff6666", border: "1px solid rgba(255,68,68,0.3)", cursor: "pointer" }}
-              >
-                View Changelog
-              </button>
-              <button
-                onClick={dismissVersionPopup}
-                className="flex-1 py-2.5 rounded-xl font-semibold text-sm bg-w6 border-w10" style={{ color: "rgba(255,255,255,0.45)", cursor: "pointer" }}
-              >
-                Dismiss
-              </button>
-            </div>
           </div>
         </ModalOverlay>
       )}
