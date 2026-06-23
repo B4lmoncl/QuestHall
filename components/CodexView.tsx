@@ -289,11 +289,19 @@ export default function CodexView() {
             </p>
           </TipCustom>
           <div className="grid gap-1" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))" }}>
-            {undiscoveredFiltered.map(entry => (
-              <div key={entry.id} className="rounded-lg px-3 py-2 text-center crystal-breathe" style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", ["--glow-color" as string]: "rgba(107,114,128,0.15)" }}>
-                <p className="text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>???</p>
-              </div>
-            ))}
+            {undiscoveredFiltered.map(entry => {
+              const catName = categories.find(c => c.id === entry.category)?.name;
+              return (
+                <div
+                  key={entry.id}
+                  title={`Locked ${catName ? `${catName} ` : ""}entry — discover it through quests, NPCs, and exploration.`}
+                  className="rounded-lg px-3 py-2 text-center crystal-breathe"
+                  style={{ background: "rgba(255,255,255,0.01)", border: "1px solid rgba(255,255,255,0.04)", cursor: "help", ["--glow-color" as string]: "rgba(107,114,128,0.15)" }}
+                >
+                  <p className="text-xs" style={{ color: "rgba(255,255,255,0.22)" }}>???</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
