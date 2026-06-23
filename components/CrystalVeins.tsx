@@ -210,28 +210,35 @@ export default function CrystalVeins({ floorColor = "#818cf8", moonIntensity = 1
       if (!parent) return;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const w = parent.clientWidth;
-      const h = parent.scrollHeight;
+      // Use clientHeight (the laid-out content height), NOT scrollHeight, and never
+      // force a minimum. The canvas is absolutely positioned inside <main>; sizing it
+      // to scrollHeight or a hardcoded 4000px made the canvas itself overflow main and
+      // extended the whole document downward by "a mile" of empty scroll. clientHeight
+      // tracks the real content height with no feedback loop, so the veins fill the page
+      // exactly and never push it past its content.
+      const h = parent.clientHeight;
 
-      // Only resize canvas if width changed OR height grew significantly (>20%)
-      // This prevents flicker from minor scrollHeight changes
-      const heightChanged = h > lastCanvasH * 1.2 || lastCanvasH === 0;
+      // Resize when width changes, or height changes by >20% in either direction
+      // (grow on content load, shrink when switching to a shorter view).
+      const heightChanged = lastCanvasH === 0 || h > lastCanvasH * 1.2 || h < lastCanvasH * 0.8;
       const widthChanged = w !== generatedForWidth;
 
       if (widthChanged || heightChanged) {
-        const stableH = Math.max(h, 4000);
         canvas.width = w * dpr;
-        canvas.height = stableH * dpr;
+        canvas.height = h * dpr;
         canvas.style.width = `${w}px`;
-        canvas.style.height = `${stableH}px`;
+        canvas.style.height = `${h}px`;
         const ctx = canvas.getContext("2d");
         if (ctx) ctx.scale(dpr, dpr);
-        sizeRef.current = { w, h: stableH };
-        lastCanvasH = stableH;
+        sizeRef.current = { w, h };
+        lastCanvasH = h;
       }
 
       if (widthChanged) {
         generatedForWidth = w;
-        const refH = Math.max(h, 4000);
+        // Generate the vein pattern over a tall reference so long pages stay filled;
+        // only the portion inside the canvas (h) is actually drawn/visible.
+        const refH = 4000;
         const cacheKey = `${seed}-${w}`;
         if (_veinCache.has(cacheKey)) {
           veinsRef.current = _veinCache.get(cacheKey)!;

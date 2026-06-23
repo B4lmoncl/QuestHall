@@ -2239,20 +2239,21 @@ body.moon-new .crystal-breathe { animation-duration: 6s; }
 /* Pulsing radial glow that breathes like Stormlight-infused spheres (4s cycle) */
 @keyframes currency-infuse {
   0%, 100% {
-    box-shadow: 0 0 4px var(--currency-glow, rgba(255,255,255,0.1)),
-                0 0 10px var(--currency-glow-outer, rgba(255,255,255,0.04));
-    filter: brightness(1.02);
+    filter: drop-shadow(0 0 2px var(--currency-glow, rgba(255,255,255,0.1)))
+            drop-shadow(0 0 5px var(--currency-glow-outer, rgba(255,255,255,0.04)))
+            brightness(1.02);
   }
   50% {
-    box-shadow: 0 0 7px var(--currency-glow, rgba(255,255,255,0.2)),
-                0 0 16px var(--currency-glow-outer, rgba(255,255,255,0.08));
-    filter: brightness(1.12);
+    filter: drop-shadow(0 0 4px var(--currency-glow, rgba(255,255,255,0.2)))
+            drop-shadow(0 0 9px var(--currency-glow-outer, rgba(255,255,255,0.08)))
+            brightness(1.12);
   }
 }
+/* Glow traces the icon's own silhouette via drop-shadow (alpha-aware) instead
+   of box-shadow, which would draw a ring around the square image box. */
 .currency-infused {
   animation: currency-infuse 4s ease-in-out infinite;
-  border-radius: 50%;
-  will-change: box-shadow, filter;
+  will-change: filter;
 }
 /* Per-currency glow colors (Stormlight sphere palette) */
 .currency-gold       { --currency-glow: rgba(245, 168, 30, 0.50); --currency-glow-outer: rgba(245, 168, 30, 0.18); }

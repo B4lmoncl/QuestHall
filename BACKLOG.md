@@ -3,7 +3,11 @@
 
 ## Open Bugs
 
-*(none currently known — last deep audit: 2026-04-17, 20+ commits across 40+ cycles)*
+### UI/UX visual pass (2026-06-23)
+- **[FIXED]** Currency bar glow rendered as a ring around the square icon box (`box-shadow` + `border-radius:50%`). Switched `.currency-infused` to alpha-aware `drop-shadow` so the glow traces the icon silhouette (`app/globals.css`).
+- **[FIXED]** Currency numbers vertically offset / "below-right" of icons — icon + number sat inside one inline `gt-ref` span (baseline-aligned). Wrapped them in an `inline-flex items-center` group (`app/page.tsx` currency bar).
+- **[FIXED]** Footer barely legible over the bright Guild Hall background — added a translucent blurred backdrop pill; anchored footer to the bottom via flex-column + `mt-auto` so it no longer floats mid-screen.
+- **[NEEDS LIVE REPRO]** "Can scroll ~a mile below the page." Not reproducible by static analysis: root is `min-h-screen`, post-`<main>` overlays are `position:fixed`/conditional, GuildHallBackground + FloorAmbientParticles are `fixed inset-0`, Quest Journal list is conditionally mounted. Suspect: a specific `dashView` rendering a tall element, or `content-visibility:auto` (`.cv-auto`, `contain-intrinsic-size: auto 140px`) over-reserving placeholder height on a long quest list. **Next step:** in DevTools find the element extending `document.body.scrollHeight`, then bound it. The flex-column + `mt-auto` change already anchors the footer regardless.
 
 ## Open Features
 

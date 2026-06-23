@@ -1118,7 +1118,7 @@ export default function Dashboard() {
 
   return (
     <DashboardProvider value={ctxValue}>
-    <div className="min-h-screen text-primary" style={{ background: "transparent", position: "relative" }}>
+    <div className="min-h-screen flex flex-col text-primary" style={{ background: "transparent", position: "relative" }}>
       <GuildHallBackground />
       <FloorAmbientParticles floorId={activeFloor} />
       <DashboardHeader
@@ -1398,11 +1398,13 @@ export default function Dashboard() {
                     if (c.key === "gold") return true;
                     return c.value > 0;
                   }).map(c => (
-                    <div key={c.key} className="flex items-center gap-1 cursor-pointer" onClick={() => setCurrenciesOpen(true)}>
+                    <div key={c.key} className="flex items-center cursor-pointer" onClick={() => setCurrenciesOpen(true)}>
                       <Tip k={c.key}>
-                        {c.iconSrc ? <img src={c.iconSrc} alt="" width={24} height={24} className={`currency-infused currency-${c.key} ${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} onError={(e) => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
-                        <span className="text-base font-mono font-black" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
-                          {c.value}
+                        <span className="inline-flex items-center gap-1 align-middle">
+                          {c.iconSrc ? <img src={c.iconSrc} alt="" width={24} height={24} className={`currency-infused currency-${c.key} ${c.key === "stardust" ? "premium-stardust" : c.key === "runensplitter" ? "premium-rune-shards" : ""} img-render-auto`} style={{ flexShrink: 0 }} onError={(e) => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} /> : <span style={{ fontSize: 18 }}>{c.emoji}</span>}
+                          <span className="text-base font-mono font-black leading-none" style={{ color: c.value > 0 ? c.color : "rgba(255,255,255,0.15)" }}>
+                            {c.value}
+                          </span>
                         </span>
                       </Tip>
                     </div>
@@ -2934,10 +2936,12 @@ export default function Dashboard() {
         </div>
       )}
 
-      <footer data-feedback-id="footer" className="mt-12 py-4" style={{ position: "relative", zIndex: 2 }}>
+      <footer data-feedback-id="footer" className="mt-auto pt-6 pb-3" style={{ position: "relative", zIndex: 2 }}>
         {/* Gradient separator */}
-        <div style={{ height: 1, background: `linear-gradient(90deg, transparent 0%, ${currentFloorColor}18 30%, ${currentFloorColor}25 50%, ${currentFloorColor}18 70%, transparent 100%)`, marginBottom: 16 }} />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-3 text-xs font-mono" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <div style={{ height: 1, background: `linear-gradient(90deg, transparent 0%, ${currentFloorColor}18 30%, ${currentFloorColor}25 50%, ${currentFloorColor}18 70%, transparent 100%)`, marginBottom: 12 }} />
+        {/* Backdrop pill keeps the footer legible over the bright Guild Hall background */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-center gap-3 text-xs font-mono">
+          <div className="flex items-center justify-center gap-3 rounded-full px-4 py-1.5" style={{ background: "rgba(11,13,17,0.7)", backdropFilter: "blur(6px)", border: "1px solid rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.5)" }}>
           <span
             role="button"
             tabIndex={0}
@@ -2972,6 +2976,7 @@ export default function Dashboard() {
               </button>
             </>
           )}
+          </div>
         </div>
       </footer>
 
