@@ -17,7 +17,7 @@ export interface BalanceConfig {
     decayPerHour: number;
     gainPerQuest: number;
   };
-  streak: { bonusPerDay: number; maxBonus: number; maxDays: number };
+  streak: { bonusPerDay: number; maxBonus: number; softCap: number };
   hoarding: { freeLimit: number; penaltyPerQuest: number; softCap: number; hardCap: number; hardCapAt: number };
   gacha: {
     legendaryRate: number;

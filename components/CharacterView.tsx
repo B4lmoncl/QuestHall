@@ -1702,7 +1702,7 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
                   hairStyle: (loggedInUser as unknown as { appearance?: { hairStyle?: string } }).appearance?.hairStyle || "short",
                 }}
                 equipment={(charData?.equipment || {}) as Record<string, string>}
-                companion={loggedInUser.companion ? { type: loggedInUser.companion.type, name: loggedInUser.companion.name, emoji: loggedInUser.companion.emoji || "" } : null}
+                companion={loggedInUser?.companion ? { type: loggedInUser.companion.type, name: loggedInUser.companion.name, emoji: loggedInUser.companion.emoji || "" } : null}
               />
             </div>
             {/* Equipped title + frame colour surface right under the character */}

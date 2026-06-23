@@ -897,22 +897,6 @@ export default function Dashboard() {
     if (ev === "true") { addToast({ type: "flavor", message: "Email verified.", icon: "/images/icons/nav-great-hall.png" }); window.history.replaceState({}, "", "/"); }
   }, []);
 
-  // What's New splash — show once per version, but skip brand-new players.
-  // A level-1 user with 0 completed quests has no context for "Mythic+ Affixe"
-  // or "Rested XP" — the splash would overwhelm their first session. Let them
-  // complete a few quests first; the popup will still fire on the next login.
-  useEffect(() => {
-    try {
-      if (!playerName) return;
-      if (localStorage.getItem("whatsNewSeen") === CURRENT_VERSION) return;
-      const completedCount = loggedInUser?.questsCompleted ?? 0;
-      const level = loggedInUser ? getUserLevel(loggedInUser.xp || 0).level : 1;
-      if (completedCount < 3 && level < 2) return; // first-timer guard
-      const t = setTimeout(() => { setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true); }, 1500);
-      return () => clearTimeout(t);
-    } catch { /* ignore */ }
-  }, [playerName, loggedInUser]);
-
   useEffect(() => {
     if (dashView === "changelog" && changelog.length === 0 && !changelogLoading) {
       setChangelogLoading(true);
@@ -989,6 +973,23 @@ export default function Dashboard() {
   const loggedInUser = useMemo(() => playerName ? users.find(u => (u.id || "").toLowerCase() === playerNameLower || (u.name || "").toLowerCase() === playerNameLower) : null, [playerName, playerNameLower, users]);
   const currentPlayerLevel = useMemo(() => loggedInUser ? getUserLevel(loggedInUser.xp ?? 0).level : undefined, [loggedInUser]);
   const currentFloorColor = useMemo(() => (FLOORS.find(f => f.id === activeFloor) || FLOORS[1]).color, [activeFloor]);
+
+  // What's New splash — show once per version, but skip brand-new players.
+  // A level-1 user with 0 completed quests has no context for "Mythic+ Affixe"
+  // or "Rested XP" — the splash would overwhelm their first session. Let them
+  // complete a few quests first; the popup will still fire on the next login.
+  // NOTE: must stay after the loggedInUser declaration above (TDZ).
+  useEffect(() => {
+    try {
+      if (!playerName) return;
+      if (localStorage.getItem("whatsNewSeen") === CURRENT_VERSION) return;
+      const completedCount = loggedInUser?.questsCompleted ?? 0;
+      const level = loggedInUser ? getUserLevel(loggedInUser.xp || 0).level : 1;
+      if (completedCount < 3 && level < 2) return; // first-timer guard
+      const t = setTimeout(() => { setPopupStage("hero"); setRingLockStep(0); setWhatsNewOpen(true); }, 1500);
+      return () => clearTimeout(t);
+    } catch { /* ignore */ }
+  }, [playerName, loggedInUser]);
   useEffect(() => { playerLevelRef.current = currentPlayerLevel ?? 1; }, [currentPlayerLevel]);
 
   // ─── Welcome Back toast: show when returning after >6h absence ──────────
@@ -1413,7 +1414,7 @@ export default function Dashboard() {
                   // Low-level players drown in zeroed-out currencies they haven't unlocked yet.
                   // Below Lv10, hide any non-gold currency that's still at zero so the bar
                   // shows only what's relevant. Gold always stays so the row never collapses.
-                  ] as const).filter(c => {
+                  ]).filter(c => {
                     if (playerLevelInfo.level >= 10) return true;
                     if (c.key === "gold") return true;
                     return c.value > 0;

@@ -533,7 +533,7 @@ export default function TalentTreeView({
                   key={n.id}
                   role="button"
                   tabIndex={0}
-                  aria-label={`${n.name}${state === "allocated" ? " (aktiviert)" : state === "unlockable" ? " (wählbar)" : " (gesperrt)"}`}
+                  aria-label={`${n.name}${state === "allocated" ? " (aktiviert)" : state === "available" ? " (wählbar)" : " (gesperrt)"}`}
                   aria-pressed={state === "allocated"}
                   onClick={() => setSelectedNode(n.id === selectedNode ? null : n.id)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedNode(n.id === selectedNode ? null : n.id); } }}
