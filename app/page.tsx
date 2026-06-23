@@ -1416,10 +1416,10 @@ export default function Dashboard() {
                   <div className="flex items-center gap-1.5">
                     <img src="/images/icons/ach-forge-novice.png" alt="forge" width={35} height={35} className="img-render-auto" onError={e => { const t = e.currentTarget; t.style.opacity = "0"; t.style.width = "0"; t.style.overflow = "hidden"; }} />
                     <Tip k="forge_temp">
-                      <span className="text-xs font-medium" style={{ color: forgeTempColor }}>
-                        {forgeTemp}%
+                      <span className="inline-flex items-baseline gap-1">
+                        <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTemp}%</span>
+                        <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
                       </span>
-                      <span className="text-xs font-medium" style={{ color: forgeTempColor }}>{forgeTempLabel}</span>
                     </Tip>
                   </div>
                   {/* Forge bar */}

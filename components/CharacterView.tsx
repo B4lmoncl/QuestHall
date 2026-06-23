@@ -25,7 +25,10 @@ function PixelCharacter({ appearance = {}, equipment = {}, companion = null }: P
   const getTier = () => {
     const slots = ['weapon', 'armor', 'shield', 'helm'];
     for (const s of slots) {
-      const id = equipment[s];
+      const raw: unknown = equipment[s];
+      if (!raw) continue;
+      // Equipment values may be a plain id string or an instance object { templateId, ... }
+      const id = typeof raw === 'object' ? String((raw as Record<string, unknown>).templateId ?? '') : String(raw);
       if (!id) continue;
       if (id.startsWith('t4-') || ['dawn-blade','aegis-shield','wise-crown','dragon-armor','luck-heart','world-boots'].includes(id)) return 4;
       if (id.startsWith('t3-') || ['rune-sword','dragon-scale','arcane-helm','mythril-armor','gold-medallion','wind-boots'].includes(id)) return 3;
