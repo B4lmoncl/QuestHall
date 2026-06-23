@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { TutorialMomentBanner } from "@/components/ContextualTutorial";
 import { useDashboard } from "@/app/DashboardContext";
 import { getAuthHeaders } from "@/lib/auth-client";
