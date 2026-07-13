@@ -1624,7 +1624,15 @@ export default function CharacterView({ addToast, onNavigate }: { addToast?: (t:
 
               // Persist order to backend (flat item list, no gaps)
               try {
-                const allEquippedIds = new Set(Object.values(charData.equipment).filter(Boolean));
+                // Equipment values may be plain id strings or GearInstance objects —
+                // resolve both to their id so equipped items are matched correctly.
+                const allEquippedIds = new Set(
+                  Object.values(charData.equipment).filter(Boolean).map(v =>
+                    typeof v === 'object' && v !== null
+                      ? ((v as { instanceId?: string; templateId?: string }).instanceId || (v as { instanceId?: string; templateId?: string }).templateId)
+                      : v
+                  )
+                );
                 const equipped = charData.inventory.filter(i => allEquippedIds.has(i.id));
                 // Build new grid with swap applied
                 const newGrid = [...grid];
