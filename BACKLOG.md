@@ -3,6 +3,9 @@
 
 ## Open Bugs
 
+### Quest Board flooded with hundreds of open quests (2026-07-13)
+- **[FIXED]** Even after companion quests were excluded, the Quest Board still showed hundreds of open quests. Root cause in the backend per-player quest builder (`routes/quests.js`): when a player's visible pool was momentarily empty (e.g. right after the daily reset, before `GET /api/quests/pool` regenerates it), the fallback returned **every** open player quest (`visibleIds.size > 0 ? filtered : openPlayer`). Combined with accumulated untracked generated quests, this dumped the whole backlog onto the board and defeated the ~11-quest pool cap. **Fix:** the empty-pool fallback now caps to ~11 templated quests (non-templated starter/hand-created quests are always shown); the pool filter is applied unconditionally. Added a one-time boot cleanup (`server.js` `purgeOrphanGeneratedQuests`) that removes open, templated, system-generated quests no player's pool still references (never touches hand-created/NPC/campaign/completed quests).
+
 ### Companion quest flood — Quest Board (2026-07-13)
 - **[FIXED]** Quest Board OPEN list flooded with dozens of duplicate companion quests ("Im Rudel ruhen", "Auf der Jagd", …). Multi-part root cause + fix:
   - Companion quests are created (`components/QuestPanels.tsx` `createDobbieQuest`) with `type: "personal"`, `rarity: "companion"`, `createdBy: "companion"`. The Quest Board OPEN filter (`app/page.tsx`) only filtered by `type`, so `"personal"` passed — and the level filter even force-included `q.rarity === "companion"`. **Fix:** OPEN filter now excludes `isCompanionQuest(q)` (mirrors the in-progress filter); removed the companion force-include.

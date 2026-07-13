@@ -310,6 +310,38 @@ function dedupeCompanionQuests() {
 }
 try { dedupeCompanionQuests(); } catch (e) { console.error('[boot] companion dedupe failed:', e.message); }
 
+// ─── One-time cleanup: purge orphaned generated quests ───────────────────────
+// generatePlayerQuests() creates system quests (createdBy 'system', templateId set)
+// and tracks their IDs in pp.generatedQuests. If that list is reset (daily rotation)
+// or the removal of the previous batch is skipped, old generated quests linger as
+// open-but-untracked "orphans". Normally the empty-pool path used to dump every one
+// of them onto the board (now fixed), so they piled up into the hundreds. Remove any
+// open, templated, system-generated quest that no player's pool still references.
+function purgeOrphanGeneratedQuests() {
+  const referenced = new Set();
+  for (const pp of Object.values(state.playerProgress || {})) {
+    for (const id of (pp.generatedQuests || [])) referenced.add(id);
+    for (const id of (pp.activeQuestPool || [])) referenced.add(id);
+  }
+  const removeIds = new Set();
+  for (const q of state.quests) {
+    if (!q || q.status !== 'open') continue;
+    if (q.createdBy !== 'system') continue;   // only auto-generated pool quests
+    if (!q.templateId) continue;              // never touch hand-created/starter quests
+    if (q.npcGiverId || q.parentQuestId) continue; // never NPC or campaign chain quests
+    if (referenced.has(q.id)) continue;       // still in someone's active pool
+    removeIds.add(q.id);
+  }
+  if (removeIds.size === 0) return 0;
+  state.quests = state.quests.filter(q => !removeIds.has(q.id));
+  const { saveQuests, rebuildQuestsById } = require('./lib/state');
+  rebuildQuestsById();
+  saveQuests();
+  console.log(`[boot] Purged orphaned generated quests: removed ${removeIds.size}`);
+  return removeIds.size;
+}
+try { purgeOrphanGeneratedQuests(); } catch (e) { console.error('[boot] orphan purge failed:', e.message); }
+
 // Version tracking
 try {
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));

@@ -834,15 +834,21 @@ function getQuestsData(playerParam, typeFilter) {
     const poolIds = pp.activeQuestPool && pp.activeQuestPool.length > 0
       ? pp.activeQuestPool
       : (pp.generatedQuests || []).slice(0, 11);
-    const visibleIds = new Set(poolIds);
+    let visibleIds = new Set(poolIds);
+    // Fallback when the pool hasn't been built yet (e.g. right after the daily
+    // reset, before GET /api/quests/pool regenerates it). Previously this branch
+    // returned EVERY open player quest, which dumped hundreds of stale generated
+    // quests onto the board whenever the pool was momentarily empty. Instead cap
+    // to a reasonable number of templated quests; the real curated pool takes
+    // over as soon as it is rebuilt.
+    if (visibleIds.size === 0) {
+      visibleIds = new Set(openPlayer.filter(q => q.templateId).slice(0, 11).map(q => q.id));
+    }
     // Non-templated quests (starter quests from createStarterQuestsIfNew,
     // hand-created quests, NPC quests that were re-opened via recurrence)
-    // can't appear in the generated pool (they have no templateId), so
-    // they were silently dropped for new players whose pool populated
-    // before the dashboard render. Always include non-templated quests.
-    const poolFilteredOpen = visibleIds.size > 0
-      ? openPlayer.filter(q => visibleIds.has(q.id) || !q.templateId)
-      : openPlayer;
+    // can't appear in the generated pool (they have no templateId), so they must
+    // always be included or they would be silently dropped.
+    const poolFilteredOpen = openPlayer.filter(q => visibleIds.has(q.id) || !q.templateId);
 
     // Dev quest types use global status as-is
     return {
