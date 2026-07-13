@@ -187,6 +187,7 @@ server.js             # Express entry point, boot sequence (~337 lines)
 - **User lookups:** Use `state.usersByName.get(name)` or `state.usersByApiKey.get(key)` — never `Object.values(state.users).find()`
 - **After state.quests.push(q):** Always add `state.questsById.set(q.id, q)`
 - **After state.quests reassignment:** Always call `rebuildQuestsById()`
+- **Companion quests NEVER appear on the main Quest Board.** They are created by the Companions panel (`createdBy: "companion"`, `rarity: "companion"`, `type: "personal"`) and belong ONLY to the Companions widget. This bug has recurred many times. Invariants that must hold: (1) the Quest Board OPEN filter (`app/page.tsx` questBoard) must exclude `isCompanionQuest(q)` — mirror the in-progress filter, do NOT add `|| q.rarity === "companion"` back into the level filter; (2) the backend player-quest builder (`routes/quests.js`) must skip companion quests when populating `openPlayer` (they have no `templateId` and would bypass the pool cap); (3) companion quest creation (`POST /api/quest`) must dedup on title so accepts/daily-resets never pile up duplicates. Identify a companion quest by `rarity === "companion" || type === "companion" || createdBy === "companion" || createdBy === "dobbie" || companionOwnerId`.
 
 ## Item & Gear Balancing Rules
 

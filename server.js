@@ -269,6 +269,47 @@ startupNpcCheck();
 const npcInterval = setInterval(checkPeriodicTasks, NPC_ROTATION_MS);
 checkAndRunDailyRotation();
 
+// ─── One-time cleanup: collapse duplicate companion quests ───────────────────
+// Companion quests (createdBy 'companion'/'dobbie', rarity/type 'companion', or a
+// companionOwnerId) are persistent daily-recurring quests owned by the Companions
+// panel. A prior bug created a fresh instance on every accept / daily reset without
+// deduping, so players accumulated dozens of duplicate OPEN companion quests that
+// flooded the Quest Board. Collapse each (owner + title) group to a single instance,
+// preferring an in-progress copy, then the most recently created. Keying on the
+// owner means quests carrying real progress are never merged across players;
+// unclaimed orphans (no owner, no progress) are safe to thin out.
+function dedupeCompanionQuests() {
+  const isCompanion = q => q && (
+    q.createdBy === 'companion' || q.createdBy === 'dobbie' ||
+    q.rarity === 'companion' || q.type === 'companion' || !!q.companionOwnerId
+  );
+  const groups = new Map();
+  for (const q of state.quests) {
+    if (!isCompanion(q)) continue;
+    const owner = ((q.claimedBy || q.companionOwnerId || '') + '').toLowerCase() || '_none';
+    const key = `${owner}::${q.title}`;
+    let arr = groups.get(key);
+    if (!arr) { arr = []; groups.set(key, arr); }
+    arr.push(q);
+  }
+  const removeIds = new Set();
+  const statusRank = s => (s === 'in_progress' ? 3 : s === 'open' ? 2 : s === 'completed' ? 1 : 0);
+  for (const arr of groups.values()) {
+    if (arr.length <= 1) continue;
+    arr.sort((a, b) => statusRank(b.status) - statusRank(a.status)
+      || String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+    for (let i = 1; i < arr.length; i++) removeIds.add(arr[i].id);
+  }
+  if (removeIds.size === 0) return 0;
+  state.quests = state.quests.filter(q => !removeIds.has(q.id));
+  const { saveQuests, rebuildQuestsById } = require('./lib/state');
+  rebuildQuestsById();
+  saveQuests();
+  console.log(`[boot] Deduped companion quests: removed ${removeIds.size} duplicate(s)`);
+  return removeIds.size;
+}
+try { dedupeCompanionQuests(); } catch (e) { console.error('[boot] companion dedupe failed:', e.message); }
+
 // Version tracking
 try {
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));

@@ -3,6 +3,14 @@
 
 ## Open Bugs
 
+### Companion quest flood — Quest Board (2026-07-13)
+- **[FIXED]** Quest Board OPEN list flooded with dozens of duplicate companion quests ("Im Rudel ruhen", "Auf der Jagd", …). Multi-part root cause + fix:
+  - Companion quests are created (`components/QuestPanels.tsx` `createDobbieQuest`) with `type: "personal"`, `rarity: "companion"`, `createdBy: "companion"`. The Quest Board OPEN filter (`app/page.tsx`) only filtered by `type`, so `"personal"` passed — and the level filter even force-included `q.rarity === "companion"`. **Fix:** OPEN filter now excludes `isCompanionQuest(q)` (mirrors the in-progress filter); removed the companion force-include.
+  - Backend player-quest builder (`routes/quests.js`) pushed companion quests into `openPlayer`; since they lack a `templateId` they bypassed the per-player pool cap via `|| !q.templateId`. **Fix:** companion quests are skipped in the open branch.
+  - `POST /api/quest` deduped only `createdBy === 'dobbie'` (and only "today"), but the widget sends `createdBy: 'companion'` → every accept/daily-reset created a new duplicate. **Fix:** dedup now covers all companion quests (by title + active status + claimant), no day restriction.
+  - Existing accumulated duplicates are collapsed by a one-time boot cleanup (`server.js` `dedupeCompanionQuests`) — one instance per (owner + title), preferring in-progress; never merges across players.
+  - Invariant documented in `CLAUDE.md` (Code Style & Conventions) to stop this recurring.
+
 ### UI/UX visual pass (2026-06-23)
 - **[FIXED]** Views had inconsistent widths. Root cause: hard internal width caps — `TavernView` rest history (`maxWidth:600`) and `WandererRest` (5× `maxWidth:1000`). Removed so all views fill the `<main>` `max-w-7xl` (1280px) width. Audited all 18 views; only these two had hard caps (others use full-width grids/flex).
 - **[FIXED]** Inconsistent root vertical rhythm (`space-y-4/5/6` mixed) and two views (`SocialView`, `ChallengesView`) missing the mandatory `tab-content-enter` view-transition animation. Standardized roots to `space-y-5` + added the entrance animation.

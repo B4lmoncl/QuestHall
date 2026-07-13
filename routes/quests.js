@@ -104,10 +104,22 @@ router.post('/api/quest', requireApiKey, (req, res) => {
     return res.status(403).json({ error: `Cannot create quest as ${requestedCreator}` });
   }
   const resolvedCreatedBy = requestedCreator;
-  // Dobbie quest dedup: if same title was already created by dobbie today, return existing
-  if (resolvedCreatedBy === 'dobbie') {
-    const today = getTodayBerlin();
-    const existing = state.quests.find(q => q.createdBy === 'dobbie' && q.title === title && (q.createdAt || '').slice(0, 10) === today);
+  // Companion quest dedup. Companion/Dobbie quests are persistent daily-recurring
+  // quests managed by the Companions panel — exactly ONE instance per title should
+  // ever exist per player. Previously this only matched createdBy === 'dobbie' and
+  // only for "today", but the Companions widget creates them with createdBy
+  // 'companion' + rarity 'companion', so they slipped past the guard and piled up
+  // as dozens of duplicate open quests flooding the Quest Board. Dedup against any
+  // still-active companion quest with the same title for this player.
+  const isCompanionCreate = resolvedCreatedBy === 'dobbie' || resolvedCreatedBy === 'companion' || rarity === 'companion';
+  if (isCompanionCreate) {
+    const claimant = (req.auth?.userId || '').toLowerCase();
+    const existing = state.quests.find(q =>
+      q.title === title &&
+      q.status !== 'completed' && q.status !== 'rejected' &&
+      (q.createdBy === 'dobbie' || q.createdBy === 'companion' || q.rarity === 'companion') &&
+      (!q.claimedBy || !claimant || q.claimedBy.toLowerCase() === claimant)
+    );
     if (existing) {
       return res.json({ ok: true, quest: existing, duplicate: true });
     }
@@ -805,7 +817,14 @@ function getQuestsData(playerParam, typeFilter) {
       } else if (claimedIds.has(q.id)) {
         inProgressPlayer.push({ ...q, status: 'in_progress', claimedBy: playerParam });
       } else {
-        openPlayer.push({ ...q, status: 'open', claimedBy: null, completedBy: null });
+        // Companion quests (managed via the Companions panel) must never surface on
+        // the main Quest Board's OPEN list. They lack a templateId, so they would
+        // otherwise bypass the per-player pool cap below and pile up as duplicates.
+        const isCompanionQuest = q.rarity === 'companion' || q.type === 'companion'
+          || q.createdBy === 'companion' || q.createdBy === 'dobbie' || !!q.companionOwnerId;
+        if (!isCompanionQuest) {
+          openPlayer.push({ ...q, status: 'open', claimedBy: null, completedBy: null });
+        }
       }
     }
 

@@ -582,10 +582,10 @@
     "status": "clean"
   },
   "public/data/uniqueItems.json": {
-    "auditCount": 3,
-    "lastAuditDate": "2026-04-13",
-    "findings": "Cycle 3: MED content gap — 35 world boss unique drop IDs referenced in worldBosses.json but missing from uniqueItems.json. Fallback in world-boss.js:498 creates generic items. No crash, but missing stats/lore/icons for 35 boss-exclusive drops. Requires content creation.",
-    "status": "needs-content"
+    "auditCount": 4,
+    "lastAuditDate": "2026-07-13",
+    "findings": "2026-07-13: Re-verified via xref script — all 48 unique IDs resolve; every worldBosses.json uniqueDrop (all 35 wb-* drops) now exists in uniqueItems.json. The earlier \"35 missing\" content gap is RESOLVED.",
+    "status": "clean"
   },
   "public/data/codex.json": {
     "auditCount": 2,

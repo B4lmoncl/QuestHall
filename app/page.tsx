@@ -2100,14 +2100,18 @@ export default function Dashboard() {
         {/* ── QUEST BOARD (Player Tab) ── */}
         {dashView === "questBoard" && (() => {
           const playerQuestTypes = ["personal", "learning", "fitness", "social", "relationship-coop"];
-          const playerVisibleOpen = applySort(applyFilter(quests.open.filter(q => playerQuestTypes.includes(q.type ?? ""))));
+          // Companion quests (created by the companion widget with type "personal" +
+          // rarity "companion") belong to the Companions panel, NOT the main Quest
+          // Board. They must be excluded here — otherwise they flood the open list
+          // with duplicates. The in-progress filter already excludes them.
+          const playerVisibleOpen = applySort(applyFilter(quests.open.filter(q => playerQuestTypes.includes(q.type ?? "") && !isCompanionQuest(q))));
           const playerVisibleInProgress = applySort(applyFilter(quests.inProgress.filter(q => playerQuestTypes.includes(q.type ?? "") && !isCompanionQuest(q) && (!playerNameLower || q.claimedBy?.toLowerCase() === playerNameLower))));
           // Filter by player level, exclude already claimed
           const inProgressIds = new Set(playerVisibleInProgress.map(q => q.id));
           const levelFiltered = playerVisibleOpen.filter(q => {
             if (inProgressIds.has(q.id)) return false;
-            // NPC and companion quests always visible
-            if (q.npcGiverId || q.rarity === "companion") return true;
+            // NPC quests always visible (companion quests are excluded above)
+            if (q.npcGiverId) return true;
             // No level req = visible to all
             if (!q.minLevel) return true;
             // Show quests up to 3 levels above player (stretch goals), hide if way above
