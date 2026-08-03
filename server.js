@@ -342,6 +342,33 @@ function purgeOrphanGeneratedQuests() {
 }
 try { purgeOrphanGeneratedQuests(); } catch (e) { console.error('[boot] orphan purge failed:', e.message); }
 
+// ─── One-time cleanup: drop broken legacy starter quests ─────────────────────
+// A removed seeding routine left quests whose stored title carries a stray "x "
+// prefix ("x Welcome to the Guild!", "x Read for 30 Minutes"). They have no
+// templateId, so nothing can regenerate or replace them, and they render as
+// garbage on the board. Only untouched ones are removed: still open, never
+// claimed or completed, and not companion/NPC/campaign quests.
+function purgeBrokenLegacyQuests() {
+  const removeIds = new Set();
+  for (const q of state.quests) {
+    if (!q || q.status !== 'open') continue;
+    if (!/^x\s+\S/.test(q.title || '')) continue;   // only the broken "x " titles
+    if (q.templateId) continue;                     // regenerable pool quests stay
+    if (q.claimedBy || q.completedBy) continue;     // never touch progressed quests
+    if (q.npcGiverId || q.parentQuestId) continue;  // never NPC or campaign chains
+    if (q.rarity === 'companion' || q.type === 'companion' || q.companionOwnerId) continue;
+    removeIds.add(q.id);
+  }
+  if (removeIds.size === 0) return 0;
+  state.quests = state.quests.filter(q => !removeIds.has(q.id));
+  const { saveQuests, rebuildQuestsById } = require('./lib/state');
+  rebuildQuestsById();
+  saveQuests();
+  console.log(`[boot] Removed ${removeIds.size} broken legacy starter quest(s)`);
+  return removeIds.size;
+}
+try { purgeBrokenLegacyQuests(); } catch (e) { console.error('[boot] legacy purge failed:', e.message); }
+
 // Version tracking
 try {
   const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8'));

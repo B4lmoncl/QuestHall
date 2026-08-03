@@ -3,6 +3,17 @@
 
 ## Open Bugs
 
+### Quest Board readability + tiles (2026-07-13)
+- **[FIXED]** Quest detail modal was see-through/unreadable. `.panel-ornate` used the `background` shorthand, which also resets `background-color` to transparent, wiping the `.bg-surface-alt` fill the modal relied on (same specificity, defined later in the sheet). Now uses `background-image`. The three other `panel-ornate` users set an inline background and were never affected.
+- **[FIXED]** Grid quest cards had uneven heights (variable title/subtitle wrapping). Title + subtitle clamped to 2 lines with reserved subtitle height.
+- **[FIXED]** Cards showed one of six generic board flavours picked by id hash, ignoring `quest.description` — the board was a wall of repeating text and the actual task was only visible after opening each quest. Cards now show the description, falling back to the quest's own flavour, then the generic line.
+- **[FIXED]** First load after the daily rotation rendered an empty Quest Board: the pool was only built by `/api/quests/pool`, which runs *after* the dashboard responded. `/api/dashboard` now calls a shared `ensurePlayerPool()` before building quest data.
+- **[FIXED]** Broken legacy starter quests with a stray `"x "` title prefix ("x Welcome to the Guild!", "x Read for 30 Minutes") — leftovers from a removed seeding routine, no `templateId`, unregenerable. Boot cleanup removes them (only untouched, unclaimed, non-companion/NPC/campaign ones).
+
+### Deferred (user: "lass die erstmal so")
+- Replace the removed English starter quests with German equivalents in the quest catalog (stretch / read / tidy desk / guild intro), matching the existing tone.
+- Review concrete quest "todos" (task wording) across the catalog for usefulness — the user's actual gripe was task content, not titles. `"Burpee Bestrafung"` deliberately kept as-is.
+
 ### Quest Board flooded with hundreds of open quests (2026-07-13)
 - **[FIXED]** Even after companion quests were excluded, the Quest Board still showed hundreds of open quests. Root cause in the backend per-player quest builder (`routes/quests.js`): when a player's visible pool was momentarily empty (e.g. right after the daily reset, before `GET /api/quests/pool` regenerates it), the fallback returned **every** open player quest (`visibleIds.size > 0 ? filtered : openPlayer`). Combined with accumulated untracked generated quests, this dumped the whole backlog onto the board and defeated the ~11-quest pool cap. **Fix:** the empty-pool fallback now caps to ~11 templated quests (non-templated starter/hand-created quests are always shown); the pool filter is applied unconditionally. Added a one-time boot cleanup (`server.js` `purgeOrphanGeneratedQuests`) that removes open, templated, system-generated quests no player's pool still references (never touches hand-created/NPC/campaign/completed quests).
 
