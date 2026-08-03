@@ -856,6 +856,22 @@ function getQuestsData(playerParam, typeFilter) {
     const bypassesPool = q => !q.templateId && q.createdBy !== 'system';
     const poolFilteredOpen = openPlayer.filter(q => visibleIds.has(q.id) || bypassesPool(q));
 
+    // Record how the board was composed. This is the exact number that flooded
+    // three times over; logging it makes the cause obvious without a screenshot.
+    try {
+      const bypassCount = poolFilteredOpen.filter(bypassesPool).length;
+      require('../lib/diag').diagLog('board.compose', {
+        player: playerParam,
+        shown: poolFilteredOpen.length,
+        fromPool: poolFilteredOpen.length - bypassCount,
+        bypass: bypassCount,
+        poolSize: visibleIds.size,
+        candidates: openPlayer.length,
+        poolWasEmpty: poolIds.length === 0,
+        ...(poolFilteredOpen.length > 40 ? { ANOMALY: 'board over 40 quests — pool cap leaking' } : {}),
+      });
+    } catch { /* diagnostics must never break the board */ }
+
     // Dev quest types use global status as-is
     return {
       open:       [...enrichEpics(poolFilteredOpen),  ...filterAndEnrich('open',        devTypeQuests)].map(ensureRewards),

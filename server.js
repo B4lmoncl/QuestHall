@@ -109,6 +109,7 @@ if (validApiKeys.size === 0) {
 state.validApiKeys = validApiKeys;
 
 // ─── Mount route files ───────────────────────────────────────────────────────
+app.use(require('./routes/diag'));
 app.use(require('./routes/agents'));
 app.use(require('./routes/quests'));
 app.use(require('./routes/config-admin'));
@@ -368,6 +369,17 @@ function purgeBrokenLegacyQuests() {
   return removeIds.size;
 }
 try { purgeBrokenLegacyQuests(); } catch (e) { console.error('[boot] legacy purge failed:', e.message); }
+
+// Record the post-boot state so a rebuild's effect is visible after the fact.
+try {
+  const { diagLog, questSnapshot, getDiagKey } = require('./lib/diag');
+  getDiagKey(); // ensure the key exists on first boot
+  diagLog('boot.complete', {
+    version: (state.appState && state.appState.version) || null,
+    quests: questSnapshot(),
+    users: Object.keys(state.users || {}).length,
+  });
+} catch (e) { console.error('[boot] diag snapshot failed:', e.message); }
 
 // Version tracking
 try {

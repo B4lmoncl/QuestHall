@@ -16,6 +16,9 @@ services:
       - MASTER_KEY=${MASTER_KEY:-}
       # GitHub webhook HMAC verification secret
       - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET:-}
+      # Private diagnostics endpoint key. Leave unset to auto-generate one into
+      # the data volume (data/diag-key.txt) on first boot.
+      - DIAG_KEY=${DIAG_KEY:-}
     volumes:
       - quest-data:/app/data
 
