@@ -844,11 +844,17 @@ function getQuestsData(playerParam, typeFilter) {
     if (visibleIds.size === 0) {
       visibleIds = new Set(openPlayer.filter(q => q.templateId).slice(0, 11).map(q => q.id));
     }
-    // Non-templated quests (starter quests from createStarterQuestsIfNew,
-    // hand-created quests, NPC quests that were re-opened via recurrence)
-    // can't appear in the generated pool (they have no templateId), so they must
-    // always be included or they would be silently dropped.
-    const poolFilteredOpen = openPlayer.filter(q => visibleIds.has(q.id) || !q.templateId);
+    // Quests that genuinely cannot live in the generated pool must still be shown:
+    // hand-created player quests and NPC quests re-opened via recurrence.
+    //
+    // The criterion is deliberately NOT "has no templateId". Auto-generated
+    // system quests (the ~594 seeded catalog quests) also carry no templateId on
+    // older data, so a bare `!q.templateId` escape hatch let every one of them
+    // bypass the pool cap and dumped hundreds of quests onto the board. Anything
+    // created by the system belongs to the pool and is capped by it; only quests
+    // authored by a player or an NPC bypass.
+    const bypassesPool = q => !q.templateId && q.createdBy !== 'system';
+    const poolFilteredOpen = openPlayer.filter(q => visibleIds.has(q.id) || bypassesPool(q));
 
     // Dev quest types use global status as-is
     return {
