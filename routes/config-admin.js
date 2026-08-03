@@ -102,6 +102,12 @@ router.get('/api/dashboard', (req, res) => {
   });
 
   // ─── Quests (direct call to getQuestsData) ────────────────────────────────
+  // Build the player's quest pool first so the very first render already has a
+  // full board. Without this, the load right after the daily rotation showed an
+  // empty Quest Board (the pool was only built by the later /api/quests/pool call).
+  if (playerLower) {
+    try { ensurePlayerPool(playerLower); } catch (e) { console.error('[dashboard] ensurePlayerPool failed:', e.message); }
+  }
   const quests = getQuestsData(playerLower, null);
 
   // ─── Users (inline from GET /api/users — no pagination for dashboard) ─────
@@ -865,35 +871,49 @@ function generatePlayerQuests(playerName, playerLevel) {
   return newQuests.map(q => q.id);
 }
 
+// Ensure a player's quest pool exists and is usable.
+// Safe to call on every dashboard/pool read: it only regenerates when the pool is
+// missing or has decayed below the usable threshold. The dashboard calls this
+// BEFORE building quest data — otherwise the first load after the daily rotation
+// (which clears both the generated quests and the pools) rendered an empty Quest
+// Board, because GET /api/quests/pool only runs after the dashboard has responded.
+function ensurePlayerPool(playerLower) {
+  const userRecord = state.users[playerLower];
+  if (!userRecord) return null;
+  const pp = getPlayerProgress(playerLower);
+  const playerLevel = getLevelInfo(userRecord.xp || 0).level;
+  let changed = false;
+
+  if (!pp.generatedQuests || pp.generatedQuests.length === 0) {
+    pp.generatedQuests = generatePlayerQuests(playerLower, playerLevel);
+    changed = true;
+  }
+  if (!pp.activeQuestPool || pp.activeQuestPool.length === 0) {
+    pp.activeQuestPool = buildVisiblePool(playerLower, playerLevel);
+    changed = true;
+  } else {
+    // Drop quests that are no longer open (claimed/completed), refill when too thin
+    const validIds = new Set(state.quests.filter(q => q.status === 'open').map(q => q.id));
+    const filtered = pp.activeQuestPool.filter(id => validIds.has(id));
+    if (filtered.length !== pp.activeQuestPool.length) { pp.activeQuestPool = filtered; changed = true; }
+    if (pp.activeQuestPool.length < 3) {
+      pp.activeQuestPool = buildVisiblePool(playerLower, playerLevel);
+      changed = true;
+    }
+  }
+  if (changed) savePlayerProgress();
+  return pp;
+}
+
 // GET /api/quests/pool?player=X — get or initialize the quest pool
 router.get('/api/quests/pool', (req, res) => {
   const playerParam = req.query.player ? String(req.query.player).toLowerCase() : null;
   if (!playerParam) return res.status(400).json({ error: 'player parameter required' });
   const userRecord = state.users[playerParam];
   if (!userRecord) return res.status(404).json({ error: 'Player not found' });
-  const pp = getPlayerProgress(playerParam);
-  const playerLevel = getLevelInfo(userRecord.xp || 0).level;
+  const pp = ensurePlayerPool(playerParam) || getPlayerProgress(playerParam);
 
-  // Auto-generate if player has no generated quests yet
-  if (!pp.generatedQuests || pp.generatedQuests.length === 0) {
-    pp.generatedQuests = generatePlayerQuests(playerParam, playerLevel);
-  }
-
-  // Build/rebuild visible pool if empty or stale
-  if (!pp.activeQuestPool || pp.activeQuestPool.length === 0) {
-    pp.activeQuestPool = buildVisiblePool(playerParam, playerLevel);
-    savePlayerProgress();
-  } else {
-    // Remove completed/claimed quests from visible pool
-    const validIds = new Set(state.quests.filter(q => q.status === 'open').map(q => q.id));
-    pp.activeQuestPool = pp.activeQuestPool.filter(id => validIds.has(id));
-    if (pp.activeQuestPool.length < 3) {
-      pp.activeQuestPool = buildVisiblePool(playerParam, playerLevel);
-      savePlayerProgress();
-    }
-  }
-
-  const poolQuests = pp.activeQuestPool
+  const poolQuests = (pp.activeQuestPool || [])
     .map(id => state.questsById.get(id))
     .filter(Boolean);
 

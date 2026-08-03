@@ -140,11 +140,18 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
   const cats = quest.categories?.length ? quest.categories : (quest.category ? [quest.category] : []);
   const isClaimedByMe = playerName && quest.claimedBy?.toLowerCase() === playerName.toLowerCase();
   const isCoop = quest.type === "relationship-coop";
+  // Card subtitle. Show what the quest actually ASKS FOR first — previously every
+  // non-NPC card rendered one of six generic board flavours picked by id hash, so
+  // the board was a wall of repeating "Der Gildenmeister hat diesen Zettel..." lines
+  // and you had to open each quest to learn its task. Fall back to the quest's own
+  // flavour, then to the generic board flavour only when there is nothing else.
   const flavorText = quest.npcGiverId
     ? (quest.flavorText || `Quest from ${quest.npcName || "NPC"}`)
-    : QUEST_BOARD_FLAVORS[
-        Math.abs((quest.id.charCodeAt(0) ?? 0) + (quest.id.charCodeAt(quest.id.length - 1) ?? 0)) % QUEST_BOARD_FLAVORS.length
-      ];
+    : (quest.description?.trim()
+        || quest.flavorText?.trim()
+        || QUEST_BOARD_FLAVORS[
+             Math.abs((quest.id.charCodeAt(0) ?? 0) + (quest.id.charCodeAt(quest.id.length - 1) ?? 0)) % QUEST_BOARD_FLAVORS.length
+           ]);
   const coopPartners = quest.coopPartners ?? [];
   const coopClaimed = quest.coopClaimed ?? [];
   const coopCompletions = quest.coopCompletions ?? [];
@@ -246,7 +253,9 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
               />
               <span style={{ display: "none" }}>{typeCfg.icon?.startsWith("/") ? typeCfg.label : typeCfg.icon}</span>
             </span>
-            <p className="text-sm font-semibold leading-snug" style={{ color: isInProgress ? "#c4b5fd" : "#e8d5a3" }}>{quest.title}</p>
+            {/* Clamp to 2 lines so every grid card has the same content height —
+                otherwise long titles/flavor made the tiles visibly uneven. */}
+            <p className="text-sm font-semibold leading-snug" style={{ color: isInProgress ? "#c4b5fd" : "#e8d5a3", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{quest.title}</p>
           </div>
           {quest.npcGiverId ? (
             <>
@@ -258,7 +267,7 @@ export const QuestCard = memo(function QuestCard({ quest, selected, onToggle, on
               )}
             </>
           ) : (
-            <p className="text-xs italic" style={{ color: "rgba(220,185,120,0.35)" }}>{flavorText}</p>
+            <p className="text-xs italic" style={{ color: "rgba(220,185,120,0.35)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", minHeight: "2.1em" }}>{flavorText}</p>
           )}
           {/* Mini checklist progress for grid cards */}
           {quest.checklist && quest.checklist.length > 1 && (() => {

@@ -2184,7 +2184,12 @@ body.moon-new .crystal-breathe { animation-duration: 6s; }
   position: relative;
   border: 1px solid rgba(230,204,128,0.2);
   border-radius: 12px;
-  background: linear-gradient(180deg, rgba(230,204,128,0.04) 0%, transparent 8%, transparent 92%, rgba(230,204,128,0.03) 100%);
+  /* background-IMAGE, not the `background` shorthand: the shorthand also resets
+     background-color to transparent, which silently wiped the panel fill of any
+     element that set its colour via a utility class (e.g. .bg-surface-alt on the
+     quest detail modal) — the modal rendered see-through and unreadable. Callers
+     that set an inline `background` still override this gradient as before. */
+  background-image: linear-gradient(180deg, rgba(230,204,128,0.04) 0%, transparent 8%, transparent 92%, rgba(230,204,128,0.03) 100%);
 }
 .panel-ornate::before,
 .panel-ornate::after {
